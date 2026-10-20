@@ -100,10 +100,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function loadStudentsForClass(classId) {
         if (!classId) {
-            studentsContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Silakan pilih kelas terlebih dahulu.</div>';
+            studentsContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Silakan pilih kelas ujian terlebih dahulu.</div>';
             activeStudents = [];
             updateStudentTablePreview([]);
             updateRekap();
+            updateLivePreview();
             return;
         }
 
@@ -141,7 +142,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(classes => {
                 if (Array.isArray(classes) && classes.length) {
                     const prevVal = classSelect.value;
-                    classSelect.innerHTML = '<option value="">-- Pilih Kelas Aktif --</option>';
+                    classSelect.innerHTML = '<option value="" selected>-- Pilih Kelas Ujian --</option>';
                     classes.forEach(c => {
                         const opt = document.createElement('option');
                         opt.value = c.id;
@@ -149,17 +150,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         classSelect.appendChild(opt);
                     });
 
-                    // Pilih kelas yang cocok atau kelas pertama
+                    // Hanya pertahankan nilai jika sebelumnya pengguna sudah memilih kelas
                     if (prevVal && classes.some(c => String(c.id) === String(prevVal))) {
                         classSelect.value = prevVal;
-                    } else if (classes.some(c => String(c.id) === '7')) {
-                        classSelect.value = '7'; // Default ke XII DKV jika ada
+                        loadStudentsForClass(classSelect.value);
                     } else {
-                        classSelect.value = classes[0].id;
+                        classSelect.value = '';
+                        loadStudentsForClass('');
                     }
-                    loadStudentsForClass(classSelect.value);
                 } else {
-                    classSelect.innerHTML = '<option value="">-- Belum Ada Kelas Terdaftar --</option>';
+                    classSelect.innerHTML = '<option value="" selected>-- Belum Ada Kelas Terdaftar --</option>';
                     loadStudentsForClass('');
                 }
             })
@@ -414,7 +414,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!tbody) return;
 
         if (students.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 1.5rem; color:#666;">(Pilih kelas untuk menampilkan daftar siswa)</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 1.5rem; color:#666;">(Silakan pilih kelas ujian terlebih dahulu)</td></tr>';
             return;
         }
 

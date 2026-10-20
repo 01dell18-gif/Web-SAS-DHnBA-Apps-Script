@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(classes => {
                 if (Array.isArray(classes) && classes.length) {
                     const prevVal = classSelect.value;
-                    classSelect.innerHTML = '<option value="">-- Pilih Kelas Aktif --</option>';
+                    classSelect.innerHTML = '<option value="" selected>-- Pilih Kelas Ujian --</option>';
                     classes.forEach(c => {
                         const opt = document.createElement('option');
                         opt.value = c.id;
@@ -112,18 +112,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         classSelect.appendChild(opt);
                     });
 
+                    // Hanya pertahankan nilai jika sebelumnya pengguna sudah memilih kelas
                     if (prevVal && classes.some(c => String(c.id) === String(prevVal))) {
                         classSelect.value = prevVal;
-                    } else if (classes.some(c => String(c.id) === '7')) {
-                        classSelect.value = '7'; // Default ke XII DKV
+                        triggerClassChange(classSelect.value);
                     } else {
-                        classSelect.value = classes[0].id;
+                        classSelect.value = '';
+                        triggerClassChange('');
                     }
-
-                    // Trigger initial class student load
-                    triggerClassChange(classSelect.value);
                 } else {
-                    classSelect.innerHTML = '<option value="">-- Belum Ada Kelas Terdaftar --</option>';
+                    classSelect.innerHTML = '<option value="" selected>-- Belum Ada Kelas Terdaftar --</option>';
                     triggerClassChange('');
                 }
             })
@@ -138,8 +136,16 @@ document.addEventListener('DOMContentLoaded', function() {
             if (inputNamaKelas) {
                 inputNamaKelas.value = opt.getAttribute('data-nama') || opt.text.split('(')[0].trim();
             }
+        } else {
+            if (inputNamaKelas && !classId) {
+                inputNamaKelas.value = '';
+            }
         }
         if (!classId) {
+            if (inputSeharusnya) inputSeharusnya.value = 0;
+            if (inputHadir) inputHadir.value = 0;
+            if (inputTidakHadir) inputTidakHadir.value = 0;
+            if (validationAlert) validationAlert.style.display = 'none';
             updateLivePreview();
             return;
         }
@@ -178,7 +184,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const classIdVal = classSelect ? classSelect.value : '';
         const classNameVal = inputNamaKelas ? inputNamaKelas.value.trim() : '';
 
-        if (!tglVal && !mapelVal) return;
+        if (!tglVal || !mapelVal) {
+            if (noticeEl) noticeEl.style.display = 'none';
+            return;
+        }
 
         const url = `/api/get-attendance-rekap?class_id=${encodeURIComponent(classIdVal)}&kelas=${encodeURIComponent(classNameVal)}&tanggal_ujian=${encodeURIComponent(tglVal)}&mata_pelajaran=${encodeURIComponent(mapelVal)}`;
 

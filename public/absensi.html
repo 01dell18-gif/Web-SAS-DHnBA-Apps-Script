@@ -104,7 +104,7 @@
                             <div class="form-group">
                                 <label class="form-label" for="mata_pelajaran">Mata Pelajaran <span class="required">*</span></label>
                                 <input type="text" name="mata_pelajaran" id="mata_pelajaran" class="form-control" 
-                                       list="datalist_subjects" placeholder="Contoh: Desain Grafis / Pemrograman Web" value="Desain Komunikasi Visual" required>
+                                       list="datalist_subjects" placeholder="Contoh: Desain Grafis / Pemrograman Web" value="" required>
                                 <datalist id="datalist_subjects"></datalist>
                             </div>
                         </div>
@@ -144,7 +144,7 @@
                         <div class="form-group">
                             <label class="form-label" for="class_id">Pilih Kelas Ujian <span class="required">*</span></label>
                             <select name="class_id" id="class_id" class="form-select" required>
-                                <option value="">-- Memuat Daftar Kelas... --</option>
+                                <option value="" selected>-- Pilih Kelas Ujian --</option>
                             </select>
                         </div>
 
@@ -156,7 +156,7 @@
                         <!-- Container Siswa -->
                         <div id="studentsContainer">
                             <div style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
-                                Memuat data siswa...
+                                Silakan pilih kelas ujian terlebih dahulu.
                             </div>
                         </div>
 
@@ -351,7 +351,7 @@
                         <tbody id="pvStudentTbody">
                             <tr>
                                 <td colspan="4" style="text-align: center; padding: 2rem; color: #666;">
-                                    (Memuat data siswa...)
+                                    (Silakan pilih kelas ujian terlebih dahulu)
                                 </td>
                             </tr>
                         </tbody>

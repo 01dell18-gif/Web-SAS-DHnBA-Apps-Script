@@ -473,3 +473,18 @@ docker run -d -p 3003:3003 --name web-sas-app web-sas
   - **`docker-compose.yml`**: Memetakan port `3003:3003` dengan volume persisten untuk folder `/data` dan `/public/assets/img` guna menjamin integritas data saat container di-restart.
   - **`.dockerignore`**: Mengoptimalkan proses pembuatan *image* dengan mengecualikan berkas non-esensial.
 
+### 4. Standarisasi Urutan Kolom Master Guru & Pengawas
+
+- Urutan data guru & pengawas ujian diseragamkan secara konsisten di seluruh lapisan sistem (Tampilan UI Tabel, Ekspor Excel `.xlsx`, Format Template & Impor Excel `.xlsx`, berkas basis data `data/db.json`, serta skema relasional `database.sql`):
+  1. `NO`
+  2. `Nama Lengkap & Gelar` (`NAMA`)
+  3. `NIP`
+  4. `Mata Pelajaran Diampu` (`MAPEL`)
+  5. `Jabatan / Peran` (`JABATAN`)
+
+### 5. Inisialisasi Bersih Formulir Daftar Hadir & Berita Acara
+
+- Pada saat formulir **Daftar Hadir** (`absensi.html`) dan **Berita Acara** (`berita-acara.html`) pertama kali dibuka:
+  - Kolom **Mata Pelajaran** dikosongkan secara default (`value=""`) sehingga pengguna dapat memilih dari daftar saran mata pelajaran resmi atau mengetik mata pelajaran ujian yang akan diselenggarakan.
+  - Dropdown **Pilih Kelas Ujian** (`class_id`) berada pada posisi default `-- Pilih Kelas Ujian --` (`value=""`), tanpa memaksa pemilihan otomatis ke kelas tertentu.
+  - Wadah peserta dan pratinjau lembar kertas A4 menampilkan panduan informatif `(Silakan pilih kelas ujian terlebih dahulu)` hingga pengguna secara sadar memilih kelas yang diujikan.
