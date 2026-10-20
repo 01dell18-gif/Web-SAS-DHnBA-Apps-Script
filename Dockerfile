@@ -21,11 +21,11 @@ COPY package*.json ./
 COPY . .
 
 # Ekspos port default server
-EXPOSE 3000
+EXPOSE 3003
 
 # Variabel environment default
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=3003
 
 # Jalankan server aplikasi
 CMD ["node", "server.js"]

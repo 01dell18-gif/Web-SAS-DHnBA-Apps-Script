@@ -185,7 +185,7 @@ function applyRoleAccessControl() {
 // Sinkronisasi Identitas Sekolah di Seluruh Panel Administrator
 function applySchoolIdentityToAdmin(settings) {
     if (!settings) return;
-    const schoolName = settings.school_name || 'SMK NEGERI FYJ CHANNEL';
+    const schoolName = settings.school_name || 'SMK NEGERI 1 FYJ CHANNEL';
     const schoolTagline = settings.school_tagline || 'Generator Administrasi Ujian';
     const schoolLogo = settings.school_logo || '/assets/img/logo.png';
 
@@ -198,8 +198,8 @@ function applySchoolIdentityToAdmin(settings) {
         }
     }
 
-    // 2. Update Brand Navbar Admin
-    document.querySelectorAll('.brand-title').forEach(el => {
+    // 2. Update Brand Navbar Admin & Topbar School Name
+    document.querySelectorAll('.brand-title, .topbar-school-name, #topbarSchoolName').forEach(el => {
         el.textContent = schoolName;
     });
 
@@ -209,7 +209,7 @@ function applySchoolIdentityToAdmin(settings) {
 
     // 3. Update Logo Navbar Admin
     if (schoolLogo) {
-        document.querySelectorAll('.navbar-logo, #topNavbarLogo').forEach(img => {
+        document.querySelectorAll('.navbar-logo, #topNavbarLogo, .topbar-school-logo').forEach(img => {
             img.src = schoolLogo + (schoolLogo.startsWith('data:') ? '' : '?t=' + Date.now());
         });
     }
@@ -228,7 +228,22 @@ function applySchoolIdentityToAdmin(settings) {
     window.SCHOOL_NAME = schoolName;
 }
 
+// 8. Toggle Bilah Sisi (Sidebar Collapsed / Expanded)
+function toggleAdminSidebar() {
+    const layout = document.querySelector('.admin-layout');
+    if (layout) {
+        layout.classList.toggle('sidebar-collapsed');
+        const isCollapsed = layout.classList.contains('sidebar-collapsed');
+        localStorage.setItem('sas_sidebar_collapsed', isCollapsed ? '1' : '0');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Restore sidebar collapsed preference
+    if (localStorage.getItem('sas_sidebar_collapsed') === '1') {
+        document.querySelector('.admin-layout')?.classList.add('sidebar-collapsed');
+    }
+
     try {
         const cached = localStorage.getItem('sas_offline_db');
         if (cached) {
@@ -239,18 +254,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     applyRoleAccessControl();
 
+    const role = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    const roleText = (role === 'admin' || role === 'superadmin') ? 'Super Admin' : 'Operator';
+
     const adminUserEl = document.getElementById('adminUsername');
     if (adminUserEl) {
         const name = localStorage.getItem('sas_admin_name') || localStorage.getItem('sas_admin_user') || 'Administrator';
-        const role = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
-        const roleBadge = role === 'operator' ? ' (Operator)' : ' (Admin)';
-        adminUserEl.textContent = name + roleBadge;
+        adminUserEl.textContent = `${name} (${roleText})`;
     }
 
-    // Set active link sidebar sesuai pathname
-    const currentPath = window.location.pathname;
+    const topbarRoleEl = document.getElementById('topbarRoleBadge');
+    if (topbarRoleEl) {
+        topbarRoleEl.textContent = roleText;
+    }
+
+    // Set active link sidebar sesuai pathname & update breadcrumb
+    const currentPath = window.location.pathname.toLowerCase();
+    let pageLabel = 'Dashboard';
+    if (currentPath.includes('siswa.html')) pageLabel = 'Data Siswa & Master Kelas';
+    else if (currentPath.includes('guru.html')) pageLabel = 'Data Guru & Pengawas';
+    else if (currentPath.includes('template.html')) pageLabel = 'Template Ujian';
+    else if (currentPath.includes('arsip.html')) pageLabel = 'Arsip Dokumen Ujian';
+    else if (currentPath.includes('pengaturan.html')) pageLabel = 'Pengaturan Sekolah & Kop';
+    else if (currentPath.includes('users.html')) pageLabel = 'Manajemen User';
+    else if (currentPath.includes('database.html')) pageLabel = 'Backup & Database SQL';
+
+    const breadcrumbEl = document.getElementById('currentPageBreadcrumb');
+    if (breadcrumbEl) {
+        breadcrumbEl.textContent = pageLabel;
+    }
+
     document.querySelectorAll('.admin-nav-item').forEach(link => {
-        const href = link.getAttribute('href');
+        const href = (link.getAttribute('href') || '').toLowerCase();
         if (href && (currentPath.endsWith(href) || (href.endsWith('index.html') && (currentPath.endsWith('/admin/') || currentPath.endsWith('/admin'))))) {
             link.classList.add('active');
         } else {

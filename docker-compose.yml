@@ -8,7 +8,7 @@ services:
     container_name: web-sas-app
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3003:3003"
     volumes:
       # Persistent volume: database JSON & SQL tetap tersimpan di host
       - ./data:/app/data
@@ -16,4 +16,4 @@ services:
       - ./public/assets/img:/app/public/assets/img
     environment:
       - NODE_ENV=production
-      - PORT=3000
+      - PORT=3003

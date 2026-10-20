@@ -12,7 +12,7 @@ const fs = require('fs');
 const path = require('path');
 const url = require('url');
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3003;
 const DB_FILE = path.join(__dirname, 'data', 'db.json');
 const KOP_IMG_PATH = path.join(__dirname, 'public', 'assets', 'img', 'kop-header.png');
 const KOP_DEFAULT_PATH = path.join(__dirname, 'public', 'assets', 'img', 'kop-header-default.png');

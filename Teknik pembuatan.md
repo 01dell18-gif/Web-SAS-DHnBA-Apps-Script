@@ -233,7 +233,7 @@ node server.js
 Tekan `Enter`. Dalam 1 detik, server akan aktif dan menampilkan pesan konfirmasi:
 
 ```text
-🚀 Server SAS berjalan di http://localhost:3000
+🚀 Server SAS berjalan di http://localhost:3003
 📂 Direktori Publik: .../public
 💾 Berkas Basis Data: .../data/db.json
 📑 Berkas SQL Ekspor: .../database.sql
@@ -247,14 +247,14 @@ Tekan `Enter`. Dalam 1 detik, server akan aktif dan menampilkan pesan konfirmasi
 2. Pada bilah alamat browser, ketik URL berikut lalu tekan `Enter`:
 
    ```text
-   http://localhost:3000
+   http://localhost:3003
    ```
 
 3. Halaman Beranda Publik Generator Administrasi SAS SMK NEGERI FYJ CHANNEL akan langsung tampil dan siap digunakan.
 
 #### Langkah 5: Masuk ke Panel Administrator
 
-1. Klik tombol **"Panel Admin"** di pojok kanan atas bilah navigasi, atau buka langsung alamat `http://localhost:3000/admin/login.html`.
+1. Klik tombol **"Panel Admin"** di pojok kanan atas bilah navigasi, atau buka langsung alamat `http://localhost:3003/admin/login.html`.
 2. Masukkan kredensial login bawaan:
    - **Akun Administrator (Akses Penuh CRUD Data & Backup)**:
      - Username: `admin`
@@ -287,8 +287,8 @@ Aplikasi ini telah dilengkapi konfigurasi kontainerisasi Docker resmi (`Dockerfi
    docker compose up -d
    ```
 
-3. Docker akan otomatis mem-build image, memetakan port `3000:3000`, dan menghubungkan *persistent volume* untuk folder `data/` dan `public/assets/img/` (sehingga database JSON, SQL dump, dan logo sekolah yang diunggah tetap awet tersimpan di komputer host).
-4. Akses di browser: `http://localhost:3000`.
+3. Docker akan otomatis mem-build image, memetakan port `3003:3003`, dan menghubungkan *persistent volume* untuk folder `data/` dan `public/assets/img/` (sehingga database JSON, SQL dump, dan logo sekolah yang diunggah tetap awet tersimpan di komputer host).
+4. Akses di browser: `http://localhost:3003`.
 5. Untuk menghentikan container Docker:
 
    ```bash
@@ -301,8 +301,8 @@ Aplikasi ini telah dilengkapi konfigurasi kontainerisasi Docker resmi (`Dockerfi
 # 1. Build image Docker
 docker build -t web-sas .
 
-# 2. Jalankan container dengan binding port 3000
-docker run -d -p 3000:3000 --name web-sas-app web-sas
+# 2. Jalankan container dengan binding port 3003
+docker run -d -p 3003:3003 --name web-sas-app web-sas
 ```
 
 ---
@@ -470,6 +470,6 @@ docker run -d -p 3000:3000 --name web-sas-app web-sas
 
 - Disediakan berkas konfigurasi Docker siap pakai untuk standarisasi penerapan lingkungan produksi maupun pengujian lokal:
   - **`Dockerfile`**: Menggunakan basis image resmi `node:20-alpine` yang ringkas, cepat, dan aman.
-  - **`docker-compose.yml`**: Memetakan port `3000:3000` dengan volume persisten untuk folder `/data` dan `/public/assets/img` guna menjamin integritas data saat container di-restart.
+  - **`docker-compose.yml`**: Memetakan port `3003:3003` dengan volume persisten untuk folder `/data` dan `/public/assets/img` guna menjamin integritas data saat container di-restart.
   - **`.dockerignore`**: Mengoptimalkan proses pembuatan *image* dengan mengecualikan berkas non-esensial.
 

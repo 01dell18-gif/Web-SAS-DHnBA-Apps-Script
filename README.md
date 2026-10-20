@@ -169,9 +169,9 @@ Ikuti langkah mudah berikut:
    ```
 
 4. **Buka di Browser**:
-   - Buka browser (Chrome, Edge, Firefox, dll) dan akses: 👉 **`http://localhost:3000`**
+   - Buka browser (Chrome, Edge, Firefox, dll) dan akses: 👉 **`http://localhost:3003`**
 5. **Masuk ke Panel Administrator**:
-   - Klik tombol **Panel Admin** di pojok kanan atas atau buka `http://localhost:3000/admin/login.html`.
+   - Klik tombol **Panel Admin** di pojok kanan atas atau buka `http://localhost:3003/admin/login.html`.
    - Akun Admin (Akses Penuh): `admin` / `admin123`.
    - Akun Operator (Kelola Dokumen): `operator` / `operator123`.
 6. **Menghentikan Server**:
@@ -186,7 +186,7 @@ Aplikasi ini sudah dilengkapi dengan berkas `Dockerfile` dan `docker-compose.yml
 docker compose up -d
 ```
 
-- Buka di browser: 👉 **`http://localhost:3000`**
+- Buka di browser: 👉 **`http://localhost:3003`**
 - Data basis data (`data/db.json`, `database.sql`) dan logo sekolah otomatis disimpan di komputer host melalui *persistent volumes*.
 - Untuk menghentikan container: `docker compose down`.
 
