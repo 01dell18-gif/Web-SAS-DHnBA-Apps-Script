@@ -7,12 +7,6 @@
     <link rel="stylesheet" href="/assets/css/app.css">
     <link rel="icon" type="image/png" href="/assets/img/logo.png">
     <style>
-        .admin-layout { display: flex; min-height: calc(100vh - 70px); }
-        .admin-sidebar { width: 260px; background: #ffffff; border-right: 1px solid var(--border); padding: 1.5rem 1rem; display: flex; flex-direction: column; justify-content: space-between; }
-        .admin-nav { list-style: none; display: flex; flex-direction: column; gap: 0.35rem; }
-        .admin-nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-sm); color: var(--text-main); font-weight: 600; font-size: 0.9rem; text-decoration: none; cursor: pointer; transition: all 0.2s ease; }
-        .admin-nav-item:hover, .admin-nav-item.active { background: var(--primary-light); color: var(--primary); }
-        .admin-content { flex: 1; padding: 2rem; background: var(--bg-body); overflow-y: auto; }
         .toast-notify { position: fixed; bottom: 24px; right: 24px; background: #1E293B; color: #ffffff; padding: 12px 20px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px; z-index: 10000; font-size: 0.9rem; font-weight: 600; opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
         .toast-notify.show { opacity: 1; transform: translateY(0); }
         .toast-notify.toast-success { background: #065F46; }
@@ -22,39 +16,13 @@
         /* Modal Overlay */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: 1rem; }
         .modal-card { background: #ffffff; width: 100%; max-width: 500px; border-radius: var(--radius-lg); padding: 1.75rem; box-shadow: var(--shadow-lg); max-height: 90vh; overflow-y: auto; }
-
-        @media (max-width: 900px) {
-            .admin-layout { flex-direction: column; }
-            .admin-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
-            .admin-content { padding: 1.25rem; }
-        }
     </style>
     <script src="/assets/js/github-pages-compat.js"></script>
 </head>
 <body>
 
-<header class="admin-topbar">
-    <div class="topbar-left-group">
-        <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="toggleAdminSidebar()" title="Sembunyikan/Tampilkan Bilah Sisi">
-            <i class="bi bi-layout-sidebar"></i>
-        </button>
-        <img src="/assets/img/logo.png" alt="Logo Sekolah" class="topbar-school-logo navbar-logo">
-        <div class="topbar-school-info">
-            <div class="topbar-school-name brand-title" id="topbarSchoolName">SMK NEGERI 1 FYJ CHANNEL</div>
-            <div class="topbar-school-breadcrumb">Sistem SAS • <span id="currentPageBreadcrumb">Manajemen User</span></div>
-        </div>
-    </div>
-    <div class="topbar-right-group">
-        <span class="topbar-user-badge">
-            <i class="bi bi-person-circle"></i> <span id="adminUsername">Administrator</span>
-        </span>
-        <a href="/" class="btn btn-secondary btn-sm"><i class="bi bi-house"></i> Beranda Publik</a>
-        <button type="button" class="btn btn-danger btn-sm" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Keluar</button>
-    </div>
-</header>
-
 <div class="admin-layout">
-    <!-- SIDEBAR DARK MODERN (SAS PORTAL) -->
+    <!-- 1. SIDEBAR DARK MODERN (SEJAJAR DENGAN TOPBAR) -->
     <aside class="admin-sidebar" id="adminSidebar">
         <div>
             <div class="sidebar-brand-wrapper">
@@ -71,7 +39,7 @@
 
             <div class="admin-nav-category">DATA MASTER</div>
             <ul class="admin-nav">
-                <li><a href="/admin/guru.html" class="admin-nav-item"><i class="bi bi-person-workspace"></i> Data Guru</a></li>
+                <li><a href="/admin/guru.html" class="admin-nav-item"><i class="bi bi-person-workspace"></i> Data Guru & Pengawas</a></li>
                 <li><a href="/admin/siswa.html" class="admin-nav-item"><i class="bi bi-people"></i> Data Siswa & Kelas</a></li>
             </ul>
 
@@ -93,8 +61,30 @@
         </div>
     </aside>
 
-    <!-- MAIN CONTENT -->
-    <main class="admin-content">
+    <!-- 2. WRAPPER UTAMA KANAN: TOPBAR DI ATAS + CONTENT DI BAWAH -->
+    <div class="admin-main-wrapper">
+        <header class="admin-topbar">
+            <div class="topbar-left-group">
+                <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="toggleAdminSidebar()" title="Sembunyikan/Tampilkan Bilah Sisi">
+                    <i class="bi bi-layout-sidebar"></i>
+                </button>
+                <img src="/assets/img/logo.png" alt="Logo Sekolah" class="topbar-school-logo navbar-logo">
+                <div class="topbar-school-info">
+                    <div class="topbar-school-name brand-title" id="topbarSchoolName">SMK NEGERI 1 FYJ CHANNEL</div>
+                    <div class="topbar-school-breadcrumb">Sistem SAS • <span id="currentPageBreadcrumb">Manajemen User</span></div>
+                </div>
+            </div>
+            <div class="topbar-right-group">
+                <span class="topbar-user-badge">
+                    <i class="bi bi-person-circle"></i> <span id="adminUsername">Administrator</span>
+                </span>
+                <a href="/" class="btn btn-secondary btn-sm"><i class="bi bi-house"></i> Beranda Publik</a>
+                <button type="button" class="btn btn-danger btn-sm" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Keluar</button>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT -->
+        <main class="admin-content">
         <div class="card">
             <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div>
@@ -144,7 +134,8 @@
                 </div>
             </div>
         </div>
-    </main>
+        </main>
+    </div>
 </div>
 
 <!-- MODAL TAMBAH / EDIT USER -->

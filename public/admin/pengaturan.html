@@ -9,12 +9,9 @@
     <script src="/assets/js/xlsx.full.min.js"></script>
     <script src="/assets/js/github-pages-compat.js"></script>
     <style>
-        .admin-layout { display: flex; min-height: calc(100vh - 70px); }
-        .admin-sidebar { width: 260px; background: #ffffff; border-right: 1px solid var(--border); padding: 1.5rem 1rem; display: flex; flex-direction: column; justify-content: space-between; }
         .admin-nav { list-style: none; display: flex; flex-direction: column; gap: 0.35rem; }
         .admin-nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-sm); color: var(--text-main); font-weight: 600; font-size: 0.9rem; text-decoration: none; cursor: pointer; transition: all 0.2s ease; }
         .admin-nav-item:hover, .admin-nav-item.active { background: var(--primary-light); color: var(--primary); }
-        .admin-content { flex: 1; padding: 2rem; background: var(--bg-body); overflow-y: auto; }
         .toast-notify { position: fixed; bottom: 24px; right: 24px; background: #1E293B; color: #ffffff; padding: 12px 20px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px; z-index: 10000; font-size: 0.9rem; font-weight: 600; opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
         .toast-notify.show { opacity: 1; transform: translateY(0); }
         .toast-notify.toast-success { background: #065F46; }
@@ -24,38 +21,12 @@
         /* Modal Overlay */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: 1rem; }
         .modal-card { background: #ffffff; width: 100%; max-width: 580px; border-radius: var(--radius-lg); padding: 1.75rem; box-shadow: var(--shadow-lg); max-height: 90vh; overflow-y: auto; }
-
-        @media (max-width: 900px) {
-            .admin-layout { flex-direction: column; }
-            .admin-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
-            .admin-content { padding: 1.25rem; }
-        }
     </style>
 </head>
 <body>
 
-<header class="admin-topbar">
-    <div class="topbar-left-group">
-        <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="toggleAdminSidebar()" title="Sembunyikan/Tampilkan Bilah Sisi">
-            <i class="bi bi-layout-sidebar"></i>
-        </button>
-        <img src="/assets/img/logo.png" alt="Logo Sekolah" class="topbar-school-logo navbar-logo" id="topNavbarLogo">
-        <div class="topbar-school-info">
-            <div class="topbar-school-name brand-title" id="topbarSchoolName">SMK NEGERI 1 FYJ CHANNEL</div>
-            <div class="topbar-school-breadcrumb">Sistem SAS • <span id="currentPageBreadcrumb">Pengaturan Sekolah & Kop</span></div>
-        </div>
-    </div>
-    <div class="topbar-right-group">
-        <span class="topbar-user-badge">
-            <i class="bi bi-person-circle"></i> <span id="adminUsername">Administrator</span>
-        </span>
-        <a href="/" class="btn btn-secondary btn-sm"><i class="bi bi-house"></i> Beranda Publik</a>
-        <button type="button" class="btn btn-danger btn-sm" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Keluar</button>
-    </div>
-</header>
-
 <div class="admin-layout">
-    <!-- SIDEBAR DARK MODERN (SAS PORTAL) -->
+    <!-- 1. SIDEBAR DARK MODERN (SEJAJAR DENGAN TOPBAR) -->
     <aside class="admin-sidebar" id="adminSidebar">
         <div>
             <div class="sidebar-brand-wrapper">
@@ -72,7 +43,7 @@
 
             <div class="admin-nav-category">DATA MASTER</div>
             <ul class="admin-nav">
-                <li><a href="/admin/guru.html" class="admin-nav-item"><i class="bi bi-person-workspace"></i> Data Guru</a></li>
+                <li><a href="/admin/guru.html" class="admin-nav-item"><i class="bi bi-person-workspace"></i> Data Guru & Pengawas</a></li>
                 <li><a href="/admin/siswa.html" class="admin-nav-item"><i class="bi bi-people"></i> Data Siswa & Kelas</a></li>
             </ul>
 
@@ -94,8 +65,30 @@
         </div>
     </aside>
 
-    <!-- CONTENT -->
-    <main class="admin-content">
+    <!-- 2. WRAPPER UTAMA KANAN: TOPBAR DI ATAS + CONTENT DI BAWAH -->
+    <div class="admin-main-wrapper">
+        <header class="admin-topbar">
+            <div class="topbar-left-group">
+                <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="toggleAdminSidebar()" title="Sembunyikan/Tampilkan Bilah Sisi">
+                    <i class="bi bi-layout-sidebar"></i>
+                </button>
+                <img src="/assets/img/logo.png" alt="Logo Sekolah" class="topbar-school-logo navbar-logo" id="topNavbarLogo">
+                <div class="topbar-school-info">
+                    <div class="topbar-school-name brand-title" id="topbarSchoolName">SMK NEGERI 1 FYJ CHANNEL</div>
+                    <div class="topbar-school-breadcrumb">Sistem SAS • <span id="currentPageBreadcrumb">Pengaturan Sekolah & Kop</span></div>
+                </div>
+            </div>
+            <div class="topbar-right-group">
+                <span class="topbar-user-badge">
+                    <i class="bi bi-person-circle"></i> <span id="adminUsername">Administrator</span>
+                </span>
+                <a href="/" class="btn btn-secondary btn-sm"><i class="bi bi-house"></i> Beranda Publik</a>
+                <button type="button" class="btn btn-danger btn-sm" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Keluar</button>
+            </div>
+        </header>
+
+        <!-- CONTENT -->
+        <main class="admin-content">
         <!-- 1. KARTU PENGATURAN IDENTITAS, LOGO & KOP SURAT -->
         <div class="card" style="margin-bottom: 1.75rem;">
             <div class="card-header">
@@ -196,6 +189,9 @@
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                     <span id="badgeClassCount" class="badge" style="background: var(--primary-light); color: var(--primary); font-weight: 700; padding: 6px 10px; border-radius: 6px;">0 Kelas</span>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="syncClassesFromStudents()" title="Ambil dan sinkronkan kelas unik yang ada dari Master Data Siswa">
+                        <i class="bi bi-arrow-repeat"></i> Ambil dari Master Siswa
+                    </button>
                     <button type="button" class="btn btn-secondary btn-sm" onclick="exportClassesExcel()" title="Ekspor daftar kelas ke Excel (.xlsx)">
                         <i class="bi bi-file-earmark-excel" style="color: #10B981;"></i> Export (.xlsx)
                     </button>
@@ -306,12 +302,13 @@
                 </div>
                 <div>
                     <button type="button" id="btnSaveAllPengaturan" class="btn btn-primary" onclick="saveAllPengaturan()" style="padding: 0.85rem 1.75rem; font-size: 0.95rem; font-weight: 700; box-shadow: 0 4px 14px rgba(70, 87, 217, 0.35); display: inline-flex; align-items: center; gap: 8px;">
-                        <i class="bi bi-check-circle-fill"></i> Perbarui Pengaturan, Logo & Kop Surat
+                        <i class="bi bi-check-circle-fill"></i> Perbarui Pengaturan
                     </button>
                 </div>
             </div>
         </div>
-    </main>
+        </main>
+    </div>
 </div>
 
 <!-- ================= MODALS ================= -->
@@ -918,6 +915,99 @@ async function deleteClass(classId, className, studentCount) {
     }
 }
 
+// ================= SINKRONISASI KELAS DARI MASTER DATA SISWA =================
+async function syncClassesFromStudents() {
+    try {
+        if (!db.students || db.students.length === 0) {
+            const res = await fetch('/api/data');
+            const data = await res.json();
+            if (data && data.students) db.students = data.students;
+            if (data && data.classes && (!db.classes || db.classes.length === 0)) db.classes = data.classes;
+        }
+
+        if (!db.students || db.students.length === 0) {
+            if (typeof showAlertModal === 'function') {
+                showAlertModal({
+                    title: 'Data Siswa Kosong',
+                    message: 'Tidak ditemukan data siswa pada Master Data Siswa. Silakan tambahkan atau import data siswa terlebih dahulu.',
+                    type: 'warning'
+                });
+            } else {
+                alert('Tidak ditemukan data siswa pada Master Data Siswa.');
+            }
+            return;
+        }
+
+        if (!Array.isArray(db.classes)) db.classes = [];
+
+        // Himpun seluruh nama kelas unik dari siswa
+        const existingClassNames = new Set(db.classes.map(c => (c.nama_kelas || '').trim().toUpperCase()));
+        let maxId = db.classes.reduce((max, c) => Math.max(max, parseInt(c.id) || 0), 0);
+        let addedCount = 0;
+
+        const studentClassNames = new Set();
+        db.students.forEach(s => {
+            const name = (s.kelas || s.nama_kelas || s.class_name || '').trim();
+            if (name) studentClassNames.add(name);
+        });
+
+        studentClassNames.forEach(className => {
+            if (!existingClassNames.has(className.toUpperCase())) {
+                maxId++;
+                const tingkat = detectClassTingkat(className);
+                const program = detectProgramKeahlian(className) || 'Umum';
+                db.classes.push({
+                    id: maxId,
+                    nama_kelas: className,
+                    tingkat: tingkat,
+                    program_keahlian: program,
+                    is_active: 1
+                });
+                existingClassNames.add(className.toUpperCase());
+                addedCount++;
+            }
+        });
+
+        // Urutkan kelas berdasarkan nama kelas
+        db.classes.sort((a, b) => (a.nama_kelas || '').localeCompare(b.nama_kelas || '', undefined, { numeric: true }));
+
+        renderClassesTable();
+        markDirty(true);
+
+        if (addedCount > 0) {
+            if (typeof showAlertModal === 'function') {
+                showAlertModal({
+                    title: 'Sinkronisasi Berhasil',
+                    message: `Berhasil mengambil dan menambahkan ${addedCount} kelas baru dari Master Data Siswa! Klik tombol "Perbarui Pengaturan" di bawah untuk menyimpan perubahan secara permanen ke database.`,
+                    type: 'success'
+                });
+            } else {
+                showToast(`Berhasil menambahkan ${addedCount} kelas baru dari data siswa!`, 'success');
+            }
+        } else {
+            if (typeof showAlertModal === 'function') {
+                showAlertModal({
+                    title: 'Daftar Kelas Lengkap',
+                    message: `Seluruh kelas siswa (${studentClassNames.size || db.classes.length} kelas) sudah terdaftar pada Master Daftar Kelas Resmi. Tidak ada kelas baru yang perlu ditambahkan.`,
+                    type: 'info'
+                });
+            } else {
+                showToast('Seluruh kelas dari data siswa sudah terdaftar pada Master Kelas.', 'info');
+            }
+        }
+    } catch (err) {
+        showToast('Gagal menyinkronkan kelas dari data siswa: ' + err.message, 'danger');
+    }
+}
+
+function detectClassTingkat(className) {
+    const upper = (className || '').toUpperCase().trim();
+    if (upper.startsWith('XII') || upper.startsWith('12')) return 'XII';
+    if (upper.startsWith('XI') || upper.startsWith('11')) return 'XI';
+    if (upper.startsWith('X') || upper.startsWith('10')) return 'X';
+    return 'XII';
+}
+
 // ================= 3. EXPORT & IMPORT EXCEL KELAS =================
 function exportClassesExcel() {
     const classes = db.classes || [];
@@ -1393,7 +1483,7 @@ async function saveAllPengaturan(notify = true) {
     } finally {
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Perbarui Pengaturan, Logo & Kop Surat';
+            btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Perbarui Pengaturan';
         }
     }
 }

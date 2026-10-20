@@ -8,11 +8,6 @@
     <link rel="icon" type="image/png" href="/assets/img/logo.png">
     <script src="/assets/js/xlsx.full.min.js"></script>
     <style>
-        .admin-layout { display: flex; min-height: calc(100vh - 70px); }
-        .admin-sidebar {
-            width: 260px; background: #ffffff; border-right: 1px solid var(--border);
-            padding: 1.5rem 1rem; display: flex; flex-direction: column; justify-content: space-between;
-        }
         .admin-nav { list-style: none; display: flex; flex-direction: column; gap: 0.35rem; }
         .admin-nav-item {
             display: flex; align-items: center; gap: 10px; padding: 10px 14px;
@@ -20,21 +15,6 @@
             font-size: 0.9rem; text-decoration: none; cursor: pointer; transition: all 0.2s ease;
         }
         .admin-nav-item:hover, .admin-nav-item.active { background: var(--primary-light); color: var(--primary); }
-        .admin-content { flex: 1; padding: 2rem; background: var(--bg-body); overflow-y: auto; }
-        .stat-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 1.25rem; margin-bottom: 2rem;
-        }
-        .stat-card {
-            background: #ffffff; border-radius: var(--radius-md); border: 1px solid var(--border);
-            padding: 1.25rem 1.5rem; box-shadow: var(--shadow-xs); display: flex; align-items: center; gap: 1rem;
-        }
-        .stat-icon {
-            width: 50px; height: 50px; border-radius: 12px; display: flex;
-            align-items: center; justify-content: center; font-size: 1.5rem;
-        }
-        .stat-value { font-size: 1.6rem; font-weight: 800; color: var(--text-heading); line-height: 1.1; }
-        .stat-label { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
         .toast-notify {
             position: fixed; bottom: 24px; right: 24px; background: #1E293B; color: #ffffff;
             padding: 12px 20px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
@@ -46,38 +26,13 @@
         .toast-notify.toast-success { background: #065F46; }
         .toast-notify.toast-danger { background: #991B1B; }
         .toast-notify.toast-info { background: #1E3A8A; }
-        @media (max-width: 900px) {
-            .admin-layout { flex-direction: column; }
-            .admin-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
-            .admin-content { padding: 1.25rem; }
-        }
     </style>
     <script src="/assets/js/github-pages-compat.js"></script>
 </head>
 <body>
 
-<header class="admin-topbar">
-    <div class="topbar-left-group">
-        <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="toggleAdminSidebar()" title="Sembunyikan/Tampilkan Bilah Sisi">
-            <i class="bi bi-layout-sidebar"></i>
-        </button>
-        <img src="/assets/img/logo.png" alt="Logo Sekolah" class="topbar-school-logo navbar-logo">
-        <div class="topbar-school-info">
-            <div class="topbar-school-name brand-title" id="topbarSchoolName">SMK NEGERI 1 FYJ CHANNEL</div>
-            <div class="topbar-school-breadcrumb">Sistem SAS • <span id="currentPageBreadcrumb">Dashboard</span></div>
-        </div>
-    </div>
-    <div class="topbar-right-group">
-        <span class="topbar-user-badge">
-            <i class="bi bi-person-circle"></i> <span id="adminUsername">Administrator</span>
-        </span>
-        <a href="/" class="btn btn-secondary btn-sm"><i class="bi bi-house"></i> Beranda Publik</a>
-        <button type="button" class="btn btn-danger btn-sm" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Keluar</button>
-    </div>
-</header>
-
 <div class="admin-layout">
-    <!-- SIDEBAR DARK MODERN (SAS PORTAL) -->
+    <!-- 1. SIDEBAR DARK MODERN (SEJAJAR DARI PALING ATAS DENGAN TOPBAR) -->
     <aside class="admin-sidebar" id="adminSidebar">
         <div>
             <div class="sidebar-brand-wrapper">
@@ -94,7 +49,7 @@
 
             <div class="admin-nav-category">DATA MASTER</div>
             <ul class="admin-nav">
-                <li><a href="/admin/guru.html" class="admin-nav-item"><i class="bi bi-person-workspace"></i> Data Guru</a></li>
+                <li><a href="/admin/guru.html" class="admin-nav-item"><i class="bi bi-person-workspace"></i> Data Guru & Pengawas</a></li>
                 <li><a href="/admin/siswa.html" class="admin-nav-item"><i class="bi bi-people"></i> Data Siswa & Kelas</a></li>
             </ul>
 
@@ -116,15 +71,37 @@
         </div>
     </aside>
 
-    <!-- CONTENT -->
-    <main class="admin-content">
-        <!-- WELCOME BANNER -->
-        <div class="dashboard-welcome-banner">
-            <h2 class="welcome-heading">Selamat Datang, Admin Pengelola! 👋</h2>
-            <div class="welcome-subtext">
-                Masuk sebagai: <span class="badge-pill-role" id="dashRolePill">Super Admin</span> • Tahun Ajaran: <strong id="dashAcademicYear">2026/2027</strong> (<span id="dashSemester">Ganjil</span>)
+    <!-- 2. WRAPPER UTAMA KANAN: TOPBAR DI ATAS + CONTENT DI BAWAH -->
+    <div class="admin-main-wrapper">
+        <header class="admin-topbar">
+            <div class="topbar-left-group">
+                <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="toggleAdminSidebar()" title="Sembunyikan/Tampilkan Bilah Sisi">
+                    <i class="bi bi-layout-sidebar"></i>
+                </button>
+                <img src="/assets/img/logo.png" alt="Logo Sekolah" class="topbar-school-logo navbar-logo">
+                <div class="topbar-school-info">
+                    <div class="topbar-school-name brand-title" id="topbarSchoolName">SMK NEGERI 1 FYJ CHANNEL</div>
+                    <div class="topbar-school-breadcrumb">Sistem SAS • <span id="currentPageBreadcrumb">Dashboard</span></div>
+                </div>
             </div>
-        </div>
+            <div class="topbar-right-group">
+                <span class="topbar-user-badge">
+                    <i class="bi bi-person-circle"></i> <span id="adminUsername">Administrator</span>
+                </span>
+                <a href="/" class="btn btn-secondary btn-sm"><i class="bi bi-house"></i> Beranda Publik</a>
+                <button type="button" class="btn btn-danger btn-sm" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Keluar</button>
+            </div>
+        </header>
+
+        <!-- CONTENT -->
+        <main class="admin-content">
+            <!-- WELCOME BANNER -->
+            <div class="dashboard-welcome-banner">
+                <h2 class="welcome-heading">Selamat Datang, Admin Pengelola! 👋</h2>
+                <div class="welcome-subtext">
+                    Masuk sebagai: <span class="badge-pill-role" id="dashRolePill">Super Admin</span> • Tahun Ajaran: <strong id="dashAcademicYear">2026/2027</strong> (<span id="dashSemester">Ganjil</span>)
+                </div>
+            </div>
 
         <!-- STATS GRID KARTU (PERSIS SEPERTI GAMBAR CONTOH DENGAN DATA SAS) -->
         <div class="stat-grid-screenshot">
@@ -220,6 +197,7 @@
             </div>
         </div>
     </main>
+    </div>
 </div>
 
 <script src="/assets/js/popup.js"></script>
@@ -228,43 +206,76 @@
 async function initDashboard() {
     await loadAdminDatabase();
 
-    // 1. Hitung kelas aktif (kelas yang memiliki siswa terdaftar)
-    const activeClassIds = new Set((db.students || []).map(s => String(s.class_id)));
-    const activeClasses = (db.classes || []).filter(c => activeClassIds.has(String(c.id)));
+    const setTxt = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    };
+
+    const classes = db.classes || [];
+    const students = db.students || [];
+    const teachers = db.teachers || [];
+    const templates = db.templates || [];
+    const archives = db.archives || [];
+    const users = db.users || [];
 
     // Stats
-    document.getElementById('countClasses').textContent = activeClasses.length;
-    document.getElementById('countStudents').textContent = (db.students || []).length;
-    document.getElementById('countTeachers').textContent = (db.teachers || []).length;
-    document.getElementById('countTemplates').textContent = (db.templates || []).length;
-    document.getElementById('countArchives').textContent = (db.archives || []).length;
-    document.getElementById('countUsers').textContent = (db.users || []).length;
+    setTxt('countClasses', classes.length);
+    setTxt('countStudents', students.length);
+    setTxt('countTeachers', teachers.length);
+    setTxt('countTemplates', templates.length);
+    setTxt('countArchives', archives.length);
+    setTxt('countUsers', users.length);
 
-    // Render classes table
+    // Render classes table (Ringkasan Siswa per Kelas)
     const tbody = document.getElementById('classSummaryBody');
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    if (activeClasses.length === 0) {
+    // Ambil daftar kelas dari db.classes, jika ada siswa dengan kelas baru tambahkan juga
+    let allClassList = [...classes];
+    const existingClassNames = new Set(classes.map(c => String(c.nama_kelas).toLowerCase().trim()));
+
+    // Cek apakah ada kelas unik dari data siswa yang belum ada di classes
+    students.forEach(s => {
+        const sKls = (s.kelas || '').trim();
+        if (sKls && !existingClassNames.has(sKls.toLowerCase())) {
+            existingClassNames.add(sKls.toLowerCase());
+            let tingkat = 'XII';
+            if (sKls.toUpperCase().startsWith('X ') || sKls.toUpperCase().startsWith('X-')) tingkat = 'X';
+            else if (sKls.toUpperCase().startsWith('XI ') || sKls.toUpperCase().startsWith('XI-')) tingkat = 'XI';
+            allClassList.push({
+                id: s.class_id || ('s_' + Math.random().toString(36).substr(2, 5)),
+                nama_kelas: sKls,
+                tingkat: tingkat,
+                program_keahlian: s.program_keahlian || '-'
+            });
+        }
+    });
+
+    if (allClassList.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="6" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
                     <i class="bi bi-inbox" style="font-size: 2.2rem; display: block; margin-bottom: 8px; opacity: 0.4;"></i>
-                    Belum ada kelas aktif (0 siswa terdaftar).<br>
-                    <span style="font-size: 0.82rem;">Data kelas otomatis tercatat saat penginputan data siswa di menu <strong>Siswa & Master Kelas</strong> atau dapat dikonfigurasi pada menu <strong>Pengaturan</strong>.</span>
+                    Belum ada kelas terdaftar di database.<br>
+                    <span style="font-size: 0.82rem;">Data kelas dapat dikonfigurasi pada menu <strong>Pengaturan Sekolah & Kop</strong> atau di menu <strong>Siswa & Master Kelas</strong>.</span>
                 </td>
             </tr>
         `;
         return;
     }
 
-    activeClasses.forEach(c => {
-        const stCount = (db.students || []).filter(s => String(s.class_id) === String(c.id)).length;
+    allClassList.forEach((c, idx) => {
+        const stCount = students.filter(s => 
+            (c.id && String(s.class_id) === String(c.id)) || 
+            (s.kelas && String(s.kelas).toLowerCase().trim() === String(c.nama_kelas).toLowerCase().trim())
+        ).length;
+
         tbody.innerHTML += `
             <tr>
-                <td><strong>#${c.id}</strong></td>
+                <td><strong>#${idx + 1}</strong></td>
                 <td><strong>${c.nama_kelas}</strong></td>
-                <td><span class="badge" style="background: var(--slate-100); color: var(--slate-700); padding: 4px 8px; border-radius: 4px;">${c.tingkat}</span></td>
+                <td><span class="badge" style="background: var(--slate-100); color: var(--slate-700); padding: 4px 8px; border-radius: 4px;">${c.tingkat || '-'}</span></td>
                 <td>${c.program_keahlian || '-'}</td>
                 <td style="text-align: center; font-weight: 700; color: var(--primary);">${stCount} Siswa</td>
                 <td style="text-align: center;">

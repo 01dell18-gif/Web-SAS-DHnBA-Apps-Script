@@ -1192,6 +1192,21 @@ textarea.form-control {
    ========================================================= */
 
 /* Topbar Header matching user reference screenshot */
+.admin-layout, .admin-wrapper {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    background: var(--bg-body);
+}
+
+.admin-main-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 100vh;
+}
+
 .admin-topbar {
     display: flex;
     align-items: center;
@@ -1203,6 +1218,7 @@ textarea.form-control {
     position: sticky;
     top: 0;
     z-index: 1000;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
 .topbar-left-group {
@@ -1286,12 +1302,12 @@ textarea.form-control {
     gap: 6px;
 }
 
-/* Dark Navy Sidebar - Sticky, Full Viewport, Scrollable */
+/* Dark Navy Sidebar - Level with Topbar, Full Viewport Height */
 .admin-sidebar {
     width: 260px;
     background: #0B132B !important;
     border-right: 1px solid rgba(255, 255, 255, 0.06);
-    padding: 1.25rem 1rem;
+    padding: 0 1rem 1.5rem;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -1299,10 +1315,11 @@ textarea.form-control {
     color: #E2E8F0;
     flex-shrink: 0;
     position: sticky;
-    top: 64px;
-    height: calc(100vh - 64px);
+    top: 0;
+    height: 100vh;
     overflow-y: auto;
     overflow-x: hidden;
+    z-index: 1010;
 }
 
 .admin-sidebar::-webkit-scrollbar {
@@ -1317,9 +1334,11 @@ textarea.form-control {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 0.25rem 0.5rem 1.25rem;
+    height: 64px;
+    padding: 0 0.5rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
+    flex-shrink: 0;
 }
 
 .sidebar-brand-icon {
