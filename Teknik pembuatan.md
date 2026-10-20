@@ -56,7 +56,7 @@ Panel Administrator telah dipisahkan menjadi halaman HTML penuh independen (`1 M
 | **Arsip Dokumen** | `public/admin/arsip.html` | Manajemen berkas ujian tersimpan dengan filter horizontal mendatar ke samping (5 filter seleksi detail), tinjau ulang berkas, unduh PDF, dan hapus berkas. |
 | **Pengaturan Sekolah, Kelas & Kop** | `public/admin/pengaturan.html` | Identitas sekolah, upload & update **Logo Sekolah** resmi, upload/reset kop surat resmi, **Master Daftar Kelas** (dengan Export/Import Excel & cascade update ke siswa), **Master Daftar Mata Pelajaran** (dengan Export/Import Excel), dan Master Tahun Ajaran. |
 | **Manajemen User** | `public/admin/users.html` | Kelola akun administrator & operator ujian, kolom password dengan toggle mata, input nama terintegrasi autocomplete Master Guru, proteksi akun utama. |
-| **Database & Backup** | `public/admin/database.html` | Unduh langsung `database.sql`, `db.json`, `Data_Siswa.xlsx` (lengkap nama, kelas, tingkat, program keahlian), `Data_Guru.xlsx` (lengkap NIP, nama, mapel, jabatan), dan metrik kapasitas basis data. |
+| **Database & Backup** | `public/admin/database.html` | Unduh langsung `database.sql`, `db.json`, `Data_Siswa.xlsx` (lengkap nama, kelas, tingkat, program keahlian), `Data_Guru.xlsx` (lengkap No, Nama Lengkap & Gelar, NIP, Mata Pelajaran Diampu, Jabatan / Peran), dan metrik kapasitas basis data. |
 | **Login Administrator** | `public/admin/login.html` | Halaman login dengan tombol toggle mata pada kolom password, proteksi sesi (`sas_admin_auth`), dan multi-user authentication. |
 
 ---
@@ -341,7 +341,7 @@ docker run -d -p 3003:3003 --name web-sas-app web-sas
 
 - Pada menu **Backup & Database SQL** (`public/admin/database.html`):
   - Tombol **Unduh Data_Siswa.xlsx** telah diperbaiki dari properti lama yang tidak sesuai menjadi referensi relasional database yang presisi: `NIS`, `Nama Lengkap Peserta Didik`, `Kelas`, `Tingkat`, dan `Program / Konsentrasi Keahlian`.
-  - Tombol **Unduh Data_Guru.xlsx** kini mengekspor seluruh data guru dan pengawas lengkap dengan: `NIP`, `Nama Lengkap & Gelar`, `Mata Pelajaran Diampu`, dan `Jabatan / Peran`.
+  - Tombol **Unduh Data_Guru.xlsx** kini mengekspor seluruh data guru dan pengawas lengkap dengan urutan standar: `NO`, `Nama Lengkap & Gelar`, `NIP`, `Mata Pelajaran Diampu`, dan `Jabatan / Peran`.
 
 ### 4. Filter Horizontal Mendatar ke Samping pada Arsip Dokumen
 

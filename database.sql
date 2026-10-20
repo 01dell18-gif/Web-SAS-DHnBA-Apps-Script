@@ -1,7 +1,7 @@
 -- ========================================================
 -- DATABASE SCHEMA & MASTER DATA: SISTEM ADMINISTRASI UJIAN
 -- SMK NEGERI FYJ CHANNEL
--- Auto-synchronized: 2026-10-20T04:52:50.186Z
+-- Auto-synchronized: 2026-10-20T06:14:48.089Z
 -- ========================================================
 
 SET FOREIGN_KEY_CHECKS = 0;
@@ -34,8 +34,8 @@ CREATE TABLE `students` (
 
 CREATE TABLE `teachers` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `nip` VARCHAR(50) DEFAULT NULL,
   `nama` VARCHAR(255) NOT NULL,
+  `nip` VARCHAR(50) DEFAULT NULL,
   `mata_pelajaran` VARCHAR(255) DEFAULT '',
   `jabatan` VARCHAR(100) DEFAULT 'Guru / Pengawas',
   `is_active` TINYINT(1) DEFAULT 1,
@@ -94,9 +94,9 @@ CREATE TABLE `exam_archives` (
 
 INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (1, 'XII TKJ', 'XII', 'Teknik Komputer dan Jaringan', 1);
 INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (2, 'XII DKV', 'XII', 'Desain Komunikasi Visual', 1);
-INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (3, 'XII LPKKK 1', 'XII', 'Layanan Penunjang Kefarmasian Klinis dan Komunitas', 1);
+INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (3, 'XII LPKKK 1', 'XII', 'LPKKK', 1);
 INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (4, 'XII LPKKK 2', 'XII', 'Layanan Penunjang Kefarmasian Klinis dan Komunitas', 1);
-INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (5, 'XII BD 1', 'XII', 'Bisnis Digital', 1);
+INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (5, 'XII BD 1', 'XII', 'BD', 1);
 INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (6, 'XII BD 2', 'XII', 'Bisnis Digital', 1);
 INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (7, 'XII MP 1', 'XII', 'Manajemen Perkantoran dan Layanan Bisnis', 1);
 INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (8, 'XII MP 2', 'XII', 'Manajemen Perkantoran dan Layanan Bisnis', 1);
@@ -363,16 +363,16 @@ INSERT INTO `students` (`id`, `class_id`, `nis`, `nama`) VALUES (256, 11, '13795
 INSERT INTO `students` (`id`, `class_id`, `nis`, `nama`) VALUES (257, 11, '13559', 'WIRANTO SANJAYA');
 INSERT INTO `students` (`id`, `class_id`, `nis`, `nama`) VALUES (258, 11, '13560', 'YUSUF ARDIANSYAH');
 
-INSERT INTO `teachers` (`id`, `nip`, `nama`, `mata_pelajaran`, `jabatan`, `is_active`) VALUES (1, '19820514 200801 1 012', 'I Wayan Sukadana, S.Pd.', 'Teknik Jaringan Komputer', 'Guru Madya / Pengawas', 1);
-INSERT INTO `teachers` (`id`, `nip`, `nama`, `mata_pelajaran`, `jabatan`, `is_active`) VALUES (2, '19870921 201101 2 008', 'Ni Made Rai Artini, S.Kom.', 'Desain Komunikasi Visual', 'Guru Muda / Pengawas', 1);
-INSERT INTO `teachers` (`id`, `nip`, `nama`, `mata_pelajaran`, `jabatan`, `is_active`) VALUES (3, '19680315 199412 1 002', 'Drs. I Ketut Suardana, M.Pd.', 'Bahasa Indonesia', 'Guru Pembina / Pengawas', 1);
-INSERT INTO `teachers` (`id`, `nip`, `nama`, `mata_pelajaran`, `jabatan`, `is_active`) VALUES (4, '19841120 200902 2 005', 'Ni Luh Putu Dewi Lestari, S.Pd.', 'Matematika', 'Guru Madya / Pengawas', 1);
-INSERT INTO `teachers` (`id`, `nip`, `nama`, `mata_pelajaran`, `jabatan`, `is_active`) VALUES (5, '19890610 201503 1 004', 'I Made Agus Wira Pratama, S.T.', 'Teknik Sepeda Motor', 'Guru Muda / Pengawas', 1);
-INSERT INTO `teachers` (`id`, `nip`, `nama`, `mata_pelajaran`, `jabatan`, `is_active`) VALUES (6, '19910425 201903 2 011', 'Ni Kadek Sri Wahyuni, S.Farm., Apt.', 'Layanan Penunjang Kefarmasian', 'Guru Pertama / Pengawas', 1);
-INSERT INTO `teachers` (`id`, `nip`, `nama`, `mata_pelajaran`, `jabatan`, `is_active`) VALUES (7, '19780814 200604 1 009', 'I Gusti Ngurah Agung Putra, S.E.', 'Akuntansi dan Keuangan', 'Guru Madya / Pengawas', 1);
-INSERT INTO `teachers` (`id`, `nip`, `nama`, `mata_pelajaran`, `jabatan`, `is_active`) VALUES (8, '19860112 201001 2 018', 'Ni Putu Eka Yuliani, S.Pd.', 'Manajemen Perkantoran', 'Guru Muda / Pengawas', 1);
-INSERT INTO `teachers` (`id`, `nip`, `nama`, `mata_pelajaran`, `jabatan`, `is_active`) VALUES (9, '19920818 202012 1 007', 'I Komang Yudi Antara, S.Kom.', 'Bisnis Digital', 'Guru Pertama / Pengawas', 1);
-INSERT INTO `teachers` (`id`, `nip`, `nama`, `mata_pelajaran`, `jabatan`, `is_active`) VALUES (10, '19800722 200501 1 006', 'Ida Bagus Made Ananda, S.Pd.', 'Bahasa Inggris', 'Guru Madya / Pengawas', 1);
+INSERT INTO `teachers` (`id`, `nama`, `nip`, `mata_pelajaran`, `jabatan`, `is_active`) VALUES (1, 'I Wayan Sukadana, S.Pd.', '19820514 200801 1 012', 'Teknik Jaringan Komputer', 'Guru Madya / Pengawas', 1);
+INSERT INTO `teachers` (`id`, `nama`, `nip`, `mata_pelajaran`, `jabatan`, `is_active`) VALUES (2, 'Ni Made Rai Artini, S.Kom.', '19870921 201101 2 008', 'Desain Komunikasi Visual', 'Guru Muda / Pengawas', 1);
+INSERT INTO `teachers` (`id`, `nama`, `nip`, `mata_pelajaran`, `jabatan`, `is_active`) VALUES (3, 'Drs. I Ketut Suardana, M.Pd.', '19680315 199412 1 002', 'Bahasa Indonesia', 'Guru Pembina / Pengawas', 1);
+INSERT INTO `teachers` (`id`, `nama`, `nip`, `mata_pelajaran`, `jabatan`, `is_active`) VALUES (4, 'Ni Luh Putu Dewi Lestari, S.Pd.', '19841120 200902 2 005', 'Matematika', 'Guru Madya / Pengawas', 1);
+INSERT INTO `teachers` (`id`, `nama`, `nip`, `mata_pelajaran`, `jabatan`, `is_active`) VALUES (5, 'I Made Agus Wira Pratama, S.T.', '19890610 201503 1 004', 'Teknik Sepeda Motor', 'Guru Muda / Pengawas', 1);
+INSERT INTO `teachers` (`id`, `nama`, `nip`, `mata_pelajaran`, `jabatan`, `is_active`) VALUES (6, 'Ni Kadek Sri Wahyuni, S.Farm., Apt.', '19910425 201903 2 011', 'Layanan Penunjang Kefarmasian', 'Guru Pertama / Pengawas', 1);
+INSERT INTO `teachers` (`id`, `nama`, `nip`, `mata_pelajaran`, `jabatan`, `is_active`) VALUES (7, 'I Gusti Ngurah Agung Putra, S.E.', '19780814 200604 1 009', 'Akuntansi dan Keuangan', 'Guru Madya / Pengawas', 1);
+INSERT INTO `teachers` (`id`, `nama`, `nip`, `mata_pelajaran`, `jabatan`, `is_active`) VALUES (8, 'Ni Putu Eka Yuliani, S.Pd.', '19860112 201001 2 018', 'Manajemen Perkantoran', 'Guru Muda / Pengawas', 1);
+INSERT INTO `teachers` (`id`, `nama`, `nip`, `mata_pelajaran`, `jabatan`, `is_active`) VALUES (9, 'I Komang Yudi Antara, S.Kom.', '19920818 202012 1 007', 'Bisnis Digital', 'Guru Pertama / Pengawas', 1);
+INSERT INTO `teachers` (`id`, `nama`, `nip`, `mata_pelajaran`, `jabatan`, `is_active`) VALUES (10, 'Ida Bagus Made Ananda, S.Pd.', '19800722 200501 1 006', 'Bahasa Inggris', 'Guru Madya / Pengawas', 1);
 
 INSERT INTO `exam_templates` (`id`, `nama_ujian`, `tahun_ajaran`, `semester`, `judul_berita_acara`, `redaksi_isi`, `aktif`) VALUES (1, 'Sumatif Akhir Semester (SAS)', '2026/2027', 'Ganjil', 'BERITA ACARA \nPENYELENGGARAAN SUMATIF AKHIR SEMESTER (SAS) GANJIL\nTAHUN AJARAN [tahun_ajaran]', '<p>Pada hari ini [hari], tanggal [tanggal] ([tanggal_teks]) bulan [bulan] tahun [tahun] ([tahun_teks]):</p>\n<ol style="margin-top: 6px; margin-bottom: 12px;">\n<li style="margin-bottom: 8px;">Telah diselenggarakan [nama_ujian] Tahun Ajaran [tahun_ajaran] dari pukul [jam_mulai] sampai dengan pukul [jam_selesai] WITA.\n<ul style="margin-bottom: 6px; margin-left: 20px; list-style-type: disc;">\n<li>Pada Sekolah:&nbsp;<strong>[sekolah]</strong></li>\n<li>Kelas:&nbsp;<strong>[kelas]</strong></li>\n<li>Mata Pelajaran:&nbsp;<strong>[mata_pelajaran]</strong></li>\n<li>Ruang:&nbsp;<strong>[ruang]</strong></li>\n<li>Jumlah Peserta Seharusnya:&nbsp;<strong>[peserta_seharusnya]</strong>&nbsp;orang</li>\n<li>Jumlah Peserta yang Tidak Hadir:&nbsp;<strong>[peserta_tidak_hadir]</strong>&nbsp;orang</li>\n<li>Jumlah Peserta yang Hadir:&nbsp;<strong>[peserta_hadir]</strong>&nbsp;orang</li>\n</ul>\n</li>\n<li style="margin-bottom: 8px;">Catatan selama pelaksanaan ujian (kendala teknis, kejadian khusus, atau keterangan lain):[catatan_pelaksanaan]</li>\n<li style="margin-bottom: 8px;">Catatan selama pelaksanaan ujian (kendala teknis, kejadian khusus, atau keterangan lain):<br><em>[catatan_pelaksanaan]</em></li>\n</ol>\n<p style="margin-top: 15px;">Demikian Berita Acara ini dibuat dengan sesungguhnya.</p>\n<p style="margin-top: 15px;"><span style="font-size: 14.6667px;"><br></span></p>\n<p style="text-align: center; margin-top: 15px;"><span style="font-size: 14.6667px;">Yang membuat berita acara :</span></p>', 1);
 INSERT INTO `exam_templates` (`id`, `nama_ujian`, `tahun_ajaran`, `semester`, `judul_berita_acara`, `redaksi_isi`, `aktif`) VALUES (2, 'Sumatif Akhir Semester (SAS)', '2026/2027', 'Genap', 'BERITA ACARA \nPENYELENGGARAAN SUMATIF AKHIR SEMESTER (SAS) GENAP\nTAHUN AJARAN [tahun_ajaran]', '<p>Pada hari ini [hari], tanggal [tanggal] ([tanggal_teks]) bulan [bulan] tahun [tahun] ([tahun_teks]):</p>\n<ol style="margin-top: 6px; margin-bottom: 12px;">\n<li style="margin-bottom: 8px;">Telah diselenggarakan [nama_ujian] Tahun Ajaran [tahun_ajaran] dari pukul [jam_mulai] sampai dengan pukul [jam_selesai] WITA.\n<ul style="margin-bottom: 6px; margin-left: 20px; list-style-type: disc;">\n<li>Pada Sekolah:&nbsp;<strong>[sekolah]</strong></li>\n<li>Kelas:&nbsp;<strong>[kelas]</strong></li>\n<li>Mata Pelajaran:&nbsp;<strong>[mata_pelajaran]</strong></li>\n<li>Ruang:&nbsp;<strong>[ruang]</strong></li>\n<li>Jumlah Peserta Seharusnya:&nbsp;<strong>[peserta_seharusnya]</strong>&nbsp;orang</li>\n<li>Jumlah Peserta yang Tidak Hadir:&nbsp;<strong>[peserta_tidak_hadir]</strong>&nbsp;orang</li>\n<li>Jumlah Peserta yang Hadir:&nbsp;<strong>[peserta_hadir]</strong>&nbsp;orang</li>\n</ul>\n</li>\n<li style="margin-bottom: 8px;">Catatan selama pelaksanaan ujian (kendala teknis, kejadian khusus, atau keterangan lain):[catatan_pelaksanaan]</li>\n<li style="margin-bottom: 8px;">Catatan selama pelaksanaan ujian (kendala teknis, kejadian khusus, atau keterangan lain):<br><em>[catatan_pelaksanaan]</em></li>\n</ol>\n<p style="margin-top: 15px;">Demikian Berita Acara ini dibuat dengan sesungguhnya.</p>\n<p style="margin-top: 15px;"><span style="font-size: 14.6667px;"><br></span></p>\n<p style="text-align: center; margin-top: 15px;"><span style="font-size: 14.6667px;">Yang membuat berita acara :</span></p>', 1);

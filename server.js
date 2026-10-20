@@ -123,8 +123,8 @@ function syncSqlFile(data) {
         // Teachers Table
         lines.push('CREATE TABLE `teachers` (');
         lines.push('  `id` INT AUTO_INCREMENT PRIMARY KEY,');
-        lines.push('  `nip` VARCHAR(50) DEFAULT NULL,');
         lines.push('  `nama` VARCHAR(255) NOT NULL,');
+        lines.push('  `nip` VARCHAR(50) DEFAULT NULL,');
         lines.push('  `mata_pelajaran` VARCHAR(255) DEFAULT \'\',');
         lines.push('  `jabatan` VARCHAR(100) DEFAULT \'Guru / Pengawas\',');
         lines.push('  `is_active` TINYINT(1) DEFAULT 1,');
@@ -204,7 +204,7 @@ function syncSqlFile(data) {
         // Insert Teachers
         if (Array.isArray(data.teachers)) {
             data.teachers.forEach(t => {
-                lines.push(`INSERT INTO \`teachers\` (\`id\`, \`nip\`, \`nama\`, \`mata_pelajaran\`, \`jabatan\`, \`is_active\`) VALUES (${t.id}, ${esc(t.nip || '')}, ${esc(t.nama)}, ${esc(t.mapel || t.mata_pelajaran || '')}, ${esc(t.jabatan || 'Guru / Pengawas')}, 1);`);
+                lines.push(`INSERT INTO \`teachers\` (\`id\`, \`nama\`, \`nip\`, \`mata_pelajaran\`, \`jabatan\`, \`is_active\`) VALUES (${t.id}, ${esc(t.nama)}, ${esc(t.nip || '')}, ${esc(t.mapel || t.mata_pelajaran || '')}, ${esc(t.jabatan || 'Guru / Pengawas')}, 1);`);
             });
             lines.push('');
         }

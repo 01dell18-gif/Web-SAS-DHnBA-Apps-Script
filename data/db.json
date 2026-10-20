@@ -18,7 +18,7 @@
       "id": 3,
       "nama_kelas": "XII LPKKK 1",
       "tingkat": "XII",
-      "program_keahlian": "Layanan Penunjang Kefarmasian Klinis dan Komunitas",
+      "program_keahlian": "LPKKK",
       "is_active": 1
     },
     {
@@ -32,7 +32,7 @@
       "id": 5,
       "nama_kelas": "XII BD 1",
       "tingkat": "XII",
-      "program_keahlian": "Bisnis Digital",
+      "program_keahlian": "BD",
       "is_active": 1
     },
     {
@@ -341,127 +341,169 @@
       "id": 44,
       "class_id": 3,
       "nis": "13582",
-      "nama": "Agus Billy Fedrico"
+      "nama": "Agus Billy Fedrico",
+      "kelas": "XII LPKKK 1",
+      "nama_kelas": "XII LPKKK 1"
     },
     {
       "id": 45,
       "class_id": 3,
       "nis": "13583",
-      "nama": "Agus Eka Widya Pradnyana"
+      "nama": "Agus Eka Widya Pradnyana",
+      "kelas": "XII LPKKK 1",
+      "nama_kelas": "XII LPKKK 1"
     },
     {
       "id": 46,
       "class_id": 3,
       "nis": "13584",
-      "nama": "Dewa Ayu Sri Widyastuti"
+      "nama": "Dewa Ayu Sri Widyastuti",
+      "kelas": "XII LPKKK 1",
+      "nama_kelas": "XII LPKKK 1"
     },
     {
       "id": 47,
       "class_id": 3,
       "nis": "13585",
-      "nama": "I Dewa Ayu Dwi Cahya Indrayani"
+      "nama": "I Dewa Ayu Dwi Cahya Indrayani",
+      "kelas": "XII LPKKK 1",
+      "nama_kelas": "XII LPKKK 1"
     },
     {
       "id": 48,
       "class_id": 3,
       "nis": "13586",
-      "nama": "I Komang Edi Setiawan."
+      "nama": "I Komang Edi Setiawan.",
+      "kelas": "XII LPKKK 1",
+      "nama_kelas": "XII LPKKK 1"
     },
     {
       "id": 49,
       "class_id": 3,
       "nis": "13587",
-      "nama": "Ida Ayu Putu Diah Kamiswari"
+      "nama": "Ida Ayu Putu Diah Kamiswari",
+      "kelas": "XII LPKKK 1",
+      "nama_kelas": "XII LPKKK 1"
     },
     {
       "id": 50,
       "class_id": 3,
       "nis": "13588",
-      "nama": "Luh Ade Galuh Pratiwi"
+      "nama": "Luh Ade Galuh Pratiwi",
+      "kelas": "XII LPKKK 1",
+      "nama_kelas": "XII LPKKK 1"
     },
     {
       "id": 51,
       "class_id": 3,
       "nis": "13589",
-      "nama": "Munifa Inayatur Rohma"
+      "nama": "Munifa Inayatur Rohma",
+      "kelas": "XII LPKKK 1",
+      "nama_kelas": "XII LPKKK 1"
     },
     {
       "id": 52,
       "class_id": 3,
       "nis": "13590",
-      "nama": "Ni Kadek Ayu Arsani"
+      "nama": "Ni Kadek Ayu Arsani",
+      "kelas": "XII LPKKK 1",
+      "nama_kelas": "XII LPKKK 1"
     },
     {
       "id": 53,
       "class_id": 3,
       "nis": "13591",
-      "nama": "Ni Kadek Diah Dwi Adnyani"
+      "nama": "Ni Kadek Diah Dwi Adnyani",
+      "kelas": "XII LPKKK 1",
+      "nama_kelas": "XII LPKKK 1"
     },
     {
       "id": 54,
       "class_id": 3,
       "nis": "13592",
-      "nama": "Ni Kadek Dian Candra Pratiwi"
+      "nama": "Ni Kadek Dian Candra Pratiwi",
+      "kelas": "XII LPKKK 1",
+      "nama_kelas": "XII LPKKK 1"
     },
     {
       "id": 55,
       "class_id": 3,
       "nis": "13593",
-      "nama": "Ni Kadek Evinayanti"
+      "nama": "Ni Kadek Evinayanti",
+      "kelas": "XII LPKKK 1",
+      "nama_kelas": "XII LPKKK 1"
     },
     {
       "id": 56,
       "class_id": 3,
       "nis": "13595",
-      "nama": "Ni Komang Ayu Santika"
+      "nama": "Ni Komang Ayu Santika",
+      "kelas": "XII LPKKK 1",
+      "nama_kelas": "XII LPKKK 1"
     },
     {
       "id": 57,
       "class_id": 3,
       "nis": "13596",
-      "nama": "Ni Komang Widya Krista Yanti"
+      "nama": "Ni Komang Widya Krista Yanti",
+      "kelas": "XII LPKKK 1",
+      "nama_kelas": "XII LPKKK 1"
     },
     {
       "id": 58,
       "class_id": 3,
       "nis": "13597",
-      "nama": "Ni Made Juniari"
+      "nama": "Ni Made Juniari",
+      "kelas": "XII LPKKK 1",
+      "nama_kelas": "XII LPKKK 1"
     },
     {
       "id": 59,
       "class_id": 3,
       "nis": "13598",
-      "nama": "Ni Made Shita Wulandari"
+      "nama": "Ni Made Shita Wulandari",
+      "kelas": "XII LPKKK 1",
+      "nama_kelas": "XII LPKKK 1"
     },
     {
       "id": 60,
       "class_id": 3,
       "nis": "13599",
-      "nama": "Ni Putu Intan Merliani Putri"
+      "nama": "Ni Putu Intan Merliani Putri",
+      "kelas": "XII LPKKK 1",
+      "nama_kelas": "XII LPKKK 1"
     },
     {
       "id": 61,
       "class_id": 3,
       "nis": "13600",
-      "nama": "Ni Putu Novi Armatiana"
+      "nama": "Ni Putu Novi Armatiana",
+      "kelas": "XII LPKKK 1",
+      "nama_kelas": "XII LPKKK 1"
     },
     {
       "id": 62,
       "class_id": 3,
       "nis": "13601",
-      "nama": "Ni Wayan Ani Arthayasih"
+      "nama": "Ni Wayan Ani Arthayasih",
+      "kelas": "XII LPKKK 1",
+      "nama_kelas": "XII LPKKK 1"
     },
     {
       "id": 63,
       "class_id": 3,
       "nis": "13602",
-      "nama": "Ni Wayan Nanda Pradnya Suari"
+      "nama": "Ni Wayan Nanda Pradnya Suari",
+      "kelas": "XII LPKKK 1",
+      "nama_kelas": "XII LPKKK 1"
     },
     {
       "id": 64,
       "class_id": 3,
       "nis": "13603",
-      "nama": "Yoneda Yebleb"
+      "nama": "Yoneda Yebleb",
+      "kelas": "XII LPKKK 1",
+      "nama_kelas": "XII LPKKK 1"
     },
     {
       "id": 65,
@@ -581,175 +623,233 @@
       "id": 84,
       "class_id": 5,
       "nis": "13625",
-      "nama": "Dewa Ayu Made Dwi Artika Darmayanti"
+      "nama": "Dewa Ayu Made Dwi Artika Darmayanti",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 85,
       "class_id": 5,
       "nis": "13626",
-      "nama": "I Gede Adi Putra"
+      "nama": "I Gede Adi Putra",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 86,
       "class_id": 5,
       "nis": "13627",
-      "nama": "I Gusti Ayu Wika Ariestari"
+      "nama": "I Gusti Ayu Wika Ariestari",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 87,
       "class_id": 5,
       "nis": "13628",
-      "nama": "I Gusti Ngurah Wijana"
+      "nama": "I Gusti Ngurah Wijana",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 88,
       "class_id": 5,
       "nis": "13629",
-      "nama": "I Kadek Yogi Iswara"
+      "nama": "I Kadek Yogi Iswara",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 89,
       "class_id": 5,
       "nis": "13630",
-      "nama": "I Nyoman Candra Paranarta"
+      "nama": "I Nyoman Candra Paranarta",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 90,
       "class_id": 5,
       "nis": "13631",
-      "nama": "Kadek Suki Oktami"
+      "nama": "Kadek Suki Oktami",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 91,
       "class_id": 5,
       "nis": "13632",
-      "nama": "Luh Desiyani"
+      "nama": "Luh Desiyani",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 92,
       "class_id": 5,
       "nis": "13633",
-      "nama": "Ni Kadek Ayu Dwipayani"
+      "nama": "Ni Kadek Ayu Dwipayani",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 93,
       "class_id": 5,
       "nis": "13634",
-      "nama": "Ni Kadek Sanjiani"
+      "nama": "Ni Kadek Sanjiani",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 94,
       "class_id": 5,
       "nis": "13635",
-      "nama": "Ni Kadek Widiantari"
+      "nama": "Ni Kadek Widiantari",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 95,
       "class_id": 5,
       "nis": "13636",
-      "nama": "Ni Komang Ayu Intan Pratiwi"
+      "nama": "Ni Komang Ayu Intan Pratiwi",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 96,
       "class_id": 5,
       "nis": "13637",
-      "nama": "Ni Komang Henny Herdi Yani"
+      "nama": "Ni Komang Henny Herdi Yani",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 97,
       "class_id": 5,
       "nis": "13638",
-      "nama": "Ni Komang Purnama Sari"
+      "nama": "Ni Komang Purnama Sari",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 98,
       "class_id": 5,
       "nis": "13639",
-      "nama": "Ni Komang Sri Damayanti"
+      "nama": "Ni Komang Sri Damayanti",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 99,
       "class_id": 5,
       "nis": "13640",
-      "nama": "Ni Komang Trisna Yuni Astari"
+      "nama": "Ni Komang Trisna Yuni Astari",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 100,
       "class_id": 5,
       "nis": "13641",
-      "nama": "Ni Luh Putu Frema Sugi Maharani"
+      "nama": "Ni Luh Putu Frema Sugi Maharani",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 101,
       "class_id": 5,
       "nis": "13642",
-      "nama": "Ni Made Sari Astini"
+      "nama": "Ni Made Sari Astini",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 102,
       "class_id": 5,
       "nis": "13643",
-      "nama": "Ni Made Sukma Yanti"
+      "nama": "Ni Made Sukma Yanti",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 103,
       "class_id": 5,
       "nis": "13644",
-      "nama": "Ni Nyoman Manik Dalem Maharani"
+      "nama": "Ni Nyoman Manik Dalem Maharani",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 104,
       "class_id": 5,
       "nis": "13645",
-      "nama": "Ni Putu Eka Candra Dewi"
+      "nama": "Ni Putu Eka Candra Dewi",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 105,
       "class_id": 5,
       "nis": "13646",
-      "nama": "Ni Putu Sari Astuti"
+      "nama": "Ni Putu Sari Astuti",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 106,
       "class_id": 5,
       "nis": "13647",
-      "nama": "Ni Putu Sariasih"
+      "nama": "Ni Putu Sariasih",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 107,
       "class_id": 5,
       "nis": "13648",
-      "nama": "Ni Putu Selpi"
+      "nama": "Ni Putu Selpi",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 108,
       "class_id": 5,
       "nis": "13649",
-      "nama": "Ni Putu Sinta Purnama Yanti"
+      "nama": "Ni Putu Sinta Purnama Yanti",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 109,
       "class_id": 5,
       "nis": "13650",
-      "nama": "Putu Agus Mahendra"
+      "nama": "Putu Agus Mahendra",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 110,
       "class_id": 5,
       "nis": "13651",
-      "nama": "Putu Aryadinata"
+      "nama": "Putu Aryadinata",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 111,
       "class_id": 5,
       "nis": "13652",
-      "nama": "Putu Purnamawati"
+      "nama": "Putu Purnamawati",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 112,
       "class_id": 5,
       "nis": "13653",
-      "nama": "Rizki Ananta Ramadhani"
+      "nama": "Rizki Ananta Ramadhani",
+      "kelas": "XII BD 1",
+      "nama_kelas": "XII BD 1"
     },
     {
       "id": 113,
@@ -1706,71 +1806,71 @@
   "teachers": [
     {
       "id": 1,
-      "nip": "19820514 200801 1 012",
       "nama": "I Wayan Sukadana, S.Pd.",
+      "nip": "19820514 200801 1 012",
       "mapel": "Teknik Jaringan Komputer",
       "jabatan": "Guru Madya / Pengawas"
     },
     {
       "id": 2,
-      "nip": "19870921 201101 2 008",
       "nama": "Ni Made Rai Artini, S.Kom.",
+      "nip": "19870921 201101 2 008",
       "mapel": "Desain Komunikasi Visual",
       "jabatan": "Guru Muda / Pengawas"
     },
     {
       "id": 3,
-      "nip": "19680315 199412 1 002",
       "nama": "Drs. I Ketut Suardana, M.Pd.",
+      "nip": "19680315 199412 1 002",
       "mapel": "Bahasa Indonesia",
       "jabatan": "Guru Pembina / Pengawas"
     },
     {
       "id": 4,
-      "nip": "19841120 200902 2 005",
       "nama": "Ni Luh Putu Dewi Lestari, S.Pd.",
+      "nip": "19841120 200902 2 005",
       "mapel": "Matematika",
       "jabatan": "Guru Madya / Pengawas"
     },
     {
       "id": 5,
-      "nip": "19890610 201503 1 004",
       "nama": "I Made Agus Wira Pratama, S.T.",
+      "nip": "19890610 201503 1 004",
       "mapel": "Teknik Sepeda Motor",
       "jabatan": "Guru Muda / Pengawas"
     },
     {
       "id": 6,
-      "nip": "19910425 201903 2 011",
       "nama": "Ni Kadek Sri Wahyuni, S.Farm., Apt.",
+      "nip": "19910425 201903 2 011",
       "mapel": "Layanan Penunjang Kefarmasian",
       "jabatan": "Guru Pertama / Pengawas"
     },
     {
       "id": 7,
-      "nip": "19780814 200604 1 009",
       "nama": "I Gusti Ngurah Agung Putra, S.E.",
+      "nip": "19780814 200604 1 009",
       "mapel": "Akuntansi dan Keuangan",
       "jabatan": "Guru Madya / Pengawas"
     },
     {
       "id": 8,
-      "nip": "19860112 201001 2 018",
       "nama": "Ni Putu Eka Yuliani, S.Pd.",
+      "nip": "19860112 201001 2 018",
       "mapel": "Manajemen Perkantoran",
       "jabatan": "Guru Muda / Pengawas"
     },
     {
       "id": 9,
-      "nip": "19920818 202012 1 007",
       "nama": "I Komang Yudi Antara, S.Kom.",
+      "nip": "19920818 202012 1 007",
       "mapel": "Bisnis Digital",
       "jabatan": "Guru Pertama / Pengawas"
     },
     {
       "id": 10,
-      "nip": "19800722 200501 1 006",
       "nama": "Ida Bagus Made Ananda, S.Pd.",
+      "nip": "19800722 200501 1 006",
       "mapel": "Bahasa Inggris",
       "jabatan": "Guru Madya / Pengawas"
     }

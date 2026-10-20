@@ -239,7 +239,7 @@
         </div>
 
         <div style="background: var(--slate-100); border-radius: var(--radius-sm); padding: 12px; font-size: 0.84rem; margin-bottom: 1.25rem;">
-            <strong>Format Kolom Excel:</strong> <code>NIP</code>, <code>NAMA</code>, <code>MAPEL</code>, <code>JABATAN</code>.
+            <strong>Format Kolom Excel:</strong> <code>NO</code>, <code>NAMA</code>, <code>NIP</code>, <code>MAPEL</code>, <code>JABATAN</code>.
         </div>
 
         <div class="form-group">
@@ -263,6 +263,15 @@
             <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 6px;" id="importTeacherSummaryText">Pratinjau Data Guru:</div>
             <div style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm);">
                 <table class="table" style="font-size: 0.8rem; margin: 0;">
+                    <thead>
+                        <tr style="background: var(--slate-100); font-weight: 700; border-bottom: 1px solid var(--border);">
+                            <th style="width: 45px;">No</th>
+                            <th>Nama Lengkap & Gelar</th>
+                            <th>NIP</th>
+                            <th>Mata Pelajaran</th>
+                            <th>Jabatan / Peran</th>
+                        </tr>
+                    </thead>
                     <tbody id="importTeacherPreviewTableBody"></tbody>
                 </table>
             </div>
@@ -514,14 +523,14 @@ async function submitTeacherForm(e) {
     if (idVal) {
         const existing = db.teachers.find(t => String(t.id) === String(idVal));
         if (existing) {
-            existing.nip = nipVal;
             existing.nama = namaVal;
+            existing.nip = nipVal;
             existing.mapel = mapelVal;
             existing.jabatan = jabatanVal;
         }
     } else {
         const newId = db.teachers.reduce((max, t) => Math.max(max, Number(t.id) || 0), 0) + 1;
-        db.teachers.push({ id: newId, nip: nipVal, nama: namaVal, mapel: mapelVal, jabatan: jabatanVal });
+        db.teachers.push({ id: newId, nama: namaVal, nip: nipVal, mapel: mapelVal, jabatan: jabatanVal });
     }
 
     const res = await saveAdminDatabase({ teachers: db.teachers });
@@ -616,17 +625,17 @@ function exportTeachersExcel() {
         showToast('Belum ada data guru untuk diekspor.', 'danger');
         return;
     }
-    // Sertakan SEMUA data dewan guru dan pengawas dari basis data secara lengkap
+    // Urutan kolom konsisten: NO, NAMA, NIP, MAPEL, JABATAN
     const rows = (db.teachers || []).map((t, idx) => ({
         'NO': idx + 1,
-        'NIP': t.nip ? String(t.nip) : '',
         'NAMA': t.nama || '',
+        'NIP': t.nip ? String(t.nip) : '',
         'MAPEL': t.mapel || t.mata_pelajaran || '',
         'JABATAN': t.jabatan || 'Guru Mata Pelajaran'
     }));
 
     const ws = XLSX.utils.json_to_sheet(rows);
-    ws['!cols'] = [{ wch: 6 }, { wch: 24 }, { wch: 35 }, { wch: 28 }, { wch: 25 }];
+    ws['!cols'] = [{ wch: 6 }, { wch: 35 }, { wch: 24 }, { wch: 28 }, { wch: 25 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'DATA_GURU');
     XLSX.writeFile(wb, 'Data_Guru_Pengawas_SMK_NEGERI_FYJ_CHANNEL.xlsx');
@@ -647,11 +656,11 @@ function closeImportTeachersModal() {
 
 function downloadTeacherExcelTemplate() {
     const sampleRows = [
-        { 'NIP': '198205142008011012', 'NAMA': 'I Wayan Sukadana, S.Pd.', 'MAPEL': 'Desain Komunikasi Visual', 'JABATAN': 'Guru Produktif DKV' },
-        { 'NIP': '198709212011012008', 'NAMA': 'Ni Made Rai Artini, S.Kom.', 'MAPEL': 'Animasi 2D & 3D', 'JABATAN': 'Wali Kelas / Guru Produktif' }
+        { 'NO': 1, 'NAMA': 'I Wayan Sukadana, S.Pd.', 'NIP': '19820514 200801 1 012', 'MAPEL': 'Desain Komunikasi Visual', 'JABATAN': 'Guru Produktif DKV' },
+        { 'NO': 2, 'NAMA': 'Ni Made Rai Artini, S.Kom.', 'NIP': '19870921 201101 2 008', 'MAPEL': 'Animasi 2D & 3D', 'JABATAN': 'Wali Kelas / Guru Produktif' }
     ];
     const ws = XLSX.utils.json_to_sheet(sampleRows);
-    ws['!cols'] = [{ wch: 24 }, { wch: 35 }, { wch: 28 }, { wch: 25 }];
+    ws['!cols'] = [{ wch: 6 }, { wch: 35 }, { wch: 24 }, { wch: 28 }, { wch: 25 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'TEMPLATE_GURU');
     XLSX.writeFile(wb, 'Template_Import_Guru_SMK_NEGERI_FYJ_CHANNEL.xlsx');
@@ -672,7 +681,7 @@ function handleTeacherExcelFileSelected(event) {
 
             parsedTeacherExcelData = [];
             json.forEach(row => {
-                let nip = '', nama = '', mapel = '', jabatan = 'Guru Mata Pelajaran';
+                let nama = '', nip = '', mapel = '', jabatan = 'Guru Mata Pelajaran';
                 for (const [key, val] of Object.entries(row)) {
                     const k = key.trim().toUpperCase();
                     const v = String(val).trim();
@@ -681,7 +690,7 @@ function handleTeacherExcelFileSelected(event) {
                     else if (k.includes('MAPEL') || k.includes('PELAJARAN')) mapel = v;
                     else if (k.includes('JABATAN') || k.includes('PERAN')) jabatan = v;
                 }
-                if (nama) parsedTeacherExcelData.push({ nip, nama, mapel, jabatan });
+                if (nama) parsedTeacherExcelData.push({ nama, nip, mapel, jabatan });
             });
 
             if (parsedTeacherExcelData.length === 0) {
@@ -695,8 +704,8 @@ function handleTeacherExcelFileSelected(event) {
                 tbody.innerHTML += `
                     <tr>
                         <td>${i + 1}</td>
-                        <td><code>${t.nip || '-'}</code></td>
                         <td><strong>${t.nama}</strong></td>
+                        <td><code>${t.nip || '-'}</code></td>
                         <td>${t.mapel || '-'}</td>
                         <td>${t.jabatan || '-'}</td>
                     </tr>
@@ -729,12 +738,13 @@ async function executeImportTeachers() {
         );
 
         if (existing) {
+            existing.nama = item.nama || existing.nama;
             existing.nip = item.nip || existing.nip;
             existing.mapel = item.mapel || existing.mapel;
             existing.jabatan = item.jabatan || existing.jabatan;
             updated++;
         } else {
-            db.teachers.push({ id: nextId++, nip: item.nip, nama: item.nama, mapel: item.mapel, jabatan: item.jabatan });
+            db.teachers.push({ id: nextId++, nama: item.nama, nip: item.nip, mapel: item.mapel, jabatan: item.jabatan });
             added++;
         }
     });
