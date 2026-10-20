@@ -42,14 +42,14 @@ Panel Administrator telah dipisahkan menjadi halaman HTML penuh independen (`1 M
 
 | Halaman | Lokasi Berkas | Deskripsi & Fungsi Utama |
 |---|---|---|
-| **Dashboard** | `public/admin/index.html` | Ringkasan statistik, status database, pintasan menu cepat. |
-| **Siswa & Kelas** | `public/admin/siswa.html` | Master 11 kelas, 258 siswa, filter kelas, export/import Excel (.xlsx), tambah/edit/hapus siswa, hapus massal per kelas atau hapus semua data siswa. |
-| **Guru & Pengawas** | `public/admin/guru.html` | Master dewan guru & pengawas ujian, export/import Excel (.xlsx), autocomplete nama dan otomatisasi pengisian NIP. |
+| **Dashboard** | `public/admin/index.html` | Ringkasan statistik (menghitung Total Kelas Aktif yang memiliki siswa), status database, pintasan menu cepat. |
+| **Siswa & Kelas** | `public/admin/siswa.html` | Master siswa & kelas dinamis, auto-register kelas baru saat input manual/impor Excel, export/import Excel (.xlsx), hapus siswa, dan hapus massal. |
+| **Guru & Pengawas** | `public/admin/guru.html` | Master dewan guru & pengawas ujian, export/import Excel (.xlsx), autocomplete nama dan otomatisasi pengisian NIP, tombol **Hapus Data Guru**. |
 | **Template Ujian** | `public/admin/template.html` | Redaksi HTML berita acara, variabel dinamis (`[semester]`, `[tahun_ajaran]`, `[tanggal]`, dll.), riwayat template, pratinjau live. |
 | **Arsip Dokumen** | `public/admin/arsip.html` | Manajemen berkas ujian tersimpan dengan 5 filter seleksi detail, tinjau ulang berkas, unduh PDF, dan hapus berkas. |
-| **Pengaturan & Kop** | `public/admin/pengaturan.html` | Identitas sekolah, dropdown tahun ajaran aktif dinamis, master mata pelajaran resmi, master daftar tahun ajaran, dan upload/reset kop surat resmi. |
+| **Pengaturan Sekolah, Kelas & Kop** | `public/admin/pengaturan.html` | Identitas sekolah, upload & update **Logo Sekolah** resmi, upload/reset kop surat resmi, **Master Daftar Kelas** (dengan Export/Import Excel), **Master Daftar Mata Pelajaran** (dengan Export/Import Excel), dan Master Tahun Ajaran. |
 | **Manajemen User** | `public/admin/users.html` | Kelola akun administrator & operator ujian, pengaturan kata sandi dengan toggle mata, proteksi akun utama. |
-| **Database & Backup** | `public/admin/database.html` | Unduh langsung `database.sql`, `db.json`, `Data_Siswa.xlsx`, dan metrik kapasitas basis data. |
+| **Database & Backup** | `public/admin/database.html` | Unduh langsung `database.sql`, `db.json`, `Data_Siswa.xlsx`, `Data_Guru.xlsx`, dan metrik kapasitas basis data. |
 | **Login Administrator** | `public/admin/login.html` | Halaman login dengan tombol toggle mata pada kolom password, proteksi sesi (`sas_admin_auth`), dan multi-user authentication. |
 
 ---
@@ -72,12 +72,12 @@ web-sas-dh-n-beritaacara/
     ├── berita-acara.html        # Generator Berita Acara Ujian
     ├── arsip.html               # Arsip Dokumen Publik (5 Filter Detail)
     ├── admin/                   # Modul Panel Administrator Terpisah
-    │   ├── index.html           # Dashboard Admin
-    │   ├── siswa.html           # Master Siswa & Kelas
-    │   ├── guru.html            # Master Guru & Pengawas
+    │   ├── index.html           # Dashboard Admin (Total Kelas Aktif Berbasis Siswa)
+    │   ├── siswa.html           # Master Siswa & Kelas (Auto-Register Kelas)
+    │   ├── guru.html            # Master Guru & Pengawas (Tombol Hapus Data Guru)
     │   ├── template.html        # Template Ujian & Redaksi
     │   ├── arsip.html           # Arsip Dokumen Admin
-    │   ├── pengaturan.html      # Pengaturan Sekolah, Mapel, Tahun, & Kop
+    │   ├── pengaturan.html      # Pengaturan Sekolah, Logo, Kop, Kelas & Mapel (Export/Import .xlsx)
     │   ├── users.html           # Manajemen Akun User & Hak Akses
     │   ├── database.html        # Backup & Ekspor Basis Data
     │   └── login.html           # Login Admin (Password Eye Toggle)
@@ -94,15 +94,16 @@ web-sas-dh-n-beritaacara/
         │   └── xlsx.full.min.js # SheetJS offline untuk export/import Excel
         └── img/
             ├── logo.png         # Logo resmi SMK Negeri 1 Klungkung
+            ├── logo-default.png # Cadangan logo sekolah bawaan
             ├── kop-header.png   # Kop surat aktif
-            └── kop-default.png  # Cadangan kop surat bawaan pabrik
+            └── kop-header-default.png # Cadangan kop surat bawaan pabrik
 ```
 
 ---
 
 ## 5. MEKANISME BASIS DATA & SINKRONISASI OTOMATIS
 1. **JSON Primary Source of Truth (`data/db.json`)**:
-   - Seluruh mutasi data (penambahan siswa, perubahan guru, update template, penggantian kop, penambahan user, dan penyimpanan arsip) diperbarui secara instan pada file `data/db.json`.
+   - Seluruh mutasi data (penambahan siswa, perubahan guru, update template, penggantian logo/kop, penambahan user, master kelas, dan penyimpanan arsip) diperbarui secara instan pada file `data/db.json`.
 2. **Realtime SQL Synchronizer (`syncSqlFile`)**:
    - Fungsi `syncSqlFile(db)` di dalam `server.js` merekonstruksi seluruh skema relasional tabel MySQL/MariaDB:
      - `classes`
@@ -112,29 +113,35 @@ web-sas-dh-n-beritaacara/
      - `settings`
      - `users`
      - `exam_archives`
-   - Setiap kali terjadi perubahan pada REST API (POST `/api/save-db`, POST `/api/save-user`, POST `/api/save-archive`, dll.), file `database.sql` ditulis ulang secara otomatis. Dengan demikian, file `database.sql` selalu 100% mutakhir dan siap diimpor ke phpMyAdmin/MySQL server produksi.
+   - Setiap kali terjadi perubahan pada REST API (POST `/api/save-db`, POST `/api/save-user`, POST `/api/save-archive`, POST `/api/upload-logo`, dll.), file `database.sql` ditulis ulang secara otomatis.
 
 ---
 
-## 6. MEKANISME GENERATOR DOKUMEN & LIVE PREVIEW A4
-1. **Live Synchronous Preview**:
-   - Input formulir di sisi kiri langsung diikat (*two-way binding*) ke lembar kerja A4 di sisi kanan secara real-time.
-2. **Format Tanda Tangan Pengawas Resmi**:
-   - Sesuai standarisasi dokumen resmi, tanda tangan pengawas ujian disajikan bersih **tanpa tanda kurung `()`** dan **tanpa garis bawah (`underline`)**.
-3. **Penyimpanan Berkas Otomatis**:
-   - Ketika pengguna menekan tombol **"Unduh PDF"** atau **"Cetak Dokumen"**, konten HTML utuh dan metadata dokumen otomatis dikirim ke backend `/api/save-archive`.
-   - Dokumen langsung tercatat pada menu **Arsip Dokumen** untuk dibuka dan dicetak kembali sewaktu-waktu.
+## 6. MEKANISME TOTAL KELAS AKTIF & REGISTRASI KELAS DINAMIS
+1. **Total Kelas Aktif Realtime**:
+   - Pada Dashboard (`/admin/index.html`) dan Backup (`/admin/database.html`), metrik "Total Kelas Aktif" dihitung dari kelas yang memiliki siswa terdaftar:
+     ```javascript
+     const activeClassIds = new Set((db.students || []).map(s => String(s.class_id)));
+     const activeClasses = (db.classes || []).filter(c => activeClassIds.has(String(c.id)));
+     ```
+   - Ketika seluruh data siswa dikosongkan, Total Kelas Aktif otomatis bernilai **0**.
+2. **Auto-Register Kelas Baru Saat Penginputan Siswa**:
+   - Saat input manual di modal "Tambah Siswa Baru", pengguna dapat mengetik nama kelas baru (contoh: `XII DKV`) dan kelas tersebut otomatis terdaftar ke dalam tabel master kelas (`classes`).
+   - Saat import Excel (.xlsx) data siswa, kolom `KELAS` dibaca dan seluruh kelas baru yang belum ada di database otomatis didaftarkan ke tabel `classes`.
+3. **Master Daftar Kelas di Pengaturan**:
+   - Pada menu **Pengaturan Sekolah & Kop**, administrator dapat mengelola kelas secara mandiri:
+     - Tambah kelas manual (Nama Kelas, Tingkat, Program Keahlian).
+     - **Export (.xlsx)** Master Kelas.
+     - **Import (.xlsx)** Master Kelas dengan template standar.
 
 ---
 
-## 7. FITUR FILTER ARSIP DOKUMEN (5 KRITERIA DETAIL)
-Menu Arsip Dokumen (`public/arsip.html` dan `public/admin/arsip.html`) dilengkapi dengan 5 filter kombinasi simultan:
-1. **Tahun Ajaran** (Dropdown dinamis dari arsip dan master settings).
-2. **Semester** (Pilihan: Ganjil / Genap).
-3. **Tanggal Ujian** (Kalender pemilih tanggal presisi).
-4. **Kelas** (Dropdown 11 kelas master).
-5. **Mata Pelajaran** (Dropdown seluruh mata pelajaran terdaftar).
-6. **Tombol Reset Filter**: Mengembalikan seluruh filter ke kondisi semula dengan satu klik.
+## 7. FITUR EXPORT & IMPORT EXCEL (.XLSX)
+Tersedia export dan import lembar kerja Microsoft Excel di seluruh modul utama:
+1. **Master Siswa**: Export & Import via SheetJS (`/admin/siswa.html`).
+2. **Master Guru & Pengawas**: Export & Import via SheetJS (`/admin/guru.html`).
+3. **Master Daftar Kelas**: Export & Import via SheetJS (`/admin/pengaturan.html`).
+4. **Master Mata Pelajaran Resmi**: Export & Import via SheetJS (`/admin/pengaturan.html`).
 
 ---
 
@@ -148,7 +155,7 @@ node server.js
 Buka browser pada alamat: `http://localhost:3000`
 
 ### Menjalankan di GitHub Pages:
-1. Buat repository di GitHub (misalnya: `web-sas-dh-n-beritaacara`).
+1. Pastikan kode ter-upload di repository GitHub (`https://github.com/01dell18-gif/web-sas-dh-n-beritaacara`).
 2. Masuk ke tab **Settings** > **Pages** di repository GitHub Anda.
 3. Pada bagian **Build and deployment**, pilih:
    - **Source**: `Deploy from a branch`

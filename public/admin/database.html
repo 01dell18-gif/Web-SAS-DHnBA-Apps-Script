@@ -222,7 +222,8 @@
 <script>
 function renderMetrics() {
     if (!db) return;
-    document.getElementById('statClasses').textContent = (db.classes || []).length;
+    const activeClassIds = new Set((db.students || []).map(s => String(s.class_id)));
+    document.getElementById('statClasses').textContent = (db.classes || []).filter(c => activeClassIds.has(String(c.id))).length;
     document.getElementById('statStudents').textContent = (db.students || []).length;
     document.getElementById('statTeachers').textContent = (db.teachers || []).length;
     document.getElementById('statTemplates').textContent = (db.templates || []).length;

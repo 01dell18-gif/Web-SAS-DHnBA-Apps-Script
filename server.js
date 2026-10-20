@@ -16,6 +16,8 @@ const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, 'data', 'db.json');
 const KOP_IMG_PATH = path.join(__dirname, 'public', 'assets', 'img', 'kop-header.png');
 const KOP_DEFAULT_PATH = path.join(__dirname, 'public', 'assets', 'img', 'kop-header-default.png');
+const LOGO_IMG_PATH = path.join(__dirname, 'public', 'assets', 'img', 'logo.png');
+const LOGO_DEFAULT_PATH = path.join(__dirname, 'public', 'assets', 'img', 'logo-default.png');
 
 // Helper baca database JSON
 function getDatabase() {
@@ -644,6 +646,9 @@ const server = http.createServer((req, res) => {
 
                 if (payload.delete_all_students === true) {
                     db.students = [];
+                    if (payload.reset_classes === true) {
+                        db.classes = [];
+                    }
                 } else if (Array.isArray(payload.students)) {
                     db.students = payload.students;
                 }
@@ -763,6 +768,78 @@ const server = http.createServer((req, res) => {
         } catch (err) {
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ success: false, message: 'Gagal mereset kop: ' + err.message }));
+        }
+        return;
+    }
+
+    // 8b. REST API: POST /api/upload-logo (Upload Logo Sekolah Baru)
+    if (req.method === 'POST' && pathname === '/api/upload-logo') {
+        readRequestBody(req, (rawBody) => {
+            try {
+                const payload = JSON.parse(rawBody || '{}');
+                const imageData = payload.image;
+                if (!imageData) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: false, message: 'Data gambar tidak valid.' }));
+                    return;
+                }
+
+                let buffer;
+                const matches = imageData.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+                if (matches && matches.length === 3) {
+                    buffer = Buffer.from(matches[2], 'base64');
+                } else {
+                    buffer = Buffer.from(imageData, 'base64');
+                }
+
+                if (fs.existsSync(LOGO_IMG_PATH) && !fs.existsSync(LOGO_DEFAULT_PATH)) {
+                    try {
+                        fs.copyFileSync(LOGO_IMG_PATH, LOGO_DEFAULT_PATH);
+                    } catch (e) {
+                        console.error('Error backing up default logo:', e);
+                    }
+                }
+
+                fs.writeFileSync(LOGO_IMG_PATH, buffer);
+
+                const db = getDatabase();
+                if (!db.settings) db.settings = {};
+                db.settings.school_logo = '/assets/img/logo.png';
+                saveDatabase(db);
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    success: true,
+                    message: 'Logo sekolah resmi berhasil diunggah dan diperbarui!',
+                    url: '/assets/img/logo.png?t=' + Date.now()
+                }));
+            } catch (err) {
+                console.error('Error upload logo:', err);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, message: 'Gagal mengunggah logo: ' + err.message }));
+            }
+        });
+        return;
+    }
+
+    // 8c. REST API: POST /api/reset-logo (Reset Logo ke Default)
+    if (req.method === 'POST' && pathname === '/api/reset-logo') {
+        try {
+            if (fs.existsSync(LOGO_DEFAULT_PATH)) {
+                fs.copyFileSync(LOGO_DEFAULT_PATH, LOGO_IMG_PATH);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    success: true,
+                    message: 'Logo sekolah berhasil direset ke standar default!',
+                    url: '/assets/img/logo.png?t=' + Date.now()
+                }));
+            } else {
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, message: 'Berkas default logo tidak ditemukan.' }));
+            }
+        } catch (err) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, message: 'Gagal mereset logo: ' + err.message }));
         }
         return;
     }

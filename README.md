@@ -1,38 +1,54 @@
 # Generator Absensi & Berita Acara Ujian Resmi Format A4
 ## SMK NEGERI 1 KLUNGKUNG
 
-Aplikasi web modern untuk pembuatan administrasi ujian sekolah otomatis yang menghasilkan **Daftar Hadir Peserta Ujian** dan **Berita Acara Pelaksanaan Ujian (2 Halaman)** standar resmi kertas A4. Dilengkapi dengan **Panel Administrator Multi-Halaman**, **Manajemen Pengguna (User Management)**, **Arsip Berkas Digital dengan 5 Filter Seleksi**, serta dukungan penuh untuk **GitHub Pages** dan **Server Mandiri Node.js Zero-Dependency**.
+Aplikasi web modern untuk pembuatan administrasi ujian sekolah otomatis yang menghasilkan **Daftar Hadir Peserta Ujian** dan **Berita Acara Pelaksanaan Ujian (2 Halaman)** standar resmi kertas A4. Dilengkapi dengan **Panel Administrator Multi-Halaman**, **Manajemen Pengguna (User Management)**, **Arsip Berkas Digital dengan 5 Filter Seleksi**, **Master Kelas & Mapel dengan Export/Import Excel**, serta dukungan penuh untuk **GitHub Pages** dan **Server Mandiri Node.js Zero-Dependency**.
 
 ---
 
 ## 🚀 Fitur Unggulan Sistem Terbaru
 
 1. **Panel Administrator Modular (1 Menu = 1 Full HTML Terkoneksi)**:
-   - Panel admin kini dipecah menjadi halaman penuh independen untuk stabilitas tinggi tanpa tab-switching error.
-   - **Dashboard**: `/admin/index.html`
-   - **Master Siswa & Kelas**: `/admin/siswa.html` (Export/Import Excel, Hapus Massal per Kelas / Hapus Semua Siswa)
-   - **Master Guru & Pengawas**: `/admin/guru.html` (Export/Import Excel, Autocomplete NIP)
+   - Panel admin dipecah menjadi halaman penuh independen untuk stabilitas tinggi tanpa tab-switching error:
+   - **Dashboard**: `/admin/index.html` (Total Kelas Aktif akurat berbasis siswa terdaftar)
+   - **Master Siswa & Kelas**: `/admin/siswa.html` (Auto-register kelas baru saat input manual atau impor Excel, Hapus Massal Siswa & Opsi Reset Kelas)
+   - **Master Guru & Pengawas**: `/admin/guru.html` (Export/Import Excel, Autocomplete NIP, tombol **Hapus Data Guru**)
    - **Template Ujian**: `/admin/template.html` (Riwayat template tersimpan, chip variabel dinamis `[semester]`)
    - **Arsip Dokumen Ujian**: `/admin/arsip.html` (5 Filter Detail, Cetak Ulang, Unduh PDF)
-   - **Pengaturan Sekolah & Kop**: `/admin/pengaturan.html` (Tahun ajaran aktif dari master, mapel resmi, upload/reset kop surat)
+   - **Pengaturan Sekolah, Kelas & Kop**: `/admin/pengaturan.html` (Upload Logo Sekolah, Upload Kop Surat, Master Kelas dengan Export/Import Excel, Master Mapel dengan Export/Import Excel, Tahun Ajaran)
    - **Manajemen User**: `/admin/users.html` (Akun Administrator & Operator, proteksi akun utama)
    - **Database & Backup**: `/admin/database.html` (Unduh langsung `database.sql`, `db.json`, `Data_Siswa.xlsx`, `Data_Guru.xlsx`)
 
-2. **Login Administrator dengan Tombol Mata & Sesi Pintar**:
+2. **Upload & Penggantian Logo Sekolah Resmi**:
+   - Menu Pengaturan kini dilengkapi pratinjau & upload berkas **Logo Sekolah Resmi** (`logo.png`) serta tombol **Reset ke Logo Standar**.
+
+3. **Master Daftar Kelas & Export/Import Excel**:
+   - Pengaturan kini memiliki sub-menu **Master Daftar Kelas Resmi**:
+     - Tambah kelas manual (Nama Kelas, Tingkat, Program Keahlian).
+     - **Export (.xlsx)** dan **Import (.xlsx)** Master Kelas.
+     - Kelas baru juga otomatis terdaftar saat menginput data siswa.
+     - Dashboard menghitung kelas aktif yang memiliki siswa terdaftar.
+
+4. **Export & Import Excel untuk Master Mata Pelajaran Resmi**:
+   - Mata pelajaran resmi kini dapat diekspor ke `.xlsx` dan diimpor massal dari berkas Excel dengan template siap pakai.
+
+5. **Tombol Hapus Data Guru di Master Guru**:
+   - Tombol hapus massal pada menu Guru & Pengawas kini tepat berfungsi untuk mengosongkan data guru (`delete_all_teachers`).
+
+6. **Login Administrator dengan Tombol Mata & Sesi Pintar**:
    - Kolom password dilengkapi tombol mata untuk melihat/sembunyikan karakter.
    - Sesi terproteksi (`localStorage.getItem('sas_admin_auth')`). Saat pengguna login dan kembali ke beranda publik, tombol **Panel Admin** langsung membuka dashboard tanpa meminta login ulang.
 
-3. **Menu Arsip Dokumen dengan 5 Kriteria Filter Detail**:
+7. **Menu Arsip Dokumen dengan 5 Kriteria Filter Detail**:
    - Filter simultan berdasarkan: **Tahun Ajaran**, **Semester (Ganjil/Genap)**, **Tanggal Ujian**, **Kelas**, dan **Mata Pelajaran**.
    - Dilengkapi tombol **Reset Filter** dan pencarian teks cepat.
 
-4. **Format Tanda Tangan Pengawas Resmi (Tanpa Kurung & Tanpa Underline)**:
+8. **Format Tanda Tangan Pengawas Resmi (Tanpa Kurung & Tanpa Underline)**:
    - Kolom nama dan titik-titik tanda tangan pengawas ujian pada pratinjau A4 disajikan bersih tanpa tanda kurung `()` dan tanpa garis bawah (`underline`).
 
-5. **Sinkronisasi Otomatis Basis Data (`database.sql`)**:
-   - Setiap mutasi data (tambah/edit/hapus siswa, guru, template, user, pengaturan) otomatis meregenerasi file `database.sql` secara realtime.
+9. **Sinkronisasi Otomatis Basis Data (`database.sql`)**:
+   - Setiap mutasi data otomatis meregenerasi file `database.sql` secara realtime.
 
-6. **Kompatibilitas Penuh GitHub Pages**:
+10. **Kompatibilitas Penuh GitHub Pages**:
    - Aplikasi dapat dijalankan 100% pada **GitHub Pages** tanpa backend server menggunakan modul pintar `public/assets/js/github-pages-compat.js`.
 
 ---
@@ -55,12 +71,12 @@ web-sas-dh-n-beritaacara/
     ├── berita-acara.html        # Generator Berita Acara Ujian
     ├── arsip.html               # Arsip Dokumen Publik (5 Filter Detail)
     ├── admin/                   # Modul Panel Administrator Terpisah
-    │   ├── index.html           # Dashboard Admin
-    │   ├── siswa.html           # Master Siswa & Kelas
-    │   ├── guru.html            # Master Guru & Pengawas
+    │   ├── index.html           # Dashboard Admin (Total Kelas Aktif Berbasis Siswa)
+    │   ├── siswa.html           # Master Siswa & Kelas (Auto-Register Kelas)
+    │   ├── guru.html            # Master Guru & Pengawas (Tombol Hapus Data Guru)
     │   ├── template.html        # Template Ujian & Redaksi
     │   ├── arsip.html           # Arsip Dokumen Admin
-    │   ├── pengaturan.html      # Pengaturan Sekolah, Mapel, Tahun, & Kop
+    │   ├── pengaturan.html      # Pengaturan Sekolah, Logo, Kop, Kelas & Mapel (Export/Import .xlsx)
     │   ├── users.html           # Manajemen Akun User & Hak Akses
     │   ├── database.html        # Backup & Ekspor Basis Data
     │   └── login.html           # Login Admin (Password Eye Toggle)
@@ -77,8 +93,9 @@ web-sas-dh-n-beritaacara/
         │   └── xlsx.full.min.js # SheetJS offline untuk export/import Excel
         └── img/
             ├── logo.png         # Logo resmi SMK Negeri 1 Klungkung
+            ├── logo-default.png # Cadangan logo sekolah bawaan
             ├── kop-header.png   # Kop surat aktif
-            └── kop-default.png  # Cadangan kop surat bawaan pabrik
+            └── kop-header-default.png # Cadangan kop surat bawaan pabrik
 ```
 
 ---

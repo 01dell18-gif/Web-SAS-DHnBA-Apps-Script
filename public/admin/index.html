@@ -200,8 +200,12 @@
 async function initDashboard() {
     await loadAdminDatabase();
 
+    // 1. Hitung kelas aktif (kelas yang memiliki siswa terdaftar)
+    const activeClassIds = new Set((db.students || []).map(s => String(s.class_id)));
+    const activeClasses = (db.classes || []).filter(c => activeClassIds.has(String(c.id)));
+
     // Stats
-    document.getElementById('countClasses').textContent = (db.classes || []).length;
+    document.getElementById('countClasses').textContent = activeClasses.length;
     document.getElementById('countStudents').textContent = (db.students || []).length;
     document.getElementById('countTeachers').textContent = (db.teachers || []).length;
     document.getElementById('countTemplates').textContent = (db.templates || []).length;
@@ -213,7 +217,20 @@ async function initDashboard() {
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    (db.classes || []).forEach(c => {
+    if (activeClasses.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                    <i class="bi bi-inbox" style="font-size: 2.2rem; display: block; margin-bottom: 8px; opacity: 0.4;"></i>
+                    Belum ada kelas aktif (0 siswa terdaftar).<br>
+                    <span style="font-size: 0.82rem;">Data kelas otomatis tercatat saat penginputan data siswa di menu <strong>Siswa & Master Kelas</strong> atau dapat dikonfigurasi pada menu <strong>Pengaturan</strong>.</span>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    activeClasses.forEach(c => {
         const stCount = (db.students || []).filter(s => String(s.class_id) === String(c.id)).length;
         tbody.innerHTML += `
             <tr>

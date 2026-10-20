@@ -283,9 +283,37 @@
             });
         }
 
+        // 14b. POST /api/upload-logo
+        if (pathname.includes('/api/upload-logo') && method === 'POST') {
+            const payload = JSON.parse(options.body || '{}');
+            if (!db.settings) db.settings = {};
+            db.settings.school_logo = payload.image;
+            localStorage.setItem('sas_offline_db', JSON.stringify(db));
+            return new Response(JSON.stringify({ success: true, message: 'Logo sekolah disimpan (Mode Statis)', url: payload.image }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
+        // 14c. POST /api/reset-logo
+        if (pathname.includes('/api/reset-logo') && method === 'POST') {
+            if (!db.settings) db.settings = {};
+            db.settings.school_logo = '/assets/img/logo.png';
+            localStorage.setItem('sas_offline_db', JSON.stringify(db));
+            return new Response(JSON.stringify({ success: true, message: 'Logo sekolah direset ke default', url: '/assets/img/logo.png' }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
         // 15. POST /api/save-db
         if (pathname.includes('/api/save-db') && method === 'POST') {
             const payload = JSON.parse(options.body || '{}');
+            if (payload.delete_all_students === true) {
+                db.students = [];
+                if (payload.reset_classes === true) db.classes = [];
+            }
+            if (payload.delete_all_teachers === true) db.teachers = [];
             Object.assign(db, payload);
             localStorage.setItem('sas_offline_db', JSON.stringify(db));
             return new Response(JSON.stringify({ success: true, message: 'Basis data disimpan ke penyimpanan lokal.' }), {

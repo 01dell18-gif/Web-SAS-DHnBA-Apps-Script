@@ -170,8 +170,10 @@
         <h3 style="margin-bottom: 1rem; font-size: 1.15rem;"><i class="bi bi-person-plus-fill" style="color: var(--primary);"></i> Tambah Siswa Baru</h3>
         <form onsubmit="submitNewStudent(event)">
             <div class="form-group">
-                <label class="form-label">Kelas</label>
-                <select id="modal_class_id" class="form-select" required></select>
+                <label class="form-label">Kelas Siswa <span class="required">*</span></label>
+                <input type="text" id="modal_class_input" class="form-control" list="modalClassesDatalist" placeholder="Ketik atau pilih kelas (contoh: XII DKV)" required autocomplete="off">
+                <datalist id="modalClassesDatalist"></datalist>
+                <div class="form-hint">Dapat memilih kelas terdaftar atau mengetik nama kelas baru. Kelas baru otomatis didaftarkan ke sistem.</div>
             </div>
             <div class="form-group">
                 <label class="form-label">Nomor Induk Siswa (NIS)</label>
@@ -366,23 +368,25 @@ function promptDeleteAllStudents() {
         return;
     }
 
-    if (confirm(`⚠️ PERINGATAN KRUSIAL:\n\nApakah Anda yakin ingin MENGHAPUS SEMUA DATA SISWA?\n\nSebanyak ${count} siswa di seluruh kelas akan dikosongkan secara permanen dari basis data database.sql & server.\nTindakan ini tidak dapat dibatalkan.`)) {
-        executeDeleteAllStudents();
+    if (confirm(`⚠️ PERINGATAN KRUSIAL:\n\nApakah Anda yakin ingin MENGHAPUS SEMUA DATA SISWA?\n\nSebanyak ${count} siswa di seluruh kelas akan dikosongkan secara permanen dari basis data.\nTindakan ini tidak dapat dibatalkan.`)) {
+        const resetClasses = confirm("Apakah Anda juga ingin MENGOSONGKAN DAFTAR KELAS agar daftar kelas dapat diambil/didaftarkan ulang secara bersih saat penginputan data siswa baru berikutnya?\n\n• Klik [OK] untuk mengosongkan siswa dan daftar kelas.\n• Klik [Batal] untuk hanya mengosongkan data siswa.");
+        executeDeleteAllStudents(resetClasses);
     }
 }
 
-async function executeDeleteAllStudents() {
+async function executeDeleteAllStudents(resetClasses = false) {
     try {
         const res = await fetch('/api/save-db', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ delete_all_students: true })
+            body: JSON.stringify({ delete_all_students: true, reset_classes: resetClasses })
         });
         const result = await res.json();
         if (result.success) {
             db.students = [];
+            if (resetClasses) db.classes = [];
             initSiswaPage();
-            showToast('Seluruh data siswa berhasil dihapus dan dikosongkan dari basis data!', 'success');
+            showToast(resetClasses ? 'Seluruh data siswa dan daftar kelas berhasil dikosongkan!' : 'Seluruh data siswa berhasil dikosongkan!', 'success');
         } else {
             showToast('Gagal menghapus data siswa: ' + result.message, 'danger');
         }
@@ -408,7 +412,16 @@ async function deleteStudent(id) {
 }
 
 function showAddStudentModal() {
+    const dl = document.getElementById('modalClassesDatalist');
+    if (dl) {
+        dl.innerHTML = (db.classes || []).map(c => `<option value="${c.nama_kelas}">`).join('');
+    }
+    const inp = document.getElementById('modal_class_input');
+    if (inp) inp.value = '';
+    document.getElementById('modal_nis').value = '';
+    document.getElementById('modal_nama').value = '';
     document.getElementById('studentModal').style.display = 'flex';
+    if (inp) inp.focus();
 }
 function closeStudentModal() {
     document.getElementById('studentModal').style.display = 'none';
@@ -416,19 +429,35 @@ function closeStudentModal() {
 
 async function submitNewStudent(e) {
     e.preventDefault();
-    const classId = parseInt(document.getElementById('modal_class_id').value, 10);
+    const classNameInput = document.getElementById('modal_class_input').value.trim();
     const nis = document.getElementById('modal_nis').value.trim();
     const nama = document.getElementById('modal_nama').value.trim();
 
+    if (!classNameInput || !nama) {
+        showToast('Nama kelas dan nama siswa wajib diisi.', 'danger');
+        return;
+    }
+
+    // Cari kelas yang sudah ada atau buat kelas baru secara otomatis
+    let cls = (db.classes || []).find(c => c.nama_kelas.toLowerCase() === classNameInput.toLowerCase());
+    let isNewClass = false;
+    if (!cls) {
+        const nextClassId = (db.classes || []).reduce((max, c) => Math.max(max, Number(c.id) || 0), 0) + 1;
+        cls = { id: nextClassId, nama_kelas: classNameInput, tingkat: 'XII', program_keahlian: 'Umum', is_active: 1 };
+        db.classes.push(cls);
+        isNewClass = true;
+    }
+
     const newId = (db.students.reduce((max, s) => Math.max(max, s.id || 0), 0)) + 1;
-    const newStudent = { id: newId, class_id: classId, nis: nis, nama: nama };
+    const newStudent = { id: newId, class_id: cls.id, nis: nis, nama: nama };
     db.students.push(newStudent);
 
-    const res = await saveAdminDatabase({ students: db.students });
+    const payload = isNewClass ? { classes: db.classes, students: db.students } : { students: db.students };
+    const res = await saveAdminDatabase(payload);
     if (res.success) {
         closeStudentModal();
         initSiswaPage();
-        showToast(`Siswa "${nama}" berhasil ditambahkan!`, 'success');
+        showToast(`Siswa "${nama}" (${cls.nama_kelas}) berhasil ditambahkan!`, 'success');
     } else {
         showToast(res.message, 'danger');
     }
