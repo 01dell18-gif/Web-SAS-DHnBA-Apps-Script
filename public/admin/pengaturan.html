@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengaturan Sekolah & Kop - Panel Administrator SMK NEGERI 1 KLUNGKUNG</title>
+    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="icon" type="image/png" href="/assets/img/logo.png">
+    <style>
+        .admin-layout { display: flex; min-height: calc(100vh - 70px); }
+        .admin-sidebar { width: 260px; background: #ffffff; border-right: 1px solid var(--border); padding: 1.5rem 1rem; display: flex; flex-direction: column; justify-content: space-between; }
+        .admin-nav { list-style: none; display: flex; flex-direction: column; gap: 0.35rem; }
+        .admin-nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-sm); color: var(--text-main); font-weight: 600; font-size: 0.9rem; text-decoration: none; cursor: pointer; transition: all 0.2s ease; }
+        .admin-nav-item:hover, .admin-nav-item.active { background: var(--primary-light); color: var(--primary); }
+        .admin-content { flex: 1; padding: 2rem; background: var(--bg-body); overflow-y: auto; }
+        .toast-notify { position: fixed; bottom: 24px; right: 24px; background: #1E293B; color: #ffffff; padding: 12px 20px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px; z-index: 10000; font-size: 0.9rem; font-weight: 600; opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
+        .toast-notify.show { opacity: 1; transform: translateY(0); }
+        .toast-notify.toast-success { background: #065F46; }
+        .toast-notify.toast-danger { background: #991B1B; }
+        .toast-notify.toast-info { background: #1E3A8A; }
+
+        @media (max-width: 900px) {
+            .admin-layout { flex-direction: column; }
+            .admin-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+            .admin-content { padding: 1.25rem; }
+        }
+    </style>
+    <script src="/assets/js/github-pages-compat.js"></script>
+</head>
+<body>
+
+<header class="navbar">
+    <div class="navbar-brand">
+        <a href="/" class="brand-link">
+            <img src="/assets/img/logo.png" alt="Logo Sekolah" class="navbar-logo">
+            <div class="brand-text">
+                <span class="brand-title">SMK NEGERI 1 KLUNGKUNG</span>
+                <span class="brand-subtitle">Panel Administrator Database</span>
+            </div>
+        </a>
+    </div>
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">
+            <i class="bi bi-person-circle"></i> <span id="adminUsername">Administrator</span>
+        </span>
+        <a href="/" class="btn btn-secondary btn-sm"><i class="bi bi-house"></i> Beranda Publik</a>
+        <button type="button" class="btn btn-danger btn-sm" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Keluar</button>
+    </div>
+</header>
+
+<div class="admin-layout">
+    <!-- SIDEBAR -->
+    <aside class="admin-sidebar">
+        <div>
+            <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); margin-bottom: 0.75rem; padding-left: 10px;">
+                Menu Manajemen
+            </div>
+            <ul class="admin-nav">
+                <li><a href="/admin/index.html" class="admin-nav-item"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                <li><a href="/admin/siswa.html" class="admin-nav-item"><i class="bi bi-people"></i> Siswa & Master Kelas</a></li>
+                <li><a href="/admin/guru.html" class="admin-nav-item"><i class="bi bi-person-workspace"></i> Master Data Guru & Pengawas</a></li>
+                <li><a href="/admin/template.html" class="admin-nav-item"><i class="bi bi-file-earmark-text"></i> Template Ujian</a></li>
+                <li><a href="/admin/arsip.html" class="admin-nav-item"><i class="bi bi-archive-fill"></i> Arsip Dokumen Ujian</a></li>
+                <li><a href="/admin/pengaturan.html" class="admin-nav-item active"><i class="bi bi-sliders"></i> Pengaturan Sekolah & Kop</a></li>
+                <li><a href="/admin/users.html" class="admin-nav-item"><i class="bi bi-person-badge-fill"></i> Manajemen User</a></li>
+                <li><a href="/admin/database.html" class="admin-nav-item"><i class="bi bi-database"></i> Backup & Database SQL</a></li>
+            </ul>
+        </div>
+        <div style="font-size: 0.78rem; color: var(--text-muted); padding: 10px; border-top: 1px solid var(--border);">
+            Sistem SAS v2.5<br>SMK Negeri 1 Klungkung
+        </div>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="admin-content">
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title"><i class="bi bi-sliders"></i> Pengaturan Identitas Sekolah & Kop Surat Resmi</span>
+            </div>
+            <div class="card-body">
+                <form id="settingsForm" onsubmit="saveSettings(event)">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Nama Sekolah Resmi</label>
+                            <input type="text" id="set_school_name" class="form-control" value="SMK NEGERI 1 KLUNGKUNG" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tagline Aplikasi</label>
+                            <input type="text" id="set_school_tagline" class="form-control" value="Generator Administrasi Ujian">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Tahun Ajaran Aktif <span class="required">*</span></label>
+                            <select id="set_academic_year" class="form-select" onchange="onActiveYearSelectChange(this.value)">
+                                <!-- Populated dynamically from Master Daftar Tahun Ajaran -->
+                            </select>
+                            <div class="form-hint">Otomatis disinkronkan dari Master Daftar Tahun Ajaran di bawah.</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Zona Waktu Ujian</label>
+                            <input type="text" id="set_timezone" class="form-control" value="WITA">
+                        </div>
+                    </div>
+
+                    <!-- MENU UPLOAD KOP SURAT RESMI -->
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label class="form-label" style="font-weight: 700; display: flex; justify-content: space-between; align-items: center;">
+                            <span>Pratinjau & Penggantian Kop Surat Resmi</span>
+                            <span style="font-size: 0.78rem; font-weight: normal; color: var(--text-muted);">Digunakan pada Absensi & Berita Acara</span>
+                        </label>
+
+                        <!-- Area Pratinjau Gambar Kop -->
+                        <div style="border: 2px dashed var(--border); padding: 16px; border-radius: var(--radius-md); text-align: center; background: #ffffff; margin-bottom: 10px; position: relative;">
+                            <img id="kopPreviewImg" src="/assets/img/kop-header.png" alt="Pratinjau Kop Surat" style="max-height: 110px; max-width: 100%; object-fit: contain; display: inline-block;">
+                        </div>
+
+                        <!-- Notifikasi saat file baru dipilih -->
+                        <div id="kopSelectedNotice" style="display: none; margin-bottom: 10px; padding: 10px 14px; background: var(--success-light); border: 1px solid #A7F3D0; border-radius: var(--radius-sm); font-size: 0.85rem; color: #065F46;">
+                            <i class="bi bi-check-circle-fill"></i> Berkas kop baru siap disimpan: <strong id="kopSelectedFilename">-</strong>. Klik tombol <strong>Perbarui Pengaturan</strong> di bawah untuk menerapkan perubahan.
+                        </div>
+
+                        <!-- Tombol Aksi Upload Kop -->
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                            <input type="file" id="kopFileInput" accept="image/png, image/jpeg, image/jpg" style="display: none;" onchange="handleKopFileSelected(event)">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('kopFileInput').click()">
+                                <i class="bi bi-cloud-arrow-up-fill"></i> Pilih Berkas Kop Baru (PNG/JPG)
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="resetKopDefault()">
+                                <i class="bi bi-arrow-counterclockwise"></i> Reset ke Kop Standar
+                            </button>
+                        </div>
+                        <div class="form-hint" style="margin-top: 8px;">
+                            💡 <strong>Panduan:</strong> Gunakan gambar berlatar transparan atau putih dengan resolusi tajam (rekomendasi lebar ~1000 - 1200 px, rasio ~ 5:1). Format yang didukung: PNG, JPG, JPEG.
+                        </div>
+                    </div>
+
+                    <!-- KELOLA DAFTAR MATA PELAJARAN RESMI -->
+                    <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                            <div>
+                                <label class="form-label" style="font-weight: 700; margin: 0; font-size: 0.95rem;">
+                                    <i class="bi bi-journal-bookmark-fill" style="color: var(--primary);"></i> Master Daftar Mata Pelajaran Resmi
+                                </label>
+                                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">
+                                    Mata pelajaran yang tersimpan otomatis menjadi pilihan/autocomplete pada formulir Berita Acara dan Absensi.
+                                </div>
+                            </div>
+                            <span id="badgeSubjectCount" class="badge" style="background: var(--primary-light); color: var(--primary); font-weight: 700; padding: 4px 8px; border-radius: 6px;">0 Mapel</span>
+                        </div>
+
+                        <div id="subjectsTagContainer" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 0.75rem; min-height: 44px; padding: 12px; background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                            <!-- Populated by JS -->
+                        </div>
+
+                        <div style="display: flex; gap: 8px; max-width: 480px;">
+                            <input type="text" id="newSubjectInput" class="form-control form-control-sm" placeholder="Ketik nama mata pelajaran baru..." onkeydown="if(event.key==='Enter'){event.preventDefault();addNewSubject();}">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="addNewSubject()" style="white-space: nowrap;">
+                                <i class="bi bi-plus-lg"></i> Tambah Mapel
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- KELOLA DAFTAR TAHUN AJARAN -->
+                    <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                            <div>
+                                <label class="form-label" style="font-weight: 700; margin: 0; font-size: 0.95rem;">
+                                    <i class="bi bi-calendar-range-fill" style="color: #D97706;"></i> Master Daftar Tahun Ajaran
+                                </label>
+                                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">
+                                    Daftar tahun ajaran yang aktif digunakan di seluruh sistem administrasi ujian.
+                                </div>
+                            </div>
+                            <span id="badgeYearCount" class="badge" style="background: #FEF3C7; color: #92400E; font-weight: 700; padding: 4px 8px; border-radius: 6px;">0 Tahun</span>
+                        </div>
+
+                        <div id="academicYearsTagContainer" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 0.75rem; min-height: 44px; padding: 12px; background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                            <!-- Populated by JS -->
+                        </div>
+
+                        <div style="display: flex; gap: 8px; max-width: 400px;">
+                            <input type="text" id="newYearInput" class="form-control form-control-sm" placeholder="Contoh: 2027/2028" onkeydown="if(event.key==='Enter'){event.preventDefault();addNewAcademicYear();}">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="addNewAcademicYear()" style="white-space: nowrap;">
+                                <i class="bi bi-plus-lg"></i> Tambah Tahun
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.25rem;">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Perbarui Pengaturan & Kop Surat</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="/assets/js/admin-common.js"></script>
+<script>
+let pendingKopBase64 = null;
+
+function initSettingsForm() {
+    if (!db || !db.settings) return;
+    const s = db.settings;
+    if (s.school_name) document.getElementById('set_school_name').value = s.school_name;
+    if (s.school_tagline) document.getElementById('set_school_tagline').value = s.school_tagline;
+    if (s.timezone) document.getElementById('set_timezone').value = s.timezone;
+    if (s.kop_header) {
+        document.getElementById('kopPreviewImg').src = s.kop_header + '?t=' + Date.now();
+    }
+    renderSettingsSubjectsAndYears();
+}
+
+function renderSettingsSubjectsAndYears() {
+    if (!db) return;
+    if (!db.settings) db.settings = {};
+
+    // 1. Render Mapel
+    const subjects = db.settings.subjects || db.subjects || [];
+    const subjCont = document.getElementById('subjectsTagContainer');
+    document.getElementById('badgeSubjectCount').textContent = subjects.length + ' Mapel';
+
+    if (subjects.length === 0) {
+        subjCont.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">Belum ada daftar mata pelajaran tersimpan.</span>';
+    } else {
+        subjCont.innerHTML = subjects.map(sub => `
+            <span style="display: inline-flex; align-items: center; gap: 6px; background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; padding: 4px 10px; border-radius: 20px; font-size: 0.82rem; font-weight: 600;">
+                ${sub}
+                <button type="button" onclick="removeSubject('${sub.replace(/'/g, "\\'")}')" style="background: none; border: none; color: #EF4444; cursor: pointer; padding: 0 2px; font-weight: bold;" title="Hapus mata pelajaran">&times;</button>
+            </span>
+        `).join('');
+    }
+
+    // 2. Render Tahun Ajaran
+    const years = db.settings.academic_years || db.academic_years || ["2024/2025", "2025/2026", "2026/2027"];
+    const yrCont = document.getElementById('academicYearsTagContainer');
+    document.getElementById('badgeYearCount').textContent = years.length + ' Tahun';
+
+    if (years.length === 0) {
+        yrCont.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">Belum ada tahun ajaran tersimpan.</span>';
+    } else {
+        yrCont.innerHTML = years.map(yr => {
+            const isActive = db.settings.academic_year === yr;
+            return `
+                <span style="display: inline-flex; align-items: center; gap: 6px; background: ${isActive ? '#D1FAE5' : '#FEF3C7'}; color: ${isActive ? '#065F46' : '#92400E'}; border: 1px solid ${isActive ? '#A7F3D0' : '#FDE68A'}; padding: 4px 10px; border-radius: 20px; font-size: 0.82rem; font-weight: 600;">
+                    ${isActive ? '<i class="bi bi-check-circle-fill"></i> ' : ''}${yr}
+                    ${isActive ? '<span style="font-size: 0.72rem; opacity: 0.8;">(Aktif)</span>' : ''}
+                    <button type="button" onclick="removeAcademicYear('${yr.replace(/'/g, "\\'")}')" style="background: none; border: none; color: #EF4444; cursor: pointer; padding: 0 2px; font-weight: bold;" title="Hapus tahun ajaran">&times;</button>
+                </span>
+            `;
+        }).join('');
+    }
+
+    // 3. Dropdown Tahun Ajaran Aktif
+    const yearSelect = document.getElementById('set_academic_year');
+    const currentActive = db.settings.academic_year || (years[0] || '2024/2025');
+    yearSelect.innerHTML = years.map(yr => `
+        <option value="${yr}" ${yr === currentActive ? 'selected' : ''}>${yr}${yr === currentActive ? ' (Aktif Saat Ini)' : ''}</option>
+    `).join('');
+}
+
+function onActiveYearSelectChange(newVal) {
+    if (db && db.settings) {
+        db.settings.academic_year = newVal;
+        renderSettingsSubjectsAndYears();
+    }
+}
+
+async function addNewSubject() {
+    const input = document.getElementById('newSubjectInput');
+    const val = input.value.trim();
+    if (!val) return;
+
+    if (!db.settings) db.settings = {};
+    if (!Array.isArray(db.settings.subjects)) db.settings.subjects = [];
+
+    if (db.settings.subjects.includes(val)) {
+        showToast(`Mata pelajaran "${val}" sudah ada.`, 'info');
+        return;
+    }
+
+    db.settings.subjects.push(val);
+    input.value = '';
+
+    await saveAdminDatabase({ subjects: db.settings.subjects, settings: db.settings });
+    renderSettingsSubjectsAndYears();
+    showToast(`Mata pelajaran "${val}" berhasil ditambahkan!`, 'success');
+}
+
+async function removeSubject(sub) {
+    if (!confirm(`Hapus mata pelajaran "${sub}" dari master?`)) return;
+
+    if (!db.settings || !Array.isArray(db.settings.subjects)) return;
+    db.settings.subjects = db.settings.subjects.filter(s => s !== sub);
+
+    await saveAdminDatabase({ subjects: db.settings.subjects, settings: db.settings });
+    renderSettingsSubjectsAndYears();
+    showToast(`Mata pelajaran "${sub}" dihapus.`, 'info');
+}
+
+async function addNewAcademicYear() {
+    const input = document.getElementById('newYearInput');
+    const val = input.value.trim();
+    if (!val) return;
+
+    if (!db.settings) db.settings = {};
+    if (!Array.isArray(db.settings.academic_years)) db.settings.academic_years = [];
+
+    if (db.settings.academic_years.includes(val)) {
+        showToast(`Tahun ajaran "${val}" sudah terdaftar.`, 'info');
+        return;
+    }
+
+    db.settings.academic_years.push(val);
+    input.value = '';
+
+    await saveAdminDatabase({ academic_years: db.settings.academic_years, settings: db.settings });
+    renderSettingsSubjectsAndYears();
+    showToast(`Tahun ajaran "${val}" berhasil ditambahkan!`, 'success');
+}
+
+async function removeAcademicYear(yr) {
+    if (!confirm(`Hapus tahun ajaran "${yr}" dari master?`)) return;
+
+    if (!db.settings || !Array.isArray(db.settings.academic_years)) return;
+    if (db.settings.academic_years.length <= 1) {
+        showToast('Minimal harus ada 1 tahun ajaran.', 'danger');
+        return;
+    }
+
+    db.settings.academic_years = db.settings.academic_years.filter(y => y !== yr);
+    if (db.settings.academic_year === yr) {
+        db.settings.academic_year = db.settings.academic_years[0];
+    }
+
+    await saveAdminDatabase({ academic_years: db.settings.academic_years, settings: db.settings });
+    renderSettingsSubjectsAndYears();
+    showToast(`Tahun ajaran "${yr}" telah dihapus.`, 'info');
+}
+
+function handleKopFileSelected(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        showToast('Berkas harus berupa gambar (PNG/JPG).', 'danger');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        pendingKopBase64 = e.target.result;
+        document.getElementById('kopPreviewImg').src = pendingKopBase64;
+        document.getElementById('kopSelectedFilename').textContent = file.name + ` (${Math.round(file.size / 1024)} KB)`;
+        document.getElementById('kopSelectedNotice').style.display = 'block';
+        showToast('Gambar kop dipilih! Klik "Perbarui Pengaturan" untuk menerapkan.', 'info');
+    };
+    reader.readAsDataURL(file);
+}
+
+async function resetKopDefault() {
+    if (confirm('Apakah Anda yakin ingin mereset kop surat ke standar bawaan SMK Negeri 1 Klungkung?')) {
+        try {
+            const res = await fetch('/api/reset-kop', { method: 'POST' });
+            const result = await res.json();
+            if (result.success) {
+                pendingKopBase64 = null;
+                document.getElementById('kopSelectedNotice').style.display = 'none';
+                document.getElementById('kopPreviewImg').src = result.url;
+                showToast(result.message, 'success');
+            } else {
+                showToast(result.message, 'danger');
+            }
+        } catch (err) {
+            showToast('Gagal mereset kop: ' + err.message, 'danger');
+        }
+    }
+}
+
+async function saveSettings(e) {
+    e.preventDefault();
+    if (!db) return;
+
+    // 1. Upload Kop jika ada gambar baru
+    if (pendingKopBase64) {
+        try {
+            const resKop = await fetch('/api/upload-kop', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: pendingKopBase64 })
+            });
+            const resKopJson = await resKop.json();
+            if (!resKopJson.success) {
+                showToast('Gagal mengunggah kop: ' + resKopJson.message, 'danger');
+                return;
+            }
+            pendingKopBase64 = null;
+            document.getElementById('kopSelectedNotice').style.display = 'none';
+            document.getElementById('kopPreviewImg').src = resKopJson.url;
+        } catch (err) {
+            showToast('Kesalahan saat mengunggah berkas kop: ' + err.message, 'danger');
+            return;
+        }
+    }
+
+    // 2. Simpan Data Settings
+    if (!db.settings) db.settings = {};
+    db.settings.school_name = document.getElementById('set_school_name').value.trim();
+    db.settings.school_tagline = document.getElementById('set_school_tagline').value.trim();
+    db.settings.academic_year = document.getElementById('set_academic_year').value.trim();
+    db.settings.timezone = document.getElementById('set_timezone').value.trim();
+
+    const res = await saveAdminDatabase({ 
+        settings: db.settings,
+        subjects: db.settings.subjects || db.subjects,
+        academic_years: db.settings.academic_years || db.academic_years
+    });
+
+    if (res.success) {
+        renderSettingsSubjectsAndYears();
+        showToast('Pengaturan sekolah, mapel, tahun ajaran & kop berhasil diperbarui!', 'success');
+    } else {
+        showToast('Gagal menyimpan: ' + res.message, 'danger');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadAdminDatabase();
+    initSettingsForm();
+});
+</script>
+</body>
+</html>

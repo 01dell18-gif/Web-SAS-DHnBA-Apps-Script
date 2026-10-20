@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Data Siswa - SMK NEGERI 1 KLUNGKUNG</title>
+    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="icon" type="image/png" href="/assets/img/logo.png">
+    <script src="/assets/js/xlsx.full.min.js"></script>
+    <style>
+        .admin-layout { display: flex; min-height: calc(100vh - 70px); }
+        .admin-sidebar {
+            width: 260px; background: #ffffff; border-right: 1px solid var(--border);
+            padding: 1.5rem 1rem; display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .admin-nav { list-style: none; display: flex; flex-direction: column; gap: 0.35rem; }
+        .admin-nav-item {
+            display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+            border-radius: var(--radius-sm); color: var(--text-main); font-weight: 600;
+            font-size: 0.9rem; text-decoration: none; cursor: pointer; transition: all 0.2s ease;
+        }
+        .admin-nav-item:hover, .admin-nav-item.active { background: var(--primary-light); color: var(--primary); }
+        .admin-content { flex: 1; padding: 2rem; background: var(--bg-body); overflow-y: auto; }
+        .toast-notify {
+            position: fixed; bottom: 24px; right: 24px; background: #1E293B; color: #ffffff;
+            padding: 12px 20px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            display: flex; align-items: center; gap: 10px; z-index: 10000; font-size: 0.9rem;
+            font-weight: 600; opacity: 0; transform: translateY(20px); transition: all 0.3s ease;
+            pointer-events: none;
+        }
+        .toast-notify.show { opacity: 1; transform: translateY(0); }
+        .toast-notify.toast-success { background: #065F46; }
+        .toast-notify.toast-danger { background: #991B1B; }
+        .toast-notify.toast-info { background: #1E3A8A; }
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: 1rem;
+        }
+        .modal-card {
+            background: #ffffff; width: 100%; max-width: 580px; border-radius: var(--radius-lg);
+            padding: 1.75rem; box-shadow: var(--shadow-lg); max-height: 90vh; overflow-y: auto;
+        }
+        @media (max-width: 900px) {
+            .admin-layout { flex-direction: column; }
+            .admin-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+            .admin-content { padding: 1.25rem; }
+        }
+    </style>
+    <script src="/assets/js/github-pages-compat.js"></script>
+</head>
+<body>
+
+<header class="navbar">
+    <div class="navbar-brand">
+        <a href="/" class="brand-link">
+            <img src="/assets/img/logo.png" alt="Logo Sekolah" class="navbar-logo">
+            <div class="brand-text">
+                <span class="brand-title">SMK NEGERI 1 KLUNGKUNG</span>
+                <span class="brand-subtitle">Panel Administrator Database</span>
+            </div>
+        </a>
+    </div>
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">
+            <i class="bi bi-person-circle"></i> <span id="adminUsername">Administrator</span>
+        </span>
+        <a href="/" class="btn btn-secondary btn-sm"><i class="bi bi-house"></i> Beranda Publik</a>
+        <button type="button" class="btn btn-danger btn-sm" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Keluar</button>
+    </div>
+</header>
+
+<div class="admin-layout">
+    <!-- SIDEBAR -->
+    <aside class="admin-sidebar">
+        <div>
+            <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); margin-bottom: 0.75rem; padding-left: 10px;">
+                Menu Manajemen
+            </div>
+            <ul class="admin-nav">
+                <li><a href="/admin/index.html" class="admin-nav-item"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                <li><a href="/admin/siswa.html" class="admin-nav-item active"><i class="bi bi-people"></i> Siswa & Master Kelas</a></li>
+                <li><a href="/admin/guru.html" class="admin-nav-item"><i class="bi bi-person-workspace"></i> Master Data Guru & Pengawas</a></li>
+                <li><a href="/admin/template.html" class="admin-nav-item"><i class="bi bi-file-earmark-text"></i> Template Ujian</a></li>
+                <li><a href="/admin/arsip.html" class="admin-nav-item"><i class="bi bi-archive-fill"></i> Arsip Dokumen Ujian</a></li>
+                <li><a href="/admin/pengaturan.html" class="admin-nav-item"><i class="bi bi-sliders"></i> Pengaturan Sekolah & Kop</a></li>
+                <li><a href="/admin/users.html" class="admin-nav-item"><i class="bi bi-person-badge-fill"></i> Manajemen User</a></li>
+                <li><a href="/admin/database.html" class="admin-nav-item"><i class="bi bi-database"></i> Backup & Database SQL</a></li>
+            </ul>
+        </div>
+        <div style="font-size: 0.78rem; color: var(--text-muted); padding: 10px; border-top: 1px solid var(--border);">
+            Sistem SAS v2.5<br>SMK Negeri 1 Klungkung
+        </div>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="admin-content">
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="card-title" style="margin: 0;"><i class="bi bi-people"></i> Master Data Siswa & Master Kelas</span>
+                    <span id="badgeFilteredCount" class="badge" style="background: var(--primary-light); color: var(--primary); font-weight: 700; padding: 4px 8px; border-radius: 6px;">0 Siswa</span>
+                </div>
+                
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <select id="filterClassSelect" class="form-select form-select-sm" style="width: auto; min-width: 170px;" onchange="onClassFilterChange()">
+                        <option value="">Semua Kelas</option>
+                    </select>
+
+                    <!-- Tombol Hapus Siswa di Kelas Terpilih -->
+                    <button id="btnDeleteClassStudents" class="btn btn-danger btn-sm" style="display: none;" onclick="openDeleteClassModal()" title="Hapus seluruh data siswa di kelas yang dipilih">
+                        <i class="bi bi-trash-fill"></i> Hapus Siswa di Kelas Ini
+                    </button>
+
+                    <!-- Tombol Export Excel -->
+                    <button class="btn btn-secondary btn-sm" onclick="exportStudentsExcel()" title="Ekspor data siswa terpilih ke berkas Microsoft Excel (.xlsx)">
+                        <i class="bi bi-file-earmark-excel" style="color: #10B981;"></i> Export (.xlsx)
+                    </button>
+
+                    <!-- Tombol Import Excel -->
+                    <button class="btn btn-secondary btn-sm" onclick="openImportModal()" title="Impor data siswa dari berkas Excel (.xlsx / .xls)">
+                        <i class="bi bi-file-earmark-arrow-up" style="color: var(--primary);"></i> Import (.xlsx)
+                    </button>
+
+                    <!-- Tombol Tambah Siswa Manual -->
+                    <button class="btn btn-primary btn-sm" onclick="showAddStudentModal()">
+                        <i class="bi bi-plus-lg"></i> Tambah Siswa
+                    </button>
+
+                    <!-- Tombol Hapus Data Siswa (Hapus seluruh siswa dari database) -->
+                    <button class="btn btn-outline-danger btn-sm" onclick="promptDeleteAllStudents()" title="Hapus semua data siswa dari database">
+                        <i class="bi bi-trash3-fill"></i> Hapus Data Siswa
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <div style="position: relative; max-width: 320px; width: 100%;">
+                        <input type="text" id="searchStudentInput" class="form-control form-control-sm" placeholder="Cari berdasarkan NIS atau Nama siswa..." oninput="renderStudentsTable()">
+                    </div>
+                    <div style="font-size: 0.82rem; color: var(--text-muted);">
+                        Format impor mendukung kolom: <code>NIS</code>, <code>NAMA</code>, <code>KELAS</code>.
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table" style="font-size: 0.88rem;">
+                        <thead>
+                            <tr>
+                                <th style="width: 45px;">No</th>
+                                <th style="width: 110px;">NIS</th>
+                                <th>Nama Lengkap Peserta Didik</th>
+                                <th>Kelas</th>
+                                <th style="text-align: center; width: 90px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody">
+                            <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Memuat data siswa...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- MODAL TAMBAH SISWA MANUAL -->
+<div id="studentModal" class="modal-overlay">
+    <div class="modal-card">
+        <h3 style="margin-bottom: 1rem; font-size: 1.15rem;"><i class="bi bi-person-plus-fill" style="color: var(--primary);"></i> Tambah Siswa Baru</h3>
+        <form onsubmit="submitNewStudent(event)">
+            <div class="form-group">
+                <label class="form-label">Kelas</label>
+                <select id="modal_class_id" class="form-select" required></select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nomor Induk Siswa (NIS)</label>
+                <input type="text" id="modal_nis" class="form-control" placeholder="Contoh: 13801" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nama Lengkap Siswa</label>
+                <input type="text" id="modal_nama" class="form-control" placeholder="Nama lengkap siswa" required>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.5rem;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeStudentModal()">Batal</button>
+                <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg"></i> Simpan Siswa</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL IMPORT EXCEL SISWA -->
+<div id="importExcelModal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 680px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="font-size: 1.15rem; margin: 0;"><i class="bi bi-file-earmark-excel" style="color: #10B981;"></i> Impor Data Siswa (.xlsx / .xls)</h3>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="downloadExcelTemplate()" title="Unduh berkas contoh format Excel">
+                <i class="bi bi-download"></i> Unduh Format Contoh
+            </button>
+        </div>
+
+        <div style="background: var(--slate-100); border-radius: var(--radius-sm); padding: 12px; font-size: 0.84rem; margin-bottom: 1.25rem;">
+            <strong>Petunjuk Format Kolom Excel:</strong>
+            <ul style="margin: 4px 0 0 20px;">
+                <li>Kolom 1: <code>NIS</code> (Nomor Induk Siswa)</li>
+                <li>Kolom 2: <code>NAMA</code> (Nama Lengkap Peserta Didik)</li>
+                <li>Kolom 3: <code>KELAS</code> (Nama Kelas, misal: <em>XII DKV</em>, <em>XII TKJ</em>)</li>
+            </ul>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Pilih Berkas Excel (.xlsx / .xls)</label>
+            <input type="file" id="excelFileInput" class="form-control" accept=".xlsx, .xls" onchange="handleExcelFileSelected(event)">
+        </div>
+
+        <div class="form-group" style="margin-top: 1rem;">
+            <label class="form-label">Metode Impor</label>
+            <div style="display: flex; gap: 15px;">
+                <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="radio" name="import_mode" value="merge" checked> Gabungkan & Perbarui (Merge)
+                </label>
+                <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="radio" name="import_mode" value="replace"> Timpa Seluruh Siswa di Kelas Terkait (Replace)
+                </label>
+            </div>
+        </div>
+
+        <div id="importPreviewArea" style="display: none; margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+            <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 6px;" id="importSummaryText">Pratinjau Data:</div>
+            <div style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <table class="table" style="font-size: 0.8rem; margin: 0;">
+                    <tbody id="importPreviewTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.5rem;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="closeImportModal()">Batal</button>
+            <button type="button" id="btnExecuteImport" class="btn btn-primary btn-sm" style="display: none;" onclick="executeImportStudents()">
+                <i class="bi bi-cloud-arrow-up-fill"></i> Simpan ke Database
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL HAPUS PER KELAS -->
+<div id="deleteClassModal" class="modal-overlay">
+    <div class="modal-card">
+        <h3 style="color: var(--danger); margin-bottom: 0.75rem; font-size: 1.15rem;">
+            <i class="bi bi-exclamation-triangle-fill"></i> Konfirmasi Penghapusan Siswa Kelas
+        </h3>
+        <p style="font-size: 0.9rem; line-height: 1.5; color: var(--text-main);">
+            Anda akan menghapus seluruh data siswa di kelas: <strong id="deleteModalClassName" style="color: var(--primary);">-</strong>
+            (Total: <span id="deleteModalCount" style="font-weight: 700;">0</span> Siswa).
+        </p>
+        <div style="margin: 1rem 0; padding: 12px; background: #FEF2F2; border: 1px solid #FCA5A5; border-radius: var(--radius-sm);">
+            <label style="font-size: 0.85rem; display: block; margin-bottom: 6px; cursor: pointer;">
+                <input type="radio" name="delete_type" value="students_only" checked> Hanya hapus seluruh siswa di kelas ini (Kelas tetap ada).
+            </label>
+            <label style="font-size: 0.85rem; display: block; cursor: pointer;">
+                <input type="radio" name="delete_type" value="delete_all"> Hapus seluruh siswa sekaligus hapus kelas ini dari daftar.
+            </label>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 8px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="closeDeleteClassModal()">Batal</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="confirmExecuteDeleteClass()">
+                <i class="bi bi-trash-fill"></i> Ya, Hapus Sekarang
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="/assets/js/admin-common.js"></script>
+<script>
+let targetDeleteClassId = null;
+let parsedExcelData = [];
+
+async function initSiswaPage() {
+    await loadAdminDatabase();
+
+    // Cek URL params jika ada filter kelas bawaan
+    const params = new URLSearchParams(window.location.search);
+    const initialClassId = params.get('class_id') || '';
+
+    // Populate dropdown kelas
+    const filterSelect = document.getElementById('filterClassSelect');
+    const modalSelect = document.getElementById('modal_class_id');
+
+    filterSelect.innerHTML = `<option value="">Semua Kelas (${(db.students || []).length} Siswa)</option>`;
+    modalSelect.innerHTML = '';
+
+    (db.classes || []).forEach(c => {
+        const count = (db.students || []).filter(s => String(s.class_id) === String(c.id)).length;
+        filterSelect.innerHTML += `<option value="${c.id}" ${String(c.id) === String(initialClassId) ? 'selected' : ''}>${c.nama_kelas} (${count} Siswa)</option>`;
+        modalSelect.innerHTML += `<option value="${c.id}">${c.nama_kelas}</option>`;
+    });
+
+    onClassFilterChange();
+}
+
+function onClassFilterChange() {
+    const filterSelect = document.getElementById('filterClassSelect');
+    const btnDelete = document.getElementById('btnDeleteClassStudents');
+    const val = filterSelect.value;
+
+    if (val) {
+        btnDelete.style.display = 'inline-flex';
+        const cls = db.classes.find(c => String(c.id) === String(val));
+        if (cls) btnDelete.innerHTML = `<i class="bi bi-trash-fill"></i> Hapus Siswa ${cls.nama_kelas}`;
+    } else {
+        btnDelete.style.display = 'none';
+    }
+
+    renderStudentsTable();
+}
+
+function renderStudentsTable() {
+    const filterId = document.getElementById('filterClassSelect').value;
+    const searchVal = (document.getElementById('searchStudentInput')?.value || '').toLowerCase().trim();
+    const tbody = document.getElementById('studentsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    let list = filterId ? (db.students || []).filter(s => String(s.class_id) === String(filterId)) : (db.students || []);
+
+    if (searchVal) {
+        list = list.filter(s => (s.nama && s.nama.toLowerCase().includes(searchVal)) || (s.nis && s.nis.toLowerCase().includes(searchVal)));
+    }
+
+    document.getElementById('badgeFilteredCount').textContent = `${list.length} Siswa`;
+
+    if (list.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                    <i class="bi bi-people" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                    Tidak ada data siswa yang cocok dengan filter.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    list.forEach((s, idx) => {
+        const cls = (db.classes || []).find(c => String(c.id) === String(s.class_id));
+        tbody.innerHTML += `
+            <tr>
+                <td>${idx + 1}</td>
+                <td><code>${s.nis || '-'}</code></td>
+                <td><strong>${s.nama}</strong></td>
+                <td><span style="font-weight:600; color: var(--primary);">${cls ? cls.nama_kelas : '-'}</span></td>
+                <td style="text-align: center;">
+                    <button class="btn btn-danger btn-sm" style="padding: 2px 7px; font-size: 0.75rem;" onclick="deleteStudent(${s.id})" title="Hapus Siswa">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+function promptDeleteAllStudents() {
+    const count = (db.students || []).length;
+    if (count === 0) {
+        showToast('Tidak ada data siswa di dalam basis data.', 'info');
+        return;
+    }
+
+    if (confirm(`⚠️ PERINGATAN KRUSIAL:\n\nApakah Anda yakin ingin MENGHAPUS SEMUA DATA SISWA?\n\nSebanyak ${count} siswa di seluruh kelas akan dikosongkan secara permanen dari basis data database.sql & server.\nTindakan ini tidak dapat dibatalkan.`)) {
+        executeDeleteAllStudents();
+    }
+}
+
+async function executeDeleteAllStudents() {
+    try {
+        const res = await fetch('/api/save-db', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ delete_all_students: true })
+        });
+        const result = await res.json();
+        if (result.success) {
+            db.students = [];
+            initSiswaPage();
+            showToast('Seluruh data siswa berhasil dihapus dan dikosongkan dari basis data!', 'success');
+        } else {
+            showToast('Gagal menghapus data siswa: ' + result.message, 'danger');
+        }
+    } catch (err) {
+        showToast('Kesalahan koneksi saat menghapus semua siswa: ' + err.message, 'danger');
+    }
+}
+
+async function deleteStudent(id) {
+    const st = (db.students || []).find(s => s.id === id);
+    const namaSiswa = st ? st.nama : 'siswa ini';
+
+    if (confirm(`Apakah Anda yakin ingin menghapus "${namaSiswa}"?`)) {
+        db.students = db.students.filter(s => s.id !== id);
+        const res = await saveAdminDatabase({ students: db.students });
+        if (res.success) {
+            renderStudentsTable();
+            showToast(`Siswa "${namaSiswa}" berhasil dihapus.`, 'success');
+        } else {
+            showToast(res.message, 'danger');
+        }
+    }
+}
+
+function showAddStudentModal() {
+    document.getElementById('studentModal').style.display = 'flex';
+}
+function closeStudentModal() {
+    document.getElementById('studentModal').style.display = 'none';
+}
+
+async function submitNewStudent(e) {
+    e.preventDefault();
+    const classId = parseInt(document.getElementById('modal_class_id').value, 10);
+    const nis = document.getElementById('modal_nis').value.trim();
+    const nama = document.getElementById('modal_nama').value.trim();
+
+    const newId = (db.students.reduce((max, s) => Math.max(max, s.id || 0), 0)) + 1;
+    const newStudent = { id: newId, class_id: classId, nis: nis, nama: nama };
+    db.students.push(newStudent);
+
+    const res = await saveAdminDatabase({ students: db.students });
+    if (res.success) {
+        closeStudentModal();
+        initSiswaPage();
+        showToast(`Siswa "${nama}" berhasil ditambahkan!`, 'success');
+    } else {
+        showToast(res.message, 'danger');
+    }
+}
+
+function openDeleteClassModal() {
+    const filterId = document.getElementById('filterClassSelect').value;
+    if (!filterId) return;
+    targetDeleteClassId = filterId;
+    const cls = db.classes.find(c => String(c.id) === String(filterId));
+    if (!cls) return;
+
+    const count = db.students.filter(s => String(s.class_id) === String(filterId)).length;
+    document.getElementById('deleteModalClassName').textContent = cls.nama_kelas;
+    document.getElementById('deleteModalCount').textContent = count;
+    document.getElementById('deleteClassModal').style.display = 'flex';
+}
+
+function closeDeleteClassModal() {
+    document.getElementById('deleteClassModal').style.display = 'none';
+    targetDeleteClassId = null;
+}
+
+async function confirmExecuteDeleteClass() {
+    if (!targetDeleteClassId) return;
+    const isDeleteClassToo = document.querySelector('input[name="delete_type"]:checked').value === 'delete_all';
+
+    try {
+        const res = await fetch('/api/delete-class-students', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ class_id: targetDeleteClassId, delete_class: isDeleteClassToo })
+        });
+        const result = await res.json();
+        if (result.success) {
+            db.students = db.students.filter(s => String(s.class_id) !== String(targetDeleteClassId));
+            if (isDeleteClassToo) {
+                db.classes = db.classes.filter(c => String(c.id) !== String(targetDeleteClassId));
+                document.getElementById('filterClassSelect').value = '';
+            }
+            closeDeleteClassModal();
+            initSiswaPage();
+            showToast(result.message, 'success');
+        } else {
+            showToast('Gagal: ' + result.message, 'danger');
+        }
+    } catch (e) {
+        showToast('Kesalahan koneksi: ' + e.message, 'danger');
+    }
+}
+
+function exportStudentsExcel() {
+    if (!db || !db.students.length) {
+        showToast('Tidak ada data siswa untuk diekspor.', 'danger');
+        return;
+    }
+    const filterId = document.getElementById('filterClassSelect').value;
+    const list = filterId ? db.students.filter(s => String(s.class_id) === String(filterId)) : db.students;
+
+    const rows = list.map((s, idx) => {
+        const cls = db.classes.find(c => String(c.id) === String(s.class_id));
+        return {
+            'NO': idx + 1,
+            'NIS': s.nis ? String(s.nis) : '',
+            'NAMA': s.nama || '',
+            'KELAS': cls ? cls.nama_kelas : ''
+        };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{ wch: 6 }, { wch: 15 }, { wch: 35 }, { wch: 20 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'DATA_SISWA');
+    XLSX.writeFile(wb, 'Data_Siswa_SMKN1Klungkung.xlsx');
+    showToast('Data siswa berhasil diekspor ke Excel (.xlsx)!', 'success');
+}
+
+function downloadExcelTemplate() {
+    const rows = [
+        ['NIS', 'NAMA', 'KELAS'],
+        ['13801', 'I Komang Arya Wiguna', 'XII TKJ'],
+        ['13802', 'Ni Kadek Dwi Lestari', 'XII TKJ'],
+        ['13803', 'I Putu Bagus Saputra', 'XII DKV'],
+        ['13804', 'Ni Wayan Desi Purnami', 'XII BD 1']
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{ wch: 15 }, { wch: 35 }, { wch: 18 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Template_Siswa');
+    XLSX.writeFile(wb, 'Template_Import_Siswa_SMKN1Klungkung.xlsx');
+    showToast('Template Excel berhasil diunduh.', 'info');
+}
+
+function openImportModal() {
+    parsedExcelData = [];
+    document.getElementById('excelFileInput').value = '';
+    document.getElementById('importPreviewArea').style.display = 'none';
+    document.getElementById('btnExecuteImport').style.display = 'none';
+    document.getElementById('importExcelModal').style.display = 'flex';
+}
+function closeImportModal() {
+    document.getElementById('importExcelModal').style.display = 'none';
+}
+
+function handleExcelFileSelected(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rawJson = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+            if (rawJson.length < 2) {
+                showToast('Berkas Excel tidak memiliki baris data.', 'danger');
+                return;
+            }
+
+            const headerRow = rawJson[0].map(h => String(h || '').trim().toLowerCase());
+            let colNis = headerRow.findIndex(h => h.includes('nis'));
+            let colNama = headerRow.findIndex(h => h.includes('nama'));
+            let colKelas = headerRow.findIndex(h => h.includes('kelas'));
+            if (colNis === -1) colNis = 0;
+            if (colNama === -1) colNama = 1;
+            if (colKelas === -1) colKelas = 2;
+
+            parsedExcelData = [];
+            for (let i = 1; i < rawJson.length; i++) {
+                const row = rawJson[i];
+                if (!row || !row.length) continue;
+                const nis = String(row[colNis] || '').trim();
+                const nama = String(row[colNama] || '').trim();
+                const kelas = String(row[colKelas] || '').trim();
+                if (nama || nis) parsedExcelData.push({ nis, nama, kelas });
+            }
+
+            if (parsedExcelData.length === 0) {
+                showToast('Tidak ada data siswa terbaca.', 'danger');
+                return;
+            }
+
+            document.getElementById('importPreviewArea').style.display = 'block';
+            document.getElementById('btnExecuteImport').style.display = 'inline-flex';
+            document.getElementById('importSummaryText').textContent = `Ditemukan ${parsedExcelData.length} siswa dalam berkas:`;
+
+            const tbody = document.getElementById('importPreviewTableBody');
+            tbody.innerHTML = '';
+            parsedExcelData.slice(0, 15).forEach((item, idx) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td><code>${item.nis || '-'}</code></td>
+                        <td><strong>${item.nama}</strong></td>
+                        <td>${item.kelas || '(Belum diset)'}</td>
+                    </tr>
+                `;
+            });
+            showToast(`${parsedExcelData.length} siswa terbaca dari Excel!`, 'info');
+        } catch (err) {
+            showToast('Gagal memproses berkas Excel: ' + err.message, 'danger');
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+async function executeImportStudents() {
+    if (!parsedExcelData || !parsedExcelData.length) return;
+    const mode = document.querySelector('input[name="import_mode"]:checked').value;
+
+    let maxStudentId = db.students.reduce((max, s) => Math.max(max, s.id || 0), 0);
+    let maxClassId = db.classes.reduce((max, c) => Math.max(max, c.id || 0), 0);
+
+    const classMap = new Map();
+    db.classes.forEach(c => classMap.set(c.nama_kelas.toLowerCase().trim(), c));
+
+    if (mode === 'replace') {
+        const targetClasses = new Set();
+        parsedExcelData.forEach(item => {
+            const k = (item.kelas || '').toLowerCase().trim();
+            if (classMap.has(k)) targetClasses.add(String(classMap.get(k).id));
+        });
+        db.students = db.students.filter(s => !targetClasses.has(String(s.class_id)));
+    }
+
+    let added = 0, updated = 0;
+    parsedExcelData.forEach(item => {
+        let cName = (item.kelas || 'XII').trim();
+        let targetCls = classMap.get(cName.toLowerCase());
+        if (!targetCls) {
+            maxClassId++;
+            targetCls = { id: maxClassId, nama_kelas: cName, tingkat: 'XII', program_keahlian: 'Umum', is_active: 1 };
+            db.classes.push(targetCls);
+            classMap.set(cName.toLowerCase(), targetCls);
+        }
+
+        const existing = item.nis ? db.students.find(s => String(s.nis).trim() === String(item.nis).trim()) : null;
+        if (existing && mode === 'merge') {
+            existing.nama = item.nama || existing.nama;
+            existing.class_id = targetCls.id;
+            updated++;
+        } else {
+            maxStudentId++;
+            db.students.push({ id: maxStudentId, class_id: targetCls.id, nis: item.nis || '', nama: item.nama || '' });
+            added++;
+        }
+    });
+
+    const res = await saveAdminDatabase({ classes: db.classes, students: db.students });
+    if (res.success) {
+        closeImportModal();
+        initSiswaPage();
+        showToast(`Impor Sukses: ${added} siswa ditambahkan, ${updated} diperbarui.`, 'success');
+    } else {
+        showToast(res.message, 'danger');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initSiswaPage);
+</script>
+</body>
+</html>

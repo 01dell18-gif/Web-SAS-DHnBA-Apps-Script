@@ -1,0 +1,19 @@
+{
+  "name": "generator-absensi-sas",
+  "version": "1.0.0",
+  "description": "Generator Absensi & Berita Acara Ujian Resmi Format A4 - SMK Negeri 1 Klungkung",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "absensi",
+    "berita-acara",
+    "ujian",
+    "pdf-generator",
+    "smk-klungkung"
+  ],
+  "author": "Antigravity Web Analyst & Engineer",
+  "license": "MIT"
+}

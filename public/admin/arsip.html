@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arsip Dokumen Ujian - Panel Administrator SMK NEGERI 1 KLUNGKUNG</title>
+    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="/assets/css/preview-a4.css">
+    <link rel="icon" type="image/png" href="/assets/img/logo.png">
+    <script src="/assets/js/html2pdf.bundle.min.js"></script>
+    <style>
+        .admin-layout { display: flex; min-height: calc(100vh - 70px); }
+        .admin-sidebar { width: 260px; background: #ffffff; border-right: 1px solid var(--border); padding: 1.5rem 1rem; display: flex; flex-direction: column; justify-content: space-between; }
+        .admin-nav { list-style: none; display: flex; flex-direction: column; gap: 0.35rem; }
+        .admin-nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-sm); color: var(--text-main); font-weight: 600; font-size: 0.9rem; text-decoration: none; cursor: pointer; transition: all 0.2s ease; }
+        .admin-nav-item:hover, .admin-nav-item.active { background: var(--primary-light); color: var(--primary); }
+        .admin-content { flex: 1; padding: 2rem; background: var(--bg-body); overflow-y: auto; }
+        .toast-notify { position: fixed; bottom: 24px; right: 24px; background: #1E293B; color: #ffffff; padding: 12px 20px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px; z-index: 10000; font-size: 0.9rem; font-weight: 600; opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
+        .toast-notify.show { opacity: 1; transform: translateY(0); }
+        .toast-notify.toast-success { background: #065F46; }
+        .toast-notify.toast-danger { background: #991B1B; }
+        .toast-notify.toast-info { background: #1E3A8A; }
+        
+        /* Modal Overlay */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: 1rem; }
+        .modal-card { background: #ffffff; width: 100%; max-width: 900px; border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-lg); max-height: 92vh; display: flex; flex-direction: column; }
+
+        @media (max-width: 900px) {
+            .admin-layout { flex-direction: column; }
+            .admin-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+            .admin-content { padding: 1.25rem; }
+        }
+    </style>
+    <script src="/assets/js/github-pages-compat.js"></script>
+</head>
+<body>
+
+<header class="navbar">
+    <div class="navbar-brand">
+        <a href="/" class="brand-link">
+            <img src="/assets/img/logo.png" alt="Logo Sekolah" class="navbar-logo">
+            <div class="brand-text">
+                <span class="brand-title">SMK NEGERI 1 KLUNGKUNG</span>
+                <span class="brand-subtitle">Panel Administrator Database</span>
+            </div>
+        </a>
+    </div>
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">
+            <i class="bi bi-person-circle"></i> <span id="adminUsername">Administrator</span>
+        </span>
+        <a href="/" class="btn btn-secondary btn-sm"><i class="bi bi-house"></i> Beranda Publik</a>
+        <button type="button" class="btn btn-danger btn-sm" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Keluar</button>
+    </div>
+</header>
+
+<div class="admin-layout">
+    <!-- SIDEBAR -->
+    <aside class="admin-sidebar">
+        <div>
+            <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); margin-bottom: 0.75rem; padding-left: 10px;">
+                Menu Manajemen
+            </div>
+            <ul class="admin-nav">
+                <li><a href="/admin/index.html" class="admin-nav-item"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                <li><a href="/admin/siswa.html" class="admin-nav-item"><i class="bi bi-people"></i> Siswa & Master Kelas</a></li>
+                <li><a href="/admin/guru.html" class="admin-nav-item"><i class="bi bi-person-workspace"></i> Master Data Guru & Pengawas</a></li>
+                <li><a href="/admin/template.html" class="admin-nav-item"><i class="bi bi-file-earmark-text"></i> Template Ujian</a></li>
+                <li><a href="/admin/arsip.html" class="admin-nav-item active"><i class="bi bi-archive-fill"></i> Arsip Dokumen Ujian</a></li>
+                <li><a href="/admin/pengaturan.html" class="admin-nav-item"><i class="bi bi-sliders"></i> Pengaturan Sekolah & Kop</a></li>
+                <li><a href="/admin/users.html" class="admin-nav-item"><i class="bi bi-person-badge-fill"></i> Manajemen User</a></li>
+                <li><a href="/admin/database.html" class="admin-nav-item"><i class="bi bi-database"></i> Backup & Database SQL</a></li>
+            </ul>
+        </div>
+        <div style="font-size: 0.78rem; color: var(--text-muted); padding: 10px; border-top: 1px solid var(--border);">
+            Sistem SAS v2.5<br>SMK Negeri 1 Klungkung
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="admin-content">
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <span class="card-title" style="margin: 0;"><i class="bi bi-archive-fill"></i> Arsip Dokumen Ujian (Daftar Hadir & Berita Acara)</span>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                        Seluruh berkas yang telah disimpan tersimpan permanen di basis data MySQL/MariaDB dan dapat ditinjau atau dicetak ulang.
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="fetchAdminArchives()"><i class="bi bi-arrow-clockwise"></i> Segarkan</button>
+                    <a href="/arsip.html" target="_blank" class="btn btn-outline-primary btn-sm"><i class="bi bi-box-arrow-up-right"></i> Buka Halaman Publik</a>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <!-- TIPE DOKUMEN TABS -->
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem;">
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-sm btn-primary admin-archive-filter active" data-type="all" onclick="filterAdminArchives('all')">
+                            <i class="bi bi-grid-fill"></i> Semua Dokumen
+                        </button>
+                        <button type="button" class="btn btn-sm btn-secondary admin-archive-filter" data-type="daftar_hadir" onclick="filterAdminArchives('daftar_hadir')">
+                            <i class="bi bi-clipboard-check"></i> Daftar Hadir
+                        </button>
+                        <button type="button" class="btn btn-sm btn-secondary admin-archive-filter" data-type="berita_acara" onclick="filterAdminArchives('berita_acara')">
+                            <i class="bi bi-file-earmark-text"></i> Berita Acara
+                        </button>
+                    </div>
+                    <div style="position: relative; max-width: 320px; width: 100%;">
+                        <input type="text" id="searchAdminArchiveInput" class="form-control form-control-sm" placeholder="Cari nama pengawas, ruang, atau kata kunci..." oninput="renderAdminArchivesTable()">
+                    </div>
+                </div>
+
+                <!-- 5 FILTER SELEKSI DETAIL (TAHUN AJARAN, SEMESTER, TANGGAL, KELAS, MAPEL) -->
+                <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 1.25rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-heading); display: flex; align-items: center; gap: 6px;">
+                            <i class="bi bi-funnel-fill" style="color: var(--primary);"></i> Filter Detail Dokumen:
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="resetAllFilters()" style="padding: 2px 8px; font-size: 0.78rem;">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reset Filter
+                        </button>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px;">
+                        <!-- 1. Tahun Ajaran -->
+                        <div>
+                            <label class="form-label" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 4px;">Tahun Ajaran</label>
+                            <select id="filterTahunAjaran" class="form-select form-select-sm" onchange="renderAdminArchivesTable()">
+                                <option value="">Semua Tahun Ajaran</option>
+                            </select>
+                        </div>
+
+                        <!-- 2. Semester -->
+                        <div>
+                            <label class="form-label" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 4px;">Semester</label>
+                            <select id="filterSemester" class="form-select form-select-sm" onchange="renderAdminArchivesTable()">
+                                <option value="">Semua Semester</option>
+                                <option value="Ganjil">Ganjil</option>
+                                <option value="Genap">Genap</option>
+                            </select>
+                        </div>
+
+                        <!-- 3. Tanggal Ujian -->
+                        <div>
+                            <label class="form-label" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 4px;">Tanggal Ujian</label>
+                            <input type="date" id="filterTanggal" class="form-control form-control-sm" onchange="renderAdminArchivesTable()">
+                        </div>
+
+                        <!-- 4. Kelas -->
+                        <div>
+                            <label class="form-label" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 4px;">Kelas</label>
+                            <select id="filterKelas" class="form-select form-select-sm" onchange="renderAdminArchivesTable()">
+                                <option value="">Semua Kelas</option>
+                            </select>
+                        </div>
+
+                        <!-- 5. Mata Pelajaran -->
+                        <div>
+                            <label class="form-label" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 4px;">Mata Pelajaran</label>
+                            <select id="filterMapel" class="form-select form-select-sm" onchange="renderAdminArchivesTable()">
+                                <option value="">Semua Mapel</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TABLE ARSIP -->
+                <div class="table-responsive">
+                    <table class="table" style="font-size: 0.88rem;">
+                        <thead>
+                            <tr>
+                                <th style="width: 45px;">No</th>
+                                <th style="width: 130px;">Jenis Dokumen</th>
+                                <th style="width: 110px;">Tanggal</th>
+                                <th>Mata Pelajaran & Kelas</th>
+                                <th style="text-align: center; width: 130px;">Kehadiran</th>
+                                <th>Pengawas Ujian</th>
+                                <th style="width: 130px;">Waktu Arsip</th>
+                                <th style="text-align: center; width: 160px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminArchiveTableBody">
+                            <tr>
+                                <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                                    <i class="bi bi-hourglass-split" style="font-size: 2rem; display: block; margin-bottom: 6px; opacity: 0.4;"></i>
+                                    Memuat data arsip dokumen...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- MODAL PRATINJAU DOKUMEN ARSIP -->
+<div id="previewArchiveModal" class="modal-overlay">
+    <div class="modal-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1rem;">
+            <div>
+                <h3 id="previewModalTitle" style="font-size: 1.15rem; margin: 0; color: var(--text-heading);">Pratinjau Dokumen Arsip</h3>
+                <div id="previewModalSubtitle" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;"></div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="printModalDoc()"><i class="bi bi-printer"></i> Cetak Ulang</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="downloadModalPdf()"><i class="bi bi-download"></i> Unduh PDF</button>
+                <button type="button" onclick="closePreviewModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); margin-left: 8px;">&times;</button>
+            </div>
+        </div>
+        <div id="modalRenderContainer" style="flex: 1; overflow-y: auto; background: #e2e8f0; padding: 1rem; border-radius: var(--radius-sm); display: flex; justify-content: center;">
+            <!-- Document preview renders here -->
+        </div>
+    </div>
+</div>
+
+<script src="/assets/js/admin-common.js"></script>
+<script>
+let adminArchivesData = [];
+let currentAdminArchiveFilter = 'all';
+let activeAdminPreviewDoc = null;
+
+async function fetchAdminArchives() {
+    try {
+        const res = await fetch('/api/archives?t=' + Date.now());
+        if (res.ok) {
+            adminArchivesData = await res.json();
+        } else {
+            const cached = localStorage.getItem('sas_archives');
+            adminArchivesData = cached ? JSON.parse(cached) : [];
+        }
+    } catch (err) {
+        const cached = localStorage.getItem('sas_archives');
+        adminArchivesData = cached ? JSON.parse(cached) : [];
+    }
+    
+    if (!Array.isArray(adminArchivesData)) adminArchivesData = [];
+    populateFilterDropdowns();
+    renderAdminArchivesTable();
+}
+
+function populateFilterDropdowns() {
+    const selTahun = document.getElementById('filterTahunAjaran');
+    const selKelas = document.getElementById('filterKelas');
+    const selMapel = document.getElementById('filterMapel');
+
+    const years = new Set();
+    const classes = new Set();
+    const subjects = new Set();
+
+    adminArchivesData.forEach(d => {
+        if (d.tahun_ajaran) years.add(d.tahun_ajaran.trim());
+        if (d.nama_kelas) classes.add(d.nama_kelas.trim());
+        if (d.mata_pelajaran) subjects.add(d.mata_pelajaran.trim());
+    });
+
+    // Ambil juga dari db jika ada
+    if (db) {
+        if (db.settings && Array.isArray(db.settings.academic_years)) {
+            db.settings.academic_years.forEach(y => years.add(y));
+        }
+        if (Array.isArray(db.classes)) {
+            db.classes.forEach(c => classes.add(c.name));
+        }
+        if (db.settings && Array.isArray(db.settings.subjects)) {
+            db.settings.subjects.forEach(s => subjects.add(s));
+        }
+    }
+
+    const curY = selTahun.value;
+    const curK = selKelas.value;
+    const curM = selMapel.value;
+
+    selTahun.innerHTML = '<option value="">Semua Tahun Ajaran</option>' + 
+        Array.from(years).sort().map(y => `<option value="${y}" ${y === curY ? 'selected' : ''}>${y}</option>`).join('');
+
+    selKelas.innerHTML = '<option value="">Semua Kelas</option>' + 
+        Array.from(classes).sort().map(k => `<option value="${k}" ${k === curK ? 'selected' : ''}>${k}</option>`).join('');
+
+    selMapel.innerHTML = '<option value="">Semua Mapel</option>' + 
+        Array.from(subjects).sort().map(m => `<option value="${m}" ${m === curM ? 'selected' : ''}>${m}</option>`).join('');
+}
+
+function resetAllFilters() {
+    document.getElementById('filterTahunAjaran').value = '';
+    document.getElementById('filterSemester').value = '';
+    document.getElementById('filterTanggal').value = '';
+    document.getElementById('filterKelas').value = '';
+    document.getElementById('filterMapel').value = '';
+    document.getElementById('searchAdminArchiveInput').value = '';
+    currentAdminArchiveFilter = 'all';
+    document.querySelectorAll('.admin-archive-filter').forEach(btn => {
+        if (btn.getAttribute('data-type') === 'all') {
+            btn.classList.add('btn-primary');
+            btn.classList.remove('btn-secondary');
+        } else {
+            btn.classList.add('btn-secondary');
+            btn.classList.remove('btn-primary');
+        }
+    });
+    renderAdminArchivesTable();
+    showToast('Seluruh filter telah di-reset.', 'info');
+}
+
+function filterAdminArchives(type) {
+    currentAdminArchiveFilter = type;
+    document.querySelectorAll('.admin-archive-filter').forEach(btn => {
+        if (btn.getAttribute('data-type') === type) {
+            btn.classList.add('btn-primary');
+            btn.classList.remove('btn-secondary');
+        } else {
+            btn.classList.add('btn-secondary');
+            btn.classList.remove('btn-primary');
+        }
+    });
+    renderAdminArchivesTable();
+}
+
+function renderAdminArchivesTable() {
+    const tbody = document.getElementById('adminArchiveTableBody');
+    if (!tbody) return;
+
+    const search = (document.getElementById('searchAdminArchiveInput')?.value || '').toLowerCase().trim();
+    const fTahun = document.getElementById('filterTahunAjaran')?.value || '';
+    const fSemester = document.getElementById('filterSemester')?.value || '';
+    const fTanggal = document.getElementById('filterTanggal')?.value || '';
+    const fKelas = document.getElementById('filterKelas')?.value || '';
+    const fMapel = document.getElementById('filterMapel')?.value || '';
+
+    let list = adminArchivesData;
+
+    // 1. Tipe
+    if (currentAdminArchiveFilter !== 'all') {
+        list = list.filter(a => a.type === currentAdminArchiveFilter);
+    }
+
+    // 2. Tahun Ajaran
+    if (fTahun) {
+        list = list.filter(a => a.tahun_ajaran && a.tahun_ajaran.toLowerCase() === fTahun.toLowerCase());
+    }
+
+    // 3. Semester
+    if (fSemester) {
+        list = list.filter(a => a.semester && a.semester.toLowerCase() === fSemester.toLowerCase());
+    }
+
+    // 4. Tanggal
+    if (fTanggal) {
+        list = list.filter(a => a.tanggal_ujian === fTanggal);
+    }
+
+    // 5. Kelas
+    if (fKelas) {
+        list = list.filter(a => a.nama_kelas && a.nama_kelas.toLowerCase() === fKelas.toLowerCase());
+    }
+
+    // 6. Mapel
+    if (fMapel) {
+        list = list.filter(a => a.mata_pelajaran && a.mata_pelajaran.toLowerCase() === fMapel.toLowerCase());
+    }
+
+    // 7. Search text
+    if (search) {
+        list = list.filter(a => 
+            (a.nama_kelas && a.nama_kelas.toLowerCase().includes(search)) ||
+            (a.mata_pelajaran && a.mata_pelajaran.toLowerCase().includes(search)) ||
+            (a.tanggal_ujian && a.tanggal_ujian.toLowerCase().includes(search)) ||
+            (a.nama_pengawas_1 && a.nama_pengawas_1.toLowerCase().includes(search)) ||
+            (a.nama_pengawas_2 && a.nama_pengawas_2.toLowerCase().includes(search)) ||
+            (a.title && a.title.toLowerCase().includes(search)) ||
+            (a.ruang && a.ruang.toLowerCase().includes(search))
+        );
+    }
+
+    if (list.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                    <i class="bi bi-inbox" style="font-size: 2.5rem; display: block; margin-bottom: 8px; opacity: 0.4;"></i>
+                    Tidak ada dokumen arsip yang sesuai dengan kriteria filter.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    let html = '';
+    list.forEach((doc, idx) => {
+        const isDh = doc.type === 'daftar_hadir';
+        const typeBadge = isDh 
+            ? `<span class="badge" style="background:#EFF6FF; color:#2563EB; font-weight:700;"><i class="bi bi-clipboard-check"></i> Daftar Hadir</span>`
+            : `<span class="badge" style="background:#FAF5FF; color:#7C3AED; font-weight:700;"><i class="bi bi-file-earmark-text"></i> Berita Acara</span>`;
+
+        const hadirPill = `
+            <span style="font-weight: 700; color: #065F46; background: #ECFDF5; padding: 3px 8px; border-radius: 4px; font-size: 0.78rem;">
+                ${doc.peserta_hadir || 0} / ${doc.peserta_seharusnya || 0}
+            </span>
+        `;
+
+        const proctorStr = doc.nama_pengawas_1 
+            ? `${doc.nama_pengawas_1}${doc.nama_pengawas_2 ? ', ' + doc.nama_pengawas_2 : ''}` 
+            : '-';
+
+        const createdDate = doc.created_at ? new Date(doc.created_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }) : '-';
+
+        html += `
+            <tr>
+                <td>${idx + 1}</td>
+                <td>${typeBadge}</td>
+                <td><strong>${doc.tanggal_ujian || '-'}</strong></td>
+                <td>
+                    <strong>${doc.mata_pelajaran || '-'}</strong>
+                    <div style="font-size: 0.78rem; color: var(--text-muted);">
+                        Kelas: <strong style="color: var(--primary);">${doc.nama_kelas || '-'}</strong> 
+                        ${doc.tahun_ajaran ? '• ' + doc.tahun_ajaran : ''} 
+                        ${doc.semester ? '(' + doc.semester + ')' : ''}
+                    </div>
+                </td>
+                <td style="text-align: center;">${hadirPill}</td>
+                <td><div style="font-size: 0.82rem; max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${proctorStr}">${proctorStr}</div></td>
+                <td style="font-size: 0.8rem; color: var(--text-muted);">${createdDate}</td>
+                <td style="text-align: center;">
+                    <div style="display: flex; gap: 4px; justify-content: center;">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="openAdminPreviewDoc(${doc.id})" title="Lihat & Cetak Ulang"><i class="bi bi-eye"></i></button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="quickDownloadPdfAdmin(${doc.id})" title="Unduh PDF"><i class="bi bi-download"></i></button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteAdminArchive(${doc.id})" title="Hapus dari database"><i class="bi bi-trash"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+}
+
+async function deleteAdminArchive(id) {
+    if (!confirm('Apakah Anda yakin ingin menghapus arsip dokumen ini secara permanen dari basis data?')) return;
+
+    try {
+        const res = await fetch('/api/delete-archive', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id })
+        });
+        const result = await res.json();
+        if (result.success) {
+            adminArchivesData = adminArchivesData.filter(a => Number(a.id) !== Number(id));
+            localStorage.setItem('sas_archives', JSON.stringify(adminArchivesData));
+            renderAdminArchivesTable();
+            showToast('Arsip dokumen berhasil dihapus.', 'info');
+        } else {
+            showToast('Gagal menghapus arsip: ' + result.message, 'danger');
+        }
+    } catch (err) {
+        showToast('Kesalahan koneksi saat menghapus arsip.', 'danger');
+    }
+}
+
+function openAdminPreviewDoc(docId) {
+    const doc = adminArchivesData.find(a => Number(a.id) === Number(docId));
+    if (!doc) return;
+
+    activeAdminPreviewDoc = doc;
+    document.getElementById('previewModalTitle').textContent = doc.title || 'Pratinjau Dokumen Arsip';
+    document.getElementById('previewModalSubtitle').textContent = `${doc.mata_pelajaran || ''} | Kelas: ${doc.nama_kelas || ''} | Tanggal: ${doc.tanggal_ujian || ''} | ${doc.tahun_ajaran || ''}`;
+
+    const container = document.getElementById('modalRenderContainer');
+    container.innerHTML = doc.html_content || '<div style="padding: 2rem; text-align: center;">Konten dokumen tidak tersedia.</div>';
+
+    document.getElementById('previewArchiveModal').style.display = 'flex';
+}
+
+function closePreviewModal() {
+    document.getElementById('previewArchiveModal').style.display = 'none';
+    activeAdminPreviewDoc = null;
+}
+
+function printModalDoc() {
+    const container = document.getElementById('modalRenderContainer');
+    if (!container) return;
+
+    const printWin = window.open('', '', 'width=900,height=700');
+    printWin.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>${activeAdminPreviewDoc ? activeAdminPreviewDoc.title : 'Dokumen Ujian'}</title>
+            <link rel="stylesheet" href="/assets/css/preview-a4.css">
+            <style>
+                body { margin: 0; padding: 0; background: #fff; }
+                @page { size: A4; margin: 0; }
+            </style>
+        </head>
+        <body>
+            ${container.innerHTML}
+            <script>
+                window.onload = function() {
+                    window.print();
+                    setTimeout(function() { window.close(); }, 500);
+                };
+            <\/script>
+        </body>
+        </html>
+    `);
+    printWin.document.close();
+}
+
+function downloadModalPdf() {
+    if (!activeAdminPreviewDoc) return;
+    const container = document.getElementById('modalRenderContainer');
+    const opt = {
+        margin: [5, 5, 5, 5],
+        filename: activeAdminPreviewDoc.filename || 'Dokumen_Ujian.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+    html2pdf().set(opt).from(container).save();
+}
+
+function quickDownloadPdfAdmin(docId) {
+    const doc = adminArchivesData.find(a => Number(a.id) === Number(docId));
+    if (!doc) return;
+
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'fixed';
+    tempDiv.style.left = '-9999px';
+    tempDiv.style.width = '794px';
+    tempDiv.innerHTML = doc.html_content || '';
+    document.body.appendChild(tempDiv);
+
+    const opt = {
+        margin: [5, 5, 5, 5],
+        filename: doc.filename || 'Dokumen_Ujian.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+
+    html2pdf().set(opt).from(tempDiv).save().then(() => {
+        document.body.removeChild(tempDiv);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadAdminDatabase();
+    await fetchAdminArchives();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - SMK NEGERI 1 KLUNGKUNG</title>
+    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="icon" type="image/png" href="/assets/img/logo.png">
+    <script src="/assets/js/xlsx.full.min.js"></script>
+    <style>
+        .admin-layout { display: flex; min-height: calc(100vh - 70px); }
+        .admin-sidebar {
+            width: 260px; background: #ffffff; border-right: 1px solid var(--border);
+            padding: 1.5rem 1rem; display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .admin-nav { list-style: none; display: flex; flex-direction: column; gap: 0.35rem; }
+        .admin-nav-item {
+            display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+            border-radius: var(--radius-sm); color: var(--text-main); font-weight: 600;
+            font-size: 0.9rem; text-decoration: none; cursor: pointer; transition: all 0.2s ease;
+        }
+        .admin-nav-item:hover, .admin-nav-item.active { background: var(--primary-light); color: var(--primary); }
+        .admin-content { flex: 1; padding: 2rem; background: var(--bg-body); overflow-y: auto; }
+        .stat-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1.25rem; margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: #ffffff; border-radius: var(--radius-md); border: 1px solid var(--border);
+            padding: 1.25rem 1.5rem; box-shadow: var(--shadow-xs); display: flex; align-items: center; gap: 1rem;
+        }
+        .stat-icon {
+            width: 50px; height: 50px; border-radius: 12px; display: flex;
+            align-items: center; justify-content: center; font-size: 1.5rem;
+        }
+        .stat-value { font-size: 1.6rem; font-weight: 800; color: var(--text-heading); line-height: 1.1; }
+        .stat-label { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+        .toast-notify {
+            position: fixed; bottom: 24px; right: 24px; background: #1E293B; color: #ffffff;
+            padding: 12px 20px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            display: flex; align-items: center; gap: 10px; z-index: 10000; font-size: 0.9rem;
+            font-weight: 600; opacity: 0; transform: translateY(20px); transition: all 0.3s ease;
+            pointer-events: none;
+        }
+        .toast-notify.show { opacity: 1; transform: translateY(0); }
+        .toast-notify.toast-success { background: #065F46; }
+        .toast-notify.toast-danger { background: #991B1B; }
+        .toast-notify.toast-info { background: #1E3A8A; }
+        @media (max-width: 900px) {
+            .admin-layout { flex-direction: column; }
+            .admin-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+            .admin-content { padding: 1.25rem; }
+        }
+    </style>
+    <script src="/assets/js/github-pages-compat.js"></script>
+</head>
+<body>
+
+<header class="navbar">
+    <div class="navbar-brand">
+        <a href="/" class="brand-link">
+            <img src="/assets/img/logo.png" alt="Logo Sekolah" class="navbar-logo">
+            <div class="brand-text">
+                <span class="brand-title">SMK NEGERI 1 KLUNGKUNG</span>
+                <span class="brand-subtitle">Panel Administrator Database</span>
+            </div>
+        </a>
+    </div>
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">
+            <i class="bi bi-person-circle"></i> <span id="adminUsername">Administrator</span>
+        </span>
+        <a href="/" class="btn btn-secondary btn-sm"><i class="bi bi-house"></i> Beranda Publik</a>
+        <button type="button" class="btn btn-danger btn-sm" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Keluar</button>
+    </div>
+</header>
+
+<div class="admin-layout">
+    <!-- SIDEBAR MENU TERSAMBUNG KE MASING-MASING HALAMAN PENUH -->
+    <aside class="admin-sidebar">
+        <div>
+            <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); margin-bottom: 0.75rem; padding-left: 10px;">
+                Menu Manajemen
+            </div>
+            <ul class="admin-nav">
+                <li><a href="/admin/index.html" class="admin-nav-item active"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                <li><a href="/admin/siswa.html" class="admin-nav-item"><i class="bi bi-people"></i> Siswa & Master Kelas</a></li>
+                <li><a href="/admin/guru.html" class="admin-nav-item"><i class="bi bi-person-workspace"></i> Master Data Guru & Pengawas</a></li>
+                <li><a href="/admin/template.html" class="admin-nav-item"><i class="bi bi-file-earmark-text"></i> Template Ujian</a></li>
+                <li><a href="/admin/arsip.html" class="admin-nav-item"><i class="bi bi-archive-fill"></i> Arsip Dokumen Ujian</a></li>
+                <li><a href="/admin/pengaturan.html" class="admin-nav-item"><i class="bi bi-sliders"></i> Pengaturan Sekolah & Kop</a></li>
+                <li><a href="/admin/users.html" class="admin-nav-item"><i class="bi bi-person-badge-fill"></i> Manajemen User</a></li>
+                <li><a href="/admin/database.html" class="admin-nav-item"><i class="bi bi-database"></i> Backup & Database SQL</a></li>
+            </ul>
+        </div>
+        <div style="font-size: 0.78rem; color: var(--text-muted); padding: 10px; border-top: 1px solid var(--border);">
+            Sistem SAS v2.5<br>SMK Negeri 1 Klungkung
+        </div>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="admin-content">
+        <!-- STATS BAR -->
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: var(--primary-light); color: var(--primary);"><i class="bi bi-building"></i></div>
+                <div>
+                    <div class="stat-value" id="countClasses">11</div>
+                    <div class="stat-label">Total Kelas Aktif</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: var(--success-light); color: var(--success);"><i class="bi bi-people-fill"></i></div>
+                <div>
+                    <div class="stat-value" id="countStudents">258</div>
+                    <div class="stat-label">Total Siswa Terdaftar</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #E0E7FF; color: #4338CA;"><i class="bi bi-person-workspace"></i></div>
+                <div>
+                    <div class="stat-value" id="countTeachers">10</div>
+                    <div class="stat-label">Guru & Pengawas</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: var(--warning-light); color: var(--warning);"><i class="bi bi-file-earmark-check"></i></div>
+                <div>
+                    <div class="stat-value" id="countTemplates">2</div>
+                    <div class="stat-label">Template Ujian</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #ECFDF5; color: #059669;"><i class="bi bi-archive-fill"></i></div>
+                <div>
+                    <div class="stat-value" id="countArchives">0</div>
+                    <div class="stat-label">Dokumen Diarsipkan</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #FEF3C7; color: #D97706;"><i class="bi bi-person-badge-fill"></i></div>
+                <div>
+                    <div class="stat-value" id="countUsers">1</div>
+                    <div class="stat-label">User Administrator</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SELAMAT DATANG CARD -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <div class="card-header">
+                <span class="card-title"><i class="bi bi-info-circle-fill" style="color: var(--primary);"></i> Selamat Datang di Panel Manajemen SAS</span>
+            </div>
+            <div class="card-body">
+                <p style="color: var(--text-muted); line-height: 1.6; margin-bottom: 1.25rem;">
+                    Gunakan bilah menu di sebelah kiri untuk mengelola data siswa, guru & pengawas, template ujian, arsip dokumen, pengaturan identitas kop surat, serta manajemen akun admin secara mandiri per menu.
+                </p>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <a href="/admin/siswa.html" class="btn btn-primary btn-sm"><i class="bi bi-people"></i> Kelola Siswa & Kelas</a>
+                    <a href="/admin/guru.html" class="btn btn-secondary btn-sm"><i class="bi bi-person-workspace"></i> Kelola Guru</a>
+                    <a href="/admin/template.html" class="btn btn-secondary btn-sm"><i class="bi bi-file-earmark-text"></i> Template Ujian</a>
+                    <a href="/admin/arsip.html" class="btn btn-secondary btn-sm"><i class="bi bi-archive-fill"></i> Arsip Dokumen</a>
+                    <a href="/admin/users.html" class="btn btn-secondary btn-sm"><i class="bi bi-person-badge-fill"></i> Manajemen User</a>
+                    <a href="/admin/pengaturan.html" class="btn btn-secondary btn-sm"><i class="bi bi-sliders"></i> Pengaturan Kop</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- RINGKASAN DATA KELAS -->
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="card-title"><i class="bi bi-grid-3x3-gap-fill"></i> Ringkasan Siswa per Kelas</span>
+                <a href="/admin/siswa.html" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-right"></i> Buka Master Siswa</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table" id="classSummaryTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nama Kelas</th>
+                                <th>Tingkat</th>
+                                <th>Program Keahlian</th>
+                                <th style="text-align: center;">Jumlah Siswa</th>
+                                <th style="text-align: center;">Aksi Cepat</th>
+                            </tr>
+                        </thead>
+                        <tbody id="classSummaryBody">
+                            <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">Memuat data kelas...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="/assets/js/admin-common.js"></script>
+<script>
+async function initDashboard() {
+    await loadAdminDatabase();
+
+    // Stats
+    document.getElementById('countClasses').textContent = (db.classes || []).length;
+    document.getElementById('countStudents').textContent = (db.students || []).length;
+    document.getElementById('countTeachers').textContent = (db.teachers || []).length;
+    document.getElementById('countTemplates').textContent = (db.templates || []).length;
+    document.getElementById('countArchives').textContent = (db.archives || []).length;
+    document.getElementById('countUsers').textContent = (db.users || []).length;
+
+    // Render classes table
+    const tbody = document.getElementById('classSummaryBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    (db.classes || []).forEach(c => {
+        const stCount = (db.students || []).filter(s => String(s.class_id) === String(c.id)).length;
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>#${c.id}</strong></td>
+                <td><strong>${c.nama_kelas}</strong></td>
+                <td><span class="badge" style="background: var(--slate-100); color: var(--slate-700); padding: 4px 8px; border-radius: 4px;">${c.tingkat}</span></td>
+                <td>${c.program_keahlian || '-'}</td>
+                <td style="text-align: center; font-weight: 700; color: var(--primary);">${stCount} Siswa</td>
+                <td style="text-align: center;">
+                    <a href="/admin/siswa.html?class_id=${c.id}" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.78rem;">
+                        <i class="bi bi-eye"></i> Lihat Siswa
+                    </a>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+document.addEventListener('DOMContentLoaded', initDashboard);
+</script>
+</body>
+</html>

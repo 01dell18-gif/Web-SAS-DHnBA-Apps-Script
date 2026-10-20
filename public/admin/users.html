@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen User - Panel Administrator SMK NEGERI 1 KLUNGKUNG</title>
+    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="icon" type="image/png" href="/assets/img/logo.png">
+    <style>
+        .admin-layout { display: flex; min-height: calc(100vh - 70px); }
+        .admin-sidebar { width: 260px; background: #ffffff; border-right: 1px solid var(--border); padding: 1.5rem 1rem; display: flex; flex-direction: column; justify-content: space-between; }
+        .admin-nav { list-style: none; display: flex; flex-direction: column; gap: 0.35rem; }
+        .admin-nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-sm); color: var(--text-main); font-weight: 600; font-size: 0.9rem; text-decoration: none; cursor: pointer; transition: all 0.2s ease; }
+        .admin-nav-item:hover, .admin-nav-item.active { background: var(--primary-light); color: var(--primary); }
+        .admin-content { flex: 1; padding: 2rem; background: var(--bg-body); overflow-y: auto; }
+        .toast-notify { position: fixed; bottom: 24px; right: 24px; background: #1E293B; color: #ffffff; padding: 12px 20px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px; z-index: 10000; font-size: 0.9rem; font-weight: 600; opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
+        .toast-notify.show { opacity: 1; transform: translateY(0); }
+        .toast-notify.toast-success { background: #065F46; }
+        .toast-notify.toast-danger { background: #991B1B; }
+        .toast-notify.toast-info { background: #1E3A8A; }
+
+        /* Modal Overlay */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: 1rem; }
+        .modal-card { background: #ffffff; width: 100%; max-width: 500px; border-radius: var(--radius-lg); padding: 1.75rem; box-shadow: var(--shadow-lg); max-height: 90vh; overflow-y: auto; }
+
+        @media (max-width: 900px) {
+            .admin-layout { flex-direction: column; }
+            .admin-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+            .admin-content { padding: 1.25rem; }
+        }
+    </style>
+    <script src="/assets/js/github-pages-compat.js"></script>
+</head>
+<body>
+
+<header class="navbar">
+    <div class="navbar-brand">
+        <a href="/" class="brand-link">
+            <img src="/assets/img/logo.png" alt="Logo Sekolah" class="navbar-logo">
+            <div class="brand-text">
+                <span class="brand-title">SMK NEGERI 1 KLUNGKUNG</span>
+                <span class="brand-subtitle">Panel Administrator Database</span>
+            </div>
+        </a>
+    </div>
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">
+            <i class="bi bi-person-circle"></i> <span id="adminUsername">Administrator</span>
+        </span>
+        <a href="/" class="btn btn-secondary btn-sm"><i class="bi bi-house"></i> Beranda Publik</a>
+        <button type="button" class="btn btn-danger btn-sm" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Keluar</button>
+    </div>
+</header>
+
+<div class="admin-layout">
+    <!-- SIDEBAR -->
+    <aside class="admin-sidebar">
+        <div>
+            <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); margin-bottom: 0.75rem; padding-left: 10px;">
+                Menu Manajemen
+            </div>
+            <ul class="admin-nav">
+                <li><a href="/admin/index.html" class="admin-nav-item"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                <li><a href="/admin/siswa.html" class="admin-nav-item"><i class="bi bi-people"></i> Siswa & Master Kelas</a></li>
+                <li><a href="/admin/guru.html" class="admin-nav-item"><i class="bi bi-person-workspace"></i> Master Data Guru & Pengawas</a></li>
+                <li><a href="/admin/template.html" class="admin-nav-item"><i class="bi bi-file-earmark-text"></i> Template Ujian</a></li>
+                <li><a href="/admin/arsip.html" class="admin-nav-item"><i class="bi bi-archive-fill"></i> Arsip Dokumen Ujian</a></li>
+                <li><a href="/admin/pengaturan.html" class="admin-nav-item"><i class="bi bi-sliders"></i> Pengaturan Sekolah & Kop</a></li>
+                <li><a href="/admin/users.html" class="admin-nav-item active"><i class="bi bi-person-badge-fill"></i> Manajemen User</a></li>
+                <li><a href="/admin/database.html" class="admin-nav-item"><i class="bi bi-database"></i> Backup & Database SQL</a></li>
+            </ul>
+        </div>
+        <div style="font-size: 0.78rem; color: var(--text-muted); padding: 10px; border-top: 1px solid var(--border);">
+            Sistem SAS v2.5<br>SMK Negeri 1 Klungkung
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="admin-content">
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <span class="card-title" style="margin: 0;"><i class="bi bi-person-badge-fill"></i> Manajemen User & Hak Akses</span>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                        Kelola akun operator dan administrator yang memiliki otorisasi masuk ke Panel Administrator SAS.
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="fetchUsers()"><i class="bi bi-arrow-clockwise"></i> Segarkan</button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="openCreateUserModal()"><i class="bi bi-person-plus-fill"></i> Tambah User Baru</button>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-heading);" id="userCountSummary">
+                        Total: 0 Pengguna Terdaftar
+                    </span>
+                    <div style="position: relative; max-width: 280px; width: 100%;">
+                        <input type="text" id="searchUserInput" class="form-control form-control-sm" placeholder="Cari username atau nama..." oninput="renderUsersTable()">
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">No</th>
+                                <th>Username</th>
+                                <th>Nama Lengkap</th>
+                                <th style="width: 140px;">Hak Akses / Peran</th>
+                                <th style="width: 160px;">Tanggal Dibuat</th>
+                                <th style="text-align: center; width: 140px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                                    <i class="bi bi-hourglass-split" style="font-size: 2rem; display: block; margin-bottom: 6px; opacity: 0.4;"></i>
+                                    Memuat data pengguna...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- MODAL TAMBAH / EDIT USER -->
+<div id="userModal" class="modal-overlay">
+    <div class="modal-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
+            <h3 id="userModalTitle" style="font-size: 1.15rem; margin: 0;">Tambah User Pengguna</h3>
+            <button type="button" onclick="closeUserModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+        </div>
+        <form id="userForm" onsubmit="handleSaveUser(event)">
+            <input type="hidden" id="user_id">
+            
+            <div class="form-group">
+                <label class="form-label">Username <span class="required">*</span></label>
+                <input type="text" id="user_username" class="form-control" placeholder="Contoh: operator1" required autocomplete="off">
+                <div class="form-hint">Digunakan saat proses login. Huruf kecil, angka, atau garis bawah tanpa spasi.</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Nama Lengkap Pengguna <span class="required">*</span></label>
+                <input type="text" id="user_nama" class="form-control" placeholder="Contoh: Ni Putu Wulan Sari, S.Kom" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Peran / Hak Akses <span class="required">*</span></label>
+                <select id="user_role" class="form-select" required>
+                    <option value="admin">Administrator (Akses Penuh)</option>
+                    <option value="operator">Operator Ujian (Kelola Data & Dokumen)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" id="userPasswordLabel">Password <span class="required" id="userPassRequiredStar">*</span></label>
+                <div style="position: relative;">
+                    <input type="password" id="user_password" class="form-control" placeholder="Ketik kata sandi..." autocomplete="new-password">
+                    <button type="button" id="btnToggleUserPass" onclick="toggleUserPasswordVisibility()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1.1rem; padding: 4px;">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+                <div class="form-hint" id="userPassHint">Minimal 4 karakter.</div>
+            </div>
+
+            <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 1.75rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Batal</button>
+                <button type="submit" class="btn btn-primary" id="btnSubmitUser"><i class="bi bi-check2"></i> Simpan User</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="/assets/js/admin-common.js"></script>
+<script>
+let usersList = [];
+
+async function fetchUsers() {
+    try {
+        const res = await fetch('/api/users?t=' + Date.now());
+        if (res.ok) {
+            usersList = await res.json();
+        } else {
+            // Fallback db
+            if (db && Array.isArray(db.users)) {
+                usersList = db.users;
+            }
+        }
+    } catch (e) {
+        if (db && Array.isArray(db.users)) {
+            usersList = db.users;
+        }
+    }
+
+    if (!Array.isArray(usersList) || usersList.length === 0) {
+        usersList = [
+            { id: 1, username: 'admin', nama: 'Administrator Utama', role: 'admin', created_at: '2025-01-01' }
+        ];
+    }
+
+    renderUsersTable();
+}
+
+function renderUsersTable() {
+    const tbody = document.getElementById('usersTableBody');
+    if (!tbody) return;
+
+    const search = (document.getElementById('searchUserInput')?.value || '').toLowerCase().trim();
+    let filtered = usersList;
+
+    if (search) {
+        filtered = filtered.filter(u => 
+            (u.username && u.username.toLowerCase().includes(search)) ||
+            (u.nama && u.nama.toLowerCase().includes(search)) ||
+            (u.role && u.role.toLowerCase().includes(search))
+        );
+    }
+
+    document.getElementById('userCountSummary').textContent = `Total: ${filtered.length} Pengguna Terdaftar`;
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                    <i class="bi bi-people" style="font-size: 2rem; display: block; margin-bottom: 6px; opacity: 0.4;"></i>
+                    Tidak ada pengguna yang cocok dengan pencarian.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    let html = '';
+    filtered.forEach((user, idx) => {
+        const isMasterAdmin = user.username === 'admin';
+        const roleBadge = user.role === 'admin' 
+            ? `<span class="badge" style="background:#EEF2FF; color:#4338CA; font-weight:700;"><i class="bi bi-shield-lock-fill"></i> Admin</span>`
+            : `<span class="badge" style="background:#F0FDF4; color:#166534; font-weight:700;"><i class="bi bi-person-gear"></i> Operator</span>`;
+
+        const createdStr = user.created_at ? new Date(user.created_at).toLocaleDateString('id-ID', { dateStyle: 'medium' }) : '-';
+
+        html += `
+            <tr>
+                <td>${idx + 1}</td>
+                <td>
+                    <strong><i class="bi bi-person-fill" style="color: var(--primary);"></i> ${user.username}</strong>
+                    ${isMasterAdmin ? ' <span style="font-size: 0.72rem; color: #D97706; font-weight: 700;">(Akun Utama)</span>' : ''}
+                </td>
+                <td>${user.nama || '-'}</td>
+                <td>${roleBadge}</td>
+                <td style="font-size: 0.82rem; color: var(--text-muted);">${createdStr}</td>
+                <td style="text-align: center;">
+                    <div style="display: flex; gap: 4px; justify-content: center;">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="openEditUserModal(${user.id})" title="Edit User">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        ${isMasterAdmin ? `
+                            <button type="button" class="btn btn-outline-danger btn-sm" disabled title="Akun admin utama tidak dapat dihapus" style="opacity: 0.4; cursor: not-allowed;">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        ` : `
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteUser(${user.id}, '${user.username}')" title="Hapus User">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        `}
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+}
+
+function openCreateUserModal() {
+    document.getElementById('userModalTitle').textContent = 'Tambah User Pengguna Baru';
+    document.getElementById('user_id').value = '';
+    document.getElementById('user_username').value = '';
+    document.getElementById('user_username').disabled = false;
+    document.getElementById('user_nama').value = '';
+    document.getElementById('user_role').value = 'admin';
+    document.getElementById('user_password').value = '';
+    document.getElementById('user_password').required = true;
+    document.getElementById('userPassRequiredStar').style.display = 'inline';
+    document.getElementById('userPassHint').textContent = 'Kata sandi minimal 4 karakter.';
+    document.getElementById('userModal').style.display = 'flex';
+    document.getElementById('user_username').focus();
+}
+
+function openEditUserModal(userId) {
+    const user = usersList.find(u => Number(u.id) === Number(userId));
+    if (!user) return;
+
+    document.getElementById('userModalTitle').textContent = `Edit User (${user.username})`;
+    document.getElementById('user_id').value = user.id;
+    document.getElementById('user_username').value = user.username;
+    // Master admin username cannot be changed
+    document.getElementById('user_username').disabled = (user.username === 'admin');
+    document.getElementById('user_nama').value = user.nama || '';
+    document.getElementById('user_role').value = user.role || 'admin';
+    document.getElementById('user_password').value = '';
+    document.getElementById('user_password').required = false;
+    document.getElementById('userPassRequiredStar').style.display = 'none';
+    document.getElementById('userPassHint').textContent = 'Kosongkan jika tidak ingin mengubah kata sandi.';
+    document.getElementById('userModal').style.display = 'flex';
+}
+
+function closeUserModal() {
+    document.getElementById('userModal').style.display = 'none';
+}
+
+function toggleUserPasswordVisibility() {
+    const passInput = document.getElementById('user_password');
+    const toggleBtn = document.getElementById('btnToggleUserPass');
+    if (passInput.type === 'password') {
+        passInput.type = 'text';
+        toggleBtn.innerHTML = '<i class="bi bi-eye-slash"></i>';
+    } else {
+        passInput.type = 'password';
+        toggleBtn.innerHTML = '<i class="bi bi-eye"></i>';
+    }
+}
+
+async function handleSaveUser(e) {
+    e.preventDefault();
+    const id = document.getElementById('user_id').value;
+    const username = document.getElementById('user_username').value.trim();
+    const nama = document.getElementById('user_nama').value.trim();
+    const role = document.getElementById('user_role').value;
+    const password = document.getElementById('user_password').value;
+
+    if (!username || !nama) {
+        showToast('Username dan nama lengkap harus diisi.', 'danger');
+        return;
+    }
+
+    if (!id && !password) {
+        showToast('Password wajib diisi untuk pengguna baru.', 'danger');
+        return;
+    }
+
+    const payload = {
+        id: id || undefined,
+        username,
+        nama,
+        role,
+        password: password || undefined
+    };
+
+    try {
+        const res = await fetch('/api/save-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if (result.success) {
+            closeUserModal();
+            showToast(result.message || 'User berhasil disimpan!', 'success');
+            await fetchUsers();
+        } else {
+            showToast('Gagal: ' + result.message, 'danger');
+        }
+    } catch (err) {
+        showToast('Kesalahan koneksi saat menyimpan user: ' + err.message, 'danger');
+    }
+}
+
+async function deleteUser(userId, username) {
+    if (username === 'admin') {
+        showToast('Akun administrator utama tidak dapat dihapus!', 'danger');
+        return;
+    }
+
+    if (!confirm(`⚠️ Hapus pengguna "${username}" secara permanen dari sistem?`)) return;
+
+    try {
+        const res = await fetch('/api/delete-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: userId })
+        });
+        const result = await res.json();
+        if (result.success) {
+            showToast(result.message || 'User berhasil dihapus.', 'info');
+            await fetchUsers();
+        } else {
+            showToast('Gagal: ' + result.message, 'danger');
+        }
+    } catch (err) {
+        showToast('Kesalahan koneksi saat menghapus user: ' + err.message, 'danger');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadAdminDatabase();
+    await fetchUsers();
+});
+</script>
+</body>
+</html>
