@@ -709,6 +709,7 @@ function renderClassesTable() {
 
     const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
     const isAdmin = (currentRole === 'admin' || currentRole === 'superadmin');
+    let html = '';
 
     classes.forEach((c, idx) => {
         const stCount = (db.students || []).filter(s => String(s.class_id) === String(c.id)).length;
@@ -918,11 +919,13 @@ async function deleteClass(classId, className, studentCount) {
 // ================= SINKRONISASI KELAS DARI MASTER DATA SISWA =================
 async function syncClassesFromStudents() {
     try {
-        if (!db.students || db.students.length === 0) {
-            const res = await fetch('/api/data');
-            const data = await res.json();
-            if (data && data.students) db.students = data.students;
-            if (data && data.classes && (!db.classes || db.classes.length === 0)) db.classes = data.classes;
+        if (!db.students || db.students.length === 0 || !db.classes || db.classes.length === 0) {
+            const res = await fetch('/data/db.json?t=' + Date.now());
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.students && (!db.students || db.students.length === 0)) db.students = data.students;
+                if (data && data.classes && (!db.classes || db.classes.length === 0)) db.classes = data.classes;
+            }
         }
 
         if (!db.students || db.students.length === 0) {
@@ -985,14 +988,16 @@ async function syncClassesFromStudents() {
                 showToast(`Berhasil menambahkan ${addedCount} kelas baru dari data siswa!`, 'success');
             }
         } else {
+            const totalStudents = db.students.length;
+            const totalClasses = db.classes.length;
             if (typeof showAlertModal === 'function') {
                 showAlertModal({
-                    title: 'Daftar Kelas Lengkap',
-                    message: `Seluruh kelas siswa (${studentClassNames.size || db.classes.length} kelas) sudah terdaftar pada Master Daftar Kelas Resmi. Tidak ada kelas baru yang perlu ditambahkan.`,
-                    type: 'info'
+                    title: 'Daftar Kelas Lengkap & Sinkron',
+                    message: `Master Daftar Kelas Resmi telah sinkron dengan seluruh data siswa (${totalClasses} kelas aktif terhubung dengan ${totalStudents} siswa terdaftar). Seluruh data kelas telah dimuat ke tabel.`,
+                    type: 'success'
                 });
             } else {
-                showToast('Seluruh kelas dari data siswa sudah terdaftar pada Master Kelas.', 'info');
+                showToast(`Seluruh kelas (${totalClasses} kelas) sudah sinkron dengan ${totalStudents} siswa.`, 'success');
             }
         }
     } catch (err) {
