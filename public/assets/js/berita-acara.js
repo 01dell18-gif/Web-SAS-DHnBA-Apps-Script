@@ -233,6 +233,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     if (noticeEl) {
+                        noticeEl.setAttribute('data-synced', '1');
                         noticeEl.style.display = 'block';
                         noticeEl.style.background = '#ECFDF5';
                         noticeEl.style.border = '1px solid #6EE7B7';
@@ -246,6 +247,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     if (noticeEl) {
                         noticeEl.style.display = 'none';
+                        noticeEl.innerHTML = '';
+                    }
+                    // Jika sebelumnya terisi karena sinkronisasi dari arsip yang sekarang telah dihapus, reset kembali datanya
+                    if (noticeEl && noticeEl.getAttribute('data-synced') === '1') {
+                        noticeEl.removeAttribute('data-synced');
+                        const inputSiswaTidakHadir = document.getElementById('siswa_tidak_hadir');
+                        if (inputSiswaTidakHadir) inputSiswaTidakHadir.value = '';
+                        if (inputTidakHadir) inputTidakHadir.value = '0';
+                        if (inputHadir && inputSeharusnya) inputHadir.value = inputSeharusnya.value;
+                        validatePeserta();
+                        updateLivePreview();
                     }
                 }
             })
@@ -253,6 +265,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.warn('Gagal cek sinkronisasi daftar hadir:', err);
             });
     }
+
+    // Dengarkan sinyal penghapusan arsip antar-tab / jendela secara realtime
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'sas_archive_deleted_signal') {
+            syncAttendanceRekap();
+        }
+    });
 
     // Hubungkan event tanggal dan mata pelajaran ke syncAttendanceRekap
     const inputTglUjian = document.getElementById('tanggal_ujian');

@@ -666,6 +666,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Dengarkan sinyal penghapusan arsip antar-tab / jendela secara realtime
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'sas_archive_deleted_signal') {
+            document.querySelectorAll('.student-status-select').forEach(select => {
+                select.value = 'Hadir';
+                const id = select.getAttribute('data-id');
+                if (id) updateStudentStatusInPreview(id, 'Hadir');
+            });
+            updateRekap();
+            updateLivePreview();
+        }
+    });
+
     // Inisialisasi awal
     updateLivePreview();
 });

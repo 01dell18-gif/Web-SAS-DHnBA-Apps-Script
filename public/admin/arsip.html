@@ -452,14 +452,14 @@ async function deleteAdminArchive(id) {
     let confirmed = false;
     if (typeof showConfirmModal === 'function') {
         confirmed = await showConfirmModal({
-            title: 'Hapus Arsip Dokumen',
-            message: 'Apakah Anda yakin ingin menghapus arsip dokumen ini secara permanen dari basis data?',
+            title: 'Hapus Arsip Dokumen Ujian',
+            message: 'Apakah Anda yakin ingin menghapus arsip dokumen ini? Seluruh data dan berkas terkait (baik Daftar Hadir maupun Berita Acara) untuk pelaksanaan ujian ini akan ikut dihapus secara permanen dari basis data.',
             type: 'danger',
-            confirmText: 'Ya, Hapus Dokumen',
+            confirmText: 'Ya, Hapus Dokumen & Berkas Terkait',
             confirmIcon: 'bi-trash-fill'
         });
     } else {
-        confirmed = confirm('Apakah Anda yakin ingin menghapus arsip dokumen ini secara permanen dari basis data?');
+        confirmed = confirm('Apakah Anda yakin ingin menghapus arsip dokumen ini? Seluruh data dan berkas terkait (baik Daftar Hadir maupun Berita Acara) untuk pelaksanaan ujian ini akan ikut dihapus secara permanen dari basis data.');
     }
     if (!confirmed) return;
 
@@ -471,10 +471,12 @@ async function deleteAdminArchive(id) {
         });
         const result = await res.json();
         if (result.success) {
-            adminArchivesData = adminArchivesData.filter(a => Number(a.id) !== Number(id));
+            const deletedIds = (result.deleted_ids || [id]).map(String);
+            adminArchivesData = adminArchivesData.filter(a => !deletedIds.includes(String(a.id)));
             localStorage.setItem('sas_archives', JSON.stringify(adminArchivesData));
+            localStorage.setItem('sas_archive_deleted_signal', JSON.stringify({ deleted_ids: deletedIds, timestamp: Date.now() }));
             renderAdminArchivesTable();
-            showToast('Arsip dokumen berhasil dihapus.', 'info');
+            showToast(result.message || 'Arsip dokumen dan berkas terkait berhasil dihapus.', 'info');
         } else {
             showToast('Gagal menghapus arsip: ' + result.message, 'danger');
         }

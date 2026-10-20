@@ -189,14 +189,64 @@
             });
         }
 
-        // 10. POST /api/delete-archive
+        // 10. POST /api/delete-archive (Hapus Arsip Dokumen & Berkas Terkait)
         if (pathname.includes('/api/delete-archive') && method === 'POST') {
             const payload = JSON.parse(options.body || '{}');
             const localArch = localStorage.getItem('sas_archives');
             let archives = localArch ? JSON.parse(localArch) : (db.archives || []);
-            archives = archives.filter(a => Number(a.id) !== Number(payload.id));
+            const id = payload.id;
+            const target = archives.find(a => String(a.id) === String(id));
+            const deletedIds = [];
+
+            if (target) {
+                const targetClassId = target.class_id ? String(target.class_id) : '';
+                const targetClassName = (target.nama_kelas || '').trim().toLowerCase();
+                const targetMapel = (target.mata_pelajaran || '').trim().toLowerCase();
+                const targetDate = (target.tanggal_ujian || '').trim();
+
+                archives = archives.filter(a => {
+                    const isSameId = String(a.id) === String(id);
+                    if (isSameId) {
+                        deletedIds.push(a.id);
+                        return false;
+                    }
+
+                    const aClassId = a.class_id ? String(a.class_id) : '';
+                    const aClassName = (a.nama_kelas || '').trim().toLowerCase();
+                    const aMapel = (a.mata_pelajaran || '').trim().toLowerCase();
+                    const aDate = (a.tanggal_ujian || '').trim();
+
+                    const isSameDate = Boolean(targetDate && aDate && targetDate === aDate);
+                    const isSameMapel = Boolean(targetMapel && aMapel && (targetMapel === aMapel || aMapel.includes(targetMapel) || targetMapel.includes(aMapel)));
+                    const isSameClass = Boolean((targetClassId && aClassId && targetClassId === aClassId) ||
+                                        (targetClassName && aClassName && (targetClassName === aClassName || aClassName.includes(targetClassName) || targetClassName.includes(aClassName))));
+
+                    if (isSameDate && isSameMapel && isSameClass) {
+                        deletedIds.push(a.id);
+                        return false;
+                    }
+
+                    return true;
+                });
+            } else {
+                archives = archives.filter(a => {
+                    if (String(a.id) === String(id)) {
+                        deletedIds.push(a.id);
+                        return false;
+                    }
+                    return true;
+                });
+            }
+
             localStorage.setItem('sas_archives', JSON.stringify(archives));
-            return new Response(JSON.stringify({ success: true, message: 'Arsip berhasil dihapus.' }), {
+            return new Response(JSON.stringify({ 
+                success: true, 
+                message: deletedIds.length > 1
+                    ? `Dokumen dan ${deletedIds.length - 1} berkas terkait (Daftar Hadir & Berita Acara) berhasil dihapus.`
+                    : 'Arsip berhasil dihapus.',
+                deleted_ids: deletedIds,
+                deleted_count: deletedIds.length
+            }), {
                 status: 200,
                 headers: { 'Content-Type': 'application/json' }
             });

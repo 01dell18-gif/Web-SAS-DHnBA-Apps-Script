@@ -457,7 +457,7 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // 5g. REST API: POST /api/delete-archive (Hapus Arsip Dokumen)
+    // 5g. REST API: POST /api/delete-archive (Hapus Arsip Dokumen & Berkas Terkait)
     if (req.method === 'POST' && pathname === '/api/delete-archive') {
         readRequestBody(req, (rawBody) => {
             try {
@@ -466,11 +466,62 @@ const server = http.createServer((req, res) => {
                 if (!Array.isArray(db.archives)) db.archives = [];
 
                 const id = payload.id;
-                db.archives = db.archives.filter(a => String(a.id) !== String(id));
+                const target = db.archives.find(a => String(a.id) === String(id));
+                const deletedIds = [];
+
+                if (target) {
+                    const targetClassId = target.class_id ? String(target.class_id) : '';
+                    const targetClassName = (target.nama_kelas || '').trim().toLowerCase();
+                    const targetMapel = (target.mata_pelajaran || '').trim().toLowerCase();
+                    const targetDate = (target.tanggal_ujian || '').trim();
+
+                    // Hapus dokumen target dan seluruh dokumen yang berhubungan (Daftar Hadir & Berita Acara pada pelaksanaan ujian yang sama)
+                    db.archives = db.archives.filter(a => {
+                        const isSameId = String(a.id) === String(id);
+                        if (isSameId) {
+                            deletedIds.push(a.id);
+                            return false;
+                        }
+
+                        // Cek apakah dokumen ini berhubungan dengan sesi ujian yang sama (tanggal, mapel, dan kelas)
+                        const aClassId = a.class_id ? String(a.class_id) : '';
+                        const aClassName = (a.nama_kelas || '').trim().toLowerCase();
+                        const aMapel = (a.mata_pelajaran || '').trim().toLowerCase();
+                        const aDate = (a.tanggal_ujian || '').trim();
+
+                        const isSameDate = Boolean(targetDate && aDate && targetDate === aDate);
+                        const isSameMapel = Boolean(targetMapel && aMapel && (targetMapel === aMapel || aMapel.includes(targetMapel) || targetMapel.includes(aMapel)));
+                        const isSameClass = Boolean((targetClassId && aClassId && targetClassId === aClassId) ||
+                                            (targetClassName && aClassName && (targetClassName === aClassName || aClassName.includes(targetClassName) || targetClassName.includes(aClassName))));
+
+                        if (isSameDate && isSameMapel && isSameClass) {
+                            deletedIds.push(a.id);
+                            return false; // Hapus berkas pasangan/terkait ini juga
+                        }
+
+                        return true;
+                    });
+                } else {
+                    db.archives = db.archives.filter(a => {
+                        if (String(a.id) === String(id)) {
+                            deletedIds.push(a.id);
+                            return false;
+                        }
+                        return true;
+                    });
+                }
+
                 saveDatabase(db);
 
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ success: true, message: 'Arsip berhasil dihapus.' }));
+                res.end(JSON.stringify({ 
+                    success: true, 
+                    message: deletedIds.length > 1
+                        ? `Dokumen dan ${deletedIds.length - 1} berkas terkait (Daftar Hadir & Berita Acara) berhasil dihapus.`
+                        : 'Arsip dokumen berhasil dihapus.',
+                    deleted_ids: deletedIds,
+                    deleted_count: deletedIds.length
+                }));
             } catch (err) {
                 res.writeHead(400, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ success: false, message: err.message }));
