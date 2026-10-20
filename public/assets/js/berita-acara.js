@@ -200,6 +200,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (inputHadir) inputHadir.value = r.peserta_hadir;
                     if (inputTidakHadir) inputTidakHadir.value = r.peserta_tidak_hadir;
 
+                    const inputSiswaTidakHadir = document.getElementById('siswa_tidak_hadir');
+                    if (inputSiswaTidakHadir) {
+                        inputSiswaTidakHadir.value = r.siswa_tidak_hadir || '';
+                    }
+
                     // Sinkronkan kelas jika belum dipilih spesifik
                     if (r.nama_kelas && inputNamaKelas) {
                         inputNamaKelas.value = r.nama_kelas;
@@ -232,7 +237,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         noticeEl.style.background = '#ECFDF5';
                         noticeEl.style.border = '1px solid #6EE7B7';
                         noticeEl.style.color = '#065F46';
-                        noticeEl.innerHTML = `<i class="bi bi-check-circle-fill" style="color: #059669; margin-right: 6px;"></i><strong>Sinkronisasi Daftar Hadir Ditemukan:</strong> Rekap peserta terisi otomatis dari Daftar Hadir kelas <strong>${r.nama_kelas || classNameVal}</strong> (${r.peserta_seharusnya} siswa: <strong>${r.peserta_hadir} Hadir</strong>, <strong>${r.peserta_tidak_hadir} Tidak Hadir</strong>).`;
+                        const absentDetailText = r.siswa_tidak_hadir ? ` (${escapeHtml(r.siswa_tidak_hadir)})` : '';
+                        noticeEl.innerHTML = `<i class="bi bi-check-circle-fill" style="color: #059669; margin-right: 6px;"></i><strong>Sinkronisasi Daftar Hadir Ditemukan:</strong> Rekap peserta terisi otomatis dari Daftar Hadir kelas <strong>${escapeHtml(r.nama_kelas || classNameVal)}</strong> (${r.peserta_seharusnya} siswa: <strong>${r.peserta_hadir} Hadir</strong>, <strong>${r.peserta_tidak_hadir} Tidak Hadir</strong>${absentDetailText}).`;
                     }
 
                     validatePeserta();
@@ -432,6 +438,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'selectTemplate', 'nama_ujian', 'tahun_ajaran', 'semester', 'tanggal_ujian', 'jam_mulai', 'jam_selesai',
         'mata_pelajaran', 'ruang', 'class_id', 'nama_kelas', 'catatan_pelaksanaan',
         'blangko_berita_acara', 'blangko_daftar_hadir',
+        'peserta_seharusnya', 'peserta_hadir', 'peserta_tidak_hadir', 'siswa_tidak_hadir',
         'nama_pengawas_1', 'nip_pengawas_1', 'nama_pengawas_2', 'nip_pengawas_2'
     ];
 
@@ -460,6 +467,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const seh = document.getElementById('peserta_seharusnya')?.value || '0';
         const thad = document.getElementById('peserta_tidak_hadir')?.value || '0';
         const had = document.getElementById('peserta_hadir')?.value || '0';
+        const siswaTidakHadir = document.getElementById('siswa_tidak_hadir')?.value.trim() || '';
 
         const blangkoBa = document.getElementById('blangko_berita_acara')?.value || '1';
         const blangkoDh = document.getElementById('blangko_daftar_hadir')?.value || '1';
@@ -507,6 +515,7 @@ document.addEventListener('DOMContentLoaded', function() {
             peserta_seharusnya: seh,
             peserta_hadir: had,
             peserta_tidak_hadir: thad,
+            siswa_tidak_hadir: siswaTidakHadir,
             blangko_berita_acara: blangkoBa,
             blangko_daftar_hadir: blangkoDh,
             sekolah: sekolah,
@@ -561,6 +570,16 @@ document.addEventListener('DOMContentLoaded', function() {
         updatePage2Metadata(vars);
     }
 
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
     function renderWysiwygHtml(htmlTemplate, vars) {
         if (!htmlTemplate) return '';
         let result = htmlTemplate;
@@ -568,6 +587,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const regex = new RegExp('\\[' + k + '\\]', 'gi');
             result = result.replace(regex, v);
         }
+
+        // Tampilkan rincian nama siswa tidak hadir jika ada yang tidak hadir
+        const thadCount = parseInt(vars.peserta_tidak_hadir, 10) || 0;
+        const absentNames = (vars.siswa_tidak_hadir || '').trim();
+        if (thadCount > 0 && absentNames) {
+            // Cocokkan "Jumlah Peserta yang Tidak Hadir: <strong>X</strong> orang" (dan variasi penulisan tanpa kurung nama)
+            const regex = /(Jumlah Peserta\s+(?:yang\s+)?Tidak Hadir:[^<]*?(?:<[^>]+>)*\s*\d+\s*(?:<\/[^>]+>)*\s*(?:&nbsp;|\s)*orang)(?!\s*\()/gi;
+            result = result.replace(regex, (match) => `${match} (${escapeHtml(absentNames)})`);
+        }
+
         return result;
     }
 
@@ -885,6 +914,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     peserta_seharusnya: seh,
                     peserta_hadir: had,
                     peserta_tidak_hadir: thad,
+                    siswa_tidak_hadir: document.getElementById('siswa_tidak_hadir')?.value.trim() || '',
                     nama_pengawas_1: p1,
                     nip_pengawas_1: nip1,
                     nama_pengawas_2: p2,

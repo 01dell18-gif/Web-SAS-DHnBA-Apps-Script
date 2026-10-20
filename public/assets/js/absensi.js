@@ -565,12 +565,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let hadCount = 0;
         let thadCount = 0;
+        const absentList = [];
+
         document.querySelectorAll('.student-status-select').forEach(sel => {
-            if (sel.value === 'Hadir' || sel.value === 'Dispensasi') hadCount++;
-            else thadCount++;
+            const status = (sel.value || '').trim();
+            const studentId = sel.getAttribute('data-id');
+            const studentObj = Array.isArray(activeStudents) ? activeStudents.find(s => String(s.id) === String(studentId)) : null;
+            const studentName = studentObj ? studentObj.nama : (document.querySelector(`input[name="students[${studentId}][nama]"]`)?.value || '');
+
+            if (status === 'Hadir') {
+                hadCount++;
+            } else {
+                thadCount++;
+                let code = 'a';
+                const sLower = status.toLowerCase();
+                if (sLower === 'sakit' || sLower === 's') code = 's';
+                else if (sLower === 'izin' || sLower === 'i') code = 'i';
+                else if (sLower === 'dispensasi' || sLower === 'd') code = 'd';
+                else code = 'a';
+
+                if (studentName) {
+                    absentList.push(`${studentName} (${code})`);
+                }
+            }
         });
 
         const totalStudents = hadCount + thadCount;
+        const absentString = absentList.join(', ');
 
         const payload = {
             type: 'daftar_hadir',
@@ -587,6 +608,7 @@ document.addEventListener('DOMContentLoaded', function() {
             peserta_seharusnya: totalStudents,
             peserta_hadir: hadCount,
             peserta_tidak_hadir: thadCount,
+            siswa_tidak_hadir: absentString,
             nama_pengawas_1: document.getElementById('nama_pengawas_1')?.value || '',
             nip_pengawas_1: document.getElementById('nip_pengawas_1')?.value || '',
             nama_pengawas_2: document.getElementById('nama_pengawas_2')?.value || '',

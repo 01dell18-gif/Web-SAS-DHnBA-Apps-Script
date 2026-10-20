@@ -173,6 +173,7 @@
                 peserta_seharusnya: parseInt(payload.peserta_seharusnya, 10) || 0,
                 peserta_hadir: parseInt(payload.peserta_hadir, 10) || 0,
                 peserta_tidak_hadir: parseInt(payload.peserta_tidak_hadir, 10) || 0,
+                siswa_tidak_hadir: payload.siswa_tidak_hadir || '',
                 nama_pengawas_1: payload.nama_pengawas_1 || '',
                 nip_pengawas_1: payload.nip_pengawas_1 || '',
                 nama_pengawas_2: payload.nama_pengawas_2 || '',
@@ -201,23 +202,48 @@
             });
         }
 
-        // 11. GET /api/find-attendance-rekap
-        if (pathname.includes('/api/find-attendance-rekap')) {
+        // 11. GET /api/find-attendance-rekap & /api/get-attendance-rekap
+        if (pathname.includes('/api/find-attendance-rekap') || pathname.includes('/api/get-attendance-rekap')) {
             const localArch = localStorage.getItem('sas_archives');
             const archives = localArch ? JSON.parse(localArch) : (db.archives || []);
             const dhList = archives.filter(a => a.type === 'daftar_hadir');
-            const tgl = query.tanggal;
-            const mapel = query.mapel ? query.mapel.toLowerCase() : '';
+            const tgl = query.tanggal_ujian || query.tanggal;
+            const mapel = (query.mata_pelajaran || query.mapel || '').toLowerCase();
             const classId = query.class_id;
+            const className = (query.kelas || '').toLowerCase();
 
-            const match = dhList.find(a => 
-                a.tanggal_ujian === tgl && 
-                a.mata_pelajaran && a.mata_pelajaran.toLowerCase().includes(mapel) &&
-                (!classId || String(a.class_id) === String(classId))
-            );
+            const match = dhList.find(a => {
+                const mClass = (!classId && !className) ||
+                               (classId && String(a.class_id) === String(classId)) || 
+                               (className && a.nama_kelas && a.nama_kelas.toLowerCase().includes(className));
+                const mDate = !tgl || a.tanggal_ujian === tgl;
+                const mMapel = !mapel || (a.mata_pelajaran && a.mata_pelajaran.toLowerCase().includes(mapel));
+                return mClass && (mDate || mMapel);
+            });
 
             if (match) {
-                return new Response(JSON.stringify({ success: true, found: true, rekap: match }), {
+                let absentDetail = match.siswa_tidak_hadir || '';
+                if (!absentDetail && match.html_content) {
+                    const names = [];
+                    const rowRegex = /<td[^>]*style="padding-left:\s*8px;"[^>]*>([\s\S]*?)<\/td>[\s\S]*?<td[^>]*id="pvStatus_[^"]*"[^>]*>([\s\S]*?)<\/td>/gi;
+                    let rMatch;
+                    while ((rMatch = rowRegex.exec(match.html_content)) !== null) {
+                        const name = rMatch[1].replace(/<[^>]+>/g, '').trim();
+                        const status = rMatch[2].replace(/<[^>]+>/g, '').trim();
+                        if (status && status !== 'Hadir') {
+                            let code = 'a';
+                            const sLower = status.toLowerCase();
+                            if (sLower === 'sakit' || sLower === 's') code = 's';
+                            else if (sLower === 'izin' || sLower === 'i') code = 'i';
+                            else if (sLower === 'dispensasi' || sLower === 'd') code = 'd';
+                            else code = 'a';
+                            names.push(`${name} (${code})`);
+                        }
+                    }
+                    if (names.length) absentDetail = names.join(', ');
+                }
+                const rekapObj = { ...match, siswa_tidak_hadir: absentDetail };
+                return new Response(JSON.stringify({ success: true, found: true, rekap: rekapObj }), {
                     status: 200,
                     headers: { 'Content-Type': 'application/json' }
                 });

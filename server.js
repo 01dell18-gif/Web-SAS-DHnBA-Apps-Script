@@ -177,6 +177,7 @@ function syncSqlFile(data) {
         lines.push('  `peserta_seharusnya` INT DEFAULT 0,');
         lines.push('  `peserta_hadir` INT DEFAULT 0,');
         lines.push('  `peserta_tidak_hadir` INT DEFAULT 0,');
+        lines.push('  `siswa_tidak_hadir` VARCHAR(255) NULL,');
         lines.push('  `nama_pengawas_1` VARCHAR(150) NULL,');
         lines.push('  `nip_pengawas_1` VARCHAR(50) NULL,');
         lines.push('  `nama_pengawas_2` VARCHAR(150) NULL,');
@@ -237,7 +238,7 @@ function syncSqlFile(data) {
         // Insert Archives (capped at 100 recent archives to prevent huge SQL dumps)
         if (Array.isArray(data.archives)) {
             data.archives.slice(0, 100).forEach(a => {
-                lines.push(`INSERT INTO \`exam_archives\` (\`id\`, \`type\`, \`title\`, \`filename\`, \`nama_ujian\`, \`tahun_ajaran\`, \`semester\`, \`tanggal_ujian\`, \`mata_pelajaran\`, \`nama_kelas\`, \`class_id\`, \`ruang\`, \`peserta_seharusnya\`, \`peserta_hadir\`, \`peserta_tidak_hadir\`, \`nama_pengawas_1\`, \`nip_pengawas_1\`, \`nama_pengawas_2\`, \`nip_pengawas_2\`, \`html_content\`) VALUES (${a.id}, ${esc(a.type)}, ${esc(a.title)}, ${esc(a.filename)}, ${esc(a.nama_ujian)}, ${esc(a.tahun_ajaran)}, ${esc(a.semester)}, ${esc(a.tanggal_ujian)}, ${esc(a.mata_pelajaran)}, ${esc(a.nama_kelas)}, ${a.class_id ? Number(a.class_id) : 'NULL'}, ${esc(a.ruang)}, ${Number(a.peserta_seharusnya) || 0}, ${Number(a.peserta_hadir) || 0}, ${Number(a.peserta_tidak_hadir) || 0}, ${esc(a.nama_pengawas_1)}, ${esc(a.nip_pengawas_1)}, ${esc(a.nama_pengawas_2)}, ${esc(a.nip_pengawas_2)}, ${esc(a.html_content)});`);
+                lines.push(`INSERT INTO \`exam_archives\` (\`id\`, \`type\`, \`title\`, \`filename\`, \`nama_ujian\`, \`tahun_ajaran\`, \`semester\`, \`tanggal_ujian\`, \`mata_pelajaran\`, \`nama_kelas\`, \`class_id\`, \`ruang\`, \`peserta_seharusnya\`, \`peserta_hadir\`, \`peserta_tidak_hadir\`, \`siswa_tidak_hadir\`, \`nama_pengawas_1\`, \`nip_pengawas_1\`, \`nama_pengawas_2\`, \`nip_pengawas_2\`, \`html_content\`) VALUES (${a.id}, ${esc(a.type)}, ${esc(a.title)}, ${esc(a.filename)}, ${esc(a.nama_ujian)}, ${esc(a.tahun_ajaran)}, ${esc(a.semester)}, ${esc(a.tanggal_ujian)}, ${esc(a.mata_pelajaran)}, ${esc(a.nama_kelas)}, ${a.class_id ? Number(a.class_id) : 'NULL'}, ${esc(a.ruang)}, ${Number(a.peserta_seharusnya) || 0}, ${Number(a.peserta_hadir) || 0}, ${Number(a.peserta_tidak_hadir) || 0}, ${esc(a.siswa_tidak_hadir || '')}, ${esc(a.nama_pengawas_1)}, ${esc(a.nip_pengawas_1)}, ${esc(a.nama_pengawas_2)}, ${esc(a.nip_pengawas_2)}, ${esc(a.html_content)});`);
             });
             lines.push('');
         }
@@ -424,6 +425,7 @@ const server = http.createServer((req, res) => {
                     peserta_seharusnya: parseInt(payload.peserta_seharusnya, 10) || 0,
                     peserta_hadir: parseInt(payload.peserta_hadir, 10) || 0,
                     peserta_tidak_hadir: parseInt(payload.peserta_tidak_hadir, 10) || 0,
+                    siswa_tidak_hadir: payload.siswa_tidak_hadir || '',
                     nama_pengawas_1: payload.nama_pengawas_1 || '',
                     nip_pengawas_1: payload.nip_pengawas_1 || '',
                     nama_pengawas_2: payload.nama_pengawas_2 || '',
@@ -643,6 +645,28 @@ const server = http.createServer((req, res) => {
         }
 
         if (match) {
+            let absentDetail = match.siswa_tidak_hadir || '';
+            // Jika arsip belum memiliki properti siswa_tidak_hadir, lakukan ekstraksi otomatis dari html_content
+            if (!absentDetail && match.html_content) {
+                const names = [];
+                const rowRegex = /<td[^>]*style="padding-left:\s*8px;"[^>]*>([\s\S]*?)<\/td>[\s\S]*?<td[^>]*id="pvStatus_[^"]*"[^>]*>([\s\S]*?)<\/td>/gi;
+                let rMatch;
+                while ((rMatch = rowRegex.exec(match.html_content)) !== null) {
+                    const name = rMatch[1].replace(/<[^>]+>/g, '').trim();
+                    const status = rMatch[2].replace(/<[^>]+>/g, '').trim();
+                    if (status && status !== 'Hadir') {
+                        let code = 'a';
+                        const sLower = status.toLowerCase();
+                        if (sLower === 'sakit' || sLower === 's') code = 's';
+                        else if (sLower === 'izin' || sLower === 'i') code = 'i';
+                        else if (sLower === 'dispensasi' || sLower === 'd') code = 'd';
+                        else code = 'a';
+                        names.push(`${name} (${code})`);
+                    }
+                }
+                if (names.length) absentDetail = names.join(', ');
+            }
+
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({
                 success: true,
@@ -651,6 +675,7 @@ const server = http.createServer((req, res) => {
                     peserta_seharusnya: match.peserta_seharusnya,
                     peserta_hadir: match.peserta_hadir,
                     peserta_tidak_hadir: match.peserta_tidak_hadir,
+                    siswa_tidak_hadir: absentDetail,
                     nama_kelas: match.nama_kelas,
                     class_id: match.class_id,
                     tanggal_ujian: match.tanggal_ujian,
