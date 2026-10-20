@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Backup & Database SQL - Panel Administrator SMK NEGERI 1 KLUNGKUNG</title>
+    <title>Backup & Database SQL - Panel Administrator SMK NEGERI FYJ CHANNEL</title>
     <link rel="stylesheet" href="/assets/css/app.css">
     <link rel="icon" type="image/png" href="/assets/img/logo.png">
     <script src="/assets/js/xlsx.full.min.js"></script>
@@ -45,7 +45,7 @@
         <a href="/" class="brand-link">
             <img src="/assets/img/logo.png" alt="Logo Sekolah" class="navbar-logo">
             <div class="brand-text">
-                <span class="brand-title">SMK NEGERI 1 KLUNGKUNG</span>
+                <span class="brand-title">SMK NEGERI FYJ CHANNEL</span>
                 <span class="brand-subtitle">Panel Administrator Database</span>
             </div>
         </a>
@@ -78,7 +78,7 @@
             </ul>
         </div>
         <div style="font-size: 0.78rem; color: var(--text-muted); padding: 10px; border-top: 1px solid var(--border);">
-            Sistem SAS v2.5<br>SMK Negeri 1 Klungkung
+            Sistem SAS v2.5<br>SMK NEGERI FYJ CHANNEL
         </div>
     </aside>
 
@@ -106,7 +106,7 @@
                                 File SQL dump lengkap dengan struktur <code>CREATE TABLE</code> dan <code>INSERT</code> untuk <code>classes</code>, <code>students</code>, <code>teachers</code>, <code>exam_templates</code>, <code>users</code>, dan <code>archives</code>.
                             </p>
                         </div>
-                        <a href="/database.sql" download="database_sas_klungkung.sql" class="btn btn-primary btn-sm btn-block">
+                        <a href="/database.sql" download="database_sas_fyj_channel.sql" class="btn btn-primary btn-sm btn-block">
                             <i class="bi bi-download"></i> Unduh database.sql
                         </a>
                     </div>
@@ -270,7 +270,7 @@ function exportStudentsExcel() {
     ws['!cols'] = [{ wch: 6 }, { wch: 15 }, { wch: 38 }, { wch: 18 }, { wch: 12 }, { wch: 45 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Master_Siswa");
-    XLSX.writeFile(wb, "Data_Siswa_SMKN1_Klungkung.xlsx");
+    XLSX.writeFile(wb, "Data_Siswa_SMK_NEGERI_FYJ_CHANNEL.xlsx");
     showToast(`Seluruh data siswa (${data.length} siswa) berhasil diunduh sesuai database!`, 'success');
 }
 
@@ -292,7 +292,7 @@ function exportTeachersExcel() {
     ws['!cols'] = [{ wch: 6 }, { wch: 24 }, { wch: 35 }, { wch: 30 }, { wch: 25 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Master_Guru");
-    XLSX.writeFile(wb, "Data_Guru_SMKN1_Klungkung.xlsx");
+    XLSX.writeFile(wb, "Data_Guru_SMK_NEGERI_FYJ_CHANNEL.xlsx");
     showToast(`Seluruh data guru & pengawas (${data.length} guru) berhasil diunduh sesuai database!`, 'success');
 }
 
@@ -301,7 +301,7 @@ function downloadJsonDb() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
     const dlAnchorElem = document.createElement('a');
     dlAnchorElem.setAttribute("href", dataStr);
-    dlAnchorElem.setAttribute("download", "db_sas_klungkung.json");
+    dlAnchorElem.setAttribute("download", "db_sas_fyj_channel.json");
     dlAnchorElem.click();
     showToast('Berkas db.json berhasil diunduh.', 'info');
 }

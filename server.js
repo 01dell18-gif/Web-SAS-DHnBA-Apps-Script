@@ -1,6 +1,6 @@
 /**
  * Server Aplikasi Generator Absensi & Berita Acara Ujian
- * SMK NEGERI 1 KLUNGKUNG
+ * SMK NEGERI FYJ CHANNEL
  * 
  * Standalone Node.js HTTP Server (Zero Dependencies Required)
  * Mendukung URL PHP original (/absensi.php, /berita-acara.php, /api/get-students.php)
@@ -31,7 +31,7 @@ function getDatabase() {
                         id: 1,
                         username: "admin",
                         password: "admin123",
-                        nama: "Administrator SMK N 1 Klungkung",
+                        nama: "Administrator SMK NEGERI FYJ CHANNEL",
                         role: "admin",
                         created_at: "2025-01-01T00:00:00.000Z"
                     }
@@ -52,7 +52,7 @@ function getDatabase() {
                 id: 1,
                 username: "admin",
                 password: "admin123",
-                nama: "Administrator SMK N 1 Klungkung",
+                nama: "Administrator SMK NEGERI FYJ CHANNEL",
                 role: "admin",
                 created_at: "2025-01-01T00:00:00.000Z"
             }
@@ -87,7 +87,7 @@ function syncSqlFile(data) {
 
         lines.push('-- ========================================================');
         lines.push('-- DATABASE SCHEMA & MASTER DATA: SISTEM ADMINISTRASI UJIAN');
-        lines.push('-- SMK NEGERI 1 KLUNGKUNG');
+        lines.push('-- SMK NEGERI FYJ CHANNEL');
         lines.push('-- Auto-synchronized: ' + new Date().toISOString());
         lines.push('-- ========================================================\n');
         lines.push('SET FOREIGN_KEY_CHECKS = 0;');
@@ -750,6 +750,12 @@ const server = http.createServer((req, res) => {
                     buffer = Buffer.from(imageData, 'base64');
                 }
 
+                // Pastikan direktori gambar ada
+                const imgDir = path.dirname(KOP_IMG_PATH);
+                if (!fs.existsSync(imgDir)) {
+                    fs.mkdirSync(imgDir, { recursive: true });
+                }
+
                 // Backup kop lama jika belum ada backup default
                 if (fs.existsSync(KOP_IMG_PATH) && !fs.existsSync(KOP_DEFAULT_PATH)) {
                     try {
@@ -783,7 +789,7 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // 8. REST API: POST /api/reset-kop (Reset Kop ke Default SMK N 1 Klungkung)
+    // 8. REST API: POST /api/reset-kop (Reset Kop ke Default SMK NEGERI FYJ CHANNEL)
     if (req.method === 'POST' && pathname === '/api/reset-kop') {
         try {
             if (fs.existsSync(KOP_DEFAULT_PATH)) {
@@ -823,6 +829,12 @@ const server = http.createServer((req, res) => {
                     buffer = Buffer.from(matches[2], 'base64');
                 } else {
                     buffer = Buffer.from(imageData, 'base64');
+                }
+
+                // Pastikan direktori gambar ada
+                const imgDir = path.dirname(LOGO_IMG_PATH);
+                if (!fs.existsSync(imgDir)) {
+                    fs.mkdirSync(imgDir, { recursive: true });
                 }
 
                 if (fs.existsSync(LOGO_IMG_PATH) && !fs.existsSync(LOGO_DEFAULT_PATH)) {
@@ -923,7 +935,7 @@ const server = http.createServer((req, res) => {
         if (fs.existsSync(sqlPath)) {
             res.writeHead(200, {
                 'Content-Type': 'application/sql',
-                'Content-Disposition': 'attachment; filename="database_sas_klungkung.sql"'
+                'Content-Disposition': 'attachment; filename="database_sas_fyj_channel.sql"'
             });
             fs.createReadStream(sqlPath).pipe(res);
             return;
@@ -979,7 +991,7 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, () => {
     console.log(`====================================================`);
     console.log(` Generator Absensi & Berita Acara Ujian SAS`);
-    console.log(` SMK NEGERI 1 KLUNGKUNG`);
+    console.log(` SMK NEGERI FYJ CHANNEL`);
     console.log(` Server berjalan aktif di: http://localhost:${PORT}`);
     console.log(` Mode: Standalone Node.js (Zero Dependency)`);
     console.log(`====================================================`);

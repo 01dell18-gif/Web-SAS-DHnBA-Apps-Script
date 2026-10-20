@@ -2,13 +2,13 @@
 
 ## SISTEM GENERATOR ADMINISTRASI UJIAN (ABSENSI & BERITA ACARA)
 
-### SMK NEGERI 1 KLUNGKUNG
+### SMK NEGERI FYJ CHANNEL
 
 ---
 
 ## 1. PENDAHULUAN & LATAR BELAKANG
 
-Aplikasi ini dikembangkan untuk mendigitalkan, mempercepat, dan membakukan proses pembuatan dokumen administrasi Sumatif Akhir Semester (SAS) di **SMK Negeri 1 Klungkung**. Dokumen utama yang dihasilkan adalah:
+Aplikasi ini dikembangkan untuk mendigitalkan, mempercepat, dan membakukan proses pembuatan dokumen administrasi Sumatif Akhir Semester (SAS) di **SMK NEGERI FYJ CHANNEL**. Dokumen utama yang dihasilkan adalah:
 
 1. **Daftar Hadir Peserta Ujian** (Lengkap dengan NIS, nomor urut, status kehadiran Hadir/Sakit/Izin/Alfa, serta tanda tangan pengawas).
 2. **Berita Acara Penyelenggaraan Ujian** (Redaksi resmi terstandarisasi, rekap kehadiran otomatis tersinkron dari daftar hadir, catatan kendala, dan tanda tangan pengawas ujian).
@@ -74,7 +74,7 @@ web-sas-dh-n-beritaacara/
 ├── data/
 │   └── db.json                  # Basis data JSON utama (Master source of truth)
 └── public/
-    ├── index.html               # Beranda publik SMK Negeri 1 Klungkung
+    ├── index.html               # Beranda publik SMK NEGERI FYJ CHANNEL
     ├── absensi.html             # Generator Daftar Hadir Ujian
     ├── berita-acara.html        # Generator Berita Acara Ujian
     ├── arsip.html               # Arsip Dokumen Publik (Filter Horizontal Mendatar)
@@ -100,7 +100,7 @@ web-sas-dh-n-beritaacara/
         │   ├── html2pdf.bundle.min.js # Kompilasi PDF berbasis canvas A4
         │   └── xlsx.full.min.js # SheetJS offline untuk export/import Excel
         └── img/
-            ├── logo.png         # Logo resmi SMK Negeri 1 Klungkung
+            ├── logo.png         # Logo resmi SMK NEGERI FYJ CHANNEL
             ├── logo-default.png # Cadangan logo sekolah bawaan
             ├── kop-header.png   # Kop surat aktif
             └── kop-header-default.png # Cadangan kop surat bawaan pabrik
@@ -184,7 +184,7 @@ Kartu statistik metrik di Dashboard Admin (`public/admin/index.html`) berupa ele
 
 Seluruh istilah telah diseragamkan dengan standar tata kelola ujian resmi Indonesia:
 
-- Satuan pendidikan: **SMK NEGERI 1 KLUNGKUNG**.
+- Satuan pendidikan: **SMK NEGERI FYJ CHANNEL**.
 - Waktu pelaksanaan: Menggunakan zona waktu **WITA** (Waktu Indonesia Tengah).
 - Tanda tangan pengawas: Bersih tanpa kurung `()` dan tanpa garis bawah (*underline*).
 - Sinkronisasi Berita Acara & Daftar Hadir: Rekap peserta otomatis terisi berdasarkan Tanggal Ujian dan Mata Pelajaran yang cocok dari Daftar Hadir.
@@ -250,7 +250,7 @@ Tekan `Enter`. Dalam 1 detik, server akan aktif dan menampilkan pesan konfirmasi
    http://localhost:3000
    ```
 
-3. Halaman Beranda Publik Generator Administrasi SAS SMK Negeri 1 Klungkung akan langsung tampil dan siap digunakan.
+3. Halaman Beranda Publik Generator Administrasi SAS SMK NEGERI FYJ CHANNEL akan langsung tampil dan siap digunakan.
 
 #### Langkah 5: Masuk ke Panel Administrator
 
@@ -349,7 +349,7 @@ docker run -d -p 3000:3000 --name web-sas-app web-sas
 
 ### 5. Standarisasi Program / Konsentrasi Keahlian SMK N 1 Klungkung
 
-- Menggantikan label generic "Umum" dengan konsentrasi keahlian resmi SMK Negeri 1 Klungkung:
+- Menggantikan label generic "Umum" dengan konsentrasi keahlian resmi SMK NEGERI FYJ CHANNEL:
   - **XII TKJ**: Teknik Komputer dan Jaringan
   - **XII DKV**: Desain Komunikasi Visual
   - **XII LPKKK 1 & 2**: Layanan Penunjang Kefarmasian Klinis dan Komunitas

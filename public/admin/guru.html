@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Data Guru & Pengawas - SMK NEGERI 1 KLUNGKUNG</title>
+    <title>Master Data Guru & Pengawas - SMK NEGERI FYJ CHANNEL</title>
     <link rel="stylesheet" href="/assets/css/app.css">
     <link rel="icon" type="image/png" href="/assets/img/logo.png">
     <script src="/assets/js/xlsx.full.min.js"></script>
@@ -55,7 +55,7 @@
         <a href="/" class="brand-link">
             <img src="/assets/img/logo.png" alt="Logo Sekolah" class="navbar-logo">
             <div class="brand-text">
-                <span class="brand-title">SMK NEGERI 1 KLUNGKUNG</span>
+                <span class="brand-title">SMK NEGERI FYJ CHANNEL</span>
                 <span class="brand-subtitle">Panel Administrator Database</span>
             </div>
         </a>
@@ -88,7 +88,7 @@
             </ul>
         </div>
         <div style="font-size: 0.78rem; color: var(--text-muted); padding: 10px; border-top: 1px solid var(--border);">
-            Sistem SAS v2.5<br>SMK Negeri 1 Klungkung
+            Sistem SAS v2.5<br>SMK NEGERI FYJ CHANNEL
         </div>
     </aside>
 
@@ -619,7 +619,7 @@ function exportTeachersExcel() {
     ws['!cols'] = [{ wch: 6 }, { wch: 24 }, { wch: 35 }, { wch: 28 }, { wch: 25 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'DATA_GURU');
-    XLSX.writeFile(wb, 'Data_Guru_Pengawas_SMKN1Klungkung.xlsx');
+    XLSX.writeFile(wb, 'Data_Guru_Pengawas_SMK_NEGERI_FYJ_CHANNEL.xlsx');
     showToast(`Seluruh data guru (${rows.length} guru) berhasil diekspor ke Excel (.xlsx)!`, 'success');
 }
 
@@ -644,7 +644,7 @@ function downloadTeacherExcelTemplate() {
     ws['!cols'] = [{ wch: 24 }, { wch: 35 }, { wch: 28 }, { wch: 25 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'TEMPLATE_GURU');
-    XLSX.writeFile(wb, 'Template_Import_Guru_SMKN1Klungkung.xlsx');
+    XLSX.writeFile(wb, 'Template_Import_Guru_SMK_NEGERI_FYJ_CHANNEL.xlsx');
     showToast('Template Excel guru berhasil diunduh.', 'success');
 }
 

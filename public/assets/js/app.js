@@ -1,6 +1,6 @@
 /**
  * App JavaScript Helper
- * Generator Absensi dan Berita Acara Ujian - SMK Negeri 1 Klungkung
+ * Generator Absensi dan Berita Acara Ujian - SMK NEGERI FYJ CHANNEL
  */
 
 // Global Mobile Nav Toggle (Dipanggil langsung dari onclick atau event listener)
@@ -103,7 +103,7 @@ async function syncSchoolIdentity() {
 
     if (!settings) return;
 
-    const schoolName = settings.school_name || 'SMK NEGERI 1 KLUNGKUNG';
+    const schoolName = settings.school_name || 'SMK NEGERI FYJ CHANNEL';
     const schoolTagline = settings.school_tagline || 'Generator Administrasi Ujian';
     const schoolLogo = settings.school_logo || '/assets/img/logo.png';
 

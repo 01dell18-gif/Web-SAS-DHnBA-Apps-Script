@@ -1,6 +1,6 @@
 /**
  * Logika Formulir & Live Preview Daftar Hadir
- * Generator Absensi dan Berita Acara Ujian - SMK Negeri 1 Klungkung
+ * Generator Absensi dan Berita Acara Ujian - SMK NEGERI FYJ CHANNEL
  */
 
 document.addEventListener('DOMContentLoaded', function() {

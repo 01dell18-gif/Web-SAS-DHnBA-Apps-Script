@@ -1,6 +1,6 @@
 /**
  * Admin Panel Common Library
- * SMK NEGERI 1 KLUNGKUNG
+ * SMK NEGERI FYJ CHANNEL
  */
 
 // 1. Validasi Autentikasi Pengguna & Pembatasan Hak Akses (Role-Based Access Control)
@@ -185,7 +185,7 @@ function applyRoleAccessControl() {
 // Sinkronisasi Identitas Sekolah di Seluruh Panel Administrator
 function applySchoolIdentityToAdmin(settings) {
     if (!settings) return;
-    const schoolName = settings.school_name || 'SMK NEGERI 1 KLUNGKUNG';
+    const schoolName = settings.school_name || 'SMK NEGERI FYJ CHANNEL';
     const schoolTagline = settings.school_tagline || 'Generator Administrasi Ujian';
     const schoolLogo = settings.school_logo || '/assets/img/logo.png';
 

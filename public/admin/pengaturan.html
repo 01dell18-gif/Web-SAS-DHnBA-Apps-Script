@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pengaturan Sekolah, Kelas & Kop - Panel Administrator SMK NEGERI 1 KLUNGKUNG</title>
+    <title>Pengaturan Sekolah, Kelas & Kop - Panel Administrator SMK NEGERI FYJ CHANNEL</title>
     <link rel="stylesheet" href="/assets/css/app.css">
     <link rel="icon" type="image/png" href="/assets/img/logo.png">
     <script src="/assets/js/xlsx.full.min.js"></script>
@@ -39,7 +39,7 @@
         <a href="/" class="brand-link">
             <img src="/assets/img/logo.png" alt="Logo Sekolah" class="navbar-logo" id="topNavbarLogo">
             <div class="brand-text">
-                <span class="brand-title">SMK NEGERI 1 KLUNGKUNG</span>
+                <span class="brand-title">SMK NEGERI FYJ CHANNEL</span>
                 <span class="brand-subtitle">Panel Administrator Database</span>
             </div>
         </a>
@@ -72,7 +72,7 @@
             </ul>
         </div>
         <div style="font-size: 0.78rem; color: var(--text-muted); padding: 10px; border-top: 1px solid var(--border);">
-            Sistem SAS v2.5<br>SMK Negeri 1 Klungkung
+            Sistem SAS v2.5<br>SMK NEGERI FYJ CHANNEL
         </div>
     </aside>
 
@@ -88,7 +88,7 @@
                     <div class="grid-2">
                         <div class="form-group">
                             <label class="form-label">Nama Sekolah Resmi</label>
-                            <input type="text" id="set_school_name" class="form-control" value="SMK NEGERI 1 KLUNGKUNG" required>
+                            <input type="text" id="set_school_name" class="form-control" value="SMK NEGERI FYJ CHANNEL" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Tagline Aplikasi</label>
@@ -923,7 +923,7 @@ function exportClassesExcel() {
     ws['!cols'] = [{ wch: 6 }, { wch: 18 }, { wch: 12 }, { wch: 45 }, { wch: 16 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Master_Kelas");
-    XLSX.writeFile(wb, "Master_Daftar_Kelas_SMKN1Klungkung.xlsx");
+    XLSX.writeFile(wb, "Master_Daftar_Kelas_SMK_NEGERI_FYJ_CHANNEL.xlsx");
     showToast(`Seluruh data kelas (${rows.length} kelas) berhasil diekspor ke Excel (.xlsx)!`, 'success');
 }
 
@@ -1064,7 +1064,7 @@ function exportSubjectsExcel() {
     ws['!cols'] = [{ wch: 6 }, { wch: 40 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Master_Mapel");
-    XLSX.writeFile(wb, "Master_Mata_Pelajaran_SMKN1Klungkung.xlsx");
+    XLSX.writeFile(wb, "Master_Mata_Pelajaran_SMK_NEGERI_FYJ_CHANNEL.xlsx");
     showToast(`Seluruh data mata pelajaran (${rows.length} mapel) berhasil diekspor ke Excel (.xlsx)!`, 'success');
 }
 

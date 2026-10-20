@@ -1,6 +1,6 @@
 # Generator Absensi & Berita Acara Ujian Resmi Format A4
 
-## SMK NEGERI 1 KLUNGKUNG
+## SMK NEGERI FYJ CHANNEL
 
 Aplikasi web modern untuk pembuatan administrasi ujian sekolah otomatis yang menghasilkan **Daftar Hadir Peserta Ujian** dan **Berita Acara Pelaksanaan Ujian (2 Halaman)** standar resmi kertas A4. Dilengkapi dengan **Panel Administrator Multi-Halaman**, **Manajemen Pengguna (User Management)**, **Arsip Berkas Digital dengan 5 Filter Seleksi**, **Master Kelas & Mapel dengan Export/Import Excel**, serta dukungan penuh untuk **GitHub Pages** dan **Server Mandiri Node.js Zero-Dependency**.
 
@@ -113,7 +113,7 @@ web-sas-dh-n-beritaacara/
 ├── data/
 │   └── db.json                  # Basis data JSON utama (Master source of truth)
 └── public/
-    ├── index.html               # Beranda publik SMK Negeri 1 Klungkung
+    ├── index.html               # Beranda publik SMK NEGERI FYJ CHANNEL
     ├── absensi.html             # Generator Daftar Hadir Ujian
     ├── berita-acara.html        # Generator Berita Acara Ujian
     ├── arsip.html               # Arsip Dokumen Publik (5 Filter Detail)
@@ -140,7 +140,7 @@ web-sas-dh-n-beritaacara/
         │   ├── html2pdf.bundle.min.js # Kompilasi PDF berbasis canvas A4
         │   └── xlsx.full.min.js # SheetJS offline untuk export/import Excel
         └── img/
-            ├── logo.png         # Logo resmi SMK Negeri 1 Klungkung
+            ├── logo.png         # Logo resmi SMK NEGERI FYJ CHANNEL
             ├── logo-default.png # Cadangan logo sekolah bawaan
             ├── kop-header.png   # Kop surat aktif
             └── kop-header-default.png # Cadangan kop surat bawaan pabrik

@@ -1,6 +1,6 @@
 /**
  * GitHub Pages & Offline Compatibility Layer
- * Sistem Generator SAS SMK Negeri 1 Klungkung
+ * Sistem Generator SAS SMK NEGERI FYJ CHANNEL
  * 
  * Memungkinkan seluruh fitur aplikasi (formulir, live preview, filter arsip,
  * cetak/unduh PDF, dan panel admin) berjalan 100% fungsional di GitHub Pages
@@ -232,7 +232,7 @@
         if (pathname.includes('/api/users')) {
             const localUsers = localStorage.getItem('sas_users');
             const users = localUsers ? JSON.parse(localUsers) : (db.users || [
-                { id: 1, username: 'admin', password: 'password', nama: 'Administrator SMK N 1 Klungkung', role: 'admin' }
+                { id: 1, username: 'admin', password: 'password', nama: 'Administrator SMK NEGERI FYJ CHANNEL', role: 'admin' }
             ]);
             return new Response(JSON.stringify(users), {
                 status: 200,

@@ -1,6 +1,6 @@
 /**
  * Logika Formulir & Live Preview Berita Acara Ujian
- * Generator Absensi dan Berita Acara Ujian - SMK Negeri 1 Klungkung
+ * Generator Absensi dan Berita Acara Ujian - SMK NEGERI FYJ CHANNEL
  */
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -461,7 +461,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const namaP2 = document.getElementById('nama_pengawas_2')?.value.trim() || '';
         const nipP2 = document.getElementById('nip_pengawas_2')?.value.trim() || '';
 
-        const sekolah = window.SCHOOL_NAME || 'SMK NEGERI 1 KLUNGKUNG';
+        const sekolah = window.SCHOOL_NAME || 'SMK NEGERI FYJ CHANNEL';
 
         const tglParts = parseDateIndo(tglStr);
         const tglTeks = terbilang(tglParts.tanggal);

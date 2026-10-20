@@ -1,13 +1,13 @@
 # ==============================================================================
 # Dockerfile - Sistem Generator Administrasi SAS & Berita Acara Ujian Resmi
-# SMK NEGERI 1 KLUNGKUNG
+# SMK NEGERI FYJ CHANNEL
 # ==============================================================================
 
 # Gunakan image resmi Node.js LTS berbasis Alpine Linux yang sangat ringan (~50MB)
 FROM node:20-alpine
 
 # Label informasi metadata
-LABEL maintainer="SMK Negeri 1 Klungkung"
+LABEL maintainer="SMK NEGERI FYJ CHANNEL"
 LABEL description="Sistem Generator Administrasi SAS & Asesmen Ujian Resmi"
 LABEL version="2.11"
 

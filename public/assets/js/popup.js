@@ -1,6 +1,6 @@
 /**
  * SISTEM POPUP MODAL & NOTIFIKASI UNIVERSAL (SAS v2.9)
- * SMK NEGERI 1 KLUNGKUNG
+ * SMK NEGERI FYJ CHANNEL
  * Mendukung Dialog Konfirmasi Interaktif, Alert Kustom & Notifikasi Toast
  */
 

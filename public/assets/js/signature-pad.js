@@ -1,6 +1,6 @@
 /**
  * Canvas Signature Pad (Touch & Mouse Friendly)
- * Generator Absensi dan Berita Acara Ujian - SMK Negeri 1 Klungkung
+ * Generator Absensi dan Berita Acara Ujian - SMK NEGERI FYJ CHANNEL
  */
 
 class SimpleSignaturePad {
