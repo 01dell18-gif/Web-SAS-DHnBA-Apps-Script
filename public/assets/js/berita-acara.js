@@ -122,6 +122,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     // Trigger initial class student load
                     triggerClassChange(classSelect.value);
+                } else {
+                    classSelect.innerHTML = '<option value="">-- Belum Ada Kelas Terdaftar --</option>';
+                    triggerClassChange('');
                 }
             })
             .catch(err => console.warn('Gagal memuat kelas dinamis berita acara:', err));

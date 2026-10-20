@@ -145,7 +145,40 @@ Tersedia export dan import lembar kerja Microsoft Excel di seluruh modul utama:
 
 ---
 
-## 8. PANDUAN PENGGUNAAN & RUNNING LOKAL
+## 8. ANALISIS AUDIT KESELURUHAN & PENYELESAIAN MASALAH (BUG FIXES)
+
+### A. Masalah: Data Siswa Tidak Muncul Saat Klik "Lihat Siswa" dari Dashboard
+- **Gejala Masalah**:
+  Setelah data siswa diimpor/diunggah dan terhitung di Dashboard, saat pengguna mengklik tombol **"Lihat Siswa"** pada kelas tertentu (`/admin/siswa.html?class_id=X`), tabel siswa tetap kosong atau macet pada tulisan *"Memuat data siswa..."*.
+- **Akar Masalah (Root Cause)**:
+  1. Pada fungsi `initSiswaPage()` di `siswa.html`, terdapat pemanggilan `document.getElementById('modal_class_id').innerHTML = ''`. Namun elemen `<select id="modal_class_id">` sebelumnya telah direfaktor menjadi input teks `<input id="modal_class_input">` dengan datalist. Hal ini menimbulkan eksepsi JavaScript fatal `TypeError: Cannot set properties of null (setting 'innerHTML')` yang memutus eksekusi sebelum fungsi render tabel siswa (`renderStudentsTable()`) dapat berjalan.
+  2. Perbandingan tipe data ID: URL parameter `class_id` bertipe *string* (misal: `"1"`), sedangkan `s.class_id` dari JSON terkadang berupa *integer* (misal: `1`). Perbandingan ketat `===` tanpa konversi `String(...)` dapat menyebabkan pencarian kelas menghasilkan nilai kosong.
+- **Solusi yang Diterapkan**:
+  1. Membersihkan referensi elemen null pada `initSiswaPage()` dan mengarahkan opsi kelas ke elemen datalist yang valid (`modalClassesDatalist`).
+  2. Membaca URL parameter `const initialClassId = new URLSearchParams(window.location.search).get('class_id')`, menyetel nilai `<select id="filterClassSelect"> = initialClassId`, lalu memanggil `onClassFilterChange()`.
+  3. Memastikan perbandingan ID siswa dan kelas selalu menggunakan `String(s.class_id) === String(filterId)`.
+  4. Menyelaraskan seluruh badge penghitung dan tabel pratinjau sehingga ketika tautan *"Lihat Siswa"* diklik, kelas terpilih langsung aktif dan seluruh siswa kelas tersebut langsung dirender dengan jumlah yang presisi.
+
+### B. Interaktivitas Kartu Metrik Dashboard
+- Kartu statistik metrik di Dashboard Admin (`public/admin/index.html`) kini berupa elemen interaktif (`<a>`) yang dapat diklik langsung:
+  - *Total Kelas Aktif* ➔ Menuju ke Master Siswa & Kelas (`/admin/siswa.html`).
+  - *Total Siswa Terdaftar* ➔ Menuju ke Master Data Siswa (`/admin/siswa.html`).
+  - *Guru & Pengawas* ➔ Menuju ke Master Data Guru & Pengawas (`/admin/guru.html`).
+  - *Template Ujian* ➔ Menuju ke Kelola Template & Redaksi Berita Acara (`/admin/template.html`).
+  - *Dokumen Diarsipkan* ➔ Menuju ke Arsip Dokumen Ujian (`/admin/arsip.html`).
+  - *User Administrator* ➔ Menuju ke Manajemen User (`/admin/users.html`).
+
+### C. Konsistensi Bahasa & Alur Antar Menu
+- Seluruh istilah telah diseragamkan dengan standar tata kelola ujian resmi Indonesia:
+  - Satuan pendidikan: **SMK NEGERI 1 KLUNGKUNG**.
+  - Waktu pelaksanaan: Menggunakan zona waktu **WITA** (Waktu Indonesia Tengah).
+  - Tanda tangan pengawas: Bersih tanpa kurung `()` dan tanpa garis bawah (*underline*).
+  - Sinkronisasi Berita Acara & Daftar Hadir: Rekap peserta otomatis terisi berdasarkan Tanggal Ujian dan Mata Pelajaran yang cocok dari Daftar Hadir.
+  - Dropdown kelas pada formulir publik (`absensi.html` & `berita-acara.html`): Jika basis data kelas masih kosong, sistem secara elegan menampilkan opsi *"-- Belum Ada Kelas Terdaftar --"* dan tidak mengalami macet/loading tanpa henti.
+
+---
+
+## 9. PANDUAN PENGGUNAAN & RUNNING LOKAL
 
 ### Menjalankan dengan Node.js Lokal:
 ```bash
@@ -161,5 +194,5 @@ Buka browser pada alamat: `http://localhost:3000`
    - **Source**: `Deploy from a branch`
    - **Branch**: `main` / `(root)`
 4. Klik **Save**. Dalam beberapa menit situs akan aktif pada URL:
-   `https://<username>.github.io/web-sas-dh-n-beritaacara/`
+   `https://01dell18-gif.github.io/web-sas-dh-n-beritaacara/`
 5. Aplikasi akan langsung berfungsi penuh berkat modul `assets/js/github-pages-compat.js`.

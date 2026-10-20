@@ -158,6 +158,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         classSelect.value = classes[0].id;
                     }
                     loadStudentsForClass(classSelect.value);
+                } else {
+                    classSelect.innerHTML = '<option value="">-- Belum Ada Kelas Terdaftar --</option>';
+                    loadStudentsForClass('');
                 }
             })
             .catch(err => {

@@ -217,6 +217,10 @@ function syncSqlFile(data) {
         lines.push('SET FOREIGN_KEY_CHECKS = 1;\n');
 
         fs.writeFileSync(sqlPath, lines.join('\n'), 'utf-8');
+        try {
+            const publicSqlPath = path.join(__dirname, 'public', 'database.sql');
+            fs.writeFileSync(publicSqlPath, lines.join('\n'), 'utf-8');
+        } catch(err) {}
     } catch (e) {
         console.error('Error synchronizing database.sql:', e);
     }
@@ -278,7 +282,7 @@ const server = http.createServer((req, res) => {
         pathname = '/berita-acara.html';
     } else if (pathname === '/arsip.php' || pathname === '/arsip') {
         pathname = '/arsip.html';
-    } else if (pathname === '/admin/login.php' || pathname === '/admin/login') {
+    } else if (pathname === '/login' || pathname === '/login.php' || pathname === '/login.html' || pathname === '/admin/login.php' || pathname === '/admin/login') {
         pathname = '/admin/login.html';
     } else if (pathname === '/admin/' || pathname === '/admin' || pathname === '/admin/index.php' || pathname === '/admin/dashboard.html') {
         pathname = '/admin/index.html';

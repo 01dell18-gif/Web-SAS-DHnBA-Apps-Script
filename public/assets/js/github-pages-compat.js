@@ -306,6 +306,25 @@
             });
         }
 
+        // 14d. POST /api/delete-class-students
+        if (pathname.includes('/api/delete-class-students') && method === 'POST') {
+            const payload = JSON.parse(options.body || '{}');
+            const classId = payload.class_id;
+            const isDeleteClass = payload.delete_class === true;
+
+            if (classId) {
+                db.students = (db.students || []).filter(s => String(s.class_id) !== String(classId));
+                if (isDeleteClass) {
+                    db.classes = (db.classes || []).filter(c => String(c.id) !== String(classId));
+                }
+                localStorage.setItem('sas_offline_db', JSON.stringify(db));
+            }
+            return new Response(JSON.stringify({ success: true, message: 'Data siswa kelas berhasil dihapus.' }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
         // 15. POST /api/save-db
         if (pathname.includes('/api/save-db') && method === 'POST') {
             const payload = JSON.parse(options.body || '{}');

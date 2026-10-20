@@ -339,7 +339,7 @@ function updateStats() {
     if (elBa) elBa.textContent = ba;
 }
 
-function populateFilterDropdowns() {
+async function populateFilterDropdowns() {
     const selTahun = document.getElementById('filterTahunAjaran');
     const selKelas = document.getElementById('filterKelas');
     const selMapel = document.getElementById('filterMapel');
@@ -354,10 +354,21 @@ function populateFilterDropdowns() {
     const mapels = new Set();
 
     archivesData.forEach(a => {
-        if (a.tahun_ajaran) years.add(a.tahun_ajaran);
-        if (a.nama_kelas) classes.add(a.nama_kelas);
-        if (a.mata_pelajaran) mapels.add(a.mata_pelajaran);
+        if (a.tahun_ajaran) years.add(a.tahun_ajaran.trim());
+        if (a.nama_kelas) classes.add(a.nama_kelas.trim());
+        if (a.mata_pelajaran) mapels.add(a.mata_pelajaran.trim());
     });
+
+    try {
+        const [clsRes, subjRes, yrRes] = await Promise.all([
+            fetch('/api/classes?t=' + Date.now()).then(r => r.json()).catch(() => []),
+            fetch('/api/subjects?t=' + Date.now()).then(r => r.json()).catch(() => []),
+            fetch('/api/academic-years?t=' + Date.now()).then(r => r.json()).catch(() => [])
+        ]);
+        if (Array.isArray(clsRes)) clsRes.forEach(c => { const n = c.nama_kelas || c.name; if (n) classes.add(n.trim()); });
+        if (Array.isArray(subjRes)) subjRes.forEach(s => { if (s) mapels.add(s.trim()); });
+        if (Array.isArray(yrRes)) yrRes.forEach(y => { if (y) years.add(y.trim()); });
+    } catch(e) {}
 
     // Populate Tahun Ajaran
     selTahun.innerHTML = '<option value="">Semua Tahun Ajaran</option>';

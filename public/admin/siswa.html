@@ -286,16 +286,21 @@ async function initSiswaPage() {
 
     // Populate dropdown kelas
     const filterSelect = document.getElementById('filterClassSelect');
-    const modalSelect = document.getElementById('modal_class_id');
+    if (filterSelect) {
+        filterSelect.innerHTML = `<option value="">Semua Kelas (${(db.students || []).length} Siswa)</option>`;
+        (db.classes || []).forEach(c => {
+            const count = (db.students || []).filter(s => String(s.class_id) === String(c.id)).length;
+            filterSelect.innerHTML += `<option value="${c.id}" ${String(c.id) === String(initialClassId) ? 'selected' : ''}>${c.nama_kelas} (${count} Siswa)</option>`;
+        });
+        if (initialClassId) {
+            filterSelect.value = initialClassId;
+        }
+    }
 
-    filterSelect.innerHTML = `<option value="">Semua Kelas (${(db.students || []).length} Siswa)</option>`;
-    modalSelect.innerHTML = '';
-
-    (db.classes || []).forEach(c => {
-        const count = (db.students || []).filter(s => String(s.class_id) === String(c.id)).length;
-        filterSelect.innerHTML += `<option value="${c.id}" ${String(c.id) === String(initialClassId) ? 'selected' : ''}>${c.nama_kelas} (${count} Siswa)</option>`;
-        modalSelect.innerHTML += `<option value="${c.id}">${c.nama_kelas}</option>`;
-    });
+    const modalDatalist = document.getElementById('modalClassesDatalist');
+    if (modalDatalist) {
+        modalDatalist.innerHTML = (db.classes || []).map(c => `<option value="${c.nama_kelas}">`).join('');
+    }
 
     onClassFilterChange();
 }

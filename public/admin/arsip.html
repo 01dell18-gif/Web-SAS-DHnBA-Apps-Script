@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/assets/css/app.css">
     <link rel="stylesheet" href="/assets/css/preview-a4.css">
     <link rel="icon" type="image/png" href="/assets/img/logo.png">
-    <script src="/assets/js/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         .admin-layout { display: flex; min-height: calc(100vh - 70px); }
         .admin-sidebar { width: 260px; background: #ffffff; border-right: 1px solid var(--border); padding: 1.5rem 1rem; display: flex; flex-direction: column; justify-content: space-between; }
@@ -259,13 +259,16 @@ function populateFilterDropdowns() {
     // Ambil juga dari db jika ada
     if (db) {
         if (db.settings && Array.isArray(db.settings.academic_years)) {
-            db.settings.academic_years.forEach(y => years.add(y));
+            db.settings.academic_years.forEach(y => { if (y) years.add(String(y).trim()); });
         }
         if (Array.isArray(db.classes)) {
-            db.classes.forEach(c => classes.add(c.name));
+            db.classes.forEach(c => {
+                const name = c.nama_kelas || c.name;
+                if (name) classes.add(String(name).trim());
+            });
         }
         if (db.settings && Array.isArray(db.settings.subjects)) {
-            db.settings.subjects.forEach(s => subjects.add(s));
+            db.settings.subjects.forEach(s => { if (s) subjects.add(String(s).trim()); });
         }
     }
 

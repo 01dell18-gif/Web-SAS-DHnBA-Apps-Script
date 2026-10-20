@@ -51,6 +51,10 @@ Aplikasi web modern untuk pembuatan administrasi ujian sekolah otomatis yang men
 10. **Kompatibilitas Penuh GitHub Pages**:
    - Aplikasi dapat dijalankan 100% pada **GitHub Pages** tanpa backend server menggunakan modul pintar `public/assets/js/github-pages-compat.js`.
 
+11. **Navigasi Terintegrasi & Filter Siswa Akurat**:
+   - Klik tombol "Lihat Siswa" pada kelas manapun di Dashboard otomatis memfilter dan menampilkan seluruh siswa kelas tersebut secara presisi.
+   - Seluruh kartu metrik di Dashboard interaktif dan dapat diklik untuk langsung membuka modul pengelolaannya.
+
 ---
 
 ## 📁 Struktur Berkas Proyek
