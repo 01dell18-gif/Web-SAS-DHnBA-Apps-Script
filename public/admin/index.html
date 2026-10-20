@@ -64,7 +64,7 @@
         <img src="/assets/img/logo.png" alt="Logo Sekolah" class="topbar-school-logo navbar-logo">
         <div class="topbar-school-info">
             <div class="topbar-school-name brand-title" id="topbarSchoolName">SMK NEGERI 1 FYJ CHANNEL</div>
-            <div class="topbar-school-breadcrumb">SIGURU • <span id="currentPageBreadcrumb">Dashboard</span></div>
+            <div class="topbar-school-breadcrumb">Sistem SAS • <span id="currentPageBreadcrumb">Dashboard</span></div>
         </div>
     </div>
     <div class="topbar-right-group">
@@ -77,13 +77,13 @@
 </header>
 
 <div class="admin-layout">
-    <!-- SIDEBAR DARK MODERN (PERSIS SEPERTI GAMBAR CONTOH) -->
+    <!-- SIDEBAR DARK MODERN (SAS PORTAL) -->
     <aside class="admin-sidebar" id="adminSidebar">
         <div>
             <div class="sidebar-brand-wrapper">
-                <div class="sidebar-brand-icon"><i class="bi bi-mortarboard-fill"></i></div>
+                <div class="sidebar-brand-icon"><i class="bi bi-shield-check"></i></div>
                 <div class="sidebar-brand-text">
-                    <span class="sidebar-brand-title">SIGURU</span>
+                    <span class="sidebar-brand-title">PANEL SAS</span>
                     <span class="sidebar-brand-sub">ADMIN PORTAL</span>
                 </div>
             </div>
@@ -118,7 +118,7 @@
 
     <!-- CONTENT -->
     <main class="admin-content">
-        <!-- WELCOME BANNER (PERSIS SEPERTI GAMBAR CONTOH) -->
+        <!-- WELCOME BANNER -->
         <div class="dashboard-welcome-banner">
             <h2 class="welcome-heading">Selamat Datang, Admin Pengelola! 👋</h2>
             <div class="welcome-subtext">
@@ -126,11 +126,11 @@
             </div>
         </div>
 
-        <!-- STATS GRID KARTU (PERSIS SEPERTI GAMBAR CONTOH) -->
+        <!-- STATS GRID KARTU (PERSIS SEPERTI GAMBAR CONTOH DENGAN DATA SAS) -->
         <div class="stat-grid-screenshot">
             <a href="/admin/guru.html" class="stat-card-screenshot">
                 <div>
-                    <div class="stat-card-title">Data Guru</div>
+                    <div class="stat-card-title">Data Guru & Pengawas</div>
                     <div class="stat-card-number" id="countTeachers">0</div>
                     <div class="stat-card-badge" style="color: #2563EB;"><i class="bi bi-person-badge"></i> Tenaga Pendidik</div>
                 </div>
@@ -143,7 +143,7 @@
                 <div>
                     <div class="stat-card-title">Data Siswa</div>
                     <div class="stat-card-number" id="countStudents">0</div>
-                    <div class="stat-card-badge" style="color: #059669;"><i class="bi bi-mortarboard"></i> Siswa Terdaftar</div>
+                    <div class="stat-card-badge" style="color: #059669;"><i class="bi bi-mortarboard-fill"></i> Siswa Terdaftar</div>
                 </div>
                 <div class="stat-card-icon-box" style="background: #ECFDF5; color: #059669;">
                     <i class="bi bi-person-check-fill"></i>
@@ -154,28 +154,21 @@
                 <div>
                     <div class="stat-card-title">Template Ujian</div>
                     <div class="stat-card-number" id="countTemplates">0</div>
-                    <div class="stat-card-badge" style="color: #7C3AED;"><i class="bi bi-file-earmark-check"></i> Format Ujian Aktif</div>
+                    <div class="stat-card-badge" style="color: #7C3AED;"><i class="bi bi-file-earmark-check-fill"></i> Format Ujian Aktif</div>
                 </div>
                 <div class="stat-card-icon-box" style="background: #F5F3FF; color: #7C3AED;">
-                    <i class="bi bi-chat-heart-fill"></i>
+                    <i class="bi bi-file-earmark-ruled-fill"></i>
                 </div>
             </a>
 
-            <a href="/admin/siswa.html" class="stat-card-screenshot">
+            <a href="/admin/arsip.html" class="stat-card-screenshot">
                 <div>
-                    <div class="stat-card-title">Wali Kelas / Total Kelas</div>
-                    <div class="stat-card-number" id="countClasses">0</div>
-                    <div class="stat-card-badge" style="color: #D97706;"><i class="bi bi-building"></i> Kelas Terdaftar</div>
+                    <div class="stat-card-title">Arsip Dokumen Ujian</div>
+                    <div class="stat-card-number" id="countArchives">0</div>
+                    <div class="stat-card-badge" style="color: #D97706;"><i class="bi bi-archive-fill"></i> Berkas Tersimpan</div>
                 </div>
                 <div class="stat-card-icon-box" style="background: #FFFBEB; color: #D97706;">
-                    <i class="bi bi-calendar-event"></i>
-                </div>
-            </a>
-        </div>
-                <div class="stat-icon" style="background: #FEF3C7; color: #D97706;"><i class="bi bi-person-badge-fill"></i></div>
-                <div>
-                    <div class="stat-value" id="countUsers">0</div>
-                    <div class="stat-label">User Administrator</div>
+                    <i class="bi bi-folder-check"></i>
                 </div>
             </a>
         </div>

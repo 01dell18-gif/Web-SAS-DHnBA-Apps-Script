@@ -1188,7 +1188,7 @@ textarea.form-control {
 }
 
 /* =========================================================
-   SIGURU / MODERN ADMIN NAVBAR & SIDEBAR DESIGN SYSTEM
+   MODERN SAS ADMIN NAVBAR & SIDEBAR DESIGN SYSTEM
    ========================================================= */
 
 /* Topbar Header matching user reference screenshot */
@@ -1286,7 +1286,7 @@ textarea.form-control {
     gap: 6px;
 }
 
-/* Dark Navy Sidebar matching screenshot */
+/* Dark Navy Sidebar - Sticky, Full Viewport, Scrollable */
 .admin-sidebar {
     width: 260px;
     background: #0B132B !important;
@@ -1298,6 +1298,19 @@ textarea.form-control {
     transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     color: #E2E8F0;
     flex-shrink: 0;
+    position: sticky;
+    top: 64px;
+    height: calc(100vh - 64px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.admin-sidebar::-webkit-scrollbar {
+    width: 5px;
+}
+.admin-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
 }
 
 .sidebar-brand-wrapper {
