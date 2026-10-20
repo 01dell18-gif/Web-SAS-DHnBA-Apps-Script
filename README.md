@@ -78,6 +78,16 @@ Aplikasi web modern untuk pembuatan administrasi ujian sekolah otomatis yang men
    - Seluruh tombol ekspor Excel (Siswa, Guru, Kelas, Mapel) mengekspor 100% seluruh rekaman data dari database tanpa terpotong batas paginasi atau filter tampilan.
    - Fitur **Unduh Data_Siswa.xlsx** dan **Unduh Data_Guru.xlsx** pada menu **Backup & Database SQL** telah disinkronkan dengan skema basis data relasional sehingga data terunduh lengkap dengan kolom NIS, Nama, Kelas, Tingkat, Program Keahlian, NIP, Mata Pelajaran Diampu, dan Jabatan.
 
+19. **Pembatasan Hak Akses Khusus Operator (Role-Based Access Control)**:
+   - Akun pengguna berstatus **Operator** secara otomatis disembunyikan dari menu **Manajemen User** dan **Backup & Database SQL** di bilah navigasi sidebar maupun kartu aksi Dashboard. Dilengkapi proteksi routing langsung jika halaman terlarang diakses via address bar.
+
+20. **Tombol Perbarui Pengaturan di Paling Bawah & Konfirmasi Buka Menu Baru**:
+   - Tombol **"Perbarui Pengaturan, Logo & Kop Surat"** diletakkan di posisi paling bawah halaman pengaturan untuk menyimpan seluruh perubahan identitas, logo, kop, kelas resmi, mapel, dan tahun ajaran secara serempak.
+   - Dilengkapi deteksi status belum disimpan (*dirty state tracking*) dan modal konfirmasi saat pengguna membuka menu lain sebelum menyimpan perubahan.
+
+21. **Konfirmasi Dialog Saat Keluar Panel Admin (Logout Guard)**:
+   - Tombol **Keluar** pada panel administrator kini dilengkapi dialog konfirmasi (*"Apakah Anda yakin ingin keluar dari Panel Administrator?"*) untuk mencegah pengguna keluar secara tidak sengaja.
+
 ---
 
 ## 📁 Struktur Berkas Proyek

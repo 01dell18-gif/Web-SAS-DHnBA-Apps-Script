@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,6 +16,7 @@
             background: linear-gradient(135deg, #4657D9 0%, #253047 100%);
             padding: 1rem;
         }
+
         .login-card {
             width: 100%;
             max-width: 420px;
@@ -24,10 +26,12 @@
             padding: 2.5rem;
             box-shadow: 0 16px 36px -4px rgba(37, 48, 71, 0.25);
         }
+
         .login-header {
             text-align: center;
             margin-bottom: 2rem;
         }
+
         .login-header img {
             width: 68px;
             height: 68px;
@@ -38,6 +42,7 @@
             padding: 4px;
             box-shadow: var(--shadow-sm);
         }
+
         .login-hint {
             background: var(--slate-100);
             border-radius: var(--radius-sm);
@@ -50,111 +55,118 @@
     </style>
     <script src="/assets/js/github-pages-compat.js"></script>
 </head>
+
 <body>
 
-<div class="login-card">
-    <div class="login-header">
-        <img src="/assets/img/logo.png" alt="Logo SMK N 1 Klungkung">
-        <h2>Panel Administrator</h2>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
-            SMK NEGERI 1 KLUNGKUNG
-        </p>
-    </div>
-
-    <form id="formLogin" onsubmit="handleLogin(event)">
-        <div id="loginAlert" class="alert alert-danger" style="display: none; margin-bottom: 1rem;"></div>
-
-        <div class="form-group">
-            <label class="form-label" for="username">Username</label>
-            <input type="text" name="username" id="username" class="form-control" placeholder="Masukkan username" value="admin" required autofocus>
+    <div class="login-card">
+        <div class="login-header">
+            <img src="/assets/img/logo.png" alt="Logo SMK N 1 Klungkung">
+            <h2>Panel Administrator</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+                SMK NEGERI 1 KLUNGKUNG
+            </p>
         </div>
 
-        <div class="form-group">
-            <label class="form-label" for="password">Password</label>
-            <div style="position: relative;">
-                <input type="password" name="password" id="password" class="form-control" placeholder="Masukkan password" value="admin123" required style="padding-right: 42px;">
-                <button type="button" id="btnTogglePassword" onclick="togglePasswordVisibility()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 4px; font-size: 1.1rem;" title="Lihat / Sembunyikan Password" aria-label="Toggle Password">
-                    <i class="bi bi-eye" id="iconEye"></i>
-                </button>
+        <form id="formLogin" onsubmit="handleLogin(event)">
+            <div id="loginAlert" class="alert alert-danger" style="display: none; margin-bottom: 1rem;"></div>
+
+            <div class="form-group">
+                <label class="form-label" for="username">Username</label>
+                <input type="text" name="username" id="username" class="form-control" placeholder="Masukkan username"
+                    value="admin" required autofocus>
             </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <div style="position: relative;">
+                    <input type="password" name="password" id="password" class="form-control"
+                        placeholder="Masukkan password" value="admin123" required style="padding-right: 42px;">
+                    <button type="button" id="btnTogglePassword" onclick="togglePasswordVisibility()"
+                        style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 4px; font-size: 1.1rem;"
+                        title="Lihat / Sembunyikan Password" aria-label="Toggle Password">
+                        <i class="bi bi-eye" id="iconEye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block"
+                style="margin-top: 1.5rem; padding: 0.85rem; font-size: 0.95rem;">
+                <i class="bi bi-box-arrow-in-right"></i> Masuk ke Panel Sistem
+            </button>
+        </form>
+
+        <div class="login-hint">
+            <strong>Semangat ✨🤞</strong>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem; padding: 0.85rem; font-size: 0.95rem;">
-            <i class="bi bi-box-arrow-in-right"></i> Masuk ke Panel Sistem
-        </button>
-    </form>
-
-    <div class="login-hint">
-        <i class="bi bi-info-circle"></i> Default Demo: <strong>admin</strong> / <strong>admin123</strong>
+        <div style="text-align: center; margin-top: 1.75rem;">
+            <a href="/" style="font-size: 0.85rem; color: var(--text-muted);">
+                ← Kembali ke Beranda Publik
+            </a>
+        </div>
     </div>
 
-    <div style="text-align: center; margin-top: 1.75rem;">
-        <a href="/" style="font-size: 0.85rem; color: var(--text-muted);">
-            ← Kembali ke Beranda Publik
-        </a>
-    </div>
-</div>
+    <script>
+        // Cek jika sudah login sebelumnya, langsung arahkan ke Dashboard Admin
+        if (localStorage.getItem('sas_admin_auth') === '1') {
+            window.location.href = '/admin/index.html';
+        }
 
-<script>
-// Cek jika sudah login sebelumnya, langsung arahkan ke Dashboard Admin
-if (localStorage.getItem('sas_admin_auth') === '1') {
-    window.location.href = '/admin/index.html';
-}
+        function togglePasswordVisibility() {
+            const input = document.getElementById('password');
+            const icon = document.getElementById('iconEye');
+            if (!input || !icon) return;
 
-function togglePasswordVisibility() {
-    const input = document.getElementById('password');
-    const icon = document.getElementById('iconEye');
-    if (!input || !icon) return;
-
-    if (input.type === 'password') {
-        input.type = 'text';
-        icon.classList.remove('bi-eye');
-        icon.classList.add('bi-eye-slash');
-    } else {
-        input.type = 'password';
-        icon.classList.remove('bi-eye-slash');
-        icon.classList.add('bi-eye');
-    }
-}
-
-async function handleLogin(e) {
-    e.preventDefault();
-    const u = document.getElementById('username').value.trim();
-    const p = document.getElementById('password').value.trim();
-    const alertBox = document.getElementById('loginAlert');
-
-    let valid = (u === 'admin' && p === 'admin123');
-    let userDisplayName = 'Administrator';
-    let userRole = 'superadmin';
-
-    // Periksa juga akun pengguna dari database
-    try {
-        const res = await fetch('/data/db.json?t=' + Date.now());
-        const data = await res.json();
-        if (data && Array.isArray(data.users)) {
-            const foundUser = data.users.find(usr => usr.username.toLowerCase() === u.toLowerCase());
-            if (foundUser && (foundUser.password === p || (foundUser.username === 'admin' && p === 'admin123'))) {
-                valid = true;
-                userDisplayName = foundUser.nama || foundUser.username;
-                userRole = foundUser.role || 'admin';
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
             }
         }
-    } catch (err) {
-        console.warn('Error reading db users:', err);
-    }
 
-    if (valid) {
-        localStorage.setItem('sas_admin_auth', '1');
-        localStorage.setItem('sas_admin_user', u);
-        localStorage.setItem('sas_admin_name', userDisplayName);
-        localStorage.setItem('sas_admin_role', userRole);
-        window.location.href = '/admin/index.html';
-    } else {
-        alertBox.style.display = 'block';
-        alertBox.textContent = 'Username atau password tidak valid!';
-    }
-}
-</script>
+        async function handleLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('username').value.trim();
+            const p = document.getElementById('password').value.trim();
+            const alertBox = document.getElementById('loginAlert');
+
+            let valid = (u === 'admin' && p === 'admin123');
+            let userDisplayName = 'Administrator';
+            let userRole = 'superadmin';
+
+            // Periksa juga akun pengguna dari database
+            try {
+                const res = await fetch('/data/db.json?t=' + Date.now());
+                const data = await res.json();
+                if (data && Array.isArray(data.users)) {
+                    const foundUser = data.users.find(usr => usr.username.toLowerCase() === u.toLowerCase());
+                    if (foundUser && (foundUser.password === p || (foundUser.username === 'admin' && p === 'admin123'))) {
+                        valid = true;
+                        userDisplayName = foundUser.nama || foundUser.username;
+                        userRole = foundUser.role || 'admin';
+                    }
+                }
+            } catch (err) {
+                console.warn('Error reading db users:', err);
+            }
+
+            if (valid) {
+                localStorage.setItem('sas_admin_auth', '1');
+                localStorage.setItem('sas_admin_user', u);
+                localStorage.setItem('sas_admin_name', userDisplayName);
+                localStorage.setItem('sas_admin_role', userRole);
+                window.location.href = '/admin/index.html';
+            } else {
+                alertBox.style.display = 'block';
+                alertBox.textContent = 'Username atau password tidak valid!';
+            }
+        }
+    </script>
 
 </body>
+
 </html>

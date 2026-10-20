@@ -259,3 +259,29 @@ Buka browser pada alamat: `http://localhost:3000`
 
 ### 8. Manajemen User: Integrasi Master Guru & Toggle Password Mata
 - Pada menu **Manajemen User & Hak Akses** (`public/admin/users.html`), tabel pengguna memiliki kolom Password dengan tombol toggle mata (`bi-eye`), dan input Nama Lengkap Pengguna terintegrasi dengan Master Data Guru via `<datalist>`.
+
+---
+
+## 11. PEMBARUAN FITUR & OPTIMASI TERBARU (UPDATE v2.8)
+
+### 1. Pembatasan Hak Akses Peran Operator (Role-Based Access Control)
+- Pengguna dengan peran **Operator** (`role: 'operator'`) kini dibatasi hak aksesnya:
+  - Menu **Manajemen User** dan **Backup & Database SQL** disembunyikan secara otomatis dari bilah navigasi sidebar di seluruh halaman admin.
+  - Kartu metrik dan tombol pintasan Manajemen User di Dashboard Admin disembunyikan khusus untuk peran Operator.
+  - Dilengkapi sistem proteksi routing langsung (*guard*); jika akun Operator mencoba membuka URL `/admin/users.html` atau `/admin/database.html` secara manual, sistem langsung menolak akses dan mengarahkannya kembali ke Dashboard Admin.
+
+### 2. Tombol Perbarui Pengaturan di Paling Bawah Halaman
+- Tombol **"Perbarui Pengaturan, Logo & Kop Surat"** pada menu **Pengaturan Sekolah & Kop** (`public/admin/pengaturan.html`) dipindahkan ke posisi paling bawah halaman (setelah kartu Master Daftar Tahun Ajaran).
+- Berfungsi menyimpan seluruh perubahan konfigurasi sekaligus ke basis data: nama sekolah, tagline, zona waktu, tahun ajaran aktif, berkas logo baru (base64/file), berkas kop surat resmi baru, daftar kelas resmi, mata pelajaran, dan tahun ajaran.
+
+### 3. Deteksi Perubahan Belum Disimpan & Konfirmasi Buka Menu Baru
+- Dilengkapi mekanisme *dirty state tracking* (`isDirty`) yang memantau perubahan pada input teks, dropdown, berkas logo, berkas kop surat, daftar kelas, mata pelajaran, dan tahun ajaran.
+- Disertai lencana status dinamis (*"Belum Ada Perubahan"* vs *"Ada Perubahan Belum Disimpan"*).
+- Jika pengguna telah mengubah data namun belum menekan tombol simpan di bagian bawah, lalu mengeklik menu navigasi lain (atau tombol kembali/keluar), sistem menampilkan modal konfirmasi dengan 3 pilihan:
+  - **Simpan & Lanjutkan**: Menyimpan seluruh perubahan ke basis data lalu melanjutkan ke menu yang dipilih.
+  - **Abaikan & Lanjutkan**: Mengabaikan perubahan yang belum disimpan dan langsung membuka menu tujuan.
+  - **Batal**: Menutup modal dan tetap berada di halaman pengaturan untuk melanjutkan penyesuaian.
+- Dilengkapi proteksi `beforeunload` bawaan browser untuk mencegah hilangnya data saat tab ditutup atau direfresh tanpa sengaja.
+
+### 4. Konfirmasi Dialog Saat Keluar dari Panel Admin (Logout Guard)
+- Seluruh tombol **Keluar** pada panel administrator kini dilengkapi dialog konfirmasi (*"Apakah Anda yakin ingin keluar dari Panel Administrator?"*), mencegah pengguna keluar secara tidak sengaja saat sedang bekerja.

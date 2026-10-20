@@ -3,10 +3,42 @@
  * SMK NEGERI 1 KLUNGKUNG
  */
 
-// 1. Validasi Autentikasi Pengguna
+// 1. Validasi Autentikasi Pengguna & Pembatasan Hak Akses (Role-Based Access Control)
 (function checkAuth() {
     if (localStorage.getItem('sas_admin_auth') !== '1') {
         window.location.href = '/admin/login.html';
+        return;
+    }
+
+    const role = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    const currentPath = window.location.pathname.toLowerCase();
+
+    // Guard khusus Operator: cegah akses langsung via URL ke Manajemen User & Backup Database
+    if (role === 'operator') {
+        if (currentPath.includes('users.html') || currentPath.includes('database.html')) {
+            alert('Akses Dibatasi: Menu Manajemen User dan Backup Basis Data hanya dapat diakses oleh Administrator!');
+            window.location.href = '/admin/index.html';
+            return;
+        }
+
+        // Terapkan style langsung agar menu terlarang tidak berkedip (zero-flicker)
+        const style = document.createElement('style');
+        style.id = 'operatorAccessStyle';
+        style.textContent = `
+            .admin-sidebar a[href*="users.html"],
+            .admin-sidebar a[href*="database.html"],
+            li:has(a[href*="users.html"]),
+            li:has(a[href*="database.html"]),
+            a[href*="users.html"],
+            a[href*="database.html"] {
+                display: none !important;
+            }
+        `;
+        if (document.head) {
+            document.head.appendChild(style);
+        } else {
+            document.addEventListener('DOMContentLoaded', () => document.head.appendChild(style));
+        }
     }
 })();
 
@@ -81,21 +113,47 @@ function showToast(message, type = 'info') {
     }, 3500);
 }
 
-// 6. Logout
+// 6. Logout dengan Konfirmasi
 function logout() {
-    localStorage.removeItem('sas_admin_auth');
-    localStorage.removeItem('sas_admin_user');
-    localStorage.removeItem('sas_admin_name');
-    localStorage.removeItem('sas_admin_role');
-    window.location.href = '/admin/login.html';
+    if (confirm('Apakah Anda yakin ingin keluar dari Panel Administrator SMK Negeri 1 Klungkung?')) {
+        localStorage.removeItem('sas_admin_auth');
+        localStorage.removeItem('sas_admin_user');
+        localStorage.removeItem('sas_admin_name');
+        localStorage.removeItem('sas_admin_role');
+        window.location.href = '/admin/login.html';
+    }
 }
 
-// 7. Inisialisasi Header Identitas
+// 7. Penerapan Hak Akses & Inisialisasi Header Identitas
+function applyRoleAccessControl() {
+    const role = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    if (role === 'operator') {
+        // Sembunyikan navigasi sidebar untuk Manajemen User & Backup Database
+        document.querySelectorAll('.admin-sidebar a, .admin-nav a, .admin-nav-item').forEach(link => {
+            const href = (link.getAttribute('href') || '').toLowerCase();
+            if (href.includes('users.html') || href.includes('database.html')) {
+                const li = link.closest('li');
+                if (li) li.style.display = 'none';
+                else link.style.display = 'none';
+            }
+        });
+
+        // Sembunyikan tombol & kartu di dashboard
+        document.querySelectorAll('a[href*="users.html"], a[href*="database.html"]').forEach(el => {
+            el.style.display = 'none';
+        });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    applyRoleAccessControl();
+
     const adminUserEl = document.getElementById('adminUsername');
     if (adminUserEl) {
         const name = localStorage.getItem('sas_admin_name') || localStorage.getItem('sas_admin_user') || 'Administrator';
-        adminUserEl.textContent = name;
+        const role = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+        const roleBadge = role === 'operator' ? ' (Operator)' : ' (Admin)';
+        adminUserEl.textContent = name + roleBadge;
     }
 
     // Set active link sidebar sesuai pathname
