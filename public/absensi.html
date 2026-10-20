@@ -407,6 +407,7 @@
     </div>
 </div>
 
+<script src="/assets/js/popup.js"></script>
 <script src="/assets/js/app.js"></script>
 <script src="/assets/js/signature-pad.js"></script>
 <script src="/assets/js/pdf-export.js"></script>
@@ -444,8 +445,21 @@ function applyExamTemplate(tplId) {
     }
 }
 
-function confirmResetForm() {
-    if (confirm('Apakah Anda yakin ingin mengosongkan kembali seluruh isian formulir?')) {
+async function confirmResetForm() {
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Kosongkan Formulir',
+            message: 'Apakah Anda yakin ingin mengosongkan kembali seluruh isian formulir Daftar Hadir?',
+            type: 'warning',
+            confirmText: 'Ya, Kosongkan',
+            confirmIcon: 'bi-arrow-counterclockwise'
+        });
+    } else {
+        confirmed = confirm('Apakah Anda yakin ingin mengosongkan kembali seluruh isian formulir?');
+    }
+
+    if (confirmed) {
         document.getElementById('formAbsensi').reset();
         window.location.reload();
     }

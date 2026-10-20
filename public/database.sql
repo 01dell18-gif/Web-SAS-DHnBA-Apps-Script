@@ -1,7 +1,7 @@
 -- ========================================================
 -- DATABASE SCHEMA & MASTER DATA: SISTEM ADMINISTRASI UJIAN
 -- SMK NEGERI 1 KLUNGKUNG
--- Auto-synchronized: 2026-10-20T03:40:31.339Z
+-- Auto-synchronized: 2026-10-20T04:17:46.556Z
 -- ========================================================
 
 SET FOREIGN_KEY_CHECKS = 0;
@@ -387,7 +387,7 @@ INSERT INTO `settings` (`key`, `value`) VALUES ('timezone', 'WITA');
 INSERT INTO `settings` (`key`, `value`) VALUES ('academic_years', '["2026/2027","2027/2028"]');
 INSERT INTO `settings` (`key`, `value`) VALUES ('subjects', '["Desain Komunikasi Visual","Teknik Komputer dan Jaringan","Teknik Sepeda Motor","Layanan Penunjang Kefarmasian Klinis dan Komunitas","Bisnis Digital","Manajemen Perkantoran","Akuntansi dan Keuangan Lembaga","Matematika","Bahasa Indonesia","Bahasa Inggris","Pendidikan Agama Hindu dan Budi Pekerti","Pendidikan Pancasila","Sejarah","Informatika","Projek IPAS","Mapel Pilihan","Seni Budaya","Kreativitas, Inovasi dan Kewirausahaan"]');
 
-INSERT INTO `users` (`id`, `username`, `password`, `nama`, `role`) VALUES (1, 'admin', 'admin123', 'Administrator SMK N 1 Klungkung', 'admin');
+INSERT INTO `users` (`id`, `username`, `password`, `nama`, `role`) VALUES (1, 'admin', 'admin123', 'Administrator FYJ Channel', 'admin');
 INSERT INTO `users` (`id`, `username`, `password`, `nama`, `role`) VALUES (2, 'guru', 'guru123', 'Ni Made Rai Artini, S.Kom.', 'operator');
 
 

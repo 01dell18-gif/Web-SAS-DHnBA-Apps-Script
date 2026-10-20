@@ -281,6 +281,7 @@ TAHUN AJARAN [tahun_ajaran]</textarea>
     </main>
 </div>
 
+<script src="/assets/js/popup.js"></script>
 <script src="/assets/js/admin-common.js"></script>
 <script>
 let currentEditorMode = 'simple';
@@ -508,11 +509,24 @@ function setEditorMode(mode) {
     updateEditorPreview();
 }
 
-function loadPresetTemplate(presetKey) {
+async function loadPresetTemplate(presetKey) {
     const preset = PRESET_TEMPLATES[presetKey];
     if (!preset) return;
 
-    if (confirm(`Muat format "${preset.nama_ujian}" ke formulir?`)) {
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Terapkan Format Standar',
+            message: `Muat format "${preset.nama_ujian}" ke formulir template?`,
+            type: 'info',
+            confirmText: 'Muat Format',
+            confirmIcon: 'bi-box-arrow-in-down'
+        });
+    } else {
+        confirmed = confirm(`Muat format "${preset.nama_ujian}" ke formulir?`);
+    }
+
+    if (confirmed) {
         document.getElementById('tpl_nama_ujian').value = preset.nama_ujian;
         document.getElementById('tpl_tahun_ajaran').value = preset.tahun_ajaran;
         document.getElementById('tpl_semester').value = preset.semester;
@@ -664,7 +678,19 @@ async function deleteTemplate(id) {
     const tpl = db.templates.find(t => Number(t.id) === Number(id));
     if (!tpl) return;
 
-    if (!confirm(`Apakah Anda yakin ingin menghapus template "${tpl.nama_ujian}" dari database?`)) return;
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Hapus Template',
+            message: `Apakah Anda yakin ingin menghapus template "${tpl.nama_ujian}" dari basis data?`,
+            type: 'danger',
+            confirmText: 'Ya, Hapus Template',
+            confirmIcon: 'bi-trash-fill'
+        });
+    } else {
+        confirmed = confirm(`Apakah Anda yakin ingin menghapus template "${tpl.nama_ujian}" dari database?`);
+    }
+    if (!confirmed) return;
 
     db.templates = db.templates.filter(t => Number(t.id) !== Number(id));
 

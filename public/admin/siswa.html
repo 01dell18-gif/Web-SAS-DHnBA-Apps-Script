@@ -304,6 +304,7 @@
     </div>
 </div>
 
+<script src="/assets/js/popup.js"></script>
 <script src="/assets/js/admin-common.js"></script>
 <script>
 let targetDeleteClassId = null;
@@ -517,15 +518,40 @@ function renderStudentsTable() {
     });
 }
 
-function promptDeleteAllStudents() {
+async function promptDeleteAllStudents() {
     const count = (db.students || []).length;
     if (count === 0) {
         showToast('Tidak ada data siswa di dalam basis data.', 'info');
         return;
     }
 
-    if (confirm(`⚠️ PERINGATAN KRUSIAL:\n\nApakah Anda yakin ingin MENGHAPUS SEMUA DATA SISWA?\n\nSebanyak ${count} siswa di seluruh kelas akan dikosongkan secara permanen dari basis data.\nTindakan ini tidak dapat dibatalkan.`)) {
-        const resetClasses = confirm("Apakah Anda juga ingin MENGOSONGKAN DAFTAR KELAS agar daftar kelas dapat diambil/didaftarkan ulang secara bersih saat penginputan data siswa baru berikutnya?\n\n• Klik [OK] untuk mengosongkan siswa dan daftar kelas.\n• Klik [Batal] untuk hanya mengosongkan data siswa.");
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: '⚠️ Peringatan Krusial',
+            message: `Apakah Anda yakin ingin MENGHAPUS SEMUA DATA SISWA?\n\nSebanyak ${count} siswa di seluruh kelas akan dikosongkan secara permanen dari basis data.\nTindakan ini tidak dapat dibatalkan.`,
+            type: 'danger',
+            confirmText: 'Ya, Kosongkan Siswa',
+            confirmIcon: 'bi-trash-fill'
+        });
+    } else {
+        confirmed = confirm(`⚠️ PERINGATAN KRUSIAL:\n\nApakah Anda yakin ingin MENGHAPUS SEMUA DATA SISWA?\n\nSebanyak ${count} siswa di seluruh kelas akan dikosongkan secara permanen dari basis data.\nTindakan ini tidak dapat dibatalkan.`);
+    }
+
+    if (confirmed) {
+        let resetClasses = false;
+        if (typeof showConfirmModal === 'function') {
+            resetClasses = await showConfirmModal({
+                title: 'Opsi Kosongkan Daftar Kelas',
+                message: 'Apakah Anda juga ingin MENGOSONGKAN DAFTAR KELAS agar daftar kelas dapat didaftarkan ulang secara bersih saat penginputan data siswa baru berikutnya?\n\n• Pilih [Kosongkan Kelas] untuk mengosongkan siswa dan master kelas.\n• Pilih [Pertahankan Kelas] untuk hanya mengosongkan data siswa.',
+                type: 'warning',
+                confirmText: 'Kosongkan Kelas',
+                cancelText: 'Pertahankan Kelas',
+                confirmIcon: 'bi-building-dash'
+            });
+        } else {
+            resetClasses = confirm("Apakah Anda juga ingin MENGOSONGKAN DAFTAR KELAS?");
+        }
         executeDeleteAllStudents(resetClasses);
     }
 }
@@ -555,7 +581,20 @@ async function deleteStudent(id) {
     const st = (db.students || []).find(s => s.id === id);
     const namaSiswa = st ? st.nama : 'siswa ini';
 
-    if (confirm(`Apakah Anda yakin ingin menghapus "${namaSiswa}"?`)) {
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Hapus Siswa',
+            message: `Apakah Anda yakin ingin menghapus siswa "${namaSiswa}"?`,
+            type: 'danger',
+            confirmText: 'Ya, Hapus Siswa',
+            confirmIcon: 'bi-trash-fill'
+        });
+    } else {
+        confirmed = confirm(`Apakah Anda yakin ingin menghapus "${namaSiswa}"?`);
+    }
+
+    if (confirmed) {
         db.students = db.students.filter(s => s.id !== id);
         const res = await saveAdminDatabase({ students: db.students });
         if (res.success) {

@@ -181,6 +181,7 @@
     </div>
 </div>
 
+<script src="/assets/js/popup.js"></script>
 <script src="/assets/js/admin-common.js"></script>
 <script>
 let usersList = [];
@@ -426,11 +427,31 @@ async function handleSaveUser(e) {
 
 async function deleteUser(userId, username) {
     if (username === 'admin') {
-        showToast('Akun administrator utama tidak dapat dihapus!', 'danger');
+        if (typeof showAlertModal === 'function') {
+            showAlertModal({
+                title: 'Tindakan Ditolak',
+                message: 'Akun Administrator Utama sistem tidak dapat dihapus!',
+                type: 'warning'
+            });
+        } else {
+            showToast('Akun administrator utama tidak dapat dihapus!', 'danger');
+        }
         return;
     }
 
-    if (!confirm(`⚠️ Hapus pengguna "${username}" secara permanen dari sistem?`)) return;
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Hapus Pengguna',
+            message: `Hapus pengguna "${username}" secara permanen dari sistem?`,
+            type: 'danger',
+            confirmText: 'Ya, Hapus Pengguna',
+            confirmIcon: 'bi-trash-fill'
+        });
+    } else {
+        confirmed = confirm(`⚠️ Hapus pengguna "${username}" secara permanen dari sistem?`);
+    }
+    if (!confirmed) return;
 
     try {
         const res = await fetch('/api/delete-user', {

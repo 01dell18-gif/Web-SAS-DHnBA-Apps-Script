@@ -483,6 +483,7 @@ window.EXAM_TEMPLATES = [
 ];
 window.SCHOOL_NAME = "SMK NEGERI 1 KLUNGKUNG";
 </script>
+<script src="/assets/js/popup.js"></script>
 <script src="/assets/js/app.js"></script>
 <script src="/assets/js/signature-pad.js"></script>
 <script src="/assets/js/pdf-export.js"></script>
@@ -494,8 +495,21 @@ function applyExamTemplate(tplId) {
     }
 }
 
-function confirmResetForm() {
-    if (confirm('Apakah Anda yakin ingin mengosongkan kembali seluruh isian formulir Berita Acara?')) {
+async function confirmResetForm() {
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Kosongkan Formulir',
+            message: 'Apakah Anda yakin ingin mengosongkan kembali seluruh isian formulir Berita Acara?',
+            type: 'warning',
+            confirmText: 'Ya, Kosongkan',
+            confirmIcon: 'bi-arrow-counterclockwise'
+        });
+    } else {
+        confirmed = confirm('Apakah Anda yakin ingin mengosongkan kembali seluruh isian formulir Berita Acara?');
+    }
+
+    if (confirmed) {
         document.getElementById('formBeritaAcara').reset();
         window.location.reload();
     }

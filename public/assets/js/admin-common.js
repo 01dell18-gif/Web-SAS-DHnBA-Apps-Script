@@ -16,8 +16,18 @@
     // Guard khusus Operator: cegah akses langsung via URL ke Manajemen User & Backup Database
     if (role === 'operator') {
         if (currentPath.includes('users.html') || currentPath.includes('database.html')) {
-            alert('Akses Dibatasi: Menu Manajemen User dan Backup Basis Data hanya dapat diakses oleh Administrator!');
-            window.location.href = '/admin/index.html';
+            if (typeof showAlertModal === 'function') {
+                showAlertModal({
+                    title: 'Akses Dibatasi',
+                    message: 'Menu Manajemen User dan Backup Basis Data hanya dapat diakses oleh Administrator!',
+                    type: 'danger'
+                }).then(() => {
+                    window.location.href = '/admin/index.html';
+                });
+            } else {
+                alert('Akses Dibatasi: Menu Manajemen User dan Backup Basis Data hanya dapat diakses oleh Administrator!');
+                window.location.href = '/admin/index.html';
+            }
             return;
         }
 
@@ -105,6 +115,10 @@ async function saveAdminDatabase(payload) {
 
 // 5. Toast Notification
 function showToast(message, type = 'info') {
+    if (typeof window.showNotification === 'function') {
+        window.showNotification(message, type);
+        return;
+    }
     let toast = document.getElementById('adminToast');
     if (!toast) {
         toast = document.createElement('div');
@@ -122,10 +136,23 @@ function showToast(message, type = 'info') {
     }, 3500);
 }
 
-// 6. Logout dengan Konfirmasi
-function logout() {
+// 6. Logout dengan Konfirmasi Modal Popup Modern
+async function logout() {
     const schoolName = (db && db.settings && db.settings.school_name) || 'SMK';
-    if (confirm(`Apakah Anda yakin ingin keluar dari Panel Administrator ${schoolName}?`)) {
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Konfirmasi Keluar',
+            message: `Apakah Anda yakin ingin keluar dari Panel Administrator ${schoolName}?`,
+            type: 'warning',
+            confirmText: 'Ya, Keluar',
+            confirmIcon: 'bi-box-arrow-right'
+        });
+    } else {
+        confirmed = confirm(`Apakah Anda yakin ingin keluar dari Panel Administrator ${schoolName}?`);
+    }
+
+    if (confirmed) {
         localStorage.removeItem('sas_admin_auth');
         localStorage.removeItem('sas_admin_user');
         localStorage.removeItem('sas_admin_name');

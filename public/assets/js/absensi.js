@@ -603,6 +603,9 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(res => {
             if (res.success) {
                 console.log('Arsip Daftar Hadir berhasil disimpan ke database:', res.archive.id);
+                if (typeof showToast === 'function') {
+                    showToast('Dokumen Daftar Hadir berhasil diarsipkan ke database!', 'success');
+                }
             }
         })
         .catch(e => console.warn('Gagal menyimpan arsip:', e));

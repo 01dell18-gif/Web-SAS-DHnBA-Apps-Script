@@ -267,6 +267,7 @@
     </div>
 </div>
 
+<script src="/assets/js/popup.js"></script>
 <script src="/assets/js/admin-common.js"></script>
 <script>
 let parsedTeacherExcelData = [];
@@ -495,7 +496,19 @@ async function deleteTeacher(id) {
     const t = (db.teachers || []).find(item => Number(item.id) === Number(id));
     if (!t) return;
 
-    if (!confirm(`Apakah Anda yakin ingin menghapus guru "${t.nama}"?`)) return;
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Hapus Guru / Pengawas',
+            message: `Apakah Anda yakin ingin menghapus guru "${t.nama}"?`,
+            type: 'danger',
+            confirmText: 'Ya, Hapus',
+            confirmIcon: 'bi-trash-fill'
+        });
+    } else {
+        confirmed = confirm(`Apakah Anda yakin ingin menghapus guru "${t.nama}"?`);
+    }
+    if (!confirmed) return;
 
     db.teachers = db.teachers.filter(item => Number(item.id) !== Number(id));
     const res = await saveAdminDatabase({ teachers: db.teachers });
@@ -507,14 +520,27 @@ async function deleteTeacher(id) {
     }
 }
 
-function promptDeleteAllTeachers() {
+async function promptDeleteAllTeachers() {
     const count = (db.teachers || []).length;
     if (count === 0) {
         showToast('Tidak ada data guru & pengawas di dalam basis data.', 'info');
         return;
     }
 
-    if (confirm(`⚠️ PERINGATAN KRUSIAL:\n\nApakah Anda yakin ingin MENGHAPUS SEMUA DATA GURU & PENGAWAS?\n\nSebanyak ${count} guru & pengawas akan dikosongkan secara permanen dari basis data.\nTindakan ini tidak dapat dibatalkan.`)) {
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: '⚠️ Peringatan Krusial',
+            message: `Apakah Anda yakin ingin MENGHAPUS SEMUA DATA GURU & PENGAWAS?\n\nSebanyak ${count} guru & pengawas akan dikosongkan secara permanen dari basis data.\nTindakan ini tidak dapat dibatalkan.`,
+            type: 'danger',
+            confirmText: 'Ya, Kosongkan Semua Guru',
+            confirmIcon: 'bi-trash-fill'
+        });
+    } else {
+        confirmed = confirm(`⚠️ PERINGATAN KRUSIAL:\n\nApakah Anda yakin ingin MENGHAPUS SEMUA DATA GURU & PENGAWAS?\n\nSebanyak ${count} guru & pengawas akan dikosongkan secara permanen dari basis data.\nTindakan ini tidak dapat dibatalkan.`);
+    }
+
+    if (confirmed) {
         fetch('/api/save-db', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

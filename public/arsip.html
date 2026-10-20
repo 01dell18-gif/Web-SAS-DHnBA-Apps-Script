@@ -292,6 +292,7 @@
     </div>
 </div>
 
+<script src="/assets/js/popup.js"></script>
 <script src="/assets/js/app.js"></script>
 <script>
 let archivesData = [];
@@ -575,6 +576,7 @@ function printModalDoc() {
 
 function downloadModalPdf() {
     if (!activePreviewDoc) return;
+    showToast('Sedang menyiapkan dan mengunduh berkas PDF...', 'info');
     const container = document.getElementById('modalRenderContainer');
     const opt = {
         margin: [5, 5, 5, 5],
@@ -585,13 +587,16 @@ function downloadModalPdf() {
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
-    html2pdf().set(opt).from(container).save();
+    html2pdf().set(opt).from(container).save().then(() => {
+        showToast('Berkas PDF berhasil diunduh!', 'success');
+    });
 }
 
 function quickDownloadPdf(docId) {
     const doc = archivesData.find(a => Number(a.id) === Number(docId));
     if (!doc) return;
 
+    showToast('Sedang menyiapkan dan mengunduh berkas PDF...', 'info');
     const tempDiv = document.createElement('div');
     tempDiv.style.position = 'fixed';
     tempDiv.style.left = '-9999px';
@@ -610,6 +615,7 @@ function quickDownloadPdf(docId) {
 
     html2pdf().set(opt).from(tempDiv).save().then(() => {
         document.body.removeChild(tempDiv);
+        showToast('Berkas PDF berhasil diunduh!', 'success');
     });
 }
 </script>

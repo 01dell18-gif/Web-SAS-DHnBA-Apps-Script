@@ -6,7 +6,11 @@
 window.printA4Document = function(elementId, title = 'Dokumen_Ujian') {
     const el = document.getElementById(elementId);
     if (!el) {
-        alert('Elemen pratinjau tidak ditemukan.');
+        if (typeof showAlertModal === 'function') {
+            showAlertModal({ title: 'Gagal Mencetak', message: 'Elemen pratinjau tidak ditemukan.', type: 'danger' });
+        } else {
+            alert('Elemen pratinjau tidak ditemukan.');
+        }
         return;
     }
 
@@ -25,7 +29,11 @@ window.printA4Document = function(elementId, title = 'Dokumen_Ujian') {
 window.downloadA4AsPdf = async function(wrapperId, filename = 'Dokumen.pdf') {
     const wrapper = document.getElementById(wrapperId);
     if (!wrapper) {
-        alert('Pratinjau dokumen tidak ditemukan.');
+        if (typeof showAlertModal === 'function') {
+            showAlertModal({ title: 'Gagal Mengunduh', message: 'Pratinjau dokumen tidak ditemukan.', type: 'danger' });
+        } else {
+            alert('Pratinjau dokumen tidak ditemukan.');
+        }
         return;
     }
 

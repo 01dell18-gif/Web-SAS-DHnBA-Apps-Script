@@ -887,6 +887,9 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(res => {
                 if (res.success) {
                     console.log('Arsip Berita Acara berhasil disimpan ke database:', res.archive.id);
+                    if (typeof showToast === 'function') {
+                        showToast('Dokumen Berita Acara berhasil diarsipkan ke database!', 'success');
+                    }
                 }
             })
             .catch(e => console.warn('Gagal menyimpan arsip Berita Acara:', e));

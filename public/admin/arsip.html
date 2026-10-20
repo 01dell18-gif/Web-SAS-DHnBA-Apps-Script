@@ -216,6 +216,7 @@
     </div>
 </div>
 
+<script src="/assets/js/popup.js"></script>
 <script src="/assets/js/admin-common.js"></script>
 <script>
 let adminArchivesData = [];
@@ -439,7 +440,19 @@ function renderAdminArchivesTable() {
 }
 
 async function deleteAdminArchive(id) {
-    if (!confirm('Apakah Anda yakin ingin menghapus arsip dokumen ini secara permanen dari basis data?')) return;
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Hapus Arsip Dokumen',
+            message: 'Apakah Anda yakin ingin menghapus arsip dokumen ini secara permanen dari basis data?',
+            type: 'danger',
+            confirmText: 'Ya, Hapus Dokumen',
+            confirmIcon: 'bi-trash-fill'
+        });
+    } else {
+        confirmed = confirm('Apakah Anda yakin ingin menghapus arsip dokumen ini secara permanen dari basis data?');
+    }
+    if (!confirmed) return;
 
     try {
         const res = await fetch('/api/delete-archive', {

@@ -106,6 +106,7 @@
         </div>
     </div>
 
+    <script src="/assets/js/popup.js"></script>
     <script>
         // Cek jika sudah login sebelumnya, langsung arahkan ke Dashboard Admin
         if (localStorage.getItem('sas_admin_auth') === '1') {
@@ -183,6 +184,9 @@
             } else {
                 alertBox.style.display = 'block';
                 alertBox.textContent = 'Username atau password tidak valid!';
+                if (typeof showToast === 'function') {
+                    showToast('Username atau password tidak valid!', 'danger');
+                }
             }
         }
     </script>

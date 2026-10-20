@@ -219,10 +219,12 @@ Buka browser pada alamat: `http://localhost:3000`
 ## 10. PEMBARUAN FITUR & OPTIMASI TERBARU (UPDATE v2.7)
 
 ### 1. Tampilan Program / Konsentrasi Keahlian di Master Data Siswa & Master Kelas
+
 - Pada halaman **Master Data Siswa & Master Kelas** (`public/admin/siswa.html`), kolom **Program / Konsentrasi Keahlian** kini ditampilkan secara langsung dalam tabel data siswa dengan badge yang elegan.
 - Opsi pilihan kelas pada filter dropdown juga menyertakan nama Program Keahlian resmi dari kelas terkait.
 
 ### 2. Ekspor Menyeluruh (Export All Records) pada Semua Tombol Export
+
 - Seluruh tombol export (.xlsx) pada:
   - Master Siswa (`/admin/siswa.html`)
   - Master Guru & Pengawas (`/admin/guru.html`)
@@ -232,14 +234,17 @@ Buka browser pada alamat: `http://localhost:3000`
 - Kini secara konsisten mengekspor **seluruh data yang ada di database**, terlepas dari halaman aktif paginasi atau filter seleksi sementara, sehingga berkas unduhan selalu utuh dan lengkap.
 
 ### 3. Perbaikan Unduh Data_Siswa.xlsx dan Data_Guru.xlsx di Menu Backup Database
+
 - Pada menu **Backup & Database SQL** (`public/admin/database.html`):
   - Tombol **Unduh Data_Siswa.xlsx** telah diperbaiki dari properti lama yang tidak sesuai menjadi referensi relasional database yang presisi: `NIS`, `Nama Lengkap Peserta Didik`, `Kelas`, `Tingkat`, dan `Program / Konsentrasi Keahlian`.
   - Tombol **Unduh Data_Guru.xlsx** kini mengekspor seluruh data guru dan pengawas lengkap dengan: `NIP`, `Nama Lengkap & Gelar`, `Mata Pelajaran Diampu`, dan `Jabatan / Peran`.
 
 ### 4. Filter Horizontal Mendatar ke Samping pada Arsip Dokumen
+
 - Tata letak filter detail dokumen di halaman publik (`public/arsip.html`) dan admin (`public/admin/arsip.html`) disusun **mendatar ke samping (horizontal)** dengan `overflow-x: auto`, menghemat ruang vertikal dan mempermudah pemilihan filter.
 
 ### 5. Standarisasi Program / Konsentrasi Keahlian SMK N 1 Klungkung
+
 - Menggantikan label generic "Umum" dengan konsentrasi keahlian resmi SMK Negeri 1 Klungkung:
   - **XII TKJ**: Teknik Komputer dan Jaringan
   - **XII DKV**: Desain Komunikasi Visual
@@ -252,12 +257,15 @@ Buka browser pada alamat: `http://localhost:3000`
 - Dilengkapi fungsi deteksi otomatis cerdas `detectProgramKeahlian(className)` saat input siswa manual maupun saat import file Excel.
 
 ### 6. Penyelarasan Berantai Relasi Kelas (Cascade Update Relasional)
+
 - Pada menu **Master Daftar Kelas Resmi** (`public/admin/pengaturan.html`), ketika administrator mengedit atau memperbarui data kelas (Nama Kelas, Tingkat, Program Keahlian), seluruh data siswa (`db.students`) dan arsip yang berelasi otomatis diselaraskan secara realtime ke `data/db.json` serta `database.sql`.
 
 ### 7. Paginasi Fleksibel & Limit Baris Data
+
 - Pada Master Siswa dan Master Guru, disediakan pemilih limit data: **20, 40, 50, 100, 200, 400, 500 data**, dan **Semua data**, lengkap dengan tombol Sebelumnya/Setelahnya dan penomoran urut berkesinambungan.
 
 ### 8. Manajemen User: Integrasi Master Guru & Toggle Password Mata
+
 - Pada menu **Manajemen User & Hak Akses** (`public/admin/users.html`), tabel pengguna memiliki kolom Password dengan tombol toggle mata (`bi-eye`), dan input Nama Lengkap Pengguna terintegrasi dengan Master Data Guru via `<datalist>`.
 
 ---
@@ -265,16 +273,19 @@ Buka browser pada alamat: `http://localhost:3000`
 ## 11. PEMBARUAN FITUR & OPTIMASI TERBARU (UPDATE v2.8)
 
 ### 1. Pembatasan Hak Akses Peran Operator (Role-Based Access Control)
+
 - Pengguna dengan peran **Operator** (`role: 'operator'`) kini dibatasi hak aksesnya:
   - Menu **Manajemen User** dan **Backup & Database SQL** disembunyikan secara otomatis dari bilah navigasi sidebar di seluruh halaman admin.
   - Kartu metrik dan tombol pintasan Manajemen User di Dashboard Admin disembunyikan khusus untuk peran Operator.
   - Dilengkapi sistem proteksi routing langsung (*guard*); jika akun Operator mencoba membuka URL `/admin/users.html` atau `/admin/database.html` secara manual, sistem langsung menolak akses dan mengarahkannya kembali ke Dashboard Admin.
 
 ### 2. Tombol Perbarui Pengaturan di Paling Bawah Halaman
+
 - Tombol **"Perbarui Pengaturan, Logo & Kop Surat"** pada menu **Pengaturan Sekolah & Kop** (`public/admin/pengaturan.html`) dipindahkan ke posisi paling bawah halaman (setelah kartu Master Daftar Tahun Ajaran).
 - Berfungsi menyimpan seluruh perubahan konfigurasi sekaligus ke basis data: nama sekolah, tagline, zona waktu, tahun ajaran aktif, berkas logo baru (base64/file), berkas kop surat resmi baru, daftar kelas resmi, mata pelajaran, dan tahun ajaran.
 
 ### 3. Deteksi Perubahan Belum Disimpan & Konfirmasi Buka Menu Baru
+
 - Dilengkapi mekanisme *dirty state tracking* (`isDirty`) yang memantau perubahan pada input teks, dropdown, berkas logo, berkas kop surat, daftar kelas, mata pelajaran, dan tahun ajaran.
 - Disertai lencana status dinamis (*"Belum Ada Perubahan"* vs *"Ada Perubahan Belum Disimpan"*).
 - Jika pengguna telah mengubah data namun belum menekan tombol simpan di bagian bawah, lalu mengeklik menu navigasi lain (atau tombol kembali/keluar), sistem menampilkan modal konfirmasi dengan 3 pilihan:
@@ -284,6 +295,7 @@ Buka browser pada alamat: `http://localhost:3000`
 - Dilengkapi proteksi `beforeunload` bawaan browser untuk mencegah hilangnya data saat tab ditutup atau direfresh tanpa sengaja.
 
 ### 4. Konfirmasi Dialog Saat Keluar dari Panel Admin (Logout Guard)
+
 - Seluruh tombol **Keluar** pada panel administrator kini dilengkapi dialog konfirmasi (*"Apakah Anda yakin ingin keluar dari Panel Administrator?"*), mencegah pengguna keluar secara tidak sengaja saat sedang bekerja.
 
 ---
@@ -291,10 +303,12 @@ Buka browser pada alamat: `http://localhost:3000`
 ## 12. PEMBARUAN FITUR & OPTIMASI TERBARU (UPDATE v2.9)
 
 ### 1. Penghapusan Informasi Arsitektur & Sistematika Sistem di Beranda
+
 - Bagian kartu teknis "Arsitektur & Sistematika Sistem" (Database relasional, Live Synchronized Preview, Client-side Compressor, PDF Engine) pada halaman depan beranda publik (`public/index.html`) telah dihilangkan secara menyeluruh.
 - Halaman beranda kini lebih bersih, profesional, fokus, dan langsung mengarahkan pengguna ke tiga fitur utama: **Daftar Hadir Ujian**, **Berita Acara Ujian**, dan **Arsip Hasil Ujian**.
 
 ### 2. Penyelarasan Dinamis Identitas Sekolah Resmi di Seluruh Halaman Web
+
 - Seluruh elemen yang memuat informasi nama sekolah kini tersinkronisasi secara dinamis (*realtime data-binding*) dengan data input **Nama Sekolah Resmi** (`settings.school_name`) yang dikelola di menu **Pengaturan Sekolah & Kop**:
   - **Judul Dokumen / Tab Browser (`document.title`)**: Otomatis mengganti nama sekolah di tab browser tanpa perlu memodifikasi kode HTML statis.
   - **Bilah Navigasi Atas (Navbar)**: Kelas `.brand-title` dan `.brand-subtitle` pada seluruh halaman publik (`index.html`, `absensi.html`, `berita-acara.html`, `arsip.html`) serta seluruh halaman administrator (`/admin/*.html`) terhubung dinamis ke pengaturan.
@@ -306,3 +320,25 @@ Buka browser pada alamat: `http://localhost:3000`
   - **Dialog Konfirmasi Sistem**: Dialog konfirmasi keluar panel admin (*logout*) dan reset kop surat secara otomatis memuat nama sekolah resmi institusi.
 - **Mekanisme Sinkronisasi Handal**: Menggunakan metode hibrida yang mengambil data dari REST API `/api/settings` (pada server Node.js) serta *fallback* mulus ke cache `localStorage` (`sas_offline_db`) sehingga tetap bekerja sempurna saat di-hosting pada GitHub Pages.
 
+---
+
+## 13. PEMBARUAN FITUR & OPTIMASI TERBARU (UPDATE v2.10)
+
+### 1. Transformasi Total Notifikasi & Dialog Konfirmasi ke Bentuk Popup Modal Modern
+
+- Seluruh dialog bawaan browser yang kaku (`window.confirm` dan `window.alert`) di seluruh aplikasi telah digantikan dengan **Sistem Popup Modal Interaktif & Toast Universal** (`public/assets/js/popup.js` & `public/assets/css/app.css`):
+  - **Desain Glassmorphism Eksklusif**: Dilengkapi latar belakang *backdrop blur* gelap (`backdrop-filter: blur(8px)`), animasi pop-in halus, dan tipografi modern yang selaras dengan tema sistem.
+  - **Ikon Visual & Warna Kontekstual**: Menyediakan ikon animated pulsing melingkar untuk setiap jenis tindakan:
+    - **Bahaya / Hapus (*Danger*)**: Ikon segitiga peringatan merah menyala untuk hapus siswa, hapus guru, hapus template, dan hapus arsip.
+    - **Peringatan / Keluar (*Warning*)**: Ikon tanda tanya / logout amber untuk konfirmasi keluar panel admin (*logout guard*) dan reset isian formulir.
+    - **Informasi (*Info*)**: Ikon informasi biru untuk petunjuk muat format template dan status berkas.
+    - **Sukses (*Success*)**: Ikon centang hijau untuk konfirmasi simpan dan ekspor data.
+  - **Aksi Cepat & Navigasi Keyboard**: Dilengkapi tombol aksi bergaya modern (*"Batal"* vs *"Ya, Lanjutkan"* / *"Ya, Hapus"*), penutupan via klik di luar modal (*overlay click*), serta tombol keyboard `Escape` untuk batal dan `Enter` untuk menyetujui.
+
+### 2. Notifikasi Toast Mengambang Universal
+
+- Setiap operasi cetak, unduh PDF, penyimpanan arsip, mutasi data, dan autentikasi kini memicu **Floating Toast Notification** di pojok kanan atas dengan bar progres animasi otomatis (3.5 detik) yang elegan dan non-intrusif.
+
+### 3. Konsolidasi Berkas Dokumentasi Arsitektur
+
+- Seluruh dokumentasi teknik, arsitektur, dan panduan sistem telah dipusatkan secara permanen ke file tunggal **`Teknik pembuatan.md`** dengan penyelesaian seluruh aturan linting Markdown (MD022, MD032, MD007, MD029, MD012), dan file redundant `Teknik pembuata.md` telah dihapus.

@@ -459,6 +459,7 @@
     </div>
 </div>
 
+<script src="/assets/js/popup.js"></script>
 <script src="/assets/js/admin-common.js"></script>
 <script>
 let pendingKopBase64 = null;
@@ -594,7 +595,19 @@ async function addNewSubject() {
 }
 
 async function removeSubject(sub) {
-    if (!confirm(`Hapus mata pelajaran "${sub}" dari master?`)) return;
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Hapus Mata Pelajaran',
+            message: `Hapus mata pelajaran "${sub}" dari master data?`,
+            type: 'danger',
+            confirmText: 'Ya, Hapus Mapel',
+            confirmIcon: 'bi-trash-fill'
+        });
+    } else {
+        confirmed = confirm(`Hapus mata pelajaran "${sub}" dari master?`);
+    }
+    if (!confirmed) return;
 
     if (!db.settings || !Array.isArray(db.settings.subjects)) return;
     db.settings.subjects = db.settings.subjects.filter(s => s !== sub);
@@ -628,7 +641,19 @@ async function addNewAcademicYear() {
 }
 
 async function removeAcademicYear(yr) {
-    if (!confirm(`Hapus tahun ajaran "${yr}" dari master?`)) return;
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Hapus Tahun Ajaran',
+            message: `Hapus tahun ajaran "${yr}" dari master data?`,
+            type: 'danger',
+            confirmText: 'Ya, Hapus Tahun',
+            confirmIcon: 'bi-trash-fill'
+        });
+    } else {
+        confirmed = confirm(`Hapus tahun ajaran "${yr}" dari master?`);
+    }
+    if (!confirmed) return;
 
     if (!db.settings || !Array.isArray(db.settings.academic_years)) return;
     if (db.settings.academic_years.length <= 1) {
@@ -820,7 +845,19 @@ async function deleteClass(classId, className, studentCount) {
         msg = `⚠️ PERINGATAN: Terdapat ${studentCount} siswa terdaftar di kelas "${className}".\nMenghapus kelas ini juga akan menghapus/memutus relasi seluruh siswa di kelas ini.\n\nApakah Anda yakin ingin melanjutkan?`;
     }
 
-    if (!confirm(msg)) return;
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Hapus Master Kelas',
+            message: msg,
+            type: 'danger',
+            confirmText: 'Ya, Hapus Kelas',
+            confirmIcon: 'bi-trash-fill'
+        });
+    } else {
+        confirmed = confirm(msg);
+    }
+    if (!confirmed) return;
 
     db.classes = (db.classes || []).filter(c => Number(c.id) !== Number(classId));
     db.students = (db.students || []).filter(s => Number(s.class_id) !== Number(classId));
@@ -1131,7 +1168,20 @@ function handleLogoFileSelected(event) {
 }
 
 async function resetLogoDefault() {
-    if (confirm('Apakah Anda yakin ingin mereset logo sekolah ke standar bawaan?')) {
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Reset Logo Sekolah',
+            message: 'Apakah Anda yakin ingin mereset logo sekolah ke standar bawaan?',
+            type: 'warning',
+            confirmText: 'Ya, Reset Logo',
+            confirmIcon: 'bi-arrow-counterclockwise'
+        });
+    } else {
+        confirmed = confirm('Apakah Anda yakin ingin mereset logo sekolah ke standar bawaan?');
+    }
+
+    if (confirmed) {
         try {
             const res = await fetch('/api/reset-logo', { method: 'POST' });
             const result = await res.json();
@@ -1175,7 +1225,20 @@ function handleKopFileSelected(event) {
 
 async function resetKopDefault() {
     const schoolName = (db && db.settings && db.settings.school_name) || 'Sekolah';
-    if (confirm(`Apakah Anda yakin ingin mereset kop surat ke standar bawaan ${schoolName}?`)) {
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Reset Kop Surat',
+            message: `Apakah Anda yakin ingin mereset kop surat ke standar bawaan ${schoolName}?`,
+            type: 'warning',
+            confirmText: 'Ya, Reset Kop',
+            confirmIcon: 'bi-arrow-counterclockwise'
+        });
+    } else {
+        confirmed = confirm(`Apakah Anda yakin ingin mereset kop surat ke standar bawaan ${schoolName}?`);
+    }
+
+    if (confirmed) {
         try {
             const res = await fetch('/api/reset-kop', { method: 'POST' });
             const result = await res.json();
@@ -1364,13 +1427,26 @@ document.addEventListener('click', function(e) {
 
 // Intersep tombol logout jika isDirty aktif
 const origLogoutPengaturan = window.logout;
-window.logout = function() {
+window.logout = async function() {
     if (isDirty) {
         targetNavigationUrl = 'LOGOUT_ACTION';
         document.getElementById('unsavedModal').style.display = 'flex';
     } else {
         const schoolName = (db && db.settings && db.settings.school_name) || 'Sekolah';
-        if (confirm(`Apakah Anda yakin ingin keluar dari Panel Administrator ${schoolName}?`)) {
+        let confirmed = false;
+        if (typeof showConfirmModal === 'function') {
+            confirmed = await showConfirmModal({
+                title: 'Konfirmasi Keluar',
+                message: `Apakah Anda yakin ingin keluar dari Panel Administrator ${schoolName}?`,
+                type: 'warning',
+                confirmText: 'Ya, Keluar',
+                confirmIcon: 'bi-box-arrow-right'
+            });
+        } else {
+            confirmed = confirm(`Apakah Anda yakin ingin keluar dari Panel Administrator ${schoolName}?`);
+        }
+
+        if (confirmed) {
             localStorage.removeItem('sas_admin_auth');
             localStorage.removeItem('sas_admin_user');
             localStorage.removeItem('sas_admin_name');
