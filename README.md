@@ -88,6 +88,12 @@ Aplikasi web modern untuk pembuatan administrasi ujian sekolah otomatis yang men
 21. **Konfirmasi Dialog Saat Keluar Panel Admin (Logout Guard)**:
    - Tombol **Keluar** pada panel administrator kini dilengkapi dialog konfirmasi (*"Apakah Anda yakin ingin keluar dari Panel Administrator?"*) untuk mencegah pengguna keluar secara tidak sengaja.
 
+22. **Penyederhanaan Tampilan Beranda Publik**:
+   - Kartu informasi teknis "Arsitektur & Sistematika Sistem" telah ditiadakan dari beranda publik, menghadirkan antarmuka yang lebih rapi, bersih, dan berfokus langsung pada akses formulir dan arsip dokumen.
+
+23. **Sinkronisasi Dinamis Identitas Sekolah Resmi di Seluruh Web**:
+   - Seluruh tampilan nama sekolah pada tab browser, bilah navigasi navbar, banner hero beranda, footer hak cipta, sidebar admin, halaman login, pratinjau dokumen, hingga dialog konfirmasi secara otomatis menyesuaikan dengan input **Nama Sekolah Resmi** yang dikonfigurasi pada menu **Pengaturan Sekolah & Kop**.
+
 ---
 
 ## 📁 Struktur Berkas Proyek

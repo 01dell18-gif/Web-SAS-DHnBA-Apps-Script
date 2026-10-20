@@ -126,14 +126,6 @@
             align-items: center;
             gap: 6px;
         }
-        .system-info-card {
-            background: #ffffff;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 1.5rem 1.75rem;
-            margin-top: 2rem;
-            box-shadow: var(--shadow-sm);
-        }
         @media (max-width: 640px) {
             .home-hero {
                 padding: 2.25rem 1rem 3rem 1rem;
@@ -246,47 +238,11 @@
             </div>
         </div>
     </div>
-
-    <!-- Info Sistematika & Database -->
-    <div class="system-info-card">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
-            <div>
-                <h3 style="font-size: 1.1rem; color: var(--text-heading); display: flex; align-items: center; gap: 8px;">
-                    <i class="bi bi-cpu-fill" style="color: var(--primary);"></i> Arsitektur & Sistematika Sistem
-                </h3>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
-                    Bedah analisis teknis, skema basis data, dan modul eksekusi generator.
-                </p>
-            </div>
-            <a href="/admin/index.html" class="btn btn-secondary btn-sm">
-                <i class="bi bi-gear-wide-connected"></i> Buka Panel Data Admin
-            </a>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; font-size: 0.85rem;">
-            <div style="background: var(--slate-50); padding: 12px; border-radius: var(--radius-sm); border-left: 3px solid var(--primary);">
-                <strong><i class="bi bi-hdd-network"></i> Database:</strong><br>
-                Relasional MySQL/MariaDB & SQLite (Tabel: <code>classes</code>, <code>students</code>, <code>exam_templates</code>, <code>users</code>).
-            </div>
-            <div style="background: var(--slate-50); padding: 12px; border-radius: var(--radius-sm); border-left: 3px solid var(--success);">
-                <strong><i class="bi bi-eye"></i> Live Synchronized Preview:</strong><br>
-                Pratinjau presisi A4 WYSIWYG bereaksi seketika terhadap input pengawas & tanda tangan.
-            </div>
-            <div style="background: var(--slate-50); padding: 12px; border-radius: var(--radius-sm); border-left: 3px solid var(--warning);">
-                <strong><i class="bi bi-images"></i> Client-side Compressor:</strong><br>
-                Mengompres foto 5-10MB menjadi ~180KB via HTML5 Canvas tanpa membebani memori.
-            </div>
-            <div style="background: var(--slate-50); padding: 12px; border-radius: var(--radius-sm); border-left: 3px solid var(--info);">
-                <strong><i class="bi bi-file-earmark-pdf"></i> PDF Engine:</strong><br>
-                Mendukung Dompdf CPDF, direct printable CSS A4 standard, dan HTML2PDF.
-            </div>
-        </div>
-    </div>
 </main>
 
 <footer style="background: #ffffff; border-top: 1px solid var(--border); padding: 1.5rem; text-align: center; font-size: 0.85rem; color: var(--text-muted);">
     <div class="container">
-        <div><strong>SMK NEGERI 1 KLUNGKUNG</strong> &bull; Sistem Generator Administrasi Ujian Sekolah (SAS)</div>
+        <div><strong class="school-name-text">SMK NEGERI 1 KLUNGKUNG</strong> &bull; Sistem Generator Administrasi Ujian Sekolah (SAS)</div>
     </div>
 </footer>
 

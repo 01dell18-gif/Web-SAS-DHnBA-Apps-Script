@@ -566,7 +566,7 @@ function updateEditorPreview() {
         Semester: document.getElementById('tpl_semester').value || 'Ganjil',
         jam_mulai: '07:30',
         jam_selesai: '09:30',
-        sekolah: 'SMK NEGERI 1 KLUNGKUNG',
+        sekolah: (db && db.settings && db.settings.school_name) || window.SCHOOL_NAME || 'SMK NEGERI 1 KLUNGKUNG',
         kelas: 'XII TKJ',
         mata_pelajaran: 'Teknik Jaringan Komputer',
         ruang: 'Lab Komputer 1',

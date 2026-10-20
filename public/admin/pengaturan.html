@@ -1174,7 +1174,8 @@ function handleKopFileSelected(event) {
 }
 
 async function resetKopDefault() {
-    if (confirm('Apakah Anda yakin ingin mereset kop surat ke standar bawaan SMK Negeri 1 Klungkung?')) {
+    const schoolName = (db && db.settings && db.settings.school_name) || 'Sekolah';
+    if (confirm(`Apakah Anda yakin ingin mereset kop surat ke standar bawaan ${schoolName}?`)) {
         try {
             const res = await fetch('/api/reset-kop', { method: 'POST' });
             const result = await res.json();
@@ -1368,7 +1369,8 @@ window.logout = function() {
         targetNavigationUrl = 'LOGOUT_ACTION';
         document.getElementById('unsavedModal').style.display = 'flex';
     } else {
-        if (confirm('Apakah Anda yakin ingin keluar dari Panel Administrator SMK Negeri 1 Klungkung?')) {
+        const schoolName = (db && db.settings && db.settings.school_name) || 'Sekolah';
+        if (confirm(`Apakah Anda yakin ingin keluar dari Panel Administrator ${schoolName}?`)) {
             localStorage.removeItem('sas_admin_auth');
             localStorage.removeItem('sas_admin_user');
             localStorage.removeItem('sas_admin_name');

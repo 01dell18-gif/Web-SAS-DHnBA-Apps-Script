@@ -285,3 +285,24 @@ Buka browser pada alamat: `http://localhost:3000`
 
 ### 4. Konfirmasi Dialog Saat Keluar dari Panel Admin (Logout Guard)
 - Seluruh tombol **Keluar** pada panel administrator kini dilengkapi dialog konfirmasi (*"Apakah Anda yakin ingin keluar dari Panel Administrator?"*), mencegah pengguna keluar secara tidak sengaja saat sedang bekerja.
+
+---
+
+## 12. PEMBARUAN FITUR & OPTIMASI TERBARU (UPDATE v2.9)
+
+### 1. Penghapusan Informasi Arsitektur & Sistematika Sistem di Beranda
+- Bagian kartu teknis "Arsitektur & Sistematika Sistem" (Database relasional, Live Synchronized Preview, Client-side Compressor, PDF Engine) pada halaman depan beranda publik (`public/index.html`) telah dihilangkan secara menyeluruh.
+- Halaman beranda kini lebih bersih, profesional, fokus, dan langsung mengarahkan pengguna ke tiga fitur utama: **Daftar Hadir Ujian**, **Berita Acara Ujian**, dan **Arsip Hasil Ujian**.
+
+### 2. Penyelarasan Dinamis Identitas Sekolah Resmi di Seluruh Halaman Web
+- Seluruh elemen yang memuat informasi nama sekolah kini tersinkronisasi secara dinamis (*realtime data-binding*) dengan data input **Nama Sekolah Resmi** (`settings.school_name`) yang dikelola di menu **Pengaturan Sekolah & Kop**:
+  - **Judul Dokumen / Tab Browser (`document.title`)**: Otomatis mengganti nama sekolah di tab browser tanpa perlu memodifikasi kode HTML statis.
+  - **Bilah Navigasi Atas (Navbar)**: Kelas `.brand-title` dan `.brand-subtitle` pada seluruh halaman publik (`index.html`, `absensi.html`, `berita-acara.html`, `arsip.html`) serta seluruh halaman administrator (`/admin/*.html`) terhubung dinamis ke pengaturan.
+  - **Banner Beranda Publik (Hero Title)**: Elemen `.home-title` di hero banner beranda publik langsung menampilkan nama sekolah resmi.
+  - **Footer Beranda Publik**: Teks hak cipta pada bagian bawah halaman publik (`.school-name-text`) otomatis mengikuti nama sekolah aktif.
+  - **Bilah Sisi Admin (Sidebar Footer)**: Keterangan versi dan nama institusi di bagian bawah sidebar admin disinkronkan secara realtime.
+  - **Halaman Login Administrator**: Teks institusi login (`#loginSchoolName`) dan logo sekolah otomatis memuat identitas sekolah terkini dari basis data.
+  - **Variabel Pratinjau Dokumen & Template**: Redaksi berita acara dan contoh variabel template ujian langsung memanfaatkan nilai `settings.school_name`.
+  - **Dialog Konfirmasi Sistem**: Dialog konfirmasi keluar panel admin (*logout*) dan reset kop surat secara otomatis memuat nama sekolah resmi institusi.
+- **Mekanisme Sinkronisasi Handal**: Menggunakan metode hibrida yang mengambil data dari REST API `/api/settings` (pada server Node.js) serta *fallback* mulus ke cache `localStorage` (`sas_offline_db`) sehingga tetap bekerja sempurna saat di-hosting pada GitHub Pages.
+

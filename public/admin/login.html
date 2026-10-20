@@ -60,9 +60,9 @@
 
     <div class="login-card">
         <div class="login-header">
-            <img src="/assets/img/logo.png" alt="Logo SMK N 1 Klungkung">
+            <img src="/assets/img/logo.png" alt="Logo Sekolah" id="loginLogo">
             <h2>Panel Administrator</h2>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+            <p id="loginSchoolName" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
                 SMK NEGERI 1 KLUNGKUNG
             </p>
         </div>
@@ -111,6 +111,26 @@
         if (localStorage.getItem('sas_admin_auth') === '1') {
             window.location.href = '/admin/index.html';
         }
+
+        // Sinkronisasi Nama Sekolah & Logo dari Database
+        (async function syncLoginIdentity() {
+            try {
+                const res = await fetch('/data/db.json?t=' + Date.now());
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.settings) {
+                        const sn = data.settings.school_name || 'SMK NEGERI 1 KLUNGKUNG';
+                        const el = document.getElementById('loginSchoolName');
+                        if (el) el.textContent = sn;
+                        document.title = 'Panel Administrator - ' + sn;
+                        if (data.settings.school_logo) {
+                            const logo = document.getElementById('loginLogo');
+                            if (logo) logo.src = data.settings.school_logo + (data.settings.school_logo.startsWith('data:') ? '' : '?t=' + Date.now());
+                        }
+                    }
+                }
+            } catch(e) {}
+        })();
 
         function togglePasswordVisibility() {
             const input = document.getElementById('password');

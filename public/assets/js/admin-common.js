@@ -59,15 +59,22 @@ async function loadAdminDatabase() {
         const res = await fetch('/data/db.json?t=' + Date.now());
         if (res.ok) {
             db = await res.json();
+            if (db && db.settings) applySchoolIdentityToAdmin(db.settings);
         } else {
             // Fallback localStorage jika dijalankan di GitHub Pages
             const cached = localStorage.getItem('sas_offline_db');
-            if (cached) db = JSON.parse(cached);
+            if (cached) {
+                db = JSON.parse(cached);
+                if (db && db.settings) applySchoolIdentityToAdmin(db.settings);
+            }
         }
     } catch (e) {
         console.warn('Gagal memuat db dari server, mencoba fallback lokal:', e);
         const cached = localStorage.getItem('sas_offline_db');
-        if (cached) db = JSON.parse(cached);
+        if (cached) {
+            db = JSON.parse(cached);
+            if (db && db.settings) applySchoolIdentityToAdmin(db.settings);
+        }
     }
     return db;
 }
@@ -84,12 +91,14 @@ async function saveAdminDatabase(payload) {
         if (json.success) {
             // Sinkronkan ke cache offline
             localStorage.setItem('sas_offline_db', JSON.stringify(db));
+            if (db && db.settings) applySchoolIdentityToAdmin(db.settings);
             return { success: true, message: json.message };
         }
         return { success: false, message: json.message || 'Gagal menyimpan ke server' };
     } catch (e) {
         // Fallback simpan lokal jika offline / GitHub Pages
         localStorage.setItem('sas_offline_db', JSON.stringify(db));
+        if (db && db.settings) applySchoolIdentityToAdmin(db.settings);
         return { success: true, message: 'Tersimpan ke penyimpanan lokal (Mode Offline).' };
     }
 }
@@ -115,7 +124,8 @@ function showToast(message, type = 'info') {
 
 // 6. Logout dengan Konfirmasi
 function logout() {
-    if (confirm('Apakah Anda yakin ingin keluar dari Panel Administrator SMK Negeri 1 Klungkung?')) {
+    const schoolName = (db && db.settings && db.settings.school_name) || 'SMK';
+    if (confirm(`Apakah Anda yakin ingin keluar dari Panel Administrator ${schoolName}?`)) {
         localStorage.removeItem('sas_admin_auth');
         localStorage.removeItem('sas_admin_user');
         localStorage.removeItem('sas_admin_name');
@@ -145,7 +155,61 @@ function applyRoleAccessControl() {
     }
 }
 
+// Sinkronisasi Identitas Sekolah di Seluruh Panel Administrator
+function applySchoolIdentityToAdmin(settings) {
+    if (!settings) return;
+    const schoolName = settings.school_name || 'SMK NEGERI 1 KLUNGKUNG';
+    const schoolTagline = settings.school_tagline || 'Generator Administrasi Ujian';
+    const schoolLogo = settings.school_logo || '/assets/img/logo.png';
+
+    // 1. Update Title Browser
+    if (document.title) {
+        if (document.title.includes(' - ')) {
+            document.title = document.title.split(' - ')[0] + ' - ' + schoolName;
+        } else if (document.title.includes('SMK NEGERI')) {
+            document.title = document.title.replace(/SMK NEGERI [^|\-]+/gi, schoolName);
+        }
+    }
+
+    // 2. Update Brand Navbar Admin
+    document.querySelectorAll('.brand-title').forEach(el => {
+        el.textContent = schoolName;
+    });
+
+    document.querySelectorAll('.brand-subtitle').forEach(el => {
+        el.textContent = schoolTagline;
+    });
+
+    // 3. Update Logo Navbar Admin
+    if (schoolLogo) {
+        document.querySelectorAll('.navbar-logo, #topNavbarLogo').forEach(img => {
+            img.src = schoolLogo + (schoolLogo.startsWith('data:') ? '' : '?t=' + Date.now());
+        });
+    }
+
+    // 4. Update Footer Sidebar
+    document.querySelectorAll('.admin-sidebar > div:last-child').forEach(el => {
+        el.innerHTML = `Sistem SAS v2.5<br>${schoolName}`;
+    });
+
+    // 5. Update teks info login jika ada
+    const loginSchoolEl = document.getElementById('loginSchoolName');
+    if (loginSchoolEl) {
+        loginSchoolEl.textContent = schoolName;
+    }
+
+    window.SCHOOL_NAME = schoolName;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    try {
+        const cached = localStorage.getItem('sas_offline_db');
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            if (parsed && parsed.settings) applySchoolIdentityToAdmin(parsed.settings);
+        }
+    } catch(e) {}
+
     applyRoleAccessControl();
 
     const adminUserEl = document.getElementById('adminUsername');
