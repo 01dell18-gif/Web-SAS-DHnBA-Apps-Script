@@ -228,19 +228,50 @@ function applySchoolIdentityToAdmin(settings) {
     window.SCHOOL_NAME = schoolName;
 }
 
-// 8. Toggle Bilah Sisi (Sidebar Collapsed / Expanded)
+// 8. Toggle Bilah Sisi (Desktop Collapsed / Mobile Drawer Off-Canvas)
 function toggleAdminSidebar() {
+    const isMobile = window.innerWidth <= 991;
+    const sidebar = document.getElementById('adminSidebar');
     const layout = document.querySelector('.admin-layout');
-    if (layout) {
-        layout.classList.toggle('sidebar-collapsed');
-        const isCollapsed = layout.classList.contains('sidebar-collapsed');
-        localStorage.setItem('sas_sidebar_collapsed', isCollapsed ? '1' : '0');
+
+    if (isMobile) {
+        if (!sidebar) return;
+        sidebar.classList.toggle('sidebar-open');
+        let backdrop = document.getElementById('adminSidebarBackdrop');
+        if (!backdrop) {
+            backdrop = document.createElement('div');
+            backdrop.id = 'adminSidebarBackdrop';
+            backdrop.className = 'admin-sidebar-backdrop';
+            backdrop.onclick = closeAdminSidebarMobile;
+            document.body.appendChild(backdrop);
+        }
+        if (sidebar.classList.contains('sidebar-open')) {
+            backdrop.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        } else {
+            backdrop.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+    } else {
+        if (layout) {
+            layout.classList.toggle('sidebar-collapsed');
+            const isCollapsed = layout.classList.contains('sidebar-collapsed');
+            localStorage.setItem('sas_sidebar_collapsed', isCollapsed ? '1' : '0');
+        }
     }
 }
 
+function closeAdminSidebarMobile() {
+    const sidebar = document.getElementById('adminSidebar');
+    if (sidebar) sidebar.classList.remove('sidebar-open');
+    const backdrop = document.getElementById('adminSidebarBackdrop');
+    if (backdrop) backdrop.classList.remove('show');
+    document.body.style.overflow = '';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Restore sidebar collapsed preference
-    if (localStorage.getItem('sas_sidebar_collapsed') === '1') {
+    // Restore sidebar collapsed preference on desktop
+    if (window.innerWidth > 991 && localStorage.getItem('sas_sidebar_collapsed') === '1') {
         document.querySelector('.admin-layout')?.classList.add('sidebar-collapsed');
     }
 
@@ -290,6 +321,20 @@ document.addEventListener('DOMContentLoaded', () => {
             link.classList.add('active');
         } else {
             link.classList.remove('active');
+        }
+
+        // Auto close sidebar drawer di HP saat tautan diklik
+        link.addEventListener('click', () => {
+            if (window.innerWidth <= 991) {
+                closeAdminSidebarMobile();
+            }
+        });
+    });
+
+    // Menutup sidebar drawer dengan tombol ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && window.innerWidth <= 991) {
+            closeAdminSidebarMobile();
         }
     });
 });

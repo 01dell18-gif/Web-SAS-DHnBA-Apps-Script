@@ -314,15 +314,6 @@ a:hover {
         display: none !important;
     }
 
-    .admin-sidebar {
-        display: none;
-        width: 100%;
-    }
-
-    .admin-sidebar.show {
-        display: flex;
-        animation: slideDownNav 0.2s ease-out;
-    }
 }
 
 @keyframes slideDownNav {
@@ -1524,5 +1515,242 @@ textarea.form-control {
     justify-content: center;
     font-size: 1.25rem;
     flex-shrink: 0;
+}
+
+/* ================= JARAK ANTARA NAVBAR DAN ISI MENU PANEL ADMIN ================= */
+.admin-content {
+    flex: 1;
+    padding: 2.25rem 2.25rem 3.5rem 2.25rem;
+    background: var(--bg-body);
+    overflow-y: auto;
+    min-width: 0;
+}
+
+/* ================= TAMPILAN STATISTIK ARSIP SEJAJAR KESAMPING ================= */
+.stat-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 1.25rem !important;
+    margin-bottom: 1.75rem !important;
+}
+
+.stat-card {
+    background: #ffffff !important;
+    border: 1px solid #E2E8F0 !important;
+    border-radius: 14px !important;
+    padding: 1.25rem 1.5rem !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 1.15rem !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08) !important;
+    border-color: #CBD5E1 !important;
+}
+
+.stat-icon {
+    width: 52px !important;
+    height: 52px !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.6rem !important;
+    flex-shrink: 0 !important;
+}
+
+.stat-value {
+    font-size: 1.85rem !important;
+    font-weight: 800 !important;
+    color: #0F172A !important;
+    line-height: 1.1 !important;
+    letter-spacing: -0.02em;
+}
+
+.stat-label {
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    color: #64748B !important;
+    margin-top: 4px !important;
+}
+
+/* ================= RESPONSIF MOBILE & SMARTPHONE / HP ================= */
+.admin-sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(4px);
+    z-index: 1040;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.admin-sidebar-backdrop.show {
+    display: block;
+    opacity: 1;
+}
+
+@media (max-width: 991px) {
+    .admin-layout {
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    /* Sidebar sebagai Drawer Off-Canvas di Layar Tablet & HP */
+    .admin-sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        height: 100vh !important;
+        width: 275px !important;
+        z-index: 1050 !important;
+        transform: translateX(-100%);
+        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45) !important;
+        display: flex !important;
+    }
+
+    .admin-sidebar.sidebar-open {
+        transform: translateX(0) !important;
+    }
+
+    .admin-main-wrapper {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .admin-topbar {
+        padding: 0 1rem !important;
+        height: 60px !important;
+    }
+
+    .topbar-school-name {
+        font-size: 0.88rem !important;
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .topbar-school-breadcrumb {
+        font-size: 0.72rem !important;
+    }
+
+    .topbar-user-badge {
+        display: none !important;
+    }
+
+    /* Konten diberi padding yang pas di layar kecil */
+    .admin-content {
+        padding: 1.25rem 1rem 2.5rem 1rem !important;
+    }
+
+    /* Grid Statistik Arsip menjadi 2 kolom di tablet */
+    .stat-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1rem !important;
+    }
+
+    .stat-grid-screenshot {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1rem !important;
+    }
+
+    .grid-2, .grid-3 {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .admin-topbar {
+        padding: 0 0.75rem !important;
+        height: 56px !important;
+    }
+
+    .topbar-left-group {
+        gap: 8px !important;
+    }
+
+    .topbar-school-logo {
+        width: 32px !important;
+        height: 32px !important;
+    }
+
+    .topbar-school-name {
+        max-width: 140px !important;
+        font-size: 0.82rem !important;
+    }
+
+    .topbar-school-breadcrumb {
+        display: none !important;
+    }
+
+    .topbar-right-group {
+        gap: 6px !important;
+    }
+
+    .topbar-right-group .btn {
+        padding: 4px 8px !important;
+        font-size: 0.75rem !important;
+    }
+
+    /* Stat Grid menjadi 1 kolom di layar HP kecil */
+    .stat-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .stat-grid-screenshot {
+        grid-template-columns: 1fr !important;
+    }
+
+    .welcome-heading {
+        font-size: 1.35rem !important;
+    }
+
+    .welcome-subtext {
+        font-size: 0.8rem !important;
+    }
+
+    .card-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+
+    .card-header > div:last-child {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .card-body {
+        padding: 1.15rem 1rem !important;
+    }
+
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-bottom: 0.5rem;
+    }
+
+    .table {
+        min-width: 600px;
+    }
+
+    .modal-card {
+        padding: 1.25rem !important;
+        width: 95% !important;
+        max-width: 95% !important;
+        margin: 0.5rem auto !important;
+    }
 }
 
