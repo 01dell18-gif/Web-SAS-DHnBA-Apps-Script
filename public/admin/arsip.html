@@ -123,18 +123,18 @@
                         </button>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px;">
+                    <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px;">
                         <!-- 1. Tahun Ajaran -->
-                        <div>
-                            <label class="form-label" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 4px;">Tahun Ajaran</label>
+                        <div style="flex: 1; min-width: 140px;">
+                            <label class="form-label" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 4px; white-space: nowrap;">Tahun Ajaran</label>
                             <select id="filterTahunAjaran" class="form-select form-select-sm" onchange="renderAdminArchivesTable()">
                                 <option value="">Semua Tahun Ajaran</option>
                             </select>
                         </div>
 
                         <!-- 2. Semester -->
-                        <div>
-                            <label class="form-label" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 4px;">Semester</label>
+                        <div style="flex: 1; min-width: 130px;">
+                            <label class="form-label" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 4px; white-space: nowrap;">Semester</label>
                             <select id="filterSemester" class="form-select form-select-sm" onchange="renderAdminArchivesTable()">
                                 <option value="">Semua Semester</option>
                                 <option value="Ganjil">Ganjil</option>
@@ -143,22 +143,22 @@
                         </div>
 
                         <!-- 3. Tanggal Ujian -->
-                        <div>
-                            <label class="form-label" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 4px;">Tanggal Ujian</label>
+                        <div style="flex: 1; min-width: 135px;">
+                            <label class="form-label" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 4px; white-space: nowrap;">Tanggal Ujian</label>
                             <input type="date" id="filterTanggal" class="form-control form-control-sm" onchange="renderAdminArchivesTable()">
                         </div>
 
                         <!-- 4. Kelas -->
-                        <div>
-                            <label class="form-label" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 4px;">Kelas</label>
+                        <div style="flex: 1; min-width: 135px;">
+                            <label class="form-label" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 4px; white-space: nowrap;">Kelas</label>
                             <select id="filterKelas" class="form-select form-select-sm" onchange="renderAdminArchivesTable()">
                                 <option value="">Semua Kelas</option>
                             </select>
                         </div>
 
                         <!-- 5. Mata Pelajaran -->
-                        <div>
-                            <label class="form-label" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 4px;">Mata Pelajaran</label>
+                        <div style="flex: 1.5; min-width: 170px;">
+                            <label class="form-label" style="font-size: 0.78rem; font-weight: 600; margin-bottom: 4px; white-space: nowrap;">Mata Pelajaran</label>
                             <select id="filterMapel" class="form-select form-select-sm" onchange="renderAdminArchivesTable()">
                                 <option value="">Semua Mapel</option>
                             </select>

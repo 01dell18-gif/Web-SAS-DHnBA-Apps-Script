@@ -102,20 +102,21 @@
                 </div>
 
                 <div class="table-responsive">
-                    <table class="table">
+                    <table class="table" style="font-size: 0.88rem;">
                         <thead>
                             <tr>
-                                <th style="width: 50px;">No</th>
+                                <th style="width: 45px;">No</th>
                                 <th>Username</th>
                                 <th>Nama Lengkap</th>
+                                <th style="width: 180px;">Password</th>
                                 <th style="width: 140px;">Hak Akses / Peran</th>
                                 <th style="width: 160px;">Tanggal Dibuat</th>
-                                <th style="text-align: center; width: 140px;">Aksi</th>
+                                <th style="text-align: center; width: 120px;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="usersTableBody">
                             <tr>
-                                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                                <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">
                                     <i class="bi bi-hourglass-split" style="font-size: 2rem; display: block; margin-bottom: 6px; opacity: 0.4;"></i>
                                     Memuat data pengguna...
                                 </td>
@@ -146,7 +147,11 @@
 
             <div class="form-group">
                 <label class="form-label">Nama Lengkap Pengguna <span class="required">*</span></label>
-                <input type="text" id="user_nama" class="form-control" placeholder="Contoh: Ni Putu Wulan Sari, S.Kom" required>
+                <div style="position: relative;">
+                    <input type="text" id="user_nama" class="form-control" list="userGuruDatalist" placeholder="Ketik atau pilih dari Master Guru..." required autocomplete="off">
+                    <datalist id="userGuruDatalist"></datalist>
+                </div>
+                <div class="form-hint">Dapat diketik manual secara bebas atau dipilih dari Master Data Guru resmi.</div>
             </div>
 
             <div class="form-group">
@@ -161,7 +166,7 @@
                 <label class="form-label" id="userPasswordLabel">Password <span class="required" id="userPassRequiredStar">*</span></label>
                 <div style="position: relative;">
                     <input type="password" id="user_password" class="form-control" placeholder="Ketik kata sandi..." autocomplete="new-password">
-                    <button type="button" id="btnToggleUserPass" onclick="toggleUserPasswordVisibility()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1.1rem; padding: 4px;">
+                    <button type="button" id="btnToggleUserPass" onclick="toggleUserPasswordVisibility()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1.1rem; padding: 4px;" title="Lihat / Sembunyikan Password">
                         <i class="bi bi-eye"></i>
                     </button>
                 </div>
@@ -251,7 +256,15 @@ function renderUsersTable() {
                     <strong><i class="bi bi-person-fill" style="color: var(--primary);"></i> ${user.username}</strong>
                     ${isMasterAdmin ? ' <span style="font-size: 0.72rem; color: #D97706; font-weight: 700;">(Akun Utama)</span>' : ''}
                 </td>
-                <td>${user.nama || '-'}</td>
+                <td><strong>${user.nama || '-'}</strong></td>
+                <td>
+                    <div style="display: inline-flex; align-items: center; gap: 8px;">
+                        <span id="userPassText_${user.id}" data-masked="1" style="font-family: monospace; font-size: 0.95rem; font-weight: 600; letter-spacing: 2px;">••••••••</span>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleRowPassword(${user.id})" title="Tampilkan / Sembunyikan Password" style="padding: 2px 7px; font-size: 0.75rem;">
+                            <i id="userPassEye_${user.id}" class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </td>
                 <td>${roleBadge}</td>
                 <td style="font-size: 0.82rem; color: var(--text-muted);">${createdStr}</td>
                 <td style="text-align: center;">
@@ -277,15 +290,51 @@ function renderUsersTable() {
     tbody.innerHTML = html;
 }
 
+function toggleRowPassword(userId) {
+    const user = usersList.find(u => Number(u.id) === Number(userId));
+    if (!user) return;
+    const textEl = document.getElementById(`userPassText_${userId}`);
+    const eyeEl = document.getElementById(`userPassEye_${userId}`);
+    if (!textEl || !eyeEl) return;
+
+    const isMasked = textEl.getAttribute('data-masked') === '1';
+    if (isMasked) {
+        textEl.textContent = user.password || '(Kosong)';
+        textEl.style.letterSpacing = 'normal';
+        textEl.setAttribute('data-masked', '0');
+        eyeEl.className = 'bi bi-eye-slash';
+    } else {
+        textEl.textContent = '••••••••';
+        textEl.style.letterSpacing = '2px';
+        textEl.setAttribute('data-masked', '1');
+        eyeEl.className = 'bi bi-eye';
+    }
+}
+
+function populateUserGuruDatalist() {
+    const dl = document.getElementById('userGuruDatalist');
+    if (!dl) return;
+    const teachers = (db && Array.isArray(db.teachers)) ? db.teachers : [];
+    dl.innerHTML = teachers.map(t => {
+        const nip = t.nip ? ` - NIP. ${t.nip}` : '';
+        const mapel = t.mapel ? ` (${t.mapel})` : '';
+        return `<option value="${t.nama}">${t.nama}${nip}${mapel}</option>`;
+    }).join('');
+}
+
 function openCreateUserModal() {
+    populateUserGuruDatalist();
     document.getElementById('userModalTitle').textContent = 'Tambah User Pengguna Baru';
     document.getElementById('user_id').value = '';
     document.getElementById('user_username').value = '';
     document.getElementById('user_username').disabled = false;
     document.getElementById('user_nama').value = '';
     document.getElementById('user_role').value = 'admin';
-    document.getElementById('user_password').value = '';
-    document.getElementById('user_password').required = true;
+    const passInput = document.getElementById('user_password');
+    passInput.value = '';
+    passInput.type = 'password';
+    passInput.required = true;
+    document.getElementById('btnToggleUserPass').innerHTML = '<i class="bi bi-eye"></i>';
     document.getElementById('userPassRequiredStar').style.display = 'inline';
     document.getElementById('userPassHint').textContent = 'Kata sandi minimal 4 karakter.';
     document.getElementById('userModal').style.display = 'flex';
@@ -296,6 +345,7 @@ function openEditUserModal(userId) {
     const user = usersList.find(u => Number(u.id) === Number(userId));
     if (!user) return;
 
+    populateUserGuruDatalist();
     document.getElementById('userModalTitle').textContent = `Edit User (${user.username})`;
     document.getElementById('user_id').value = user.id;
     document.getElementById('user_username').value = user.username;
@@ -303,10 +353,13 @@ function openEditUserModal(userId) {
     document.getElementById('user_username').disabled = (user.username === 'admin');
     document.getElementById('user_nama').value = user.nama || '';
     document.getElementById('user_role').value = user.role || 'admin';
-    document.getElementById('user_password').value = '';
-    document.getElementById('user_password').required = false;
+    const passInput = document.getElementById('user_password');
+    passInput.value = user.password || '';
+    passInput.type = 'password';
+    passInput.required = false;
+    document.getElementById('btnToggleUserPass').innerHTML = '<i class="bi bi-eye"></i>';
     document.getElementById('userPassRequiredStar').style.display = 'none';
-    document.getElementById('userPassHint').textContent = 'Kosongkan jika tidak ingin mengubah kata sandi.';
+    document.getElementById('userPassHint').textContent = 'Klik tombol mata untuk melihat kata sandi saat ini atau ketik untuk menggantinya.';
     document.getElementById('userModal').style.display = 'flex';
 }
 
@@ -399,6 +452,7 @@ async function deleteUser(userId, username) {
 
 document.addEventListener('DOMContentLoaded', async () => {
     await loadAdminDatabase();
+    populateUserGuruDatalist();
     await fetchUsers();
 });
 </script>

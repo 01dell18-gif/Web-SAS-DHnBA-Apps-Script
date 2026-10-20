@@ -289,7 +289,7 @@
             <input type="hidden" id="class_id">
             <div class="form-group">
                 <label class="form-label">Nama Kelas <span class="required">*</span></label>
-                <input type="text" id="class_nama" class="form-control" placeholder="Contoh: XII DKV atau XII TKJ 1" required>
+                <input type="text" id="class_nama" class="form-control" placeholder="Contoh: XII DKV atau XII TKJ 1" oninput="autoFillKeahlianFromNama(this.value)" required>
             </div>
             <div class="grid-2">
                 <div class="form-group">
@@ -302,7 +302,17 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Program / Konsentrasi Keahlian</label>
-                    <input type="text" id="class_keahlian" class="form-control" placeholder="Contoh: Desain Komunikasi Visual">
+                    <input type="text" id="class_keahlian" class="form-control" list="programKeahlianDatalist" placeholder="Pilih atau ketik program keahlian...">
+                    <datalist id="programKeahlianDatalist">
+                        <option value="Desain Komunikasi Visual">
+                        <option value="Teknik Komputer dan Jaringan">
+                        <option value="Teknik Sepeda Motor">
+                        <option value="Layanan Penunjang Kefarmasian Klinis dan Komunitas">
+                        <option value="Bisnis Digital">
+                        <option value="Manajemen Perkantoran dan Layanan Bisnis">
+                        <option value="Akuntansi dan Keuangan Lembaga">
+                        <option value="Layanan Perbankan">
+                    </datalist>
                 </div>
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
@@ -607,6 +617,28 @@ function renderClassesTable() {
     tbody.innerHTML = html;
 }
 
+function detectProgramKeahlian(className) {
+    const upper = (className || '').toUpperCase();
+    if (upper.includes('TKJ')) return 'Teknik Komputer dan Jaringan';
+    if (upper.includes('DKV')) return 'Desain Komunikasi Visual';
+    if (upper.includes('LPKKK') || upper.includes('FARMASI')) return 'Layanan Penunjang Kefarmasian Klinis dan Komunitas';
+    if (upper.includes('LPB') || upper.includes('PERBANKAN')) return 'Layanan Perbankan';
+    if (upper.includes('BD') || upper.includes('BISNIS DIGITAL')) return 'Bisnis Digital';
+    if (upper.includes('MP') || upper.includes('PERKANTORAN')) return 'Manajemen Perkantoran dan Layanan Bisnis';
+    if (upper.includes('AK') || upper.includes('AKUNTANSI')) return 'Akuntansi dan Keuangan Lembaga';
+    if (upper.includes('TSM') || upper.includes('OTOMOTIF')) return 'Teknik Sepeda Motor';
+    return '';
+}
+
+function autoFillKeahlianFromNama(val) {
+    const inputKeahlian = document.getElementById('class_keahlian');
+    if (!inputKeahlian) return;
+    const detected = detectProgramKeahlian(val);
+    if (detected && (!inputKeahlian.value || inputKeahlian.value === 'Umum')) {
+        inputKeahlian.value = detected;
+    }
+}
+
 function openAddClassModal() {
     document.getElementById('classModalTitle').textContent = 'Tambah Kelas Baru';
     document.getElementById('class_id').value = '';
@@ -624,7 +656,7 @@ function openEditClassModal(classId) {
     document.getElementById('class_id').value = c.id;
     document.getElementById('class_nama').value = c.nama_kelas;
     document.getElementById('class_tingkat').value = c.tingkat || 'XII';
-    document.getElementById('class_keahlian').value = c.program_keahlian || '';
+    document.getElementById('class_keahlian').value = c.program_keahlian || detectProgramKeahlian(c.nama_kelas) || '';
     document.getElementById('classModal').style.display = 'flex';
 }
 
@@ -637,7 +669,7 @@ async function submitClassForm(e) {
     const id = document.getElementById('class_id').value;
     const nama = document.getElementById('class_nama').value.trim();
     const tingkat = document.getElementById('class_tingkat').value;
-    const keahlian = document.getElementById('class_keahlian').value.trim();
+    const keahlian = document.getElementById('class_keahlian').value.trim() || detectProgramKeahlian(nama) || 'Umum';
 
     if (!nama) {
         showToast('Nama kelas harus diisi.', 'danger');
@@ -646,12 +678,34 @@ async function submitClassForm(e) {
 
     if (!Array.isArray(db.classes)) db.classes = [];
 
+    let oldName = '';
     if (id) {
         const cls = db.classes.find(c => Number(c.id) === Number(id));
         if (cls) {
+            oldName = cls.nama_kelas;
             cls.nama_kelas = nama;
             cls.tingkat = tingkat;
             cls.program_keahlian = keahlian;
+
+            // Sinkronkan seluruh data siswa yang terhubung ke kelas ini
+            if (Array.isArray(db.students)) {
+                db.students.forEach(s => {
+                    if (String(s.class_id) === String(id) || s.kelas === oldName || s.nama_kelas === oldName) {
+                        s.class_id = Number(id);
+                        s.kelas = nama;
+                        s.nama_kelas = nama;
+                    }
+                });
+            }
+
+            // Sinkronkan data arsip jika ada
+            if (Array.isArray(db.archives)) {
+                db.archives.forEach(a => {
+                    if (String(a.class_id) === String(id) || a.nama_kelas === oldName) {
+                        a.nama_kelas = nama;
+                    }
+                });
+            }
         }
     } else {
         const nextId = db.classes.reduce((max, c) => Math.max(max, Number(c.id) || 0), 0) + 1;
@@ -664,11 +718,15 @@ async function submitClassForm(e) {
         });
     }
 
-    const res = await saveAdminDatabase({ classes: db.classes });
+    const payload = { classes: db.classes };
+    if (Array.isArray(db.students)) payload.students = db.students;
+    if (Array.isArray(db.archives)) payload.archives = db.archives;
+
+    const res = await saveAdminDatabase(payload);
     if (res.success) {
         closeClassModal();
         renderClassesTable();
-        showToast(`Kelas "${nama}" berhasil disimpan!`, 'success');
+        showToast(`Kelas "${nama}" berhasil disimpan & data siswa telah diperbarui!`, 'success');
     } else {
         showToast('Gagal: ' + res.message, 'danger');
     }

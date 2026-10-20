@@ -195,38 +195,38 @@
             </div>
 
             <!-- Filter Lanjutan: Tahun Ajaran, Semester, Tanggal, Kelas, Mapel -->
-            <div style="border-top: 1px solid var(--border); margin-top: 1rem; padding-top: 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) auto; gap: 10px; align-items: end;">
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label class="form-label" style="font-size: 0.78rem; font-weight: 700; margin-bottom: 4px;"><i class="bi bi-calendar3"></i> Tahun Ajaran</label>
+            <div style="border-top: 1px solid var(--border); margin-top: 1rem; padding-top: 1rem; display: flex; gap: 10px; align-items: flex-end; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px;">
+                <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 140px;">
+                    <label class="form-label" style="font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; white-space: nowrap;"><i class="bi bi-calendar3"></i> Tahun Ajaran</label>
                     <select id="filterTahunAjaran" class="form-select form-select-sm" onchange="renderArchiveTable()">
                         <option value="">Semua Tahun Ajaran</option>
                     </select>
                 </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label class="form-label" style="font-size: 0.78rem; font-weight: 700; margin-bottom: 4px;"><i class="bi bi-hourglass-split"></i> Semester</label>
+                <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 130px;">
+                    <label class="form-label" style="font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; white-space: nowrap;"><i class="bi bi-hourglass-split"></i> Semester</label>
                     <select id="filterSemester" class="form-select form-select-sm" onchange="renderArchiveTable()">
                         <option value="">Semua Semester</option>
                         <option value="Ganjil">Ganjil</option>
                         <option value="Genap">Genap</option>
                     </select>
                 </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label class="form-label" style="font-size: 0.78rem; font-weight: 700; margin-bottom: 4px;"><i class="bi bi-calendar-event"></i> Tanggal Ujian</label>
+                <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 135px;">
+                    <label class="form-label" style="font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; white-space: nowrap;"><i class="bi bi-calendar-event"></i> Tanggal Ujian</label>
                     <input type="date" id="filterTanggal" class="form-control form-control-sm" onchange="renderArchiveTable()">
                 </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label class="form-label" style="font-size: 0.78rem; font-weight: 700; margin-bottom: 4px;"><i class="bi bi-building"></i> Kelas</label>
+                <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 135px;">
+                    <label class="form-label" style="font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; white-space: nowrap;"><i class="bi bi-building"></i> Kelas</label>
                     <select id="filterKelas" class="form-select form-select-sm" onchange="renderArchiveTable()">
                         <option value="">Semua Kelas</option>
                     </select>
                 </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label class="form-label" style="font-size: 0.78rem; font-weight: 700; margin-bottom: 4px;"><i class="bi bi-journal-text"></i> Mata Pelajaran</label>
+                <div class="form-group" style="margin-bottom: 0; flex: 1.5; min-width: 170px;">
+                    <label class="form-label" style="font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; white-space: nowrap;"><i class="bi bi-journal-text"></i> Mata Pelajaran</label>
                     <select id="filterMapel" class="form-select form-select-sm" onchange="renderArchiveTable()">
                         <option value="">Semua Mapel</option>
                     </select>
                 </div>
-                <div>
+                <div style="flex-shrink: 0;">
                     <button type="button" class="btn btn-secondary btn-sm" onclick="resetAllFilters()" title="Reset seluruh filter pencarian">
                         <i class="bi bi-arrow-counterclockwise"></i> Reset
                     </button>

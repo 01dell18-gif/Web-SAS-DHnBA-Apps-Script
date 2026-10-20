@@ -4,77 +4,77 @@
       "id": 1,
       "nama_kelas": "XII TKJ",
       "tingkat": "XII",
-      "program_keahlian": "Umum",
+      "program_keahlian": "Teknik Komputer dan Jaringan",
       "is_active": 1
     },
     {
       "id": 2,
       "nama_kelas": "XII DKV",
       "tingkat": "XII",
-      "program_keahlian": "Umum",
+      "program_keahlian": "Desain Komunikasi Visual",
       "is_active": 1
     },
     {
       "id": 3,
       "nama_kelas": "XII LPKKK 1",
       "tingkat": "XII",
-      "program_keahlian": "Umum",
+      "program_keahlian": "Layanan Penunjang Kefarmasian Klinis dan Komunitas",
       "is_active": 1
     },
     {
       "id": 4,
       "nama_kelas": "XII LPKKK 2",
       "tingkat": "XII",
-      "program_keahlian": "Umum",
+      "program_keahlian": "Layanan Penunjang Kefarmasian Klinis dan Komunitas",
       "is_active": 1
     },
     {
       "id": 5,
       "nama_kelas": "XII BD 1",
       "tingkat": "XII",
-      "program_keahlian": "Umum",
+      "program_keahlian": "Bisnis Digital",
       "is_active": 1
     },
     {
       "id": 6,
       "nama_kelas": "XII BD 2",
       "tingkat": "XII",
-      "program_keahlian": "Umum",
+      "program_keahlian": "Bisnis Digital",
       "is_active": 1
     },
     {
       "id": 7,
       "nama_kelas": "XII MP 1",
       "tingkat": "XII",
-      "program_keahlian": "Umum",
+      "program_keahlian": "Manajemen Perkantoran dan Layanan Bisnis",
       "is_active": 1
     },
     {
       "id": 8,
       "nama_kelas": "XII MP 2",
       "tingkat": "XII",
-      "program_keahlian": "Umum",
+      "program_keahlian": "Manajemen Perkantoran dan Layanan Bisnis",
       "is_active": 1
     },
     {
       "id": 9,
       "nama_kelas": "XII LPB",
       "tingkat": "XII",
-      "program_keahlian": "Umum",
+      "program_keahlian": "Layanan Perbankan",
       "is_active": 1
     },
     {
       "id": 10,
       "nama_kelas": "XII AK",
       "tingkat": "XII",
-      "program_keahlian": "Umum",
+      "program_keahlian": "Akuntansi dan Keuangan Lembaga",
       "is_active": 1
     },
     {
       "id": 11,
       "nama_kelas": "XII TSM",
       "tingkat": "XII",
-      "program_keahlian": "Umum",
+      "program_keahlian": "Teknik Sepeda Motor",
       "is_active": 1
     }
   ],

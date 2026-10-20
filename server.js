@@ -24,12 +24,40 @@ function getDatabase() {
     try {
         if (fs.existsSync(DB_FILE)) {
             const content = fs.readFileSync(DB_FILE, 'utf-8');
-            return JSON.parse(content);
+            const data = JSON.parse(content);
+            if (!Array.isArray(data.users) || data.users.length === 0) {
+                data.users = [
+                    {
+                        id: 1,
+                        username: "admin",
+                        password: "admin123",
+                        nama: "Administrator SMK N 1 Klungkung",
+                        role: "admin",
+                        created_at: "2025-01-01T00:00:00.000Z"
+                    }
+                ];
+            }
+            return data;
         }
     } catch (e) {
         console.error('Error reading db:', e);
     }
-    return { classes: [], students: [], templates: [], settings: {}, users: [] };
+    return {
+        classes: [],
+        students: [],
+        templates: [],
+        settings: {},
+        users: [
+            {
+                id: 1,
+                username: "admin",
+                password: "admin123",
+                nama: "Administrator SMK N 1 Klungkung",
+                role: "admin",
+                created_at: "2025-01-01T00:00:00.000Z"
+            }
+        ]
+    };
 }
 
 // Helper simpan database JSON & Sinkronisasi SQL Dump
@@ -666,6 +694,7 @@ const server = http.createServer((req, res) => {
                 if (Array.isArray(payload.classes)) db.classes = payload.classes;
                 if (Array.isArray(payload.templates)) db.templates = payload.templates;
                 if (Array.isArray(payload.archives)) db.archives = payload.archives;
+                if (Array.isArray(payload.users)) db.users = payload.users;
 
                 if (Array.isArray(payload.subjects)) {
                     db.subjects = payload.subjects;

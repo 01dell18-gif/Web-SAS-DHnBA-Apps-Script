@@ -135,8 +135,23 @@
 
             <div class="card-body">
                 <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <div style="position: relative; max-width: 320px; width: 100%;">
-                        <input type="text" id="searchStudentInput" class="form-control form-control-sm" placeholder="Cari berdasarkan NIS atau Nama siswa..." oninput="renderStudentsTable()">
+                    <div style="display: flex; gap: 10px; align-items: center; flex: 1; max-width: 560px;">
+                        <div style="position: relative; flex: 1;">
+                            <input type="text" id="searchStudentInput" class="form-control form-control-sm" placeholder="Cari berdasarkan NIS atau Nama siswa..." oninput="onStudentSearchInput()">
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">Tampilkan:</span>
+                            <select id="studentPageSizeSelect" class="form-select form-select-sm" style="width: auto; min-width: 110px; font-size: 0.82rem;" onchange="changeStudentPageSize(this.value)">
+                                <option value="20" selected>20 data</option>
+                                <option value="40">40 data</option>
+                                <option value="50">50 data</option>
+                                <option value="100">100 data</option>
+                                <option value="200">200 data</option>
+                                <option value="400">400 data</option>
+                                <option value="500">500 data</option>
+                                <option value="all">Semua data</option>
+                            </select>
+                        </div>
                     </div>
                     <div style="font-size: 0.82rem; color: var(--text-muted);">
                         Format impor mendukung kolom: <code>NIS</code>, <code>NAMA</code>, <code>KELAS</code>.
@@ -158,6 +173,22 @@
                             <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Memuat data siswa...</td></tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- PAGINATION BAR SISWA -->
+                <div id="studentPaginationBar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                    <div style="font-size: 0.82rem; color: var(--text-muted);" id="studentPaginationInfo">
+                        Menampilkan 0 - 0 dari 0 siswa
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnStudentPrev" onclick="studentPrevPage()" style="padding: 4px 10px; font-size: 0.8rem;">
+                            <i class="bi bi-chevron-left"></i> Sebelumnya
+                        </button>
+                        <div id="studentPageButtons" style="display: flex; gap: 4px; flex-wrap: wrap;"></div>
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnStudentNext" onclick="studentNextPage()" style="padding: 4px 10px; font-size: 0.8rem;">
+                            Setelahnya <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -305,7 +336,61 @@ async function initSiswaPage() {
     onClassFilterChange();
 }
 
+let currentStudentPage = 1;
+let studentPageSize = 20;
+
+function detectProgramKeahlian(className) {
+    const upper = (className || '').toUpperCase();
+    if (upper.includes('TKJ')) return 'Teknik Komputer dan Jaringan';
+    if (upper.includes('DKV')) return 'Desain Komunikasi Visual';
+    if (upper.includes('LPKKK') || upper.includes('FARMASI')) return 'Layanan Penunjang Kefarmasian Klinis dan Komunitas';
+    if (upper.includes('LPB') || upper.includes('PERBANKAN')) return 'Layanan Perbankan';
+    if (upper.includes('BD') || upper.includes('BISNIS DIGITAL')) return 'Bisnis Digital';
+    if (upper.includes('MP') || upper.includes('PERKANTORAN')) return 'Manajemen Perkantoran dan Layanan Bisnis';
+    if (upper.includes('AK') || upper.includes('AKUNTANSI')) return 'Akuntansi dan Keuangan Lembaga';
+    if (upper.includes('TSM') || upper.includes('OTOMOTIF')) return 'Teknik Sepeda Motor';
+    return 'Umum';
+}
+
+function changeStudentPageSize(val) {
+    studentPageSize = val === 'all' ? 'all' : parseInt(val, 10);
+    currentStudentPage = 1;
+    renderStudentsTable();
+}
+
+function onStudentSearchInput() {
+    currentStudentPage = 1;
+    renderStudentsTable();
+}
+
+function studentPrevPage() {
+    if (currentStudentPage > 1) {
+        currentStudentPage--;
+        renderStudentsTable();
+    }
+}
+
+function studentNextPage() {
+    const filterId = document.getElementById('filterClassSelect').value;
+    const searchVal = (document.getElementById('searchStudentInput')?.value || '').toLowerCase().trim();
+    let list = filterId ? (db.students || []).filter(s => String(s.class_id) === String(filterId)) : (db.students || []);
+    if (searchVal) {
+        list = list.filter(s => (s.nama && s.nama.toLowerCase().includes(searchVal)) || (s.nis && s.nis.toLowerCase().includes(searchVal)));
+    }
+    const totalPages = studentPageSize === 'all' ? 1 : Math.ceil(list.length / studentPageSize);
+    if (currentStudentPage < totalPages) {
+        currentStudentPage++;
+        renderStudentsTable();
+    }
+}
+
+function goToStudentPage(page) {
+    currentStudentPage = page;
+    renderStudentsTable();
+}
+
 function onClassFilterChange() {
+    currentStudentPage = 1;
     const filterSelect = document.getElementById('filterClassSelect');
     const btnDelete = document.getElementById('btnDeleteClassStudents');
     const val = filterSelect.value;
@@ -336,6 +421,12 @@ function renderStudentsTable() {
 
     document.getElementById('badgeFilteredCount').textContent = `${list.length} Siswa`;
 
+    const paginationBar = document.getElementById('studentPaginationBar');
+    const paginationInfo = document.getElementById('studentPaginationInfo');
+    const btnPrev = document.getElementById('btnStudentPrev');
+    const btnNext = document.getElementById('btnStudentNext');
+    const pageButtons = document.getElementById('studentPageButtons');
+
     if (list.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -345,14 +436,69 @@ function renderStudentsTable() {
                 </td>
             </tr>
         `;
+        if (paginationInfo) paginationInfo.textContent = 'Menampilkan 0 dari 0 data siswa';
+        if (btnPrev) btnPrev.disabled = true;
+        if (btnNext) btnNext.disabled = true;
+        if (pageButtons) pageButtons.innerHTML = '';
         return;
     }
 
-    list.forEach((s, idx) => {
+    let paginatedList = list;
+    let startIdx = 0;
+    let endIdx = list.length;
+    let totalPages = 1;
+
+    if (studentPageSize !== 'all') {
+        totalPages = Math.ceil(list.length / studentPageSize) || 1;
+        if (currentStudentPage > totalPages) currentStudentPage = totalPages;
+        if (currentStudentPage < 1) currentStudentPage = 1;
+
+        startIdx = (currentStudentPage - 1) * studentPageSize;
+        endIdx = Math.min(startIdx + studentPageSize, list.length);
+        paginatedList = list.slice(startIdx, endIdx);
+
+        if (paginationInfo) {
+            paginationInfo.textContent = `Menampilkan ${startIdx + 1} - ${endIdx} dari ${list.length} data siswa (Halaman ${currentStudentPage} dari ${totalPages})`;
+        }
+        if (btnPrev) btnPrev.disabled = (currentStudentPage <= 1);
+        if (btnNext) btnNext.disabled = (currentStudentPage >= totalPages);
+
+        if (pageButtons) {
+            let btnsHtml = '';
+            let startP = Math.max(1, currentStudentPage - 2);
+            let endP = Math.min(totalPages, currentStudentPage + 2);
+
+            if (startP > 1) {
+                btnsHtml += `<button type="button" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;" onclick="goToStudentPage(1)">1</button>`;
+                if (startP > 2) btnsHtml += `<span style="padding: 0 4px; font-size: 0.8rem; color: var(--text-muted);">...</span>`;
+            }
+
+            for (let p = startP; p <= endP; p++) {
+                const isActive = (p === currentStudentPage);
+                btnsHtml += `<button type="button" class="btn ${isActive ? 'btn-primary' : 'btn-secondary'} btn-sm" style="padding: 2px 8px; font-size: 0.75rem;" onclick="goToStudentPage(${p})">${p}</button>`;
+            }
+
+            if (endP < totalPages) {
+                if (endP < totalPages - 1) btnsHtml += `<span style="padding: 0 4px; font-size: 0.8rem; color: var(--text-muted);">...</span>`;
+                btnsHtml += `<button type="button" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;" onclick="goToStudentPage(${totalPages})">${totalPages}</button>`;
+            }
+            pageButtons.innerHTML = btnsHtml;
+        }
+    } else {
+        if (paginationInfo) {
+            paginationInfo.textContent = `Menampilkan seluruh ${list.length} data siswa`;
+        }
+        if (btnPrev) btnPrev.disabled = true;
+        if (btnNext) btnNext.disabled = true;
+        if (pageButtons) pageButtons.innerHTML = '';
+    }
+
+    paginatedList.forEach((s, idx) => {
         const cls = (db.classes || []).find(c => String(c.id) === String(s.class_id));
+        const rowNo = studentPageSize === 'all' ? idx + 1 : startIdx + idx + 1;
         tbody.innerHTML += `
             <tr>
-                <td>${idx + 1}</td>
+                <td>${rowNo}</td>
                 <td><code>${s.nis || '-'}</code></td>
                 <td><strong>${s.nama}</strong></td>
                 <td><span style="font-weight:600; color: var(--primary);">${cls ? cls.nama_kelas : '-'}</span></td>
@@ -432,6 +578,19 @@ function closeStudentModal() {
     document.getElementById('studentModal').style.display = 'none';
 }
 
+function detectProgramKeahlian(className) {
+    const upper = (className || '').toUpperCase();
+    if (upper.includes('TKJ')) return 'Teknik Komputer dan Jaringan';
+    if (upper.includes('DKV')) return 'Desain Komunikasi Visual';
+    if (upper.includes('LPKKK') || upper.includes('FARMASI')) return 'Layanan Penunjang Kefarmasian Klinis dan Komunitas';
+    if (upper.includes('LPB') || upper.includes('PERBANKAN')) return 'Layanan Perbankan';
+    if (upper.includes('BD') || upper.includes('BISNIS DIGITAL')) return 'Bisnis Digital';
+    if (upper.includes('MP') || upper.includes('PERKANTORAN')) return 'Manajemen Perkantoran dan Layanan Bisnis';
+    if (upper.includes('AK') || upper.includes('AKUNTANSI')) return 'Akuntansi dan Keuangan Lembaga';
+    if (upper.includes('TSM') || upper.includes('OTOMOTIF')) return 'Teknik Sepeda Motor';
+    return 'Umum';
+}
+
 async function submitNewStudent(e) {
     e.preventDefault();
     const classNameInput = document.getElementById('modal_class_input').value.trim();
@@ -448,7 +607,8 @@ async function submitNewStudent(e) {
     let isNewClass = false;
     if (!cls) {
         const nextClassId = (db.classes || []).reduce((max, c) => Math.max(max, Number(c.id) || 0), 0) + 1;
-        cls = { id: nextClassId, nama_kelas: classNameInput, tingkat: 'XII', program_keahlian: 'Umum', is_active: 1 };
+        const detectedProg = detectProgramKeahlian(classNameInput);
+        cls = { id: nextClassId, nama_kelas: classNameInput, tingkat: 'XII', program_keahlian: detectedProg, is_active: 1 };
         db.classes.push(cls);
         isNewClass = true;
     }
@@ -656,7 +816,8 @@ async function executeImportStudents() {
         let targetCls = classMap.get(cName.toLowerCase());
         if (!targetCls) {
             maxClassId++;
-            targetCls = { id: maxClassId, nama_kelas: cName, tingkat: 'XII', program_keahlian: 'Umum', is_active: 1 };
+            const detectedProg = detectProgramKeahlian(cName);
+            targetCls = { id: maxClassId, nama_kelas: cName, tingkat: 'XII', program_keahlian: detectedProg, is_active: 1 };
             db.classes.push(targetCls);
             classMap.set(cName.toLowerCase(), targetCls);
         }

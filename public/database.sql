@@ -1,7 +1,7 @@
 -- ========================================================
 -- DATABASE SCHEMA & MASTER DATA: SISTEM ADMINISTRASI UJIAN
 -- SMK NEGERI 1 KLUNGKUNG
--- Auto-synchronized: 2026-10-20T02:47:06.873Z
+-- Auto-synchronized: 2026-10-20T03:11:20.834Z
 -- ========================================================
 
 SET FOREIGN_KEY_CHECKS = 0;
@@ -92,17 +92,17 @@ CREATE TABLE `exam_archives` (
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (1, 'XII TKJ', 'XII', 'Umum', 1);
-INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (2, 'XII DKV', 'XII', 'Umum', 1);
-INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (3, 'XII LPKKK 1', 'XII', 'Umum', 1);
-INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (4, 'XII LPKKK 2', 'XII', 'Umum', 1);
-INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (5, 'XII BD 1', 'XII', 'Umum', 1);
-INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (6, 'XII BD 2', 'XII', 'Umum', 1);
-INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (7, 'XII MP 1', 'XII', 'Umum', 1);
-INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (8, 'XII MP 2', 'XII', 'Umum', 1);
-INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (9, 'XII LPB', 'XII', 'Umum', 1);
-INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (10, 'XII AK', 'XII', 'Umum', 1);
-INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (11, 'XII TSM', 'XII', 'Umum', 1);
+INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (1, 'XII TKJ', 'XII', 'Teknik Komputer dan Jaringan', 1);
+INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (2, 'XII DKV', 'XII', 'Desain Komunikasi Visual', 1);
+INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (3, 'XII LPKKK 1', 'XII', 'Layanan Penunjang Kefarmasian Klinis dan Komunitas', 1);
+INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (4, 'XII LPKKK 2', 'XII', 'Layanan Penunjang Kefarmasian Klinis dan Komunitas', 1);
+INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (5, 'XII BD 1', 'XII', 'Bisnis Digital', 1);
+INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (6, 'XII BD 2', 'XII', 'Bisnis Digital', 1);
+INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (7, 'XII MP 1', 'XII', 'Manajemen Perkantoran dan Layanan Bisnis', 1);
+INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (8, 'XII MP 2', 'XII', 'Manajemen Perkantoran dan Layanan Bisnis', 1);
+INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (9, 'XII LPB', 'XII', 'Layanan Perbankan', 1);
+INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (10, 'XII AK', 'XII', 'Akuntansi dan Keuangan Lembaga', 1);
+INSERT INTO `classes` (`id`, `nama_kelas`, `tingkat`, `program_keahlian`, `is_active`) VALUES (11, 'XII TSM', 'XII', 'Teknik Sepeda Motor', 1);
 
 INSERT INTO `students` (`id`, `class_id`, `nis`, `nama`) VALUES (1, 1, '13561', 'Agustinus Poka Mete');
 INSERT INTO `students` (`id`, `class_id`, `nis`, `nama`) VALUES (2, 1, '13562', 'Akbar Alfiansah');

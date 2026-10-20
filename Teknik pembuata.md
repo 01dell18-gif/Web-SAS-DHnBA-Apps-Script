@@ -196,3 +196,42 @@ Buka browser pada alamat: `http://localhost:3000`
 4. Klik **Save**. Dalam beberapa menit situs akan aktif pada URL:
    `https://01dell18-gif.github.io/web-sas-dh-n-beritaacara/`
 5. Aplikasi akan langsung berfungsi penuh berkat modul `assets/js/github-pages-compat.js`.
+
+---
+
+## 10. PEMBARUAN FITUR & OPTIMASI TERBARU (UPDATE v2.6)
+
+### 1. Filter Horizontal Mendatar ke Samping pada Arsip Dokumen
+- Tata letak filter detail dokumen di halaman publik (`public/arsip.html`) dan admin (`public/admin/arsip.html`) telah dirombak dari tata letak grid menurun menjadi **deretan mendatar ke samping (horizontal)**.
+- Menggunakan arsitektur CSS `display: flex; gap: 10px; align-items: flex-end; flex-wrap: nowrap; overflow-x: auto;` sehingga seluruh dropdown (Tahun Ajaran, Semester, Tanggal Ujian, Kelas, Mata Pelajaran, dan tombol Reset) berada rapi dalam satu baris horizontal tanpa memotong ruang kerja dokumen.
+
+### 2. Standarisasi Program / Konsentrasi Keahlian SMK N 1 Klungkung
+- Menggantikan label fallback generic "Umum" dengan konsentrasi keahlian resmi SMK Negeri 1 Klungkung:
+  - **XII TKJ**: Teknik Komputer dan Jaringan
+  - **XII DKV**: Desain Komunikasi Visual
+  - **XII LPKKK 1 & 2**: Layanan Penunjang Kefarmasian Klinis dan Komunitas
+  - **XII BD 1 & 2**: Bisnis Digital
+  - **XII MP 1 & 2**: Manajemen Perkantoran dan Layanan Bisnis
+  - **XII LPB**: Layanan Perbankan
+  - **XII AK**: Akuntansi dan Keuangan Lembaga
+  - **XII TSM**: Teknik Sepeda Motor
+- Dilengkapi fungsi deteksi otomatis cerdas `detectProgramKeahlian(className)` saat input siswa manual maupun saat import file Excel, serta autocomplete `<datalist>` pada form modal edit kelas.
+
+### 3. Penyelarasan Berantai Relasi Kelas (Cascade Update Relasional)
+- Pada menu **Master Daftar Kelas Resmi** (`public/admin/pengaturan.html`), ketika administrator mengedit atau memperbarui data kelas (Nama Kelas, Tingkat, Program Keahlian):
+  - Sistem secara otomatis menelusuri seluruh data siswa (`db.students`) yang berelasi dengan kelas tersebut (`class_id` maupun nama kelas sebelumnya).
+  - Nama kelas dan relasi ID pada data siswa diperbarui secara realtime dan otomatis disinkronkan ke `data/db.json` serta `database.sql`.
+  - Berkas arsip dokumen yang mencantumkan nama kelas lama juga otomatis diperbarui sehingga tidak terjadi diskoneksi atau rekaman siswa yatim (*orphan records*).
+
+### 4. Paginasi Fleksibel & Limit Baris Data (Master Siswa & Guru)
+- Pada menu **Master Data Siswa & Master Kelas** (`public/admin/siswa.html`) dan **Master Data Guru & Pengawas** (`public/admin/guru.html`):
+  - Disediakan pemilih jumlah data per halaman: **20, 40, 50, 100, 200, 400, 500 data**, dan opsi **Semua data**.
+  - Dilengkapi tombol navigasi **Sebelumnya**, tombol nomor halaman dinamis (maksimal 5 halaman terdekat dengan status aktif), dan tombol **Setelahnya**.
+  - Penomoran baris tabel (`No`) berkesinambungan secara matematis berdasarkan `(currentPage - 1) * pageSize + idx + 1`.
+
+### 5. Manajemen User: Integrasi Master Guru & Toggle Password Mata
+- Pada menu **Manajemen User & Hak Akses** (`public/admin/users.html`):
+  - Ditambahkan kolom **Password** pada tabel daftar pengguna dengan penyamaran teks titik (`••••••••`) dan tombol toggle mata (`bi-eye` / `bi-eye-slash`) untuk menampilkan atau menyembunyikan kata sandi secara instan.
+  - Pada formulir modal (Tambah / Edit User), kolom **Nama Lengkap Pengguna** kini terhubung dengan `<datalist id="userGuruDatalist">` yang mengambil referensi dari Master Data Guru, namun tetap dapat diketik manual secara bebas sesuai kebutuhan.
+  - Pada mode Edit User, kolom kata sandi otomatis menampilkan kata sandi pengguna saat ini dan dapat ditinjau dengan tombol mata atau langsung diubah dengan aman.
+

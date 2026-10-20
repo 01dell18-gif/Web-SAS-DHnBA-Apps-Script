@@ -55,6 +55,21 @@ Aplikasi web modern untuk pembuatan administrasi ujian sekolah otomatis yang men
    - Klik tombol "Lihat Siswa" pada kelas manapun di Dashboard otomatis memfilter dan menampilkan seluruh siswa kelas tersebut secara presisi.
    - Seluruh kartu metrik di Dashboard interaktif dan dapat diklik untuk langsung membuka modul pengelolaannya.
 
+12. **Filter Arsip Dokumen Mendatar ke Samping (Horizontal Filter)**:
+   - Filter detail dokumen (Tahun Ajaran, Semester, Tanggal Ujian, Kelas, Mata Pelajaran, dan Reset) tersusun mendatar ke samping dengan scrolling horizontal yang rapi.
+
+13. **Program / Konsentrasi Keahlian Resmi SMK N 1 Klungkung**:
+   - Master kelas menggunakan Program Keahlian resmi (Teknik Komputer dan Jaringan, Desain Komunikasi Visual, Bisnis Digital, Manajemen Perkantoran dan Layanan Bisnis, Akuntansi dan Keuangan Lembaga, Layanan Penunjang Kefarmasian Klinis dan Komunitas, Layanan Perbankan, Teknik Sepeda Motor) dengan deteksi otomatis saat input siswa maupun impor Excel.
+
+14. **Pembaruan Berantai Relasi Kelas (Cascade Update)**:
+   - Edit atau pembaruan nama kelas, tingkat, atau program keahlian pada Master Daftar Kelas otomatis memperbarui seluruh data siswa terdaftar dan arsip yang berkaitan secara serempak.
+
+15. **Paginasi Fleksibel & Limit Baris Data (20, 40, 50, 100, 200, 400, 500, Semua)**:
+   - Diterapkan pada Master Data Siswa & Master Kelas serta Master Data Guru & Pengawas dengan tombol "Sebelumnya", "Setelahnya", penomoran kontinu, dan pemilih limit baris data.
+
+16. **Manajemen User dengan Password Eye Toggle & Referensi Guru**:
+   - Kolom password pada tabel dilengkapi tombol mata untuk lihat/sembunyikan kata sandi. Form tambah/edit user terintegrasi dengan daftar dewan guru (`<datalist>`) namun tetap dapat diketik manual.
+
 ---
 
 ## 📁 Struktur Berkas Proyek
