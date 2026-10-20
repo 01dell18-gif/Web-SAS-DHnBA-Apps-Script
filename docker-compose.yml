@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  web-sas:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: web-sas-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      # Persistent volume: database JSON & SQL tetap tersimpan di host
+      - ./data:/app/data
+      # Persistent volume: logo sekolah yang diunggah tetap tersimpan di host
+      - ./public/assets/img:/app/public/assets/img
+    environment:
+      - NODE_ENV=production
+      - PORT=3000

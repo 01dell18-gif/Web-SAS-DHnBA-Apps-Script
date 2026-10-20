@@ -1,7 +1,7 @@
 -- ========================================================
 -- DATABASE SCHEMA & MASTER DATA: SISTEM ADMINISTRASI UJIAN
 -- SMK NEGERI 1 KLUNGKUNG
--- Auto-synchronized: 2026-10-20T04:17:46.556Z
+-- Auto-synchronized: 2026-10-20T04:23:49.403Z
 -- ========================================================
 
 SET FOREIGN_KEY_CHECKS = 0;

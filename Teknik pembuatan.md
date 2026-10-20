@@ -194,16 +194,120 @@ Seluruh istilah telah diseragamkan dengan standar tata kelola ujian resmi Indone
 
 ## 9. PANDUAN PENGGUNAAN & RUNNING LOKAL
 
-### Menjalankan dengan Node.js Lokal
+### A. Panduan Lengkap Menjalankan dengan Node.js Lokal (Langkah demi Langkah untuk Pemula)
+
+Sistem ini dirancang dengan prinsip **Zero External Runtime Dependencies** menggunakan modul murni bawaan Node.js (`http`, `fs`, `path`, `url`), sehingga Anda tidak perlu mengunduh ratusan megabyte folder `node_modules` atau menjalankan `npm install`.
+
+Ikuti panduan berikut langkah demi langkah:
+
+#### Langkah 1: Memasang (Install) Node.js pada Komputer
+
+1. Unduh penginstal Node.js versi LTS (Long Term Support) resmi dari website: [https://nodejs.org](https://nodejs.org) (disarankan versi 18.x, 20.x, atau yang lebih baru).
+2. Jalankan berkas installer `.msi` (Windows) atau `.pkg` (macOS) dan ikuti petunjuk pemasangan hingga selesai (Next > Next > Install).
+3. Untuk memastikan Node.js sudah terpasang dengan benar, buka terminal Anda:
+   - **Windows**: Tekan tombol `Windows + R`, ketik `cmd`, lalu tekan `Enter`.
+   - **macOS / Linux**: Buka aplikasi `Terminal`.
+4. Ketik perintah berikut dan tekan `Enter`:
+
+   ```bash
+   node -v
+   ```
+
+   Jika muncul informasi versi (contoh: `v20.18.0`), maka Node.js telah siap digunakan.
+
+#### Langkah 2: Membuka Folder Proyek di Terminal / Command Prompt
+
+1. Buka folder tempat berkas proyek ini disimpan di komputer Anda.
+2. Buka Command Prompt langsung di folder tersebut:
+   - **Trik Cepat Windows**: Buka folder proyek di File Explorer, klik pada bilah alamat (*address bar*) di bagian atas jendela, ketik `cmd`, lalu tekan tombol `Enter`. Jendela Command Prompt akan langsung terbuka tepat di direktori proyek.
+   - **Melalui VS Code**: Buka folder proyek di Visual Studio Code, lalu buka terminal terintegrasi dengan menekan tombol pintas `Ctrl + \`` (atau menu **Terminal** > **New Terminal**).
+
+#### Langkah 3: Menjalankan Server Lokal
+
+Di dalam jendela Command Prompt / Terminal yang sudah berada di direktori proyek, ketikkan perintah:
 
 ```bash
-# Jalankan server lokal
 node server.js
 ```
 
-Buka browser pada alamat: `http://localhost:3000`
+Tekan `Enter`. Dalam 1 detik, server akan aktif dan menampilkan pesan konfirmasi:
 
-### Menjalankan di GitHub Pages
+```text
+🚀 Server SAS berjalan di http://localhost:3000
+📂 Direktori Publik: .../public
+💾 Berkas Basis Data: .../data/db.json
+📑 Berkas SQL Ekspor: .../database.sql
+```
+
+> **Catatan Penting**: Biarkan jendela Command Prompt / Terminal ini tetap terbuka selama Anda menggunakan aplikasi. Jika jendela terminal ditutup, server lokal akan otomatis berhenti.
+
+#### Langkah 4: Membuka Aplikasi di Web Browser
+
+1. Buka peramban web pilihan Anda (Google Chrome, Microsoft Edge, Mozilla Firefox, Brave, Safari, dll).
+2. Pada bilah alamat browser, ketik URL berikut lalu tekan `Enter`:
+
+   ```text
+   http://localhost:3000
+   ```
+
+3. Halaman Beranda Publik Generator Administrasi SAS SMK Negeri 1 Klungkung akan langsung tampil dan siap digunakan.
+
+#### Langkah 5: Masuk ke Panel Administrator
+
+1. Klik tombol **"Panel Admin"** di pojok kanan atas bilah navigasi, atau buka langsung alamat `http://localhost:3000/admin/login.html`.
+2. Masukkan kredensial login bawaan:
+   - **Akun Administrator (Akses Penuh CRUD Data & Backup)**:
+     - Username: `admin`
+     - Password: `admin123`
+   - **Akun Operator (Akses Penginputan Dokumen & View Data)**:
+     - Username: `operator`
+     - Password: `operator123`
+3. Tekan tombol **Masuk ke Sistem**.
+
+#### Langkah 6: Cara Menghentikan Server Lokal
+
+Jika Anda sudah selesai menggunakan aplikasi dan ingin mematikan server:
+
+1. Kembali ke jendela Command Prompt / Terminal tempat Anda mengetikkan `node server.js`.
+2. Tekan kombinasi tombol keyboard: `Ctrl + C` (pada Windows) atau `Cmd + C` (pada macOS).
+3. Server lokal akan dinonaktifkan secara aman.
+
+---
+
+### B. Menjalankan Menggunakan Docker (Opsional / Kontainerisasi)
+
+Aplikasi ini telah dilengkapi konfigurasi kontainerisasi Docker resmi (`Dockerfile` dan `docker-compose.yml`) berbasis image ultra-ringan `node:20-alpine`:
+
+#### Menjalankan dengan Docker Compose (Direkomendasikan)
+
+1. Pastikan **Docker Desktop** telah terpasang dan sedang berjalan di komputer Anda.
+2. Buka terminal di direktori proyek, lalu jalankan:
+
+   ```bash
+   docker compose up -d
+   ```
+
+3. Docker akan otomatis mem-build image, memetakan port `3000:3000`, dan menghubungkan *persistent volume* untuk folder `data/` dan `public/assets/img/` (sehingga database JSON, SQL dump, dan logo sekolah yang diunggah tetap awet tersimpan di komputer host).
+4. Akses di browser: `http://localhost:3000`.
+5. Untuk menghentikan container Docker:
+
+   ```bash
+   docker compose down
+   ```
+
+#### Menjalankan dengan Docker CLI Manual
+
+```bash
+# 1. Build image Docker
+docker build -t web-sas .
+
+# 2. Jalankan container dengan binding port 3000
+docker run -d -p 3000:3000 --name web-sas-app web-sas
+```
+
+---
+
+### C. Menjalankan di GitHub Pages (Mode Statis / Serverless)
 
 1. Pastikan kode ter-upload di repository GitHub (`https://github.com/01dell18-gif/web-sas-dh-n-beritaacara`).
 2. Masuk ke tab **Settings** > **Pages** di repository GitHub Anda.
@@ -212,7 +316,7 @@ Buka browser pada alamat: `http://localhost:3000`
    - **Branch**: `main` / `(root)`
 4. Klik **Save**. Dalam beberapa menit situs akan aktif pada URL:
    `https://01dell18-gif.github.io/web-sas-dh-n-beritaacara/`
-5. Aplikasi akan langsung berfungsi penuh berkat modul `assets/js/github-pages-compat.js`.
+5. Aplikasi akan langsung berfungsi penuh berkat modul kompatibilitas offline `public/assets/js/github-pages-compat.js` yang memanfaatkan *Client-side Web Storage API*.
 
 ---
 
@@ -342,3 +446,30 @@ Buka browser pada alamat: `http://localhost:3000`
 ### 3. Konsolidasi Berkas Dokumentasi Arsitektur
 
 - Seluruh dokumentasi teknik, arsitektur, dan panduan sistem telah dipusatkan secara permanen ke file tunggal **`Teknik pembuatan.md`** dengan penyelesaian seluruh aturan linting Markdown (MD022, MD032, MD007, MD029, MD012), dan file redundant `Teknik pembuata.md` telah dihapus.
+
+---
+
+## 14. PEMBARUAN FITUR & OPTIMASI TERBARU (UPDATE v2.11)
+
+### 1. Fitur Edit / Update Peserta Didik pada Master Data Siswa & Master Kelas
+
+- Pada halaman **Master Data Siswa & Master Kelas** (`public/admin/siswa.html`), kolom **Aksi** pada tabel data siswa kini dilengkapi tombol **Edit / Perbarui Data Siswa** (`bi-pencil-square`) yang bersanding dengan tombol Hapus.
+- Menampilkan modal popup interaktif modern (`#editStudentModal`) untuk mengubah:
+  - **NIS (Nomor Induk Siswa)**: Menyesuaikan nomor identitas peserta didik.
+  - **Nama Lengkap Siswa**: Mengoreksi ejaan nama peserta didik.
+  - **Kelas Siswa**: Memilih dari dropdown master kelas aktif; perubahan kelas akan secara otomatis menyelaraskan nama Program / Konsentrasi Keahlian yang relevan.
+- Seluruh perubahan data langsung tersimpan secara permanen ke `db.students`, REST API server `/api/save-db`, berkas JSON `data/db.json`, serta diekspor ulang secara otomatis ke berkas `database.sql`.
+
+### 2. Pengetatan Hak Akses Peran Admin & Operator pada Manajemen Siswa dan Guru
+
+- Hak akses aksi tombol **Edit** dan **Hapus** pada tabel data siswa (`siswa.html`) dan data guru (`guru.html`) kini diproteksi ketat:
+  - **Administrator / Superadmin**: Memiliki akses penuh tombol aksi Edit dan Hapus, tombol Tambah Siswa, serta tombol Hapus Data Siswa secara massal.
+  - **Operator**: Tombol aksi Edit dan Hapus disembunyikan dan digantikan dengan lencana khusus *"Khusus Admin"* bersimbol gembok. Seluruh pemanggilan fungsi manipulasi data di sisi klien juga dilengkapi penjaga hak akses (*role access guard*).
+
+### 3. Dukungan Kontainerisasi Docker Resmi
+
+- Disediakan berkas konfigurasi Docker siap pakai untuk standarisasi penerapan lingkungan produksi maupun pengujian lokal:
+  - **`Dockerfile`**: Menggunakan basis image resmi `node:20-alpine` yang ringkas, cepat, dan aman.
+  - **`docker-compose.yml`**: Memetakan port `3000:3000` dengan volume persisten untuk folder `/data` dan `/public/assets/img` guna menjamin integritas data saat container di-restart.
+  - **`.dockerignore`**: Mengoptimalkan proses pembuatan *image* dengan mengecualikan berkas non-esensial.
+

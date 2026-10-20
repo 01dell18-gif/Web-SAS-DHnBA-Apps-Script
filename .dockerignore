@@ -1,0 +1,11 @@
+.git
+.gitignore
+.gemini
+brain
+scraped_source
+scratch
+*.log
+*.pdf
+node_modules
+.DS_Store
+Thumbs.db

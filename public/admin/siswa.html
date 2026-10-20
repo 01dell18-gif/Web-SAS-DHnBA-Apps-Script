@@ -223,6 +223,35 @@
     </div>
 </div>
 
+<!-- MODAL EDIT/UPDATE SISWA (KHUSUS HAK AKSES ADMIN) -->
+<div id="editStudentModal" class="modal-overlay">
+    <div class="modal-card">
+        <h3 style="margin-bottom: 1rem; font-size: 1.15rem;"><i class="bi bi-pencil-square" style="color: var(--primary);"></i> Edit Data Peserta Didik</h3>
+        <form onsubmit="submitEditStudent(event)">
+            <input type="hidden" id="edit_student_id">
+            <div class="form-group">
+                <label class="form-label">Nomor Induk Siswa (NIS)</label>
+                <input type="text" id="edit_student_nis" class="form-control" placeholder="Contoh: 13801" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nama Lengkap Siswa <span class="required">*</span></label>
+                <input type="text" id="edit_student_nama" class="form-control" placeholder="Nama lengkap siswa" required autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Kelas Siswa <span class="required">*</span></label>
+                <select id="edit_student_class_id" class="form-select" required>
+                    <!-- Dimuat dinamis dari master kelas -->
+                </select>
+                <div class="form-hint">Program / Konsentrasi Keahlian akan otomatis menyesuaikan dengan kelas yang dipilih.</div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.5rem;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeEditStudentModal()">Batal</button>
+                <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg"></i> Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- MODAL IMPORT EXCEL SISWA -->
 <div id="importExcelModal" class="modal-overlay">
     <div class="modal-card" style="max-width: 680px;">
@@ -337,6 +366,15 @@ async function initSiswaPage() {
         modalDatalist.innerHTML = (db.classes || []).map(c => `<option value="${c.nama_kelas}">`).join('');
     }
 
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    const isAdmin = (currentRole === 'admin' || currentRole === 'superadmin');
+    if (!isAdmin) {
+        const btnDeleteAll = document.querySelector('button[onclick="promptDeleteAllStudents()"]');
+        if (btnDeleteAll) btnDeleteAll.style.display = 'none';
+        const btnDeleteClass = document.getElementById('btnDeleteClassStudents');
+        if (btnDeleteClass) btnDeleteClass.style.display = 'none';
+    }
+
     onClassFilterChange();
 }
 
@@ -398,8 +436,10 @@ function onClassFilterChange() {
     const filterSelect = document.getElementById('filterClassSelect');
     const btnDelete = document.getElementById('btnDeleteClassStudents');
     const val = filterSelect.value;
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    const isAdmin = (currentRole === 'admin' || currentRole === 'superadmin');
 
-    if (val) {
+    if (val && isAdmin) {
         btnDelete.style.display = 'inline-flex';
         const cls = db.classes.find(c => String(c.id) === String(val));
         if (cls) btnDelete.innerHTML = `<i class="bi bi-trash-fill"></i> Hapus Siswa ${cls.nama_kelas}`;
@@ -497,10 +537,34 @@ function renderStudentsTable() {
         if (pageButtons) pageButtons.innerHTML = '';
     }
 
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    const isAdmin = (currentRole === 'admin' || currentRole === 'superadmin');
+
     paginatedList.forEach((s, idx) => {
         const cls = (db.classes || []).find(c => String(c.id) === String(s.class_id));
         const prog = (cls && cls.program_keahlian) ? cls.program_keahlian : (detectProgramKeahlian(cls ? cls.nama_kelas : s.kelas) || '-');
         const rowNo = studentPageSize === 'all' ? idx + 1 : startIdx + idx + 1;
+
+        let actionHtml = '';
+        if (isAdmin) {
+            actionHtml = `
+                <div style="display: flex; gap: 5px; justify-content: center; align-items: center;">
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding: 3px 8px; font-size: 0.75rem;" onclick="openEditStudentModal(${s.id})" title="Edit / Perbarui Data Siswa">
+                        <i class="bi bi-pencil-square" style="color: var(--primary);"></i>
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm" style="padding: 3px 8px; font-size: 0.75rem;" onclick="deleteStudent(${s.id})" title="Hapus Siswa">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+        } else {
+            actionHtml = `
+                <span class="badge" style="background: #F1F5F9; color: #94A3B8; font-size: 0.75rem; font-weight: 600; padding: 4px 6px;">
+                    <i class="bi bi-lock-fill"></i> Khusus Admin
+                </span>
+            `;
+        }
+
         tbody.innerHTML += `
             <tr>
                 <td>${rowNo}</td>
@@ -508,17 +572,131 @@ function renderStudentsTable() {
                 <td><strong>${s.nama}</strong></td>
                 <td><span style="font-weight:600; color: var(--primary);">${cls ? cls.nama_kelas : '-'}</span></td>
                 <td><span class="badge" style="background: #F1F5F9; color: #334155; font-size: 0.8rem; font-weight: 600; padding: 4px 8px; border-radius: 4px;">${prog}</span></td>
-                <td style="text-align: center;">
-                    <button class="btn btn-danger btn-sm" style="padding: 2px 7px; font-size: 0.75rem;" onclick="deleteStudent(${s.id})" title="Hapus Siswa">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </td>
+                <td style="text-align: center;">${actionHtml}</td>
             </tr>
         `;
     });
 }
 
+// ================= AKSI EDIT/UPDATE SISWA (KHUSUS ADMIN) =================
+function openEditStudentModal(id) {
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    if (currentRole === 'operator') {
+        if (typeof showAlertModal === 'function') {
+            showAlertModal({
+                title: 'Hak Akses Terbatas',
+                message: 'Fitur edit data siswa khusus untuk hak akses Administrator!',
+                type: 'danger'
+            });
+        } else {
+            alert('Fitur edit data siswa khusus untuk hak akses Administrator!');
+        }
+        return;
+    }
+
+    const student = (db.students || []).find(s => Number(s.id) === Number(id));
+    if (!student) {
+        showToast('Data siswa tidak ditemukan di database!', 'danger');
+        return;
+    }
+
+    document.getElementById('edit_student_id').value = student.id;
+    document.getElementById('edit_student_nis').value = student.nis || '';
+    document.getElementById('edit_student_nama').value = student.nama || '';
+
+    // Populate dropdown kelas di modal edit
+    const selClass = document.getElementById('edit_student_class_id');
+    if (selClass) {
+        selClass.innerHTML = (db.classes || []).map(c => {
+            const prog = c.program_keahlian || detectProgramKeahlian(c.nama_kelas) || '';
+            const progLabel = prog ? ` - ${prog}` : '';
+            const isSelected = String(c.id) === String(student.class_id) ? 'selected' : '';
+            return `<option value="${c.id}" ${isSelected}>${c.nama_kelas}${progLabel}</option>`;
+        }).join('');
+    }
+
+    document.getElementById('editStudentModal').style.display = 'flex';
+    setTimeout(() => {
+        document.getElementById('edit_student_nama').focus();
+    }, 100);
+}
+
+function closeEditStudentModal() {
+    document.getElementById('editStudentModal').style.display = 'none';
+}
+
+async function submitEditStudent(e) {
+    e.preventDefault();
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    if (currentRole === 'operator') {
+        showToast('Operasi ditolak: Hanya Administrator yang berwenang mengedit data siswa.', 'danger');
+        return;
+    }
+
+    const id = Number(document.getElementById('edit_student_id').value);
+    const nis = document.getElementById('edit_student_nis').value.trim();
+    const nama = document.getElementById('edit_student_nama').value.trim();
+    const classId = Number(document.getElementById('edit_student_class_id').value);
+
+    if (!nama) {
+        showToast('Nama siswa wajib diisi!', 'danger');
+        return;
+    }
+
+    if (!classId) {
+        showToast('Pilih kelas siswa yang valid!', 'danger');
+        return;
+    }
+
+    const targetStudent = (db.students || []).find(s => Number(s.id) === id);
+    if (!targetStudent) {
+        showToast('Data siswa tidak ditemukan di basis data.', 'danger');
+        return;
+    }
+
+    // Perbarui field siswa
+    targetStudent.nis = nis;
+    targetStudent.nama = nama;
+    targetStudent.class_id = classId;
+
+    const res = await saveAdminDatabase({ students: db.students });
+    if (res.success) {
+        closeEditStudentModal();
+        renderStudentsTable();
+        // Update filter dropdown label count jika berpindah kelas
+        const filterSelect = document.getElementById('filterClassSelect');
+        if (filterSelect) {
+            const currentFilter = filterSelect.value;
+            filterSelect.innerHTML = `<option value="">Semua Kelas (${(db.students || []).length} Siswa)</option>`;
+            (db.classes || []).forEach(c => {
+                const count = (db.students || []).filter(s => String(s.class_id) === String(c.id)).length;
+                const prog = c.program_keahlian || detectProgramKeahlian(c.nama_kelas) || '';
+                const labelProg = prog ? ` - ${prog}` : '';
+                filterSelect.innerHTML += `<option value="${c.id}" ${String(c.id) === String(currentFilter) ? 'selected' : ''}>${c.nama_kelas}${labelProg} (${count} Siswa)</option>`;
+            });
+            filterSelect.value = currentFilter;
+        }
+        showToast(`Data siswa "${nama}" berhasil diperbarui!`, 'success');
+    } else {
+        showToast(res.message || 'Gagal menyimpan pembaruan siswa.', 'danger');
+    }
+}
+
 async function promptDeleteAllStudents() {
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    if (currentRole === 'operator') {
+        if (typeof showAlertModal === 'function') {
+            showAlertModal({
+                title: 'Hak Akses Terbatas',
+                message: 'Fitur penghapusan database siswa hanya dapat dilakukan oleh Administrator!',
+                type: 'danger'
+            });
+        } else {
+            alert('Fitur penghapusan database siswa hanya dapat dilakukan oleh Administrator!');
+        }
+        return;
+    }
+
     const count = (db.students || []).length;
     if (count === 0) {
         showToast('Tidak ada data siswa di dalam basis data.', 'info');
@@ -578,6 +756,20 @@ async function executeDeleteAllStudents(resetClasses = false) {
 }
 
 async function deleteStudent(id) {
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    if (currentRole === 'operator') {
+        if (typeof showAlertModal === 'function') {
+            showAlertModal({
+                title: 'Hak Akses Terbatas',
+                message: 'Fitur hapus data siswa khusus untuk hak akses Administrator!',
+                type: 'danger'
+            });
+        } else {
+            alert('Fitur hapus data siswa khusus untuk hak akses Administrator!');
+        }
+        return;
+    }
+
     const st = (db.students || []).find(s => s.id === id);
     const namaSiswa = st ? st.nama : 'siswa ini';
 
@@ -673,6 +865,20 @@ async function submitNewStudent(e) {
 }
 
 function openDeleteClassModal() {
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    if (currentRole === 'operator') {
+        if (typeof showAlertModal === 'function') {
+            showAlertModal({
+                title: 'Hak Akses Terbatas',
+                message: 'Fitur penghapusan siswa kelas hanya dapat dilakukan oleh Administrator!',
+                type: 'danger'
+            });
+        } else {
+            alert('Fitur penghapusan siswa kelas hanya dapat dilakukan oleh Administrator!');
+        }
+        return;
+    }
+
     const filterId = document.getElementById('filterClassSelect').value;
     if (!filterId) return;
     targetDeleteClassId = filterId;

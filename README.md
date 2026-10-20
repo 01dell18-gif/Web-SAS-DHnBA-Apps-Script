@@ -150,33 +150,69 @@ web-sas-dh-n-beritaacara/
 
 ## 🛠️ Cara Menjalankan Aplikasi
 
-### 1. Menjalankan di Komputer Lokal (Node.js)
+### 1. Menjalankan di Komputer Lokal Menggunakan Node.js (Panduan Pemula)
+
+Sistem ini dirancang dengan arsitektur **Zero External Dependencies** (hanya memanfaatkan modul inti bawaan Node.js seperti `http`, `fs`, `path`, `url`), sehingga Anda **TIDAK PERLU** mengunduh ratusan megabyte `node_modules` atau menjalankan `npm install`.
+
+Ikuti langkah mudah berikut:
+
+1. **Pastikan Node.js Terpasang**:
+   - Unduh dan pasang versi LTS resmi dari [nodejs.org](https://nodejs.org).
+   - Buka Command Prompt / Terminal, lalu ketik `node -v` untuk memastikan instalasi berhasil.
+2. **Buka Direktori Proyek**:
+   - Buka folder proyek di File Explorer.
+   - Klik pada kolom alamat (*address bar*) di bagian atas folder, ketik `cmd`, lalu tekan `Enter` (atau buka folder di VS Code dan buka terminal terintegrasi).
+3. **Jalankan Server Lokal**:
+
+   ```bash
+   node server.js
+   ```
+
+4. **Buka di Browser**:
+   - Buka browser (Chrome, Edge, Firefox, dll) dan akses: 👉 **`http://localhost:3000`**
+5. **Masuk ke Panel Administrator**:
+   - Klik tombol **Panel Admin** di pojok kanan atas atau buka `http://localhost:3000/admin/login.html`.
+   - Akun Admin (Akses Penuh): `admin` / `admin123`.
+   - Akun Operator (Kelola Dokumen): `operator` / `operator123`.
+6. **Menghentikan Server**:
+   - Tekan `Ctrl + C` di jendela Command Prompt / Terminal untuk mematikan server.
+
+### 2. Menjalankan Menggunakan Docker (Opsional)
+
+Aplikasi ini sudah dilengkapi dengan berkas `Dockerfile` dan `docker-compose.yml` resmi berbasis `node:20-alpine`:
 
 ```bash
-# Jalankan server lokal
-node server.js
+# Jalankan container di latar belakang (background)
+docker compose up -d
 ```
 
-Akses di browser: 👉 **`http://localhost:3000`**
+- Buka di browser: 👉 **`http://localhost:3000`**
+- Data basis data (`data/db.json`, `database.sql`) dan logo sekolah otomatis disimpan di komputer host melalui *persistent volumes*.
+- Untuk menghentikan container: `docker compose down`.
 
-### 2. Menjalankan di GitHub Pages
+### 3. Menjalankan di GitHub Pages (Mode Statis / Serverless)
 
 1. Pastikan repository Anda aktif di GitHub (`https://github.com/01dell18-gif/web-sas-dh-n-beritaacara`).
 2. Masuk ke **Settings** > **Pages** di repository GitHub Anda.
 3. Pada **Source**, pilih `Deploy from a branch`, lalu pilih branch `main` dan folder `/(root)`.
 4. Klik **Save**. Web siap diakses di `https://01dell18-gif.github.io/web-sas-dh-n-beritaacara/`.
+5. Modul `public/assets/js/github-pages-compat.js` otomatis mengaktifkan database lokal via browser storage.
 
 ---
 
-## 🔐 Kredensial Administrator Bawaan
+## 🔐 Kredensial Bawaan Sistem
 
-- **Username**: `admin`
-- **Password**: `admin123`
-- Anda dapat menambah atau mengubah pengguna di menu **Manajemen User** (`/admin/users.html`).
+- **Administrator (Hak Akses Penuh: CRUD Siswa, Guru, Kelas, Mapel, User, Backup)**:
+  - Username: `admin`
+  - Password: `admin123`
+- **Operator (Hak Akses Terbatas: Input & Cetak Dokumen Ujian, View Siswa/Guru)**:
+  - Username: `operator`
+  - Password: `operator123`
+- Penambahan dan modifikasi akun dapat dilakukan di menu **Manajemen User** (`/admin/users.html`).
 
 ---
 
-## 📖 Dokumentasi Lengkap
+## 📖 Dokumentasi Lengkap & Arsitektur
 
-Informasi detail mengenai arsitektur, mekanisme basis data relasional, alur generator, dan teknik kompilasi PDF dapat dibaca di file:
+Dokumentasi komprehensif mengenai arsitektur sistem, cascading update relasional, mekanisme PDF generator, dan catatan pembaruan v2.11 dapat dipelajari di:
 👉 **`Teknik pembuatan.md`**
