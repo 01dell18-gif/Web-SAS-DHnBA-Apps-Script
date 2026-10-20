@@ -165,12 +165,13 @@
                                 <th style="width: 45px;">No</th>
                                 <th style="width: 110px;">NIS</th>
                                 <th>Nama Lengkap Peserta Didik</th>
-                                <th>Kelas</th>
+                                <th style="width: 120px;">Kelas</th>
+                                <th>Program / Konsentrasi Keahlian</th>
                                 <th style="text-align: center; width: 90px;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="studentsTableBody">
-                            <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Memuat data siswa...</td></tr>
+                            <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">Memuat data siswa...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -321,7 +322,9 @@ async function initSiswaPage() {
         filterSelect.innerHTML = `<option value="">Semua Kelas (${(db.students || []).length} Siswa)</option>`;
         (db.classes || []).forEach(c => {
             const count = (db.students || []).filter(s => String(s.class_id) === String(c.id)).length;
-            filterSelect.innerHTML += `<option value="${c.id}" ${String(c.id) === String(initialClassId) ? 'selected' : ''}>${c.nama_kelas} (${count} Siswa)</option>`;
+            const prog = c.program_keahlian || detectProgramKeahlian(c.nama_kelas) || '';
+            const labelProg = prog ? ` - ${prog}` : '';
+            filterSelect.innerHTML += `<option value="${c.id}" ${String(c.id) === String(initialClassId) ? 'selected' : ''}>${c.nama_kelas}${labelProg} (${count} Siswa)</option>`;
         });
         if (initialClassId) {
             filterSelect.value = initialClassId;
@@ -430,7 +433,7 @@ function renderStudentsTable() {
     if (list.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
                     <i class="bi bi-people" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.5;"></i>
                     Tidak ada data siswa yang cocok dengan filter.
                 </td>
@@ -495,6 +498,7 @@ function renderStudentsTable() {
 
     paginatedList.forEach((s, idx) => {
         const cls = (db.classes || []).find(c => String(c.id) === String(s.class_id));
+        const prog = (cls && cls.program_keahlian) ? cls.program_keahlian : (detectProgramKeahlian(cls ? cls.nama_kelas : s.kelas) || '-');
         const rowNo = studentPageSize === 'all' ? idx + 1 : startIdx + idx + 1;
         tbody.innerHTML += `
             <tr>
@@ -502,6 +506,7 @@ function renderStudentsTable() {
                 <td><code>${s.nis || '-'}</code></td>
                 <td><strong>${s.nama}</strong></td>
                 <td><span style="font-weight:600; color: var(--primary);">${cls ? cls.nama_kelas : '-'}</span></td>
+                <td><span class="badge" style="background: #F1F5F9; color: #334155; font-size: 0.8rem; font-weight: 600; padding: 4px 8px; border-radius: 4px;">${prog}</span></td>
                 <td style="text-align: center;">
                     <button class="btn btn-danger btn-sm" style="padding: 2px 7px; font-size: 0.75rem;" onclick="deleteStudent(${s.id})" title="Hapus Siswa">
                         <i class="bi bi-trash"></i>
@@ -675,29 +680,31 @@ async function confirmExecuteDeleteClass() {
 }
 
 function exportStudentsExcel() {
-    if (!db || !db.students.length) {
+    if (!db || !db.students || !db.students.length) {
         showToast('Tidak ada data siswa untuk diekspor.', 'danger');
         return;
     }
-    const filterId = document.getElementById('filterClassSelect').value;
-    const list = filterId ? db.students.filter(s => String(s.class_id) === String(filterId)) : db.students;
+    // Sertakan SEMUA data siswa dari database secara lengkap
+    const list = db.students;
 
     const rows = list.map((s, idx) => {
-        const cls = db.classes.find(c => String(c.id) === String(s.class_id));
+        const cls = (db.classes || []).find(c => String(c.id) === String(s.class_id));
         return {
             'NO': idx + 1,
             'NIS': s.nis ? String(s.nis) : '',
             'NAMA': s.nama || '',
-            'KELAS': cls ? cls.nama_kelas : ''
+            'KELAS': cls ? cls.nama_kelas : (s.kelas || ''),
+            'TINGKAT': cls ? (cls.tingkat || 'XII') : 'XII',
+            'PROGRAM_KEAHLIAN': cls ? (cls.program_keahlian || detectProgramKeahlian(cls.nama_kelas)) : (detectProgramKeahlian(s.kelas) || '')
         };
     });
 
     const ws = XLSX.utils.json_to_sheet(rows);
-    ws['!cols'] = [{ wch: 6 }, { wch: 15 }, { wch: 35 }, { wch: 20 }];
+    ws['!cols'] = [{ wch: 6 }, { wch: 15 }, { wch: 38 }, { wch: 18 }, { wch: 12 }, { wch: 45 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'DATA_SISWA');
     XLSX.writeFile(wb, 'Data_Siswa_SMKN1Klungkung.xlsx');
-    showToast('Data siswa berhasil diekspor ke Excel (.xlsx)!', 'success');
+    showToast(`Seluruh data siswa (${rows.length} siswa) berhasil diekspor ke Excel (.xlsx)!`, 'success');
 }
 
 function downloadExcelTemplate() {

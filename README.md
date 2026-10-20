@@ -70,6 +70,14 @@ Aplikasi web modern untuk pembuatan administrasi ujian sekolah otomatis yang men
 16. **Manajemen User dengan Password Eye Toggle & Referensi Guru**:
    - Kolom password pada tabel dilengkapi tombol mata untuk lihat/sembunyikan kata sandi. Form tambah/edit user terintegrasi dengan daftar dewan guru (`<datalist>`) namun tetap dapat diketik manual.
 
+17. **Kolom Program / Konsentrasi Keahlian pada Master Data Siswa & Master Kelas**:
+   - Tabel Master Siswa kini menampilkan kolom khusus **Program / Konsentrasi Keahlian** dengan badge visual yang rapi dan informatif.
+   - Dropdown filter kelas di Master Siswa menampilkan nama kelas beserta program keahliannya untuk memudahkan seleksi.
+
+18. **Ekspor Menyeluruh Seluruh Data (.xlsx) & Unduh Backup Basis Data Lengkap**:
+   - Seluruh tombol ekspor Excel (Siswa, Guru, Kelas, Mapel) mengekspor 100% seluruh rekaman data dari database tanpa terpotong batas paginasi atau filter tampilan.
+   - Fitur **Unduh Data_Siswa.xlsx** dan **Unduh Data_Guru.xlsx** pada menu **Backup & Database SQL** telah disinkronkan dengan skema basis data relasional sehingga data terunduh lengkap dengan kolom NIS, Nama, Kelas, Tingkat, Program Keahlian, NIP, Mata Pelajaran Diampu, dan Jabatan.
+
 ---
 
 ## 📁 Struktur Berkas Proyek

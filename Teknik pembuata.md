@@ -1,11 +1,15 @@
 # DOKUMENTASI TEKNIK PEMBUATAN & ARSITEKTUR SISTEM
+
 ## SISTEM GENERATOR ADMINISTRASI UJIAN (ABSENSI & BERITA ACARA)
+
 ### SMK NEGERI 1 KLUNGKUNG
 
 ---
 
 ## 1. PENDAHULUAN & LATAR BELAKANG
+
 Aplikasi ini dikembangkan untuk mendigitalkan, mempercepat, dan membakukan proses pembuatan dokumen administrasi Sumatif Akhir Semester (SAS) di **SMK Negeri 1 Klungkung**. Dokumen utama yang dihasilkan adalah:
+
 1. **Daftar Hadir Peserta Ujian** (Lengkap dengan NIS, nomor urut, status kehadiran Hadir/Sakit/Izin/Alfa, serta tanda tangan pengawas).
 2. **Berita Acara Penyelenggaraan Ujian** (Redaksi resmi terstandarisasi, rekap kehadiran otomatis tersinkron dari daftar hadir, catatan kendala, dan tanda tangan pengawas ujian).
 3. **Arsip Dokumen Ujian** (Penyimpanan terpusat dokumen hasil cetak/unduh dengan riwayat lengkap, pencarian instan, dan 5 filter seleksi detail).
@@ -13,7 +17,9 @@ Aplikasi ini dikembangkan untuk mendigitalkan, mempercepat, dan membakukan prose
 ---
 
 ## 2. ARSITEKTUR SISTEM (DUAL ENVIRONMENT)
+
 Sistem dirancang dengan arsitektur **Hybrid Zero-Dependency**:
+
 1. **Mode Server Lokal / Intranet (Node.js Zero-Dependency)**:
    - Berjalan pada runtime Node.js bawaan tanpa memerlukan `node_modules` atau package manager eksternal.
    - Menggunakan modul inti: `http`, `fs`, `path`, `url`.
@@ -38,18 +44,19 @@ graph TD
 ---
 
 ## 3. PEMISAHAN PANEL ADMINISTRATOR (MODULAR PER MENU)
+
 Panel Administrator telah dipisahkan menjadi halaman HTML penuh independen (`1 Menu = 1 Full HTML Terkoneksi`), menghilangkan potensi kegagalan JS monolitik dan memungkinkan navigasi URL standar:
 
 | Halaman | Lokasi Berkas | Deskripsi & Fungsi Utama |
-|---|---|---|
+| --- | --- | --- |
 | **Dashboard** | `public/admin/index.html` | Ringkasan statistik (menghitung Total Kelas Aktif yang memiliki siswa), status database, pintasan menu cepat. |
-| **Siswa & Kelas** | `public/admin/siswa.html` | Master siswa & kelas dinamis, auto-register kelas baru saat input manual/impor Excel, export/import Excel (.xlsx), hapus siswa, dan hapus massal. |
-| **Guru & Pengawas** | `public/admin/guru.html` | Master dewan guru & pengawas ujian, export/import Excel (.xlsx), autocomplete nama dan otomatisasi pengisian NIP, tombol **Hapus Data Guru**. |
+| **Siswa & Kelas** | `public/admin/siswa.html` | Master siswa & kelas dinamis, kolom Program Keahlian, auto-register kelas baru saat input manual/impor Excel, export seluruh data siswa (.xlsx), paginasi limit data (20-500, semua), hapus siswa, dan hapus massal. |
+| **Guru & Pengawas** | `public/admin/guru.html` | Master dewan guru & pengawas ujian, export seluruh data guru (.xlsx), paginasi limit data, autocomplete nama dan otomatisasi pengisian NIP, tombol **Hapus Data Guru**. |
 | **Template Ujian** | `public/admin/template.html` | Redaksi HTML berita acara, variabel dinamis (`[semester]`, `[tahun_ajaran]`, `[tanggal]`, dll.), riwayat template, pratinjau live. |
-| **Arsip Dokumen** | `public/admin/arsip.html` | Manajemen berkas ujian tersimpan dengan 5 filter seleksi detail, tinjau ulang berkas, unduh PDF, dan hapus berkas. |
-| **Pengaturan Sekolah, Kelas & Kop** | `public/admin/pengaturan.html` | Identitas sekolah, upload & update **Logo Sekolah** resmi, upload/reset kop surat resmi, **Master Daftar Kelas** (dengan Export/Import Excel), **Master Daftar Mata Pelajaran** (dengan Export/Import Excel), dan Master Tahun Ajaran. |
-| **Manajemen User** | `public/admin/users.html` | Kelola akun administrator & operator ujian, pengaturan kata sandi dengan toggle mata, proteksi akun utama. |
-| **Database & Backup** | `public/admin/database.html` | Unduh langsung `database.sql`, `db.json`, `Data_Siswa.xlsx`, `Data_Guru.xlsx`, dan metrik kapasitas basis data. |
+| **Arsip Dokumen** | `public/admin/arsip.html` | Manajemen berkas ujian tersimpan dengan filter horizontal mendatar ke samping (5 filter seleksi detail), tinjau ulang berkas, unduh PDF, dan hapus berkas. |
+| **Pengaturan Sekolah, Kelas & Kop** | `public/admin/pengaturan.html` | Identitas sekolah, upload & update **Logo Sekolah** resmi, upload/reset kop surat resmi, **Master Daftar Kelas** (dengan Export/Import Excel & cascade update ke siswa), **Master Daftar Mata Pelajaran** (dengan Export/Import Excel), dan Master Tahun Ajaran. |
+| **Manajemen User** | `public/admin/users.html` | Kelola akun administrator & operator ujian, kolom password dengan toggle mata, input nama terintegrasi autocomplete Master Guru, proteksi akun utama. |
+| **Database & Backup** | `public/admin/database.html` | Unduh langsung `database.sql`, `db.json`, `Data_Siswa.xlsx` (lengkap nama, kelas, tingkat, program keahlian), `Data_Guru.xlsx` (lengkap NIP, nama, mapel, jabatan), dan metrik kapasitas basis data. |
 | **Login Administrator** | `public/admin/login.html` | Halaman login dengan tombol toggle mata pada kolom password, proteksi sesi (`sas_admin_auth`), dan multi-user authentication. |
 
 ---
@@ -70,16 +77,16 @@ web-sas-dh-n-beritaacara/
     ├── index.html               # Beranda publik SMK Negeri 1 Klungkung
     ├── absensi.html             # Generator Daftar Hadir Ujian
     ├── berita-acara.html        # Generator Berita Acara Ujian
-    ├── arsip.html               # Arsip Dokumen Publik (5 Filter Detail)
+    ├── arsip.html               # Arsip Dokumen Publik (Filter Horizontal Mendatar)
     ├── admin/                   # Modul Panel Administrator Terpisah
     │   ├── index.html           # Dashboard Admin (Total Kelas Aktif Berbasis Siswa)
-    │   ├── siswa.html           # Master Siswa & Kelas (Auto-Register Kelas)
-    │   ├── guru.html            # Master Guru & Pengawas (Tombol Hapus Data Guru)
+    │   ├── siswa.html           # Master Siswa & Kelas (Kolom Program Keahlian, Paginasi, Export Lengkap)
+    │   ├── guru.html            # Master Guru & Pengawas (Paginasi, Export Lengkap, Hapus Data Guru)
     │   ├── template.html        # Template Ujian & Redaksi
-    │   ├── arsip.html           # Arsip Dokumen Admin
+    │   ├── arsip.html           # Arsip Dokumen Admin (Filter Horizontal Mendatar)
     │   ├── pengaturan.html      # Pengaturan Sekolah, Logo, Kop, Kelas & Mapel (Export/Import .xlsx)
-    │   ├── users.html           # Manajemen Akun User & Hak Akses
-    │   ├── database.html        # Backup & Ekspor Basis Data
+    │   ├── users.html           # Manajemen Akun User (Password Eye Toggle & Master Guru Datalist)
+    │   ├── database.html        # Backup & Ekspor Basis Data (Download Lengkap Siswa & Guru)
     │   └── login.html           # Login Admin (Password Eye Toggle)
     └── assets/
         ├── css/
@@ -102,8 +109,10 @@ web-sas-dh-n-beritaacara/
 ---
 
 ## 5. MEKANISME BASIS DATA & SINKRONISASI OTOMATIS
+
 1. **JSON Primary Source of Truth (`data/db.json`)**:
    - Seluruh mutasi data (penambahan siswa, perubahan guru, update template, penggantian logo/kop, penambahan user, master kelas, dan penyimpanan arsip) diperbarui secara instan pada file `data/db.json`.
+
 2. **Realtime SQL Synchronizer (`syncSqlFile`)**:
    - Fungsi `syncSqlFile(db)` di dalam `server.js` merekonstruksi seluruh skema relasional tabel MySQL/MariaDB:
      - `classes`
@@ -113,41 +122,42 @@ web-sas-dh-n-beritaacara/
      - `settings`
      - `users`
      - `exam_archives`
-   - Setiap kali terjadi perubahan pada REST API (POST `/api/save-db`, POST `/api/save-user`, POST `/api/save-archive`, POST `/api/upload-logo`, dll.), file `database.sql` ditulis ulang secara otomatis.
+   - Setiap kali terjadi perubahan pada REST API (POST `/api/save-db`, POST `/api/save-user`, POST `/api/save-archive`, POST `/api/upload-logo`, dll.), file `database.sql` dan `public/database.sql` ditulis ulang secara otomatis.
 
 ---
 
-## 6. MEKANISME TOTAL KELAS AKTIF & REGISTRASI KELAS DINAMIS
-1. **Total Kelas Aktif Realtime**:
-   - Pada Dashboard (`/admin/index.html`) dan Backup (`/admin/database.html`), metrik "Total Kelas Aktif" dihitung dari kelas yang memiliki siswa terdaftar:
-     ```javascript
-     const activeClassIds = new Set((db.students || []).map(s => String(s.class_id)));
-     const activeClasses = (db.classes || []).filter(c => activeClassIds.has(String(c.id)));
-     ```
-   - Ketika seluruh data siswa dikosongkan, Total Kelas Aktif otomatis bernilai **0**.
-2. **Auto-Register Kelas Baru Saat Penginputan Siswa**:
-   - Saat input manual di modal "Tambah Siswa Baru", pengguna dapat mengetik nama kelas baru (contoh: `XII DKV`) dan kelas tersebut otomatis terdaftar ke dalam tabel master kelas (`classes`).
+## 6. SINKRONISASI MASTER KELAS, SISWA & PENGAWAS
+
+1. **Total Kelas Aktif Berbasis Siswa**:
+   - Pada Dashboard, indikator Total Kelas Aktif hanya menghitung kelas yang memiliki siswa terdaftar.
+2. **Auto-Register Kelas Baru**:
+   - Saat input manual siswa baru, jika kelas yang diketik belum ada di database, sistem mendaftarkan kelas tersebut secara otomatis dengan Program Keahlian yang terdeteksi cerdas.
    - Saat import Excel (.xlsx) data siswa, kolom `KELAS` dibaca dan seluruh kelas baru yang belum ada di database otomatis didaftarkan ke tabel `classes`.
 3. **Master Daftar Kelas di Pengaturan**:
-   - Pada menu **Pengaturan Sekolah & Kop**, administrator dapat mengelola kelas secara mandiri:
+   - Administrator dapat mengelola kelas secara mandiri:
      - Tambah kelas manual (Nama Kelas, Tingkat, Program Keahlian).
      - **Export (.xlsx)** Master Kelas.
      - **Import (.xlsx)** Master Kelas dengan template standar.
+     - **Cascade Update Relasional**: Edit nama kelas otomatis menyelaraskan seluruh data siswa dan arsip yang berelasi.
 
 ---
 
-## 7. FITUR EXPORT & IMPORT EXCEL (.XLSX)
+## 7. FITUR EXPORT & IMPORT EXCEL (.XLSX) MENYELURUH
+
 Tersedia export dan import lembar kerja Microsoft Excel di seluruh modul utama:
-1. **Master Siswa**: Export & Import via SheetJS (`/admin/siswa.html`).
-2. **Master Guru & Pengawas**: Export & Import via SheetJS (`/admin/guru.html`).
-3. **Master Daftar Kelas**: Export & Import via SheetJS (`/admin/pengaturan.html`).
-4. **Master Mata Pelajaran Resmi**: Export & Import via SheetJS (`/admin/pengaturan.html`).
+
+1. **Master Siswa**: Export seluruh data siswa dari database dengan kolom `NO`, `NIS`, `NAMA`, `KELAS`, `TINGKAT`, dan `PROGRAM_KEAHLIAN` (`/admin/siswa.html`).
+2. **Master Guru & Pengawas**: Export seluruh data guru dari database dengan kolom `NO`, `NIP`, `NAMA`, `MAPEL`, dan `JABATAN` (`/admin/guru.html`).
+3. **Master Daftar Kelas**: Export seluruh data kelas dengan kolom `NO`, `NAMA_KELAS`, `TINGKAT`, `PROGRAM_KEAHLIAN`, dan `JUMLAH_SISWA` (`/admin/pengaturan.html`).
+4. **Master Mata Pelajaran Resmi**: Export seluruh daftar mata pelajaran dengan kolom `NO` dan `MATA_PELAJARAN` (`/admin/pengaturan.html`).
+5. **Menu Backup & Database SQL**: Unduh `Data_Siswa.xlsx` dan `Data_Guru.xlsx` lengkap dan akurat 100% sesuai skema relasional database.
 
 ---
 
 ## 8. ANALISIS AUDIT KESELURUHAN & PENYELESAIAN MASALAH (BUG FIXES)
 
 ### A. Masalah: Data Siswa Tidak Muncul Saat Klik "Lihat Siswa" dari Dashboard
+
 - **Gejala Masalah**:
   Setelah data siswa diimpor/diunggah dan terhitung di Dashboard, saat pengguna mengklik tombol **"Lihat Siswa"** pada kelas tertentu (`/admin/siswa.html?class_id=X`), tabel siswa tetap kosong atau macet pada tulisan *"Memuat data siswa..."*.
 - **Akar Masalah (Root Cause)**:
@@ -160,34 +170,41 @@ Tersedia export dan import lembar kerja Microsoft Excel di seluruh modul utama:
   4. Menyelaraskan seluruh badge penghitung dan tabel pratinjau sehingga ketika tautan *"Lihat Siswa"* diklik, kelas terpilih langsung aktif dan seluruh siswa kelas tersebut langsung dirender dengan jumlah yang presisi.
 
 ### B. Interaktivitas Kartu Metrik Dashboard
-- Kartu statistik metrik di Dashboard Admin (`public/admin/index.html`) kini berupa elemen interaktif (`<a>`) yang dapat diklik langsung:
-  - *Total Kelas Aktif* ➔ Menuju ke Master Siswa & Kelas (`/admin/siswa.html`).
-  - *Total Siswa Terdaftar* ➔ Menuju ke Master Data Siswa (`/admin/siswa.html`).
-  - *Guru & Pengawas* ➔ Menuju ke Master Data Guru & Pengawas (`/admin/guru.html`).
-  - *Template Ujian* ➔ Menuju ke Kelola Template & Redaksi Berita Acara (`/admin/template.html`).
-  - *Dokumen Diarsipkan* ➔ Menuju ke Arsip Dokumen Ujian (`/admin/arsip.html`).
-  - *User Administrator* ➔ Menuju ke Manajemen User (`/admin/users.html`).
+
+Kartu statistik metrik di Dashboard Admin (`public/admin/index.html`) berupa elemen interaktif (`<a>`) yang dapat diklik langsung:
+
+- *Total Kelas Aktif* ➔ Menuju ke Master Siswa & Kelas (`/admin/siswa.html`).
+- *Total Siswa Terdaftar* ➔ Menuju ke Master Data Siswa (`/admin/siswa.html`).
+- *Guru & Pengawas* ➔ Menuju ke Master Data Guru & Pengawas (`/admin/guru.html`).
+- *Template Ujian* ➔ Menuju ke Kelola Template & Redaksi Berita Acara (`/admin/template.html`).
+- *Dokumen Diarsipkan* ➔ Menuju ke Arsip Dokumen Ujian (`/admin/arsip.html`).
+- *User Administrator* ➔ Menuju ke Manajemen User (`/admin/users.html`).
 
 ### C. Konsistensi Bahasa & Alur Antar Menu
-- Seluruh istilah telah diseragamkan dengan standar tata kelola ujian resmi Indonesia:
-  - Satuan pendidikan: **SMK NEGERI 1 KLUNGKUNG**.
-  - Waktu pelaksanaan: Menggunakan zona waktu **WITA** (Waktu Indonesia Tengah).
-  - Tanda tangan pengawas: Bersih tanpa kurung `()` dan tanpa garis bawah (*underline*).
-  - Sinkronisasi Berita Acara & Daftar Hadir: Rekap peserta otomatis terisi berdasarkan Tanggal Ujian dan Mata Pelajaran yang cocok dari Daftar Hadir.
-  - Dropdown kelas pada formulir publik (`absensi.html` & `berita-acara.html`): Jika basis data kelas masih kosong, sistem secara elegan menampilkan opsi *"-- Belum Ada Kelas Terdaftar --"* dan tidak mengalami macet/loading tanpa henti.
+
+Seluruh istilah telah diseragamkan dengan standar tata kelola ujian resmi Indonesia:
+
+- Satuan pendidikan: **SMK NEGERI 1 KLUNGKUNG**.
+- Waktu pelaksanaan: Menggunakan zona waktu **WITA** (Waktu Indonesia Tengah).
+- Tanda tangan pengawas: Bersih tanpa kurung `()` dan tanpa garis bawah (*underline*).
+- Sinkronisasi Berita Acara & Daftar Hadir: Rekap peserta otomatis terisi berdasarkan Tanggal Ujian dan Mata Pelajaran yang cocok dari Daftar Hadir.
+- Dropdown kelas pada formulir publik (`absensi.html` & `berita-acara.html`): Jika basis data kelas masih kosong, sistem secara elegan menampilkan opsi *"-- Belum Ada Kelas Terdaftar --"* dan tidak mengalami macet/loading tanpa henti.
 
 ---
 
 ## 9. PANDUAN PENGGUNAAN & RUNNING LOKAL
 
-### Menjalankan dengan Node.js Lokal:
+### Menjalankan dengan Node.js Lokal
+
 ```bash
 # Jalankan server lokal
 node server.js
 ```
+
 Buka browser pada alamat: `http://localhost:3000`
 
-### Menjalankan di GitHub Pages:
+### Menjalankan di GitHub Pages
+
 1. Pastikan kode ter-upload di repository GitHub (`https://github.com/01dell18-gif/web-sas-dh-n-beritaacara`).
 2. Masuk ke tab **Settings** > **Pages** di repository GitHub Anda.
 3. Pada bagian **Build and deployment**, pilih:
@@ -199,14 +216,31 @@ Buka browser pada alamat: `http://localhost:3000`
 
 ---
 
-## 10. PEMBARUAN FITUR & OPTIMASI TERBARU (UPDATE v2.6)
+## 10. PEMBARUAN FITUR & OPTIMASI TERBARU (UPDATE v2.7)
 
-### 1. Filter Horizontal Mendatar ke Samping pada Arsip Dokumen
-- Tata letak filter detail dokumen di halaman publik (`public/arsip.html`) dan admin (`public/admin/arsip.html`) telah dirombak dari tata letak grid menurun menjadi **deretan mendatar ke samping (horizontal)**.
-- Menggunakan arsitektur CSS `display: flex; gap: 10px; align-items: flex-end; flex-wrap: nowrap; overflow-x: auto;` sehingga seluruh dropdown (Tahun Ajaran, Semester, Tanggal Ujian, Kelas, Mata Pelajaran, dan tombol Reset) berada rapi dalam satu baris horizontal tanpa memotong ruang kerja dokumen.
+### 1. Tampilan Program / Konsentrasi Keahlian di Master Data Siswa & Master Kelas
+- Pada halaman **Master Data Siswa & Master Kelas** (`public/admin/siswa.html`), kolom **Program / Konsentrasi Keahlian** kini ditampilkan secara langsung dalam tabel data siswa dengan badge yang elegan.
+- Opsi pilihan kelas pada filter dropdown juga menyertakan nama Program Keahlian resmi dari kelas terkait.
 
-### 2. Standarisasi Program / Konsentrasi Keahlian SMK N 1 Klungkung
-- Menggantikan label fallback generic "Umum" dengan konsentrasi keahlian resmi SMK Negeri 1 Klungkung:
+### 2. Ekspor Menyeluruh (Export All Records) pada Semua Tombol Export
+- Seluruh tombol export (.xlsx) pada:
+  - Master Siswa (`/admin/siswa.html`)
+  - Master Guru & Pengawas (`/admin/guru.html`)
+  - Master Kelas (`/admin/pengaturan.html`)
+  - Master Mata Pelajaran (`/admin/pengaturan.html`)
+  - Menu Backup Database (`/admin/database.html`)
+- Kini secara konsisten mengekspor **seluruh data yang ada di database**, terlepas dari halaman aktif paginasi atau filter seleksi sementara, sehingga berkas unduhan selalu utuh dan lengkap.
+
+### 3. Perbaikan Unduh Data_Siswa.xlsx dan Data_Guru.xlsx di Menu Backup Database
+- Pada menu **Backup & Database SQL** (`public/admin/database.html`):
+  - Tombol **Unduh Data_Siswa.xlsx** telah diperbaiki dari properti lama yang tidak sesuai menjadi referensi relasional database yang presisi: `NIS`, `Nama Lengkap Peserta Didik`, `Kelas`, `Tingkat`, dan `Program / Konsentrasi Keahlian`.
+  - Tombol **Unduh Data_Guru.xlsx** kini mengekspor seluruh data guru dan pengawas lengkap dengan: `NIP`, `Nama Lengkap & Gelar`, `Mata Pelajaran Diampu`, dan `Jabatan / Peran`.
+
+### 4. Filter Horizontal Mendatar ke Samping pada Arsip Dokumen
+- Tata letak filter detail dokumen di halaman publik (`public/arsip.html`) dan admin (`public/admin/arsip.html`) disusun **mendatar ke samping (horizontal)** dengan `overflow-x: auto`, menghemat ruang vertikal dan mempermudah pemilihan filter.
+
+### 5. Standarisasi Program / Konsentrasi Keahlian SMK N 1 Klungkung
+- Menggantikan label generic "Umum" dengan konsentrasi keahlian resmi SMK Negeri 1 Klungkung:
   - **XII TKJ**: Teknik Komputer dan Jaringan
   - **XII DKV**: Desain Komunikasi Visual
   - **XII LPKKK 1 & 2**: Layanan Penunjang Kefarmasian Klinis dan Komunitas
@@ -215,23 +249,13 @@ Buka browser pada alamat: `http://localhost:3000`
   - **XII LPB**: Layanan Perbankan
   - **XII AK**: Akuntansi dan Keuangan Lembaga
   - **XII TSM**: Teknik Sepeda Motor
-- Dilengkapi fungsi deteksi otomatis cerdas `detectProgramKeahlian(className)` saat input siswa manual maupun saat import file Excel, serta autocomplete `<datalist>` pada form modal edit kelas.
+- Dilengkapi fungsi deteksi otomatis cerdas `detectProgramKeahlian(className)` saat input siswa manual maupun saat import file Excel.
 
-### 3. Penyelarasan Berantai Relasi Kelas (Cascade Update Relasional)
-- Pada menu **Master Daftar Kelas Resmi** (`public/admin/pengaturan.html`), ketika administrator mengedit atau memperbarui data kelas (Nama Kelas, Tingkat, Program Keahlian):
-  - Sistem secara otomatis menelusuri seluruh data siswa (`db.students`) yang berelasi dengan kelas tersebut (`class_id` maupun nama kelas sebelumnya).
-  - Nama kelas dan relasi ID pada data siswa diperbarui secara realtime dan otomatis disinkronkan ke `data/db.json` serta `database.sql`.
-  - Berkas arsip dokumen yang mencantumkan nama kelas lama juga otomatis diperbarui sehingga tidak terjadi diskoneksi atau rekaman siswa yatim (*orphan records*).
+### 6. Penyelarasan Berantai Relasi Kelas (Cascade Update Relasional)
+- Pada menu **Master Daftar Kelas Resmi** (`public/admin/pengaturan.html`), ketika administrator mengedit atau memperbarui data kelas (Nama Kelas, Tingkat, Program Keahlian), seluruh data siswa (`db.students`) dan arsip yang berelasi otomatis diselaraskan secara realtime ke `data/db.json` serta `database.sql`.
 
-### 4. Paginasi Fleksibel & Limit Baris Data (Master Siswa & Guru)
-- Pada menu **Master Data Siswa & Master Kelas** (`public/admin/siswa.html`) dan **Master Data Guru & Pengawas** (`public/admin/guru.html`):
-  - Disediakan pemilih jumlah data per halaman: **20, 40, 50, 100, 200, 400, 500 data**, dan opsi **Semua data**.
-  - Dilengkapi tombol navigasi **Sebelumnya**, tombol nomor halaman dinamis (maksimal 5 halaman terdekat dengan status aktif), dan tombol **Setelahnya**.
-  - Penomoran baris tabel (`No`) berkesinambungan secara matematis berdasarkan `(currentPage - 1) * pageSize + idx + 1`.
+### 7. Paginasi Fleksibel & Limit Baris Data
+- Pada Master Siswa dan Master Guru, disediakan pemilih limit data: **20, 40, 50, 100, 200, 400, 500 data**, dan **Semua data**, lengkap dengan tombol Sebelumnya/Setelahnya dan penomoran urut berkesinambungan.
 
-### 5. Manajemen User: Integrasi Master Guru & Toggle Password Mata
-- Pada menu **Manajemen User & Hak Akses** (`public/admin/users.html`):
-  - Ditambahkan kolom **Password** pada tabel daftar pengguna dengan penyamaran teks titik (`••••••••`) dan tombol toggle mata (`bi-eye` / `bi-eye-slash`) untuk menampilkan atau menyembunyikan kata sandi secara instan.
-  - Pada formulir modal (Tambah / Edit User), kolom **Nama Lengkap Pengguna** kini terhubung dengan `<datalist id="userGuruDatalist">` yang mengambil referensi dari Master Data Guru, namun tetap dapat diketik manual secara bebas sesuai kebutuhan.
-  - Pada mode Edit User, kolom kata sandi otomatis menampilkan kata sandi pengguna saat ini dan dapat ditinjau dengan tombol mata atau langsung diubah dengan aman.
-
+### 8. Manajemen User: Integrasi Master Guru & Toggle Password Mata
+- Pada menu **Manajemen User & Hak Akses** (`public/admin/users.html`), tabel pengguna memiliki kolom Password dengan tombol toggle mata (`bi-eye`), dan input Nama Lengkap Pengguna terintegrasi dengan Master Data Guru via `<datalist>`.

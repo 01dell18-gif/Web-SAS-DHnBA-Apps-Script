@@ -231,6 +231,19 @@ function renderMetrics() {
     document.getElementById('statUsers').textContent = (db.users || []).length;
 }
 
+function detectProgramKeahlian(className) {
+    const upper = (className || '').toUpperCase();
+    if (upper.includes('TKJ')) return 'Teknik Komputer dan Jaringan';
+    if (upper.includes('DKV')) return 'Desain Komunikasi Visual';
+    if (upper.includes('LPKKK') || upper.includes('FARMASI')) return 'Layanan Penunjang Kefarmasian Klinis dan Komunitas';
+    if (upper.includes('LPB') || upper.includes('PERBANKAN')) return 'Layanan Perbankan';
+    if (upper.includes('BD') || upper.includes('BISNIS DIGITAL')) return 'Bisnis Digital';
+    if (upper.includes('MP') || upper.includes('PERKANTORAN')) return 'Manajemen Perkantoran dan Layanan Bisnis';
+    if (upper.includes('AK') || upper.includes('AKUNTANSI')) return 'Akuntansi dan Keuangan Lembaga';
+    if (upper.includes('TSM') || upper.includes('OTOMOTIF')) return 'Teknik Sepeda Motor';
+    return '-';
+}
+
 function exportStudentsExcel() {
     if (!db || !db.students || db.students.length === 0) {
         showToast('Tidak ada data siswa untuk diekspor.', 'info');
@@ -238,22 +251,26 @@ function exportStudentsExcel() {
     }
 
     const data = db.students.map((s, idx) => {
-        const cls = (db.classes || []).find(c => c.id === s.class_id);
+        const cls = (db.classes || []).find(c => String(c.id) === String(s.class_id));
+        const className = cls ? cls.nama_kelas : (s.kelas || '-');
+        const tingkat = cls ? (cls.tingkat || 'XII') : 'XII';
+        const programKeahlian = cls ? (cls.program_keahlian || detectProgramKeahlian(cls.nama_kelas)) : (detectProgramKeahlian(s.kelas) || '-');
         return {
             'No': idx + 1,
-            'NIS': s.nis,
-            'Nama Lengkap': s.nama,
-            'Kelas': cls ? cls.name : s.class_id,
-            'Tingkat': cls ? cls.grade : '-',
-            'Program Keahlian': cls ? cls.major : '-'
+            'NIS': s.nis ? String(s.nis) : '',
+            'Nama Lengkap Peserta Didik': s.nama || '',
+            'Kelas': className,
+            'Tingkat': tingkat,
+            'Program / Konsentrasi Keahlian': programKeahlian
         };
     });
 
     const ws = XLSX.utils.json_to_sheet(data);
+    ws['!cols'] = [{ wch: 6 }, { wch: 15 }, { wch: 38 }, { wch: 18 }, { wch: 12 }, { wch: 45 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Master_Siswa");
     XLSX.writeFile(wb, "Data_Siswa_SMKN1_Klungkung.xlsx");
-    showToast('Berkas Excel Siswa berhasil diekspor!', 'success');
+    showToast(`Seluruh data siswa (${data.length} siswa) berhasil diunduh sesuai database!`, 'success');
 }
 
 function exportTeachersExcel() {
@@ -262,17 +279,20 @@ function exportTeachersExcel() {
         return;
     }
 
-    const data = db.teachers.map((t, idx) => ({
+    const data = (db.teachers || []).map((t, idx) => ({
         'No': idx + 1,
-        'NIP': t.nip || '-',
-        'Nama Lengkap & Gelar': t.nama
+        'NIP': t.nip ? String(t.nip) : '-',
+        'Nama Lengkap & Gelar': t.nama || '',
+        'Mata Pelajaran Diampu': t.mapel || t.mata_pelajaran || '-',
+        'Jabatan / Peran': t.jabatan || 'Guru Mata Pelajaran'
     }));
 
     const ws = XLSX.utils.json_to_sheet(data);
+    ws['!cols'] = [{ wch: 6 }, { wch: 24 }, { wch: 35 }, { wch: 30 }, { wch: 25 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Master_Guru");
     XLSX.writeFile(wb, "Data_Guru_SMKN1_Klungkung.xlsx");
-    showToast('Berkas Excel Guru berhasil diekspor!', 'success');
+    showToast(`Seluruh data guru & pengawas (${data.length} guru) berhasil diunduh sesuai database!`, 'success');
 }
 
 function downloadJsonDb() {

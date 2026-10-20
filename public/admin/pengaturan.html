@@ -760,19 +760,23 @@ function exportClassesExcel() {
         return;
     }
 
-    const rows = classes.map((c, idx) => ({
-        'NO': idx + 1,
-        'NAMA_KELAS': c.nama_kelas,
-        'TINGKAT': c.tingkat || 'XII',
-        'PROGRAM_KEAHLIAN': c.program_keahlian || ''
-    }));
+    const rows = classes.map((c, idx) => {
+        const count = (db.students || []).filter(s => String(s.class_id) === String(c.id)).length;
+        return {
+            'NO': idx + 1,
+            'NAMA_KELAS': c.nama_kelas,
+            'TINGKAT': c.tingkat || 'XII',
+            'PROGRAM_KEAHLIAN': c.program_keahlian || '',
+            'JUMLAH_SISWA': count
+        };
+    });
 
     const ws = XLSX.utils.json_to_sheet(rows);
-    ws['!cols'] = [{ wch: 6 }, { wch: 18 }, { wch: 12 }, { wch: 35 }];
+    ws['!cols'] = [{ wch: 6 }, { wch: 18 }, { wch: 12 }, { wch: 45 }, { wch: 16 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Master_Kelas");
     XLSX.writeFile(wb, "Master_Daftar_Kelas_SMKN1Klungkung.xlsx");
-    showToast('Berkas Excel Master Kelas berhasil diunduh!', 'success');
+    showToast(`Seluruh data kelas (${rows.length} kelas) berhasil diekspor ke Excel (.xlsx)!`, 'success');
 }
 
 function downloadClassesExcelTemplate() {
@@ -912,7 +916,7 @@ function exportSubjectsExcel() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Master_Mapel");
     XLSX.writeFile(wb, "Master_Mata_Pelajaran_SMKN1Klungkung.xlsx");
-    showToast('Berkas Excel Mata Pelajaran berhasil diunduh!', 'success');
+    showToast(`Seluruh data mata pelajaran (${rows.length} mapel) berhasil diekspor ke Excel (.xlsx)!`, 'success');
 }
 
 function downloadSubjectsExcelTemplate() {
