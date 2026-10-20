@@ -57,21 +57,16 @@
                     </div>
                     <div class="card-body">
                         <div class="form-group">
-                            <label class="form-label" for="selectTemplate">Pilih Template Ujian</label>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                                <label class="form-label" for="selectTemplate" style="margin: 0;">Pilih Template Ujian</label>
+                                <a href="/admin/template.html" target="_blank" style="font-size: 0.78rem; color: var(--primary); font-weight: 600; text-decoration: none;" title="Buka Editor Master Template Ujian di Panel Admin">
+                                    <i class="bi bi-pencil-square"></i> Edit / Kelola Template di Admin
+                                </a>
+                            </div>
                             <select id="selectTemplate" class="form-select" onchange="applyExamTemplate(this.value)">
-                                <option value="1" 
-                                        data-nama="Sumatif Akhir Semester (SAS) Ganjil" 
-                                        data-tahun="2026/2027"
-                                        data-semester="Ganjil">
-                                    Sumatif Akhir Semester (SAS) Ganjil (2026/2027)
-                                </option>
-                                <option value="2" 
-                                        data-nama="Sumatif Akhir Semester (SAS) Genap" 
-                                        data-tahun="2026/2027"
-                                        data-semester="Genap">
-                                    Sumatif Akhir Semester (SAS) Genap (2026/2027)
-                                </option>
+                                <option value="" disabled selected>Memuat daftar template ujian...</option>
                             </select>
+                            <div class="form-hint">Template ujian dikelola melalui Panel Admin (Menu: <em>Template Ujian</em>).</div>
                         </div>
                         
                         <div class="form-group">
@@ -430,18 +425,8 @@
 })();
 
 function applyExamTemplate(tplId) {
-    const select = document.getElementById('selectTemplate');
-    const opt = select.options[select.selectedIndex];
-    if (opt) {
-        document.getElementById('nama_ujian').value = opt.getAttribute('data-nama');
-        document.getElementById('tahun_ajaran').value = opt.getAttribute('data-tahun');
-        const sem = opt.getAttribute('data-semester');
-        if (sem && document.getElementById('semester')) {
-            document.getElementById('semester').value = sem;
-            document.getElementById('semester').dispatchEvent(new Event('change'));
-        }
-        document.getElementById('nama_ujian').dispatchEvent(new Event('input'));
-        document.getElementById('tahun_ajaran').dispatchEvent(new Event('input'));
+    if (typeof window.applyExamTemplate === 'function') {
+        window.applyExamTemplate(tplId);
     }
 }
 

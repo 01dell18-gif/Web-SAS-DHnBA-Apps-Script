@@ -241,6 +241,59 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(() => {});
     }
 
+    function initDynamicTemplates() {
+        fetch('/api/templates?t=' + Date.now())
+            .then(res => res.json())
+            .then(tpls => {
+                if (Array.isArray(tpls) && tpls.length) {
+                    window.EXAM_TEMPLATES = tpls;
+                    const select = document.getElementById('selectTemplate');
+                    if (select) {
+                        const curVal = select.value;
+                        select.innerHTML = '';
+                        tpls.forEach(t => {
+                            const opt = document.createElement('option');
+                            opt.value = t.id;
+                            opt.setAttribute('data-nama', t.nama_ujian || '');
+                            opt.setAttribute('data-tahun', t.tahun_ajaran || '');
+                            opt.setAttribute('data-semester', t.semester || 'Ganjil');
+                            opt.textContent = `${t.nama_ujian} (${t.tahun_ajaran || ''}) - ${t.semester || 'Ganjil'}`;
+                            select.appendChild(opt);
+                        });
+                        if (curVal && tpls.some(t => String(t.id) === String(curVal))) {
+                            select.value = curVal;
+                        } else {
+                            select.value = tpls[0].id;
+                        }
+                    }
+                }
+            })
+            .catch(() => {});
+    }
+
+    window.applyExamTemplate = function(tplId) {
+        const templates = window.EXAM_TEMPLATES || [];
+        const tpl = templates.find(t => String(t.id) === String(tplId)) || templates[0];
+        if (tpl) {
+            const elNamaUjian = document.getElementById('nama_ujian');
+            const elTahun = document.getElementById('tahun_ajaran');
+            const elSemester = document.getElementById('semester');
+            if (elNamaUjian) {
+                elNamaUjian.value = tpl.nama_ujian || '';
+                elNamaUjian.dispatchEvent(new Event('input'));
+            }
+            if (elTahun) {
+                elTahun.value = tpl.tahun_ajaran || '';
+                elTahun.dispatchEvent(new Event('input'));
+            }
+            if (elSemester && tpl.semester) {
+                elSemester.value = tpl.semester;
+                elSemester.dispatchEvent(new Event('change'));
+            }
+            updateLivePreview();
+        }
+    };
+
     if (classSelect) {
         classSelect.addEventListener('change', function() {
             loadStudentsForClass(this.value);
@@ -250,6 +303,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initDynamicClasses();
     initDynamicTeachers();
     initDynamicSettings();
+    initDynamicTemplates();
     setupProctorAutocomplete('nama_pengawas_1', 'nip_pengawas_1');
     setupProctorAutocomplete('nama_pengawas_2', 'nip_pengawas_2');
 
