@@ -39,22 +39,96 @@ window.downloadA4AsPdf = async function(wrapperId, filename = 'Dokumen.pdf') {
 
     // Jika html2pdf tersedia
     if (typeof html2pdf !== 'undefined') {
+        const toast = showToast('Sedang menyiapkan berkas PDF...', 'info');
+
+        // Buat salinan DOM terisolasi agar ukuran pas A4 dan tidak memotong tabel
+        const exportDiv = document.createElement('div');
+        exportDiv.style.position = 'fixed';
+        exportDiv.style.left = '-9999px';
+        exportDiv.style.top = '0';
+        exportDiv.style.width = '190mm'; // 210mm - 20mm total margin
+        exportDiv.style.background = '#ffffff';
+        exportDiv.style.color = '#000000';
+        exportDiv.style.fontFamily = "'Times New Roman', Times, serif";
+        exportDiv.style.boxSizing = 'border-box';
+        exportDiv.innerHTML = wrapper.innerHTML;
+
+        // Bersihkan style preview layar yang membatasi ukuran kertas
+        exportDiv.querySelectorAll('.a4-page').forEach(page => {
+            page.removeAttribute('style');
+            page.style.width = '100%';
+            page.style.minHeight = 'auto';
+            page.style.padding = '0';
+            page.style.margin = '0';
+            page.style.boxShadow = 'none';
+            page.style.border = 'none';
+            page.style.background = '#ffffff';
+            page.style.boxSizing = 'border-box';
+        });
+
+        // Sembunyikan pemisah halaman visual layar
+        exportDiv.querySelectorAll('#pvPageSeparator').forEach(el => el.remove());
+
+        // Pastikan Halaman 2 (Lampiran Foto Berita Acara) pecah halaman rapi
+        const page2 = exportDiv.querySelector('#a4Page2');
+        if (page2) {
+            page2.style.pageBreakBefore = 'always';
+            page2.style.breakBefore = 'page';
+            page2.style.marginTop = '10mm';
+        }
+
+        // Pastikan tabel tidak memotong baris dan tidak melompat ke halaman 2
+        exportDiv.querySelectorAll('table.attendance-table').forEach(tbl => {
+            tbl.style.width = '100%';
+            tbl.style.borderCollapse = 'collapse';
+            tbl.style.pageBreakInside = 'auto';
+        });
+        exportDiv.querySelectorAll('table.attendance-table tr').forEach(tr => {
+            tr.style.pageBreakInside = 'avoid';
+            tr.style.breakInside = 'avoid';
+        });
+
+        // Pastikan kotak rekapitulasi dan tanda tangan tidak terbelah
+        exportDiv.querySelectorAll('.rekap-box').forEach(box => {
+            box.style.pageBreakInside = 'avoid';
+            box.style.breakInside = 'avoid';
+            box.style.marginTop = '14px';
+        });
+        exportDiv.querySelectorAll('.signature-section').forEach(sig => {
+            sig.style.pageBreakInside = 'avoid';
+            sig.style.breakInside = 'avoid';
+            sig.style.marginTop = '18px';
+        });
+
+        document.body.appendChild(exportDiv);
+
         const opt = {
-            margin: 0,
+            margin: [10, 10, 10, 10], // Margin merata 10mm di setiap lembar A4
             filename: filename,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+            html2canvas: {
+                scale: 2,
+                useCORS: true,
+                letterRendering: true,
+                logging: false,
+                windowWidth: 794
+            },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            pagebreak: {
+                mode: ['css', 'legacy'], // Hindari 'avoid-all' agar tabel tidak terlempar ke halaman 2
+                avoid: ['tr', '.rekap-box', '.signature-section', '.kop-surat']
+            }
         };
 
-        const toast = showToast('Sedang membuat file PDF...', 'info');
         try {
-            await html2pdf().set(opt).from(wrapper).save();
+            await html2pdf().set(opt).from(exportDiv).save();
+            if (exportDiv.parentNode) document.body.removeChild(exportDiv);
             if (toast) toast.remove();
             showToast('PDF berhasil diunduh!', 'success');
         } catch (err) {
             console.error('HTML2PDF Error:', err);
+            if (exportDiv.parentNode) document.body.removeChild(exportDiv);
+            if (toast) toast.remove();
             window.printA4Document(wrapperId, filename.replace('.pdf', ''));
         }
     } else {
