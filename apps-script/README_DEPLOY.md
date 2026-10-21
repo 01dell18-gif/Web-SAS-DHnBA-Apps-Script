@@ -142,7 +142,7 @@ Di dalam editor Apps Script, salin berkas-berkas dari folder `apps-script/` beri
 - **Data Siswa & Kelas**: Tambah/edit siswa (otomatis mendaftarkan kelas baru jika belum ada), ekspor seluruh siswa ke Excel (.xlsx), impor massal dari Excel, dan hapus massal dengan opsi kosongkan kelas.
 - **Data Guru & Pengawas**: Kelola data pengawas ujian, autocomplete NIP, ekspor dan impor Excel, serta opsi reset seluruh guru.
 - **Template Ujian**: Kustomisasi redaksi berita acara menggunakan chip variabel dinamis seperti `[semester]`, `[tahun_ajaran]`, `[tanggal]`, `[mata_pelajaran]`, `[kelas]`, `[ruang]`.
-- **Pengaturan Sekolah, Kelas & Kop**: Ganti nama sekolah, upload logo resmi sekolah, upload kop surat resmi, reset ke default, dan kelola master mapel serta tahun ajaran.
+- **Pengaturan Sekolah, Kelas & Kop**: Ganti nama sekolah, upload logo resmi sekolah, upload kop surat resmi, reset ke default, kelola master mapel serta tahun ajaran, dan atur folder penyimpanan Google Drive untuk upload file SAS.
 - **Manajemen User**: Tambah akun admin atau operator dengan proteksi akun utama superadmin.
 - **Backup & Database**:
   - Unduh dump database SQL (`database.sql`) siap pakai untuk MySQL/MariaDB.
@@ -150,3 +150,22 @@ Di dalam editor Apps Script, salin berkas-berkas dari folder `apps-script/` beri
   - Unduh langsung `Data_Siswa.xlsx` dan `Data_Guru.xlsx`.
   - Unduh backup JSON database lengkap (`db.json`).
   - Reset basis data ke kondisi awal seeder resmi dengan 1 klik (`apiResetDatabase`).
+
+---
+
+## 📂 4. Integrasi Penyimpanan Berkas Google Drive
+
+Seluruh berkas dokumen atau arsip yang diunggah diarahkan ke folder Google Drive resmi:
+
+- **URL Bawaan Folder**: `https://drive.google.com/drive/folders/19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR`
+- **ID Folder**: `19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR`
+
+### Cara Mengganti Folder Penyimpanan di Masa Depan:
+1. Masuk ke panel admin melalui menu **Login** (`admin` / `admin123`).
+2. Masuk ke menu **Pengaturan** (`?page=pengaturan`).
+3. Pada bagian **Folder Google Drive (Penyimpanan File SAS)**, masukkan URL atau ID folder Google Drive yang baru.
+4. Klik tombol **Uji Akses Folder Drive** untuk memastikan izin baca/tulis akun telah valid.
+5. Klik **Buka Folder di Google Drive** untuk memverifikasi folder di tab baru.
+6. Klik tombol **Perbarui Pengaturan** di bawah untuk menyimpan perubahan secara permanen ke sheet `Pengaturan` di Google Spreadsheet.
+
+> **Catatan Hak Akses Folder Drive**: Pastikan folder Google Drive telah diatur hak aksesnya menjadi *"Siapa saja yang memiliki link dapat melihat/mengedit"* (*Anyone with link*) atau akun Google yang men-deploy Web Apps memiliki izin akses Editor pada folder tersebut.

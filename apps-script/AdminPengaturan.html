@@ -50,6 +50,35 @@
                         </div>
                     </div>
 
+                    <!-- PENGATURAN FOLDER GOOGLE DRIVE UNTUK PENYIMPANAN FILE -->
+                    <div class="form-group" style="margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border);">
+                        <label class="form-label" style="font-weight: 700; display: flex; justify-content: space-between; align-items: center;">
+                            <span><i class="bi bi-google" style="color: #4285F4;"></i> <i class="bi bi-folder-fill" style="color: #FBBC05;"></i> Folder Google Drive (Penyimpanan File SAS)</span>
+                            <span class="badge" style="background: #EFF6FF; color: #1D4ED8; font-size: 0.75rem; font-weight: 700;">Drive Cloud Storage</span>
+                        </label>
+                        <div class="grid-2">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" style="font-size: 0.85rem;">URL Folder Google Drive <span class="required">*</span></label>
+                                <input type="url" id="set_drive_folder_url" class="form-control" placeholder="https://drive.google.com/drive/folders/..." value="https://drive.google.com/drive/folders/19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR" oninput="onDriveUrlInput(this.value)">
+                                <div class="form-hint">URL folder Google Drive tempat seluruh berkas upload ujian & dokumen SAS disimpan.</div>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" style="font-size: 0.85rem;">ID Folder Drive</label>
+                                <input type="text" id="set_drive_folder_id" class="form-control" placeholder="19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR" value="19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR" oninput="updateOpenDriveLink(); markDirty(true);">
+                                <div class="form-hint">ID folder unik Google Drive (otomatis diekstrak dari URL).</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                            <a id="btnOpenDriveFolder" href="https://drive.google.com/drive/folders/19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 6px;">
+                                <i class="bi bi-box-arrow-up-right"></i> Buka Folder di Google Drive
+                            </a>
+                            <button type="button" class="btn btn-outline btn-sm" onclick="testDriveConnection()" style="display: inline-flex; align-items: center; gap: 6px;">
+                                <i class="bi bi-hdd-network"></i> Uji Akses Folder Drive
+                            </button>
+                            <span id="driveTestStatus" style="font-size: 0.82rem; margin-left: 6px;"></span>
+                        </div>
+                    </div>
+
                     <!-- PENGATURAN & UPLOAD LOGO SEKOLAH -->
                     <div class="form-group" style="margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border);">
                         <label class="form-label" style="font-weight: 700; display: flex; justify-content: space-between; align-items: center;">
@@ -468,6 +497,9 @@ function initSettingsForm() {
     if (s.school_name) document.getElementById('set_school_name').value = s.school_name;
     if (s.school_tagline) document.getElementById('set_school_tagline').value = s.school_tagline;
     if (s.timezone) document.getElementById('set_timezone').value = s.timezone;
+    if (s.drive_folder_url) document.getElementById('set_drive_folder_url').value = s.drive_folder_url;
+    if (s.drive_folder_id) document.getElementById('set_drive_folder_id').value = s.drive_folder_id;
+    updateOpenDriveLink();
     
     // Kop
     if (s.kop_header) {
@@ -482,7 +514,7 @@ function initSettingsForm() {
     renderClassesTable();
 
     // Pantau perubahan pada input pengaturan sekolah
-    ['set_school_name', 'set_school_tagline', 'set_timezone', 'set_academic_year'].forEach(id => {
+    ['set_school_name', 'set_school_tagline', 'set_timezone', 'set_academic_year', 'set_drive_folder_url', 'set_drive_folder_id'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.addEventListener('input', () => markDirty(true));
@@ -1412,6 +1444,8 @@ async function saveAllPengaturan(notify = true) {
         db.settings.school_tagline = document.getElementById('set_school_tagline').value.trim();
         db.settings.academic_year = document.getElementById('set_academic_year').value.trim();
         db.settings.timezone = document.getElementById('set_timezone').value.trim();
+        db.settings.drive_folder_url = document.getElementById('set_drive_folder_url').value.trim();
+        db.settings.drive_folder_id = document.getElementById('set_drive_folder_id').value.trim();
 
         // 4. Simpan seluruh dataset konfigurasi ke database
         const res = await saveAdminDatabase({ 
@@ -1562,6 +1596,57 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadDatabaseFromAppsScript();
     initSettingsForm();
 });
+
+function onDriveUrlInput(val) {
+    markDirty(true);
+    if (!val) return;
+    const match = val.match(/[-\w]{25,}/);
+    if (match && match[0]) {
+        document.getElementById('set_drive_folder_id').value = match[0];
+    }
+    updateOpenDriveLink();
+}
+
+function updateOpenDriveLink() {
+    const btn = document.getElementById('btnOpenDriveFolder');
+    const url = document.getElementById('set_drive_folder_url').value.trim();
+    const id = document.getElementById('set_drive_folder_id').value.trim();
+    if (btn) {
+        btn.href = url || (id ? 'https://drive.google.com/drive/folders/' + id : 'https://drive.google.com');
+    }
+}
+
+async function testDriveConnection() {
+    const statusEl = document.getElementById('driveTestStatus');
+    const folderId = document.getElementById('set_drive_folder_id').value.trim() || document.getElementById('set_drive_folder_url').value.trim();
+    if (!folderId) {
+        showToast('Masukkan URL atau ID Folder Google Drive terlebih dahulu!', 'warning');
+        return;
+    }
+    if (statusEl) {
+        statusEl.innerHTML = '<span style="color: var(--primary);"><i class="bi bi-arrow-repeat spin"></i> Menguji koneksi folder...</span>';
+    }
+    try {
+        const res = await callServer('apiTestDriveFolder', folderId);
+        if (res && res.success) {
+            if (statusEl) {
+                statusEl.innerHTML = '<span style="color: #059669; font-weight: 600;"><i class="bi bi-check-circle-fill"></i> ' + (res.message || 'Folder terverifikasi!') + '</span>';
+            }
+            showToast('Koneksi Google Drive Berhasil: ' + (res.folderName || 'Akses OK'), 'success');
+        } else {
+            if (statusEl) {
+                statusEl.innerHTML = '<span style="color: #DC2626;"><i class="bi bi-exclamation-triangle-fill"></i> ' + (res ? res.message : 'Gagal akses') + '</span>';
+            }
+            showToast(res ? res.message : 'Gagal mengakses folder Google Drive', 'error');
+        }
+    } catch (err) {
+        if (statusEl) {
+            statusEl.innerHTML = '<span style="color: #DC2626;"><i class="bi bi-x-circle-fill"></i> ' + err.message + '</span>';
+        }
+        showToast('Uji akses gagal: ' + err.message, 'error');
+    }
+}
+
 </script>
 </body>
 </html>

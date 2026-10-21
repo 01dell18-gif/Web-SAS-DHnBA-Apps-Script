@@ -136,6 +136,8 @@ Menyimpan konfigurasi identitas sekolah, logo, kop surat, semester, dan tahun aj
 - `default_semester`: Semester aktif (`Ganjil` / `Genap`).
 - `timezone`: Zona waktu (`WITA`, `WIB`, atau `WIT`).
 - `active_template_id`: ID template berita acara yang sedang aktif.
+- `drive_folder_url`: URL folder Google Drive resmi untuk penyimpanan dan upload seluruh berkas SAS (`https://drive.google.com/drive/folders/19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR`).
+- `drive_folder_id`: ID unik folder Google Drive (`19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR`), dapat disesuaikan sewaktu-waktu melalui Menu Pengaturan.
 
 ---
 
