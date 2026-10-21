@@ -4,15 +4,19 @@ Dokumentasi rancangan relasional 9 Sheet/Tabel di Google Sheets untuk aplikasi *
 
 ---
 
-## 🗄️ 1. Gambaran Umum Arsitektur
+## 🗄️ 1. Gambaran Umum Arsitektur Basis Data
 
-Google Spreadsheet difungsikan sebagai basis data relasional/NoSQL serverless:
+Google Spreadsheet difungsikan sebagai basis data relasional serverless:
 
-- **Sheet sebagai Tabel**: Masing-masing sheet bertindak sebagai tabel independen.
+- **Sheet sebagai Tabel**: Masing-masing sheet bertindak sebagai tabel data independen.
 - **Baris 1 sebagai Nama Kolom (Header)**.
 - **Baris 2 ke Bawah sebagai Baris Data (Records)**.
-- **Auto-Initialization**: Fungsi `setupSpreadsheetDatabase()` di [Code.gs](file:///d:/Downloads/Share-DKV%20F/COBA/ambil%20coba/Code.gs) otomatis membuat sheet yang belum ada, menyusun header, dan mengisi data awal (seeder 5 data contoh per master data) secara instan.
-- **Universal Save Handler**: Fungsi `apiSaveDatabase(payload)` melayani penyimpanan atomik dan pembaruan massal (bulk sync) dari panel admin langsung ke Google Sheets.
+- **Auto-Initialization**: Fungsi `setupSpreadsheetDatabase()` dan `jalankanIsiDataAwal()` di [Code.gs](file:///d:/Downloads/Share-DKV%20F/COBA/ambil%20coba/Code.gs) otomatis membuat sheet yang belum ada, menyusun header tebal, membekukan baris pertama (*frozen header*), dan mengisi data awal (*seeder*) secara instan.
+- **Lapis Akses Cepat (*High-Speed Caching Layer*)**:
+  - `CacheService.getScriptCache()`: Menyimpan cache memori tabel per-sheet selama 30 menit untuk waktu baca **< 10 milidetik**.
+  - `_requestTableCache`: Mencegah pembacaan berulang dalam 1 siklus eksekusi Apps Script.
+  - `apiGetInitialData()`: Menyatukan pembacaan 9 entitas menjadi **1 kali round-trip**, mengeliminasi *network waterfall delay*.
+- **Universal Save Handler**: Fungsi `apiSaveDatabase(payload)` melayani penyimpanan atomik dan pembaruan massal (*bulk sync*) langsung ke Google Sheets dengan proteksi tabel agar tidak terhapus secara tidak sengaja.
 
 ```mermaid
 erDiagram
@@ -118,7 +122,6 @@ erDiagram
 ## 📋 2. Rincian 9 Sheet Database
 
 ### 1. Sheet `Pengaturan`
-
 Menyimpan konfigurasi identitas sekolah, logo, kop surat, semester, dan tahun ajaran aktif.
 
 | Kolom | Tipe Data | Keterangan | Contoh Nilai |
@@ -127,22 +130,20 @@ Menyimpan konfigurasi identitas sekolah, logo, kop surat, semester, dan tahun aj
 | `value` | String / JSON | Nilai konfigurasi / string base64 / JSON array | `SMK NEGERI FYJ CHANNEL` |
 
 **Daftar Kunci Bawaan:**
-
 - `school_name`: Nama resmi sekolah (`SMK NEGERI FYJ CHANNEL`).
 - `school_tagline`: Tagline sekolah (`Generator Administrasi Ujian`).
-- `school_logo`: String Data-URI Base64 logo resmi sekolah.
-- `kop_header`: String Data-URI Base64 gambar kop surat resmi sekolah.
+- `school_logo`: String URL Thumbnail / Base64 logo resmi sekolah (`https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI`).
+- `kop_header`: String URL Thumbnail / Base64 gambar kop surat resmi sekolah (`https://drive.google.com/thumbnail?id=1Z80pVGJv9v-GFwjE1_kBi_G9uRlR2gN7`).
 - `academic_year`: Tahun ajaran aktif (`2026/2027`).
 - `default_semester`: Semester aktif (`Ganjil` / `Genap`).
 - `timezone`: Zona waktu (`WITA`, `WIB`, atau `WIT`).
 - `active_template_id`: ID template berita acara yang sedang aktif.
-- `drive_folder_url`: URL folder Google Drive resmi untuk penyimpanan dan upload seluruh berkas SAS (`https://drive.google.com/drive/folders/19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR`).
-- `drive_folder_id`: ID unik folder Google Drive (`19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR`), dapat disesuaikan sewaktu-waktu melalui Menu Pengaturan.
+- `drive_folder_url`: URL folder Google Drive resmi untuk penyimpanan SAS (`https://drive.google.com/drive/folders/19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR`).
+- `drive_folder_id`: ID unik folder Google Drive (`19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR`).
 
 ---
 
 ### 2. Sheet `Kelas`
-
 Master daftar kelas resmi beserta program keahlian dan tingkat pendidikan.
 
 | Kolom | Tipe Data | Keterangan |
@@ -156,7 +157,6 @@ Master daftar kelas resmi beserta program keahlian dan tingkat pendidikan.
 ---
 
 ### 3. Sheet `Siswa`
-
 Master data peserta didik yang terdaftar per kelas.
 
 | Kolom | Tipe Data | Keterangan |
@@ -169,7 +169,6 @@ Master data peserta didik yang terdaftar per kelas.
 ---
 
 ### 4. Sheet `Guru`
-
 Master data dewan guru dan pengawas ujian sekolah.
 
 | Kolom | Tipe Data | Keterangan |
@@ -184,8 +183,7 @@ Master data dewan guru dan pengawas ujian sekolah.
 ---
 
 ### 5. Sheet `MataPelajaran`
-
-Daftar mata pelajaran resmi yang diujikan di sekolah.
+Daftar mata pelajaran resmi yang diujikan di sekolah. Dikelola melalui **Textarea** di menu Pengaturan Sekolah (satu baris untuk setiap mapel).
 
 | Kolom | Tipe Data | Keterangan |
 | :--- | :--- | :--- |
@@ -195,8 +193,7 @@ Daftar mata pelajaran resmi yang diujikan di sekolah.
 ---
 
 ### 6. Sheet `TahunAjaran`
-
-Daftar tahun ajaran akademik yang tersedia.
+Daftar tahun ajaran akademik yang tersedia. Dikelola melalui **Textarea** di menu Pengaturan Sekolah (satu baris untuk setiap tahun, contoh: `2026/2027`).
 
 | Kolom | Tipe Data | Keterangan |
 | :--- | :--- | :--- |
@@ -206,7 +203,6 @@ Daftar tahun ajaran akademik yang tersedia.
 ---
 
 ### 7. Sheet `TemplateUjian`
-
 Template redaksi format Berita Acara Ujian.
 
 | Kolom | Tipe Data | Keterangan |
@@ -226,12 +222,11 @@ Template redaksi format Berita Acara Ujian.
 ---
 
 ### 8. Sheet `ArsipDokumen`
-
 Penyimpanan riwayat dokumen yang telah dicetak atau diunduh sebagai PDF resmi.
 
 | Kolom | Tipe Data | Keterangan |
 | :--- | :--- | :--- |
-| `id` | Integer (PK) | Timestamp unik berkas arsip (contoh: `1730000000000`) |
+| `id` | Integer (PK) | Timestamp unik berkas arsip |
 | `type` | String | Jenis dokumen (`daftar_hadir` atau `berita_acara`) |
 | `title` | String | Judul dokumen |
 | `filename` | String | Nama berkas saat diunduh (contoh: `Daftar_Hadir_XII_DKV.pdf`) |
@@ -257,7 +252,6 @@ Penyimpanan riwayat dokumen yang telah dicetak atau diunduh sebagai PDF resmi.
 ---
 
 ### 9. Sheet `Users`
-
 Akun pengguna yang memiliki otorisasi masuk ke Panel Administrator.
 
 | Kolom | Tipe Data | Keterangan |
@@ -273,13 +267,11 @@ Akun pengguna yang memiliki otorisasi masuk ke Panel Administrator.
 
 ## 🔄 3. Integritas Data & Mekanisme Sinkronisasi
 
-1. **Sinkronisasi Atomik (`apiSaveDatabase`)**:
-   Setiap perubahan pada tabel data (tambah/edit/hapus/impor massal) dikirimkan melalui fungsi universal `apiSaveDatabase(payload)` di [Code.gs](file:///d:/Downloads/Share-DKV%20F/COBA/ambil%20coba/Code.gs) yang mengeksekusi operasi `batchReplaceTable` secara cepat dan aman di Google Sheets.
+1. **Sinkronisasi Atomik & Proteksi Data (`apiSaveDatabase`)**:
+   Operasi simpan dari formulir diproteksi agar array kosong tidak secara tidak sengaja mengosongkan tabel `Siswa` atau `Guru`. Penghapusan massal hanya dieksekusi jika flag khusus seperti `delete_all_students: true` dikirimkan secara eksplisit.
 2. **Auto-Register Kelas Baru**:
-   Saat menginput data siswa manual atau impor Excel, jika nama kelas belum ada di tabel `Kelas`, sistem otomatis mendaftarkannya ke sheet `Kelas` dengan tingkat dan program keahlian yang terdeteksi otomatis.
-3. **Cascade Update Relasi Kelas**:
-   Perubahan nama kelas pada Master Kelas otomatis memperbarui data siswa terkait dan dokumen arsip yang bersesuaian di sheet `ArsipDokumen`.
-4. **Smart Delete Linked Archive**:
-   Saat menghapus dokumen Daftar Hadir, sistem melacak apakah terdapat dokumen Berita Acara yang dibuat pada tanggal, mapel, dan kelas yang sama persis, lalu memberikan opsi pembersihan berkas terkait secara serempak.
-5. **Role-Based Access Control (RBAC)**:
-   Pengguna dengan role `operator` secara otomatis dibatasi dari akses ke menu `Users` dan `Database`, baik melalui navigasi sidebar maupun routing langsung URL.
+   Saat menginput siswa baru atau impor Excel, kelas baru yang belum ada akan otomatis dibuatkan baris di sheet `Kelas`.
+3. **Smart Delete Linked Archive**:
+   Saat menghapus arsip ujian dari `AdminArsip`, server secara cerdas mengidentifikasi berkas kembaran (Daftar Hadir dan Berita Acara pada tanggal, mapel, dan kelas yang sama) dan menghapus keduanya sekaligus, serta mengembalikan `deleted_ids` ke antarmuka pengguna untuk pembaruan tampilan instan.
+4. **Role-Based Access Control (RBAC)**:
+   Akses ke menu `Users` dan `Database` dibatasi hanya untuk role `admin`.

@@ -123,7 +123,7 @@
 </div>
 
 <!-- MODAL TAMBAH SISWA MANUAL -->
-<div id="studentModal" class="modal-overlay">
+<div id="studentModal" class="modal-overlay" style="display: none;">
     <div class="modal-card">
         <h3 style="margin-bottom: 1rem; font-size: 1.15rem;"><i class="bi bi-person-plus-fill" style="color: var(--primary);"></i> Tambah Siswa Baru</h3>
         <form onsubmit="submitNewStudent(event)">
@@ -150,7 +150,7 @@
 </div>
 
 <!-- MODAL EDIT/UPDATE SISWA (KHUSUS HAK AKSES ADMIN) -->
-<div id="editStudentModal" class="modal-overlay">
+<div id="editStudentModal" class="modal-overlay" style="display: none;">
     <div class="modal-card">
         <h3 style="margin-bottom: 1rem; font-size: 1.15rem;"><i class="bi bi-pencil-square" style="color: var(--primary);"></i> Edit Data Peserta Didik</h3>
         <form onsubmit="submitEditStudent(event)">
@@ -179,7 +179,7 @@
 </div>
 
 <!-- MODAL IMPORT EXCEL SISWA -->
-<div id="importExcelModal" class="modal-overlay">
+<div id="importExcelModal" class="modal-overlay" style="display: none;">
     <div class="modal-card" style="max-width: 680px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
             <h3 style="font-size: 1.15rem; margin: 0;"><i class="bi bi-file-earmark-excel" style="color: #10B981;"></i> Impor Data Siswa (.xlsx / .xls)</h3>
@@ -233,7 +233,7 @@
 </div>
 
 <!-- MODAL HAPUS PER KELAS -->
-<div id="deleteClassModal" class="modal-overlay">
+<div id="deleteClassModal" class="modal-overlay" style="display: none;">
     <div class="modal-card">
         <h3 style="color: var(--danger); margin-bottom: 0.75rem; font-size: 1.15rem;">
             <i class="bi bi-exclamation-triangle-fill"></i> Konfirmasi Penghapusan Siswa Kelas
@@ -300,9 +300,16 @@ let parsedExcelData = [];
 async function initSiswaPage() {
     await loadDatabaseFromAppsScript();
 
-    // Cek URL params jika ada filter kelas bawaan
-    const params = new URLSearchParams(window.location.search);
-    const initialClassId = params.get('class_id') || '';
+    // Cek server params dan URL params jika ada filter kelas bawaan (misal dari tombol Lihat Siswa di Dashboard)
+    let initialClassId = '';
+    try {
+        const serverParams = <?!= JSON.stringify(params || {}) ?>;
+        if (serverParams && serverParams.class_id) initialClassId = String(serverParams.class_id);
+    } catch (e) {}
+    if (!initialClassId) {
+        const urlParams = new URLSearchParams(window.location.search);
+        initialClassId = urlParams.get('class_id') || '';
+    }
 
     // Populate dropdown kelas
     const filterSelect = document.getElementById('filterClassSelect');

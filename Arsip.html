@@ -286,11 +286,20 @@ function toggleMobileNav(e) {
 }
 
 function fetchArchives() {
-    callServer('apiGetArchives').then(data => {
-            archivesData = Array.isArray(data) ? data : [];
-            updateStats();
-            populateFilterDropdowns();
-            renderArchiveTable();
+    callServer('apiGetInitialData').then(data => {
+            if (data && data.success) {
+                archivesData = Array.isArray(data.archives) ? data.archives : [];
+                updateStats();
+                populateFilterDropdowns(data.classes || [], data.subjects || [], data.academic_years || []);
+                renderArchiveTable();
+                return;
+            }
+            callServer('apiGetArchives').then(d => {
+                archivesData = Array.isArray(d) ? d : [];
+                updateStats();
+                populateFilterDropdowns();
+                renderArchiveTable();
+            });
         })
         .catch(err => {
             console.error('Gagal mengambil arsip:', err);
@@ -315,7 +324,7 @@ function updateStats() {
     if (elBa) elBa.textContent = ba;
 }
 
-async function populateFilterDropdowns() {
+async function populateFilterDropdowns(initClasses, initSubjects, initYears) {
     const selTahun = document.getElementById('filterTahunAjaran');
     const selKelas = document.getElementById('filterKelas');
     const selMapel = document.getElementById('filterMapel');
@@ -335,16 +344,28 @@ async function populateFilterDropdowns() {
         if (a.mata_pelajaran) mapels.add(a.mata_pelajaran.trim());
     });
 
-    try {
-        const [clsRes, subjRes, yrRes] = await Promise.all([
-            callServer('apiGetClasses').catch(() => []),
-            callServer('apiGetSubjects').catch(() => []),
-            callServer('apiGetAcademicYears').catch(() => [])
-        ]);
-        if (Array.isArray(clsRes)) clsRes.forEach(c => { const n = c.nama_kelas || c.name; if (n) classes.add(n.trim()); });
-        if (Array.isArray(subjRes)) subjRes.forEach(s => { if (s) mapels.add(s.trim()); });
-        if (Array.isArray(yrRes)) yrRes.forEach(y => { if (y) years.add(y.trim()); });
-    } catch(e) {}
+    if (Array.isArray(initClasses) && initClasses.length) {
+        initClasses.forEach(c => { const n = c.nama_kelas || c.name; if (n) classes.add(n.trim()); });
+    }
+    if (Array.isArray(initSubjects) && initSubjects.length) {
+        initSubjects.forEach(s => { if (s) mapels.add(s.trim()); });
+    }
+    if (Array.isArray(initYears) && initYears.length) {
+        initYears.forEach(y => { if (y) years.add(y.trim()); });
+    }
+
+    if (!initClasses && !initSubjects && !initYears) {
+        try {
+            const [clsRes, subjRes, yrRes] = await Promise.all([
+                callServer('apiGetClasses').catch(() => []),
+                callServer('apiGetSubjects').catch(() => []),
+                callServer('apiGetAcademicYears').catch(() => [])
+            ]);
+            if (Array.isArray(clsRes)) clsRes.forEach(c => { const n = c.nama_kelas || c.name; if (n) classes.add(n.trim()); });
+            if (Array.isArray(subjRes)) subjRes.forEach(s => { if (s) mapels.add(s.trim()); });
+            if (Array.isArray(yrRes)) yrRes.forEach(y => { if (y) years.add(y.trim()); });
+        } catch(e) {}
+    }
 
     // Populate Tahun Ajaran
     selTahun.innerHTML = '<option value="">Semua Tahun Ajaran</option>';

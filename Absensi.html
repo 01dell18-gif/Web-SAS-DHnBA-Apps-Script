@@ -485,6 +485,17 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        if (allStudentsCache && allStudentsCache.length > 0) {
+            const classStudents = allStudentsCache.filter(s => String(s.class_id) === String(classId));
+            if (studentLoading) studentLoading.style.display = 'none';
+            activeStudents = classStudents;
+            renderStudentFormInputs(classStudents);
+            updateStudentTablePreview(classStudents);
+            updateRekap();
+            updateLivePreview();
+            return;
+        }
+
         if (studentLoading) studentLoading.style.display = 'block';
         studentsContainer.innerHTML = '';
 
@@ -507,8 +518,95 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    // 3. Ambil Kelas Dinamis dari Server
+    // 3. Cache dan Pengambilan Data Cepat Terpadu (Single RPC Call)
     let teachersList = [];
+    let allStudentsCache = [];
+
+    function initPageData() {
+        callServer('apiGetInitialData').then(data => {
+            if (!data || !data.success) return;
+            if (Array.isArray(data.students)) {
+                allStudentsCache = data.students;
+            }
+            if (Array.isArray(data.classes) && data.classes.length && classSelect) {
+                const prevVal = classSelect.value;
+                classSelect.innerHTML = '<option value="" selected>-- Pilih Kelas Ujian --</option>';
+                data.classes.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = `${c.nama_kelas} (${c.program_keahlian || c.tingkat || ''})`;
+                    classSelect.appendChild(opt);
+                });
+                if (prevVal && data.classes.some(c => String(c.id) === String(prevVal))) {
+                    classSelect.value = prevVal;
+                    loadStudentsForClass(classSelect.value);
+                }
+            }
+            if (Array.isArray(data.teachers)) {
+                teachersList = data.teachers;
+                const dl = document.getElementById('datalist_pengawas');
+                if (dl) {
+                    dl.innerHTML = '';
+                    teachersList.forEach(t => {
+                        const opt = document.createElement('option');
+                        opt.value = t.nama;
+                        opt.setAttribute('data-nip', t.nip || '');
+                        opt.label = `${t.nama} (NIP: ${t.nip || '-'})`;
+                        dl.appendChild(opt);
+                    });
+                }
+            }
+            if (Array.isArray(data.subjects)) {
+                const dl = document.getElementById('datalist_subjects');
+                if (dl) {
+                    dl.innerHTML = '';
+                    data.subjects.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s;
+                        dl.appendChild(opt);
+                    });
+                }
+            }
+            if (Array.isArray(data.academic_years)) {
+                const dl = document.getElementById('datalist_academic_years');
+                if (dl) {
+                    dl.innerHTML = '';
+                    data.academic_years.forEach(y => {
+                        const opt = document.createElement('option');
+                        opt.value = y;
+                        dl.appendChild(opt);
+                    });
+                }
+            }
+            if (Array.isArray(data.templates) && data.templates.length) {
+                window.EXAM_TEMPLATES = data.templates;
+                const select = document.getElementById('selectTemplate');
+                if (select) {
+                    const curVal = select.value;
+                    select.innerHTML = '';
+                    const activeTpl = data.templates.find(t => t.aktif === 1 || t.aktif === true) || data.templates[0];
+                    data.templates.forEach(t => {
+                        const opt = document.createElement('option');
+                        opt.value = t.id;
+                        opt.setAttribute('data-nama', t.nama_ujian || '');
+                        opt.setAttribute('data-tahun', t.tahun_ajaran || '');
+                        opt.setAttribute('data-semester', t.semester || 'Ganjil');
+                        const isAktif = t.aktif === 1 || t.aktif === true;
+                        opt.textContent = `${t.nama_ujian} (${t.tahun_ajaran || ''}) - ${t.semester || 'Ganjil'}${isAktif ? ' [Aktif]' : ''}`;
+                        select.appendChild(opt);
+                    });
+                    if (curVal && data.templates.some(t => String(t.id) === String(curVal))) {
+                        select.value = curVal;
+                    } else if (activeTpl) {
+                        select.value = activeTpl.id;
+                    } else {
+                        select.value = data.templates[0].id;
+                    }
+                    applyExamTemplate(select.value);
+                }
+            }
+        }).catch(err => console.warn('Gagal memuat data awal Absensi:', err));
+    }
 
     function initDynamicClasses() {
         if (!classSelect) return;
@@ -675,10 +773,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    initDynamicClasses();
-    initDynamicTeachers();
-    initDynamicSettings();
-    initDynamicTemplates();
+    initPageData();
     setupProctorAutocomplete('nama_pengawas_1', 'nip_pengawas_1');
     setupProctorAutocomplete('nama_pengawas_2', 'nip_pengawas_2');
 
@@ -1046,13 +1141,14 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         callServer('apiSaveArchive', payload)
-        .then(r => r.json())
         .then(res => {
-            if (res.success) {
-                console.log('Arsip Daftar Hadir berhasil disimpan ke database:', res.archive.id);
+            if (res && res.success) {
+                console.log('Arsip Daftar Hadir berhasil disimpan ke database:', (res.archive && res.archive.id) || '');
                 if (typeof showToast === 'function') {
                     showToast('Dokumen Daftar Hadir berhasil diarsipkan ke database!', 'success');
                 }
+            } else {
+                console.warn('Gagal menyimpan arsip:', res ? res.message : 'Unknown error');
             }
         })
         .catch(e => console.warn('Gagal menyimpan arsip:', e));

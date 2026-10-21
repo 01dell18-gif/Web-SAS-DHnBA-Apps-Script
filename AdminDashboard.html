@@ -129,21 +129,7 @@ function initDashboard() {
         pill.textContent = role === 'admin' ? 'Super Admin' : 'Operator';
     }
 
-    callServer('apiGetDatabaseStats').then(function(res) {
-        if (res.success && res.counts) {
-            document.getElementById('countStudents').textContent = res.counts.students;
-            document.getElementById('countTeachers').textContent = res.counts.teachers;
-            document.getElementById('countTemplates').textContent = res.counts.templates;
-            document.getElementById('countArchives').textContent = res.counts.archives;
-        }
-    });
-
-    Promise.all([
-        callServer('apiGetClasses'),
-        callServer('apiGetStudents')
-    ]).then(function(results) {
-        var classes = results[0] || [];
-        var students = results[1] || [];
+    function renderClassSummary(classes, students) {
         var tbody = document.getElementById('classSummaryBody');
         if (!tbody) return;
 
@@ -168,9 +154,28 @@ function initDashboard() {
                 '</td>' +
             '</tr>';
         });
-    }).catch(function(err) {
-        var tbody = document.getElementById('classSummaryBody');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--danger); padding: 1.5rem;">Gagal memuat ringkasan kelas: ' + err.message + '</td></tr>';
+    }
+
+    callServer('apiGetDatabaseStats').then(function(res) {
+        if (res.success && res.counts) {
+            document.getElementById('countStudents').textContent = res.counts.students;
+            document.getElementById('countTeachers').textContent = res.counts.teachers;
+            document.getElementById('countTemplates').textContent = res.counts.templates;
+            document.getElementById('countArchives').textContent = res.counts.archives;
+        }
+        if (res.classes && res.students) {
+            renderClassSummary(res.classes, res.students);
+        } else {
+            Promise.all([
+                callServer('apiGetClasses'),
+                callServer('apiGetStudents')
+            ]).then(function(results) {
+                renderClassSummary(results[0] || [], results[1] || []);
+            }).catch(function(err) {
+                var tbody = document.getElementById('classSummaryBody');
+                if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--danger); padding: 1.5rem;">Gagal memuat ringkasan kelas: ' + err.message + '</td></tr>';
+            });
+        }
     });
 }
 

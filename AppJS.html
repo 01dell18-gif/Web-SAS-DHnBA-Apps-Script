@@ -1,5 +1,32 @@
 <!-- SheetJS & html2pdf CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/**
+ * Universal RPC Caller untuk memanggil backend Google Apps Script secara rapi berbasis Promise
+ */
+function callServer(functionName, ...args) {
+    return new Promise(function(resolve, reject) {
+        if (typeof google === 'undefined' || !google.script || !google.script.run) {
+            reject(new Error('google.script.run tidak tersedia di lingkungan ini.'));
+            return;
+        }
+        var runner = google.script.run
+            .withSuccessHandler(function(response) {
+                resolve(response);
+            })
+            .withFailureHandler(function(err) {
+                reject(err);
+            });
+        
+        if (typeof runner[functionName] === 'function') {
+            runner[functionName].apply(runner, args);
+        } else {
+            reject(new Error('Fungsi ' + functionName + ' tidak ditemukan di Code.gs.'));
+        }
+    });
+}
+window.callServer = callServer;
+
 /**
  * Universal Data Sync & Offline-First Helper
  */
@@ -16,6 +43,11 @@ async function loadAdminDatabase() {
             db.academic_years = res.academic_years || [];
             db.teachers = res.teachers || [];
             db.settings = res.settings || {};
+            db.students = res.students || [];
+            db.archives = res.archives || [];
+            db.users = res.users || [];
+            window.db = db;
+            return db;
         }
         var results = await Promise.all([
             callServer('apiGetStudents').catch(function() { return []; }),
@@ -450,12 +482,36 @@ class SimpleSignaturePad {
 var _APP_URL = '<?= appUrl ?>';
 
 function getAppUrl() {
-    if (_APP_URL && _APP_URL.length > 5) return _APP_URL;
-    return window.location.href.split('?')[0];
+    // 1. Ambil URL sebenarnya dari document.referrer jika berada di dalam iframe script.google.com
+    try {
+        if (document.referrer && document.referrer.indexOf('script.google.com') !== -1) {
+            return document.referrer.split('?')[0].split('#')[0];
+        }
+    } catch (e) {}
+
+    // 2. Ambil dari window.location.href jika script.google.com
+    try {
+        if (window.location && window.location.href && window.location.href.indexOf('script.google.com') !== -1) {
+            return window.location.href.split('?')[0].split('#')[0];
+        }
+    } catch (e) {}
+
+    // 3. Fallback ke URL server-side Google Apps Script
+    if (typeof _APP_URL === 'string' && _APP_URL.indexOf('script.google.com') !== -1) {
+        return _APP_URL.split('?')[0].split('#')[0];
+    }
+
+    if (typeof _APP_URL === 'string' && _APP_URL.length > 5) {
+        return _APP_URL.split('?')[0].split('#')[0];
+    }
+
+    // Hindari googleusercontent.com karena akan memicu layar blank putih
+    return '';
 }
 
 function navigateTo(page, params) {
-    var url = getAppUrl() + '?page=' + encodeURIComponent(page);
+    var baseUrl = getAppUrl();
+    var url = (baseUrl || '') + (baseUrl && baseUrl.indexOf('?') !== -1 ? '&' : '?') + 'page=' + encodeURIComponent(page);
     if (params && typeof params === 'object') {
         for (var k in params) {
             if (params.hasOwnProperty(k)) {
@@ -463,6 +519,29 @@ function navigateTo(page, params) {
             }
         }
     }
+
+    // WAJIB: Navigasi jendela teratas (_top) agar iframe tidak diblokir oleh X-Frame-Options (penyebab blank putih)
+    try {
+        if (window.top && window.top !== window) {
+            window.top.location.href = url;
+            return;
+        }
+    } catch (e) {}
+
+    try {
+        window.open(url, '_top');
+        return;
+    } catch (e) {}
+
+    try {
+        var a = document.createElement('a');
+        a.href = url;
+        a.target = '_top';
+        document.body.appendChild(a);
+        a.click();
+        return;
+    } catch (e) {}
+
     window.location.href = url;
 }
 
@@ -545,7 +624,7 @@ document.addEventListener('DOMContentLoaded', function() {
  */
 function callServer(functionName, ...args) {
     return new Promise(function(resolve, reject) {
-        if (!google || !google.script || !google.script.run) {
+        if (typeof google === 'undefined' || !google.script || !google.script.run) {
             reject(new Error('google.script.run tidak tersedia di lingkungan ini.'));
             return;
         }
@@ -564,4 +643,19 @@ function callServer(functionName, ...args) {
         }
     });
 }
+
+// Global Backdrop Click & Escape Key Handler untuk seluruh modal form (.modal-overlay)
+document.addEventListener('click', function(e) {
+    if (e.target && e.target.classList && e.target.classList.contains('modal-overlay')) {
+        e.target.style.display = 'none';
+    }
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay').forEach(function(el) {
+            el.style.display = 'none';
+        });
+    }
+});
 </script>

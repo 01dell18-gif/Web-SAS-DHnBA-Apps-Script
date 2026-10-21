@@ -88,7 +88,7 @@
 
                         <div style="display: flex; gap: 16px; align-items: center; background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px;">
                             <div style="width: 80px; height: 80px; border-radius: var(--radius-sm); background: #ffffff; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; padding: 6px; box-shadow: var(--shadow-xs);">
-                                <img id="logoPreviewImg" src="/assets/img/logo.png" alt="Logo Sekolah" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                <img id="logoPreviewImg" src="https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI" alt="Logo Sekolah" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                             </div>
                             <div style="flex: 1;">
                                 <div id="logoSelectedNotice" style="display: none; margin-bottom: 8px; padding: 6px 12px; background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: var(--radius-sm); font-size: 0.82rem; color: #065F46;">
@@ -116,7 +116,7 @@
                         </label>
 
                         <div style="border: 2px dashed var(--border); padding: 16px; border-radius: var(--radius-md); text-align: center; background: #ffffff; margin-bottom: 10px; position: relative;">
-                            <img id="kopPreviewImg" src="/assets/img/kop-header.png" alt="Pratinjau Kop Surat" style="max-height: 110px; max-width: 100%; object-fit: contain; display: inline-block;">
+                            <img id="kopPreviewImg" src="https://drive.google.com/thumbnail?id=1Z80pVGJv9v-GFwjE1_kBi_G9uRlR2gN7" alt="Pratinjau Kop Surat" style="max-height: 110px; max-width: 100%; object-fit: contain; display: inline-block;">
                         </div>
 
                         <div id="kopSelectedNotice" style="display: none; margin-bottom: 10px; padding: 10px 14px; background: var(--success-light); border: 1px solid #A7F3D0; border-radius: var(--radius-sm); font-size: 0.85rem; color: #065F46;">
@@ -183,7 +183,7 @@
             </div>
         </div>
 
-        <!-- 3. KARTU MASTER DAFTAR MATA PELAJARAN RESMI (DENGAN EXPORT & IMPORT EXCEL) -->
+        <!-- 3. KARTU MASTER DAFTAR MATA PELAJARAN RESMI (TEXTAREA FORMAT) -->
         <div class="card" style="margin-bottom: 1.75rem;">
             <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div>
@@ -193,7 +193,7 @@
                     </div>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                    <span id="badgeSubjectCount" class="badge" style="background: var(--primary-light); color: var(--primary); font-weight: 700; padding: 6px 10px; border-radius: 6px;">0 Mapel</span>
+                    <span id="badgeSubjectCount" class="badge" style="background: var(--primary-light); color: var(--primary); font-weight: 700; padding: 6px 12px; border-radius: 20px; font-size: 0.82rem;">0 Mapel</span>
                     <button type="button" class="btn btn-secondary btn-sm" onclick="exportSubjectsExcel()" title="Ekspor daftar mapel ke Excel (.xlsx)">
                         <i class="bi bi-file-earmark-excel" style="color: #10B981;"></i> Export (.xlsx)
                     </button>
@@ -204,20 +204,22 @@
             </div>
 
             <div class="card-body">
-                <div id="subjectsTagContainer" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; min-height: 48px; padding: 14px; background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm);">
-                    <!-- Populated by JS -->
+                <div class="form-group" style="margin-bottom: 0.6rem;">
+                    <textarea id="subjectsTextarea" class="form-control" rows="8" placeholder="Ketik atau tempel (paste) daftar nama mata pelajaran di sini, satu baris untuk setiap mapel..." style="width: 100%; font-family: inherit; font-size: 0.92rem; line-height: 1.6; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); resize: vertical; min-height: 160px; box-sizing: border-box; background: #ffffff;" oninput="onSubjectsTextareaInput()"></textarea>
                 </div>
-
-                <div style="display: flex; gap: 8px; max-width: 480px;">
-                    <input type="text" id="newSubjectInput" class="form-control form-control-sm" placeholder="Ketik nama mata pelajaran baru..." onkeydown="if(event.key==='Enter'){event.preventDefault();addNewSubject();}">
-                    <button type="button" class="btn btn-primary btn-sm" onclick="addNewSubject()" style="white-space: nowrap;">
-                        <i class="bi bi-plus-lg"></i> Tambah Mapel
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 0.8rem; color: var(--text-muted);">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <i class="bi bi-info-circle-fill" style="color: var(--primary);"></i>
+                        <span>Format: <strong>1 baris = 1 mata pelajaran</strong>. Anda bisa langsung copy-paste baris kolom dari spreadsheet atau dokumen lain.</span>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="formatSubjectsTextarea()" title="Rapikan spasi & hapus baris kosong">
+                        <i class="bi bi-magic"></i> Rapikan Teks
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- 4. KARTU MASTER DAFTAR TAHUN AJARAN -->
+        <!-- 4. KARTU MASTER DAFTAR TAHUN AJARAN (TEXTAREA FORMAT) -->
         <div class="card">
             <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div>
@@ -226,18 +228,20 @@
                         Tahun ajaran yang aktif digunakan pada template berita acara dan filter administrasi ujian.
                     </div>
                 </div>
-                <span id="badgeYearCount" class="badge" style="background: #FEF3C7; color: #92400E; font-weight: 700; padding: 6px 10px; border-radius: 6px;">0 Tahun</span>
+                <span id="badgeYearCount" class="badge" style="background: #FEF3C7; color: #92400E; font-weight: 700; padding: 6px 12px; border-radius: 20px; font-size: 0.82rem;">0 Tahun</span>
             </div>
 
             <div class="card-body">
-                <div id="academicYearsTagContainer" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; min-height: 48px; padding: 14px; background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm);">
-                    <!-- Populated by JS -->
+                <div class="form-group" style="margin-bottom: 0.6rem;">
+                    <textarea id="academicYearsTextarea" class="form-control" rows="5" placeholder="Ketik atau tempel (paste) daftar tahun ajaran di sini, satu baris per tahun (contoh: 2026/2027)..." style="width: 100%; font-family: inherit; font-size: 0.92rem; line-height: 1.6; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); resize: vertical; min-height: 110px; box-sizing: border-box; background: #ffffff;" oninput="onAcademicYearsTextareaInput()"></textarea>
                 </div>
-
-                <div style="display: flex; gap: 8px; max-width: 400px;">
-                    <input type="text" id="newYearInput" class="form-control form-control-sm" placeholder="Contoh: 2027/2028" onkeydown="if(event.key==='Enter'){event.preventDefault();addNewAcademicYear();}">
-                    <button type="button" class="btn btn-primary btn-sm" onclick="addNewAcademicYear()" style="white-space: nowrap;">
-                        <i class="bi bi-plus-lg"></i> Tambah Tahun
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 0.8rem; color: var(--text-muted);">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <i class="bi bi-info-circle-fill" style="color: #D97706;"></i>
+                        <span>Format: <strong>1 baris = 1 tahun ajaran</strong> (contoh: <code>2026/2027</code>). Dropdown Tahun Ajaran Aktif di bagian atas otomatis tersinkronisasi.</span>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="formatYearsTextarea()" title="Rapikan spasi & hapus baris kosong">
+                        <i class="bi bi-magic"></i> Rapikan Teks
                     </button>
                 </div>
             </div>
@@ -273,7 +277,7 @@
 <!-- ================= MODALS ================= -->
 
 <!-- 1. MODAL TAMBAH / EDIT KELAS -->
-<div id="classModal" class="modal-overlay">
+<div id="classModal" class="modal-overlay" style="display: none;">
     <div class="modal-card">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1rem;">
             <h3 id="classModalTitle" style="font-size: 1.15rem; margin: 0;">Tambah Kelas Baru</h3>
@@ -318,7 +322,7 @@
 </div>
 
 <!-- 2. MODAL IMPORT KELAS DARI EXCEL -->
-<div id="importClassesModal" class="modal-overlay">
+<div id="importClassesModal" class="modal-overlay" style="display: none;">
     <div class="modal-card">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1rem;">
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -362,7 +366,7 @@
 </div>
 
 <!-- 3. MODAL IMPORT MAPEL DARI EXCEL -->
-<div id="importSubjectsModal" class="modal-overlay">
+<div id="importSubjectsModal" class="modal-overlay" style="display: none;">
     <div class="modal-card">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1rem;">
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -501,20 +505,24 @@ function initSettingsForm() {
     if (s.drive_folder_id) document.getElementById('set_drive_folder_id').value = s.drive_folder_id;
     updateOpenDriveLink();
     
+    function safeImgUrl(url) {
+        if (!url || typeof url !== 'string' || url.startsWith('data:')) return url || '';
+        return url + (url.indexOf('?') !== -1 ? '&' : '?') + 't=' + Date.now();
+    }
     // Kop
     if (s.kop_header) {
-        document.getElementById('kopPreviewImg').src = s.kop_header + '?t=' + Date.now();
+        document.getElementById('kopPreviewImg').src = safeImgUrl(s.kop_header);
     }
     // Logo
     if (s.school_logo) {
-        document.getElementById('logoPreviewImg').src = s.school_logo + '?t=' + Date.now();
+        document.getElementById('logoPreviewImg').src = safeImgUrl(s.school_logo);
     }
 
     renderSettingsSubjectsAndYears();
     renderClassesTable();
 
-    // Pantau perubahan pada input pengaturan sekolah
-    ['set_school_name', 'set_school_tagline', 'set_timezone', 'set_academic_year', 'set_drive_folder_url', 'set_drive_folder_id'].forEach(id => {
+    // Pantau perubahan pada input pengaturan sekolah & textarea
+    ['set_school_name', 'set_school_tagline', 'set_timezone', 'set_academic_year', 'set_drive_folder_url', 'set_drive_folder_id', 'subjectsTextarea', 'academicYearsTextarea'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.addEventListener('input', () => markDirty(true));
@@ -524,161 +532,114 @@ function initSettingsForm() {
     markDirty(false);
 }
 
-// ================= 1. RENDER MAPEL & TAHUN AJARAN =================
+// ================= 1. RENDER MAPEL & TAHUN AJARAN (TEXTAREA FORMAT) =================
 function renderSettingsSubjectsAndYears() {
     if (!db) return;
     if (!db.settings) db.settings = {};
 
-    // 1. Mapel
+    // 1. Textarea Mapel
     const subjects = db.settings.subjects || db.subjects || [];
-    const subjCont = document.getElementById('subjectsTagContainer');
-    document.getElementById('badgeSubjectCount').textContent = subjects.length + ' Mapel';
-
-    if (subjects.length === 0) {
-        subjCont.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">Belum ada daftar mata pelajaran tersimpan. Klik Import atau Tambah Mapel.</span>';
-    } else {
-        subjCont.innerHTML = subjects.map(sub => `
-            <span style="display: inline-flex; align-items: center; gap: 6px; background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; padding: 4px 10px; border-radius: 20px; font-size: 0.82rem; font-weight: 600;">
-                ${sub}
-                <button type="button" onclick="removeSubject('${sub.replace(/'/g, "\\'")}')" style="background: none; border: none; color: #EF4444; cursor: pointer; padding: 0 2px; font-weight: bold;" title="Hapus mata pelajaran">&times;</button>
-            </span>
-        `).join('');
+    const subjectsTextarea = document.getElementById('subjectsTextarea');
+    if (subjectsTextarea) {
+        subjectsTextarea.value = Array.isArray(subjects) ? subjects.join('\n') : String(subjects || '');
     }
+    updateSubjectsCount();
 
-    // 2. Tahun Ajaran
-    const years = db.settings.academic_years || db.academic_years || ["2026/2027", "2027/2028"];
-    const yrCont = document.getElementById('academicYearsTagContainer');
-    document.getElementById('badgeYearCount').textContent = years.length + ' Tahun';
-
-    if (years.length === 0) {
-        yrCont.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">Belum ada tahun ajaran tersimpan.</span>';
-    } else {
-        yrCont.innerHTML = years.map(yr => {
-            const isActive = db.settings.academic_year === yr;
-            return `
-                <span style="display: inline-flex; align-items: center; gap: 6px; background: ${isActive ? '#D1FAE5' : '#FEF3C7'}; color: ${isActive ? '#065F46' : '#92400E'}; border: 1px solid ${isActive ? '#A7F3D0' : '#FDE68A'}; padding: 4px 10px; border-radius: 20px; font-size: 0.82rem; font-weight: 600;">
-                    ${isActive ? '<i class="bi bi-check-circle-fill"></i> ' : ''}${yr}
-                    ${isActive ? '<span style="font-size: 0.72rem; opacity: 0.8;">(Aktif)</span>' : ''}
-                    <button type="button" onclick="removeAcademicYear('${yr.replace(/'/g, "\\'")}')" style="background: none; border: none; color: #EF4444; cursor: pointer; padding: 0 2px; font-weight: bold;" title="Hapus tahun ajaran">&times;</button>
-                </span>
-            `;
-        }).join('');
+    // 2. Textarea Tahun Ajaran
+    const years = db.settings.academic_years || db.academic_years || ["2024/2025", "2025/2026", "2026/2027", "2027/2028", "2028/2029"];
+    const yearsTextarea = document.getElementById('academicYearsTextarea');
+    if (yearsTextarea) {
+        yearsTextarea.value = Array.isArray(years) ? years.join('\n') : String(years || '');
     }
+    updateAcademicYearsCount();
+    syncActiveYearDropdown();
+}
 
-    // 3. Dropdown Tahun Ajaran Aktif
+function getSubjectsFromTextarea() {
+    const el = document.getElementById('subjectsTextarea');
+    if (!el) return [];
+    return el.value
+        .split('\n')
+        .map(s => s.trim())
+        .filter(Boolean);
+}
+
+function updateSubjectsCount() {
+    const subs = getSubjectsFromTextarea();
+    const badge = document.getElementById('badgeSubjectCount');
+    if (badge) badge.textContent = `${subs.length} Mapel`;
+}
+
+function onSubjectsTextareaInput() {
+    updateSubjectsCount();
+    markDirty(true);
+}
+
+function formatSubjectsTextarea() {
+    const subs = getSubjectsFromTextarea();
+    const unique = [];
+    subs.forEach(s => {
+        if (!unique.includes(s)) unique.push(s);
+    });
+    const el = document.getElementById('subjectsTextarea');
+    if (el) el.value = unique.join('\n');
+    updateSubjectsCount();
+    markDirty(true);
+    showToast('Daftar mata pelajaran telah dirapikan & baris kosong dibersihkan.', 'info');
+}
+
+function getYearsFromTextarea() {
+    const el = document.getElementById('academicYearsTextarea');
+    if (!el) return [];
+    return el.value
+        .split('\n')
+        .map(y => y.trim())
+        .filter(Boolean);
+}
+
+function updateAcademicYearsCount() {
+    const years = getYearsFromTextarea();
+    const badge = document.getElementById('badgeYearCount');
+    if (badge) badge.textContent = `${years.length} Tahun`;
+}
+
+function syncActiveYearDropdown() {
+    const years = getYearsFromTextarea();
     const yearSelect = document.getElementById('set_academic_year');
-    const currentActive = db.settings.academic_year || (years[0] || '2026/2027');
-    yearSelect.innerHTML = years.map(yr => `
+    if (!yearSelect) return;
+    const currentActive = (db && db.settings && db.settings.academic_year) || yearSelect.value || (years[0] || '2026/2027');
+    
+    const list = years.length ? years : [currentActive];
+    yearSelect.innerHTML = list.map(yr => `
         <option value="${yr}" ${yr === currentActive ? 'selected' : ''}>${yr}${yr === currentActive ? ' (Aktif Saat Ini)' : ''}</option>
     `).join('');
+}
+
+function onAcademicYearsTextareaInput() {
+    updateAcademicYearsCount();
+    syncActiveYearDropdown();
+    markDirty(true);
+}
+
+function formatYearsTextarea() {
+    const years = getYearsFromTextarea();
+    const unique = [];
+    years.forEach(y => {
+        if (!unique.includes(y)) unique.push(y);
+    });
+    const el = document.getElementById('academicYearsTextarea');
+    if (el) el.value = unique.join('\n');
+    updateAcademicYearsCount();
+    syncActiveYearDropdown();
+    markDirty(true);
+    showToast('Daftar tahun ajaran telah dirapikan & baris kosong dibersihkan.', 'info');
 }
 
 function onActiveYearSelectChange(newVal) {
     if (db && db.settings) {
         db.settings.academic_year = newVal;
-        renderSettingsSubjectsAndYears();
         markDirty(true);
     }
-}
-
-async function addNewSubject() {
-    const input = document.getElementById('newSubjectInput');
-    const val = input.value.trim();
-    if (!val) return;
-
-    if (!db.settings) db.settings = {};
-    if (!Array.isArray(db.settings.subjects)) db.settings.subjects = [];
-
-    if (db.settings.subjects.includes(val)) {
-        showToast(`Mata pelajaran "${val}" sudah ada.`, 'info');
-        return;
-    }
-
-    db.settings.subjects.push(val);
-    input.value = '';
-
-    await saveAdminDatabase({ subjects: db.settings.subjects, settings: db.settings });
-    renderSettingsSubjectsAndYears();
-    markDirty(true);
-    showToast(`Mata pelajaran "${val}" berhasil ditambahkan!`, 'success');
-}
-
-async function removeSubject(sub) {
-    let confirmed = false;
-    if (typeof showConfirmModal === 'function') {
-        confirmed = await showConfirmModal({
-            title: 'Hapus Mata Pelajaran',
-            message: `Hapus mata pelajaran "${sub}" dari master data?`,
-            type: 'danger',
-            confirmText: 'Ya, Hapus Mapel',
-            confirmIcon: 'bi-trash-fill'
-        });
-    } else {
-        confirmed = confirm(`Hapus mata pelajaran "${sub}" dari master?`);
-    }
-    if (!confirmed) return;
-
-    if (!db.settings || !Array.isArray(db.settings.subjects)) return;
-    db.settings.subjects = db.settings.subjects.filter(s => s !== sub);
-
-    await saveAdminDatabase({ subjects: db.settings.subjects, settings: db.settings });
-    renderSettingsSubjectsAndYears();
-    markDirty(true);
-    showToast(`Mata pelajaran "${sub}" dihapus.`, 'info');
-}
-
-async function addNewAcademicYear() {
-    const input = document.getElementById('newYearInput');
-    const val = input.value.trim();
-    if (!val) return;
-
-    if (!db.settings) db.settings = {};
-    if (!Array.isArray(db.settings.academic_years)) db.settings.academic_years = [];
-
-    if (db.settings.academic_years.includes(val)) {
-        showToast(`Tahun ajaran "${val}" sudah terdaftar.`, 'info');
-        return;
-    }
-
-    db.settings.academic_years.push(val);
-    input.value = '';
-
-    await saveAdminDatabase({ academic_years: db.settings.academic_years, settings: db.settings });
-    renderSettingsSubjectsAndYears();
-    markDirty(true);
-    showToast(`Tahun ajaran "${val}" berhasil ditambahkan!`, 'success');
-}
-
-async function removeAcademicYear(yr) {
-    let confirmed = false;
-    if (typeof showConfirmModal === 'function') {
-        confirmed = await showConfirmModal({
-            title: 'Hapus Tahun Ajaran',
-            message: `Hapus tahun ajaran "${yr}" dari master data?`,
-            type: 'danger',
-            confirmText: 'Ya, Hapus Tahun',
-            confirmIcon: 'bi-trash-fill'
-        });
-    } else {
-        confirmed = confirm(`Hapus tahun ajaran "${yr}" dari master?`);
-    }
-    if (!confirmed) return;
-
-    if (!db.settings || !Array.isArray(db.settings.academic_years)) return;
-    if (db.settings.academic_years.length <= 1) {
-        showToast('Minimal harus ada 1 tahun ajaran.', 'danger');
-        return;
-    }
-
-    db.settings.academic_years = db.settings.academic_years.filter(y => y !== yr);
-    if (db.settings.academic_year === yr) {
-        db.settings.academic_year = db.settings.academic_years[0];
-    }
-
-    await saveAdminDatabase({ academic_years: db.settings.academic_years, settings: db.settings });
-    renderSettingsSubjectsAndYears();
-    markDirty(true);
-    showToast(`Tahun ajaran "${yr}" telah dihapus.`, 'info');
 }
 
 // ================= 2. MASTER DAFTAR KELAS =================
@@ -1156,7 +1117,7 @@ async function executeImportClasses() {
 
 // ================= 4. EXPORT & IMPORT EXCEL MATA PELAJARAN =================
 function exportSubjectsExcel() {
-    const subjects = (db.settings && db.settings.subjects) || db.subjects || [];
+    const subjects = getSubjectsFromTextarea().length ? getSubjectsFromTextarea() : ((db.settings && db.settings.subjects) || db.subjects || []);
     if (subjects.length === 0) {
         showToast('Tidak ada daftar mata pelajaran untuk diekspor.', 'info');
         return;
@@ -1257,25 +1218,40 @@ async function executeImportSubjects() {
     if (!parsedSubjectExcelData || !parsedSubjectExcelData.length) return;
 
     if (!db.settings) db.settings = {};
-    if (!Array.isArray(db.settings.subjects)) db.settings.subjects = [];
+    const currentSubs = getSubjectsFromTextarea();
 
     let added = 0;
     parsedSubjectExcelData.forEach(sub => {
-        if (!db.settings.subjects.includes(sub)) {
-            db.settings.subjects.push(sub);
+        if (!currentSubs.includes(sub)) {
+            currentSubs.push(sub);
             added++;
         }
     });
 
-    const res = await saveAdminDatabase({ subjects: db.settings.subjects, settings: db.settings });
-    if (res.success) {
-        closeImportSubjectsModal();
-        renderSettingsSubjectsAndYears();
-        markDirty(true);
-        showToast(`Impor Mapel Berhasil: ${added} mapel baru ditambahkan ke database!`, 'success');
-    } else {
-        showToast('Gagal menyimpan: ' + res.message, 'danger');
+    const el = document.getElementById('subjectsTextarea');
+    if (el) el.value = currentSubs.join('\n');
+    updateSubjectsCount();
+    db.settings.subjects = currentSubs;
+    db.subjects = currentSubs;
+
+    const saveFn = (typeof saveAdminDatabase === 'function') 
+        ? saveAdminDatabase 
+        : (window.saveAdminDatabase || (typeof callServer === 'function' ? (p) => callServer('apiSaveDatabase', p) : null));
+
+    if (saveFn) {
+        const res = await saveFn({ subjects: currentSubs, settings: db.settings });
+        if (res && res.success) {
+            closeImportSubjectsModal();
+            renderSettingsSubjectsAndYears();
+            markDirty(false);
+            showToast(`Impor Mapel Berhasil: ${added} mapel baru ditambahkan dan disimpan ke database!`, 'success');
+            return;
+        }
     }
+
+    closeImportSubjectsModal();
+    markDirty(true);
+    showToast(`Daftar mapel diperbarui (${added} mapel baru). Klik "Perbarui Pengaturan" untuk menyimpan ke database.`, 'info');
 }
 
 // ================= 5. UPLOAD & RESET LOGO / KOP =================
@@ -1319,17 +1295,19 @@ async function resetLogoDefault() {
     if (confirmed) {
         try {
             const res = await callServer('apiResetLogo');
-            const result = await res.json();
-            if (result.success) {
+            const result = res;
+            if (result && result.success) {
                 pendingLogoBase64 = null;
                 document.getElementById('logoSelectedNotice').style.display = 'none';
                 document.getElementById('logoPreviewImg').src = result.url;
                 const topLogo = document.getElementById('topNavbarLogo');
                 if (topLogo) topLogo.src = result.url;
+                const topbarLogo = document.getElementById('topbarSchoolLogo');
+                if (topbarLogo) topbarLogo.src = result.url;
                 markDirty(true);
                 showToast(result.message, 'success');
             } else {
-                showToast(result.message, 'danger');
+                showToast((result && result.message) || 'Gagal mereset logo', 'danger');
             }
         } catch (err) {
             showToast('Gagal mereset logo: ' + err.message, 'danger');
@@ -1376,15 +1354,15 @@ async function resetKopDefault() {
     if (confirmed) {
         try {
             const res = await callServer('apiResetKop');
-            const result = await res.json();
-            if (result.success) {
+            const result = res;
+            if (result && result.success) {
                 pendingKopBase64 = null;
                 document.getElementById('kopSelectedNotice').style.display = 'none';
                 document.getElementById('kopPreviewImg').src = result.url;
                 markDirty(true);
                 showToast(result.message, 'success');
             } else {
-                showToast(result.message, 'danger');
+                showToast((result && result.message) || 'Gagal mereset kop', 'danger');
             }
         } catch (err) {
             showToast('Gagal mereset kop: ' + err.message, 'danger');
@@ -1438,7 +1416,7 @@ async function saveAllPengaturan(notify = true) {
             }
         }
 
-        // 3. Simpan Nilai Formulir Identitas Sekolah
+        // 3. Simpan Nilai Formulir Identitas Sekolah & Daftar Textarea Mapel / Tahun
         if (!db.settings) db.settings = {};
         db.settings.school_name = document.getElementById('set_school_name').value.trim();
         db.settings.school_tagline = document.getElementById('set_school_tagline').value.trim();
@@ -1447,13 +1425,29 @@ async function saveAllPengaturan(notify = true) {
         db.settings.drive_folder_url = document.getElementById('set_drive_folder_url').value.trim();
         db.settings.drive_folder_id = document.getElementById('set_drive_folder_id').value.trim();
 
-        // 4. Simpan seluruh dataset konfigurasi ke database
-        const res = await saveAdminDatabase({ 
+        // Ambil daftar mapel & tahun ajaran dari textarea
+        const subjects = getSubjectsFromTextarea();
+        const academic_years = getYearsFromTextarea();
+        db.settings.subjects = subjects;
+        db.settings.academic_years = academic_years;
+        db.subjects = subjects;
+        db.academic_years = academic_years;
+
+        // Fallback saveAdminDatabase jika belum terdefinisi di local scope
+        const saveFn = (typeof saveAdminDatabase === 'function') 
+            ? saveAdminDatabase 
+            : (window.saveAdminDatabase || (typeof callServer === 'function' ? (p) => callServer('apiSaveDatabase', p) : null));
+
+        if (!saveFn) {
+            throw new Error('Fungsi penyimpanan database saveAdminDatabase tidak ditemukan.');
+        }
+
+        // 4. Simpan seluruh dataset konfigurasi ke database Google Sheets
+        const res = await saveFn({ 
             settings: db.settings,
             classes: db.classes || [],
-            students: db.students || [],
-            subjects: db.settings.subjects || db.subjects || [],
-            academic_years: db.settings.academic_years || db.academic_years || []
+            subjects: subjects,
+            academic_years: academic_years
         });
 
         if (res.success) {
@@ -1498,9 +1492,9 @@ function discardAndNavigate() {
         localStorage.removeItem('sas_admin_user');
         localStorage.removeItem('sas_admin_name');
         localStorage.removeItem('sas_admin_role');
-        window.location.href = '/admin/login.html';
+        navigateTo('login');
     } else if (targetNavigationUrl) {
-        window.location.href = targetNavigationUrl;
+        try { window.open(targetNavigationUrl, '_top'); } catch (e) { window.location.href = targetNavigationUrl; }
     }
 }
 
@@ -1520,9 +1514,9 @@ async function saveAndNavigate() {
             localStorage.removeItem('sas_admin_user');
             localStorage.removeItem('sas_admin_name');
             localStorage.removeItem('sas_admin_role');
-            window.location.href = '/admin/login.html';
+            navigateTo('login');
         } else if (targetNavigationUrl) {
-            window.location.href = targetNavigationUrl;
+            try { window.open(targetNavigationUrl, '_top'); } catch (e) { window.location.href = targetNavigationUrl; }
         }
     } else {
         if (btn) {
@@ -1578,7 +1572,7 @@ window.logout = async function() {
             localStorage.removeItem('sas_admin_user');
             localStorage.removeItem('sas_admin_name');
             localStorage.removeItem('sas_admin_role');
-            window.location.href = '/admin/login.html';
+            navigateTo('login');
         }
     }
 };

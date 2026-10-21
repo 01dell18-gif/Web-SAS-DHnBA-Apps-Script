@@ -1,3 +1,4 @@
+<base target="_top">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,16 +12,60 @@
     var p = '<?= currentPage ?>';
     var authPages = ['dashboard', 'siswa', 'guru', 'template', 'admin-arsip', 'pengaturan', 'users', 'database'];
     if (authPages.indexOf(p) !== -1) {
-      var isAuth = localStorage.getItem('sas_admin_auth') === '1';
-      var role = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+      var isAuth = false;
+      try {
+        isAuth = localStorage.getItem('sas_admin_auth') === '1';
+      } catch (e) {}
+
+      var role = 'admin';
+      try {
+        role = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+      } catch (e) {}
+
+      var baseUrl = '';
+      try {
+        if (document.referrer && document.referrer.indexOf('script.google.com') !== -1) {
+          baseUrl = document.referrer.split('?')[0].split('#')[0];
+        }
+      } catch (e) {}
+      if (!baseUrl && window.location && window.location.href && window.location.href.indexOf('script.google.com') !== -1) {
+        baseUrl = window.location.href.split('?')[0].split('#')[0];
+      }
+      if (!baseUrl) {
+        baseUrl = '<?= appUrl ?>';
+      }
+
+      function redirectTop(targetPage) {
+        var dest = (baseUrl || '') + (baseUrl && baseUrl.indexOf('?') !== -1 ? '&' : '?') + 'page=' + targetPage;
+        try {
+          if (window.top && window.top !== window) {
+            window.top.location.href = dest;
+            return;
+          }
+        } catch (err) {}
+        try {
+          window.open(dest, '_top');
+          return;
+        } catch (err) {}
+        try {
+          var a = document.createElement('a');
+          a.href = dest;
+          a.target = '_top';
+          document.body.appendChild(a);
+          a.click();
+          return;
+        } catch (err) {}
+        window.location.href = dest;
+      }
+
       if (!isAuth) {
-        document.documentElement.style.display = 'none';
-        window.location.replace('<?= appUrl ?>?page=login');
+        document.write('<div style="font-family: \'Plus Jakarta Sans\', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 85vh; text-align: center; color: #475569;"><div style="width: 44px; height: 44px; border: 3px solid #E2E8F0; border-top: 3px solid #4657D9; border-radius: 50%; animation: spinAuth 0.8s linear infinite; margin-bottom: 16px;"></div><h3 style="margin: 0 0 8px 0; color: #1E293B;">Memerlukan Akses Administrator</h3><p style="margin: 0; font-size: 0.9rem;">Mengarahkan ke halaman login panel...</p><style>@keyframes spinAuth { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style></div>');
+        redirectTop('login');
         return;
       }
       if (role === 'operator' && (p === 'users' || p === 'database')) {
-        document.documentElement.style.display = 'none';
-        window.location.replace('<?= appUrl ?>?page=dashboard');
+        document.write('<div style="font-family: \'Plus Jakarta Sans\', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 85vh; text-align: center; color: #475569;"><h3 style="color: #E11D48; margin-bottom: 8px;">Akses Dibatasi</h3><p style="margin: 0; font-size: 0.9rem;">Operator tidak memiliki izin mengakses menu ini. Mengalihkan ke Dashboard...</p></div>');
+        redirectTop('dashboard');
         return;
       }
     }
@@ -963,6 +1008,56 @@ textarea.form-control {
     font-size: 0.825rem;
     color: var(--text-muted);
     font-weight: 500;
+}
+
+/* ==========================================================================
+   STANDARD FORM MODAL OVERLAY & CARD SYSTEM
+   (Digunakan untuk Modal Tambah, Edit, Impor & Pratinjau Master Data)
+   ========================================================================== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    padding: 1.25rem;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.modal-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 540px;
+    border-radius: var(--radius-lg, 16px);
+    padding: 2rem 1.75rem;
+    box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(226, 232, 240, 0.9);
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalCardScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+    text-align: left;
+}
+
+@keyframes modalCardScaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.93) translateY(14px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 /* ==========================================================================
