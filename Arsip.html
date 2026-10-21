@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arsip Dokumen Ujian - <?= schoolSettings.school_name || 'SMK NEGERI FYJ CHANNEL' ?></title>
+    <?!= include('StyleCSS'); ?>
+    <?!= include('PreviewA4CSS'); ?>
+    <style>
+        .archive-badge-dh {
+            background: #EFF6FF;
+            color: #2563EB;
+            border: 1px solid #BFDBFE;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .archive-badge-ba {
+            background: #FAF5FF;
+            color: #7C3AED;
+            border: 1px solid #E9D5FF;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .filter-btn {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .filter-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .filter-btn.active {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(70, 87, 217, 0.25);
+        }
+        .modal-archive-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 99999;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .modal-archive-card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 950px;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+            max-height: 94vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .modal-archive-header {
+            padding: 1rem 1.5rem;
+            background: #1E293B;
+            color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-archive-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+            background: #F1F5F9;
+            display: flex;
+            justify-content: center;
+        }
+        .modal-archive-container {
+            background: #ffffff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            padding: 0;
+            max-width: 794px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<?!= include('Header'); ?>
+
+<div class="container" style="padding-top: 2rem; padding-bottom: 3.5rem;">
+    <!-- Header Banner -->
+    <div style="background: linear-gradient(135deg, #1E293B 0%, #334155 100%); color: #fff; padding: 2rem; border-radius: var(--radius-lg); margin-bottom: 2rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 0.4rem; color: #ffffff;">
+                    <i class="bi bi-archive-fill" style="color: #60A5FA; margin-right: 8px;"></i> Arsip Dokumen Pelaksanaan Ujian
+                </h1>
+                <p style="font-size: 0.95rem; opacity: 0.9; margin: 0; color: #CBD5E1;">
+                    Riwayat dokumen lembar Daftar Hadir dan Berita Acara yang tersimpan di Google Sheets setelah proses unduh/cetak resmi.
+                </p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary btn-sm" onclick="fetchArchives()"><i class="bi bi-arrow-clockwise"></i> Segarkan Data</button>
+                <button class="btn btn-primary btn-sm" onclick="navigateTo('absensi')"><i class="bi bi-plus-lg"></i> Buat Daftar Hadir</button>
+                <button class="btn btn-secondary btn-sm" onclick="navigateTo('berita-acara')"><i class="bi bi-plus-lg"></i> Buat Berita Acara</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ringkasan Statistik Arsip -->
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #EEF2FF; color: #4338CA;"><i class="bi bi-collection-fill"></i></div>
+            <div>
+                <div class="stat-value" id="statTotalArchives">0</div>
+                <div class="stat-label">Total Dokumen Diarsipkan</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #EFF6FF; color: #2563EB;"><i class="bi bi-clipboard-check-fill"></i></div>
+            <div>
+                <div class="stat-value" id="statTotalDaftarHadir">0</div>
+                <div class="stat-label">Arsip Daftar Hadir</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #FAF5FF; color: #7C3AED;"><i class="bi bi-file-earmark-text-fill"></i></div>
+            <div>
+                <div class="stat-value" id="statTotalBeritaAcara">0</div>
+                <div class="stat-label">Arsip Berita Acara</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kontrol Filter & Pencarian -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <div class="card-body" style="padding: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <!-- Filter Tabs -->
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" class="filter-btn active" data-type="all" onclick="setArchiveFilter('all')">
+                        <i class="bi bi-grid-fill"></i> Semua Dokumen
+                    </button>
+                    <button type="button" class="filter-btn" data-type="daftar_hadir" onclick="setArchiveFilter('daftar_hadir')">
+                        <i class="bi bi-clipboard-check"></i> Daftar Hadir Saja
+                    </button>
+                    <button type="button" class="filter-btn" data-type="berita_acara" onclick="setArchiveFilter('berita_acara')">
+                        <i class="bi bi-file-earmark-text"></i> Berita Acara Saja
+                    </button>
+                </div>
+
+                <!-- Input Pencarian -->
+                <div style="position: relative; max-width: 380px; width: 100%;">
+                    <input type="text" id="searchArchiveInput" class="form-control" placeholder="Cari berdasarkan kelas, mapel, tanggal, atau pengawas..." oninput="renderArchiveTable()">
+                </div>
+            </div>
+
+            <!-- Filter Lanjutan Mendatar -->
+            <div style="border-top: 1px solid var(--border); margin-top: 1rem; padding-top: 1rem; display: flex; gap: 10px; align-items: flex-end; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px;">
+                <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 140px;">
+                    <label class="form-label" style="font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; white-space: nowrap;"><i class="bi bi-calendar3"></i> Tahun Ajaran</label>
+                    <select id="filterTahunAjaran" class="form-select form-select-sm" onchange="renderArchiveTable()">
+                        <option value="">Semua Tahun Ajaran</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 130px;">
+                    <label class="form-label" style="font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; white-space: nowrap;"><i class="bi bi-hourglass-split"></i> Semester</label>
+                    <select id="filterSemester" class="form-select form-select-sm" onchange="renderArchiveTable()">
+                        <option value="">Semua Semester</option>
+                        <option value="Ganjil">Ganjil</option>
+                        <option value="Genap">Genap</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 135px;">
+                    <label class="form-label" style="font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; white-space: nowrap;"><i class="bi bi-calendar-event"></i> Tanggal Ujian</label>
+                    <input type="date" id="filterTanggal" class="form-control form-control-sm" onchange="renderArchiveTable()">
+                </div>
+                <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 135px;">
+                    <label class="form-label" style="font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; white-space: nowrap;"><i class="bi bi-building"></i> Kelas</label>
+                    <select id="filterKelas" class="form-select form-select-sm" onchange="renderArchiveTable()">
+                        <option value="">Semua Kelas</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0; flex: 1.5; min-width: 170px;">
+                    <label class="form-label" style="font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; white-space: nowrap;"><i class="bi bi-journal-text"></i> Mata Pelajaran</label>
+                    <select id="filterMapel" class="form-select form-select-sm" onchange="renderArchiveTable()">
+                        <option value="">Semua Mapel</option>
+                    </select>
+                </div>
+                <div style="flex-shrink: 0;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="resetAllFilters()" title="Reset seluruh filter pencarian">
+                        <i class="bi bi-arrow-counterclockwise"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabel Arsip -->
+    <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="card-title"><i class="bi bi-table"></i> Daftar Riwayat Dokumen Tersimpan</span>
+            <span id="badgeTableCount" class="badge" style="background: var(--primary-light); color: var(--primary); font-weight: 700; padding: 4px 10px; border-radius: 6px;">0 Dokumen</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table" style="font-size: 0.88rem;">
+                    <thead>
+                        <tr>
+                            <th style="width: 45px;">No</th>
+                            <th style="width: 140px;">Jenis Dokumen</th>
+                            <th style="width: 110px;">Tanggal Ujian</th>
+                            <th>Mata Pelajaran & Kelas</th>
+                            <th style="text-align: center; width: 130px;">Kehadiran</th>
+                            <th>Pengawas Ujian</th>
+                            <th style="width: 140px;">Waktu Arsip</th>
+                            <th style="text-align: center; width: 160px;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="archiveTableBody">
+                        <tr>
+                            <td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                                <i class="bi bi-hourglass-split spin" style="font-size: 2rem; display: block; margin-bottom: 8px;"></i>
+                                Memuat arsip dokumen dari Google Sheets...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Pratinjau Dokumen Arsip -->
+<div id="previewArchiveModal" class="modal-archive-overlay">
+    <div class="modal-archive-card">
+        <div class="modal-archive-header">
+            <div>
+                <h3 style="font-size: 1.1rem; margin: 0; color: #fff;" id="previewModalTitle">Pratinjau Dokumen Arsip</h3>
+                <div style="font-size: 0.78rem; color: #94A3B8;" id="previewModalSubtitle">-</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="printModalDoc()"><i class="bi bi-printer"></i> Cetak Ulang</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="downloadModalPdf()"><i class="bi bi-download"></i> Unduh PDF</button>
+                <button type="button" onclick="closePreviewModal()" style="background: none; border: none; font-size: 1.6rem; cursor: pointer; color: #fff; margin-left: 8px;">&times;</button>
+            </div>
+        </div>
+        <div class="modal-archive-body">
+            <div class="modal-archive-container" id="modalRenderContainer">
+            </div>
+        </div>
+    </div>
+</div>
+
+<?!= include('AppJS'); ?>
+
+<script>
+
+let archivesData = [];
+let currentFilterType = 'all';
+let activePreviewDoc = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+    fetchArchives();
+});
+
+function toggleMobileNav(e) {
+    e.stopPropagation();
+    const nav = document.getElementById('navLinks');
+    if (nav) nav.classList.toggle('active');
+}
+
+function fetchArchives() {
+    callServer('apiGetArchives').then(data => {
+            archivesData = Array.isArray(data) ? data : [];
+            updateStats();
+            populateFilterDropdowns();
+            renderArchiveTable();
+        })
+        .catch(err => {
+            console.error('Gagal mengambil arsip:', err);
+            const tbody = document.getElementById('archiveTableBody');
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--danger); padding: 2rem;">Gagal memuat arsip dokumen dari server: ${err.message}</td></tr>`;
+            }
+        });
+}
+
+function updateStats() {
+    const total = archivesData.length;
+    const dh = archivesData.filter(a => a.type === 'daftar_hadir').length;
+    const ba = archivesData.filter(a => a.type === 'berita_acara').length;
+
+    const elTotal = document.getElementById('statTotalArchives');
+    const elDh = document.getElementById('statTotalDaftarHadir');
+    const elBa = document.getElementById('statTotalBeritaAcara');
+
+    if (elTotal) elTotal.textContent = total;
+    if (elDh) elDh.textContent = dh;
+    if (elBa) elBa.textContent = ba;
+}
+
+async function populateFilterDropdowns() {
+    const selTahun = document.getElementById('filterTahunAjaran');
+    const selKelas = document.getElementById('filterKelas');
+    const selMapel = document.getElementById('filterMapel');
+    if (!selTahun || !selKelas || !selMapel) return;
+
+    const curTahun = selTahun.value;
+    const curKelas = selKelas.value;
+    const curMapel = selMapel.value;
+
+    const years = new Set();
+    const classes = new Set();
+    const mapels = new Set();
+
+    archivesData.forEach(a => {
+        if (a.tahun_ajaran) years.add(a.tahun_ajaran.trim());
+        if (a.nama_kelas) classes.add(a.nama_kelas.trim());
+        if (a.mata_pelajaran) mapels.add(a.mata_pelajaran.trim());
+    });
+
+    try {
+        const [clsRes, subjRes, yrRes] = await Promise.all([
+            callServer('apiGetClasses').catch(() => []),
+            callServer('apiGetSubjects').catch(() => []),
+            callServer('apiGetAcademicYears').catch(() => [])
+        ]);
+        if (Array.isArray(clsRes)) clsRes.forEach(c => { const n = c.nama_kelas || c.name; if (n) classes.add(n.trim()); });
+        if (Array.isArray(subjRes)) subjRes.forEach(s => { if (s) mapels.add(s.trim()); });
+        if (Array.isArray(yrRes)) yrRes.forEach(y => { if (y) years.add(y.trim()); });
+    } catch(e) {}
+
+    // Populate Tahun Ajaran
+    selTahun.innerHTML = '<option value="">Semua Tahun Ajaran</option>';
+    Array.from(years).sort().forEach(y => {
+        selTahun.innerHTML += `<option value="${y}" ${y === curTahun ? 'selected' : ''}>${y}</option>`;
+    });
+
+    // Populate Kelas
+    selKelas.innerHTML = '<option value="">Semua Kelas</option>';
+    Array.from(classes).sort().forEach(k => {
+        selKelas.innerHTML += `<option value="${k}" ${k === curKelas ? 'selected' : ''}>${k}</option>`;
+    });
+
+    // Populate Mapel
+    selMapel.innerHTML = '<option value="">Semua Mapel</option>';
+    Array.from(mapels).sort().forEach(m => {
+        selMapel.innerHTML += `<option value="${m}" ${m === curMapel ? 'selected' : ''}>${m}</option>`;
+    });
+}
+
+function resetAllFilters() {
+    currentFilterType = 'all';
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        if (btn.getAttribute('data-type') === 'all') btn.classList.add('active');
+        else btn.classList.remove('active');
+    });
+    if (document.getElementById('searchArchiveInput')) document.getElementById('searchArchiveInput').value = '';
+    if (document.getElementById('filterTahunAjaran')) document.getElementById('filterTahunAjaran').value = '';
+    if (document.getElementById('filterSemester')) document.getElementById('filterSemester').value = '';
+    if (document.getElementById('filterTanggal')) document.getElementById('filterTanggal').value = '';
+    if (document.getElementById('filterKelas')) document.getElementById('filterKelas').value = '';
+    if (document.getElementById('filterMapel')) document.getElementById('filterMapel').value = '';
+    renderArchiveTable();
+}
+
+function setArchiveFilter(type) {
+    currentFilterType = type;
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        if (btn.getAttribute('data-type') === type) btn.classList.add('active');
+        else btn.classList.remove('active');
+    });
+    renderArchiveTable();
+}
+
+function renderArchiveTable() {
+    const tbody = document.getElementById('archiveTableBody');
+    if (!tbody) return;
+
+    const search = (document.getElementById('searchArchiveInput')?.value || '').toLowerCase().trim();
+    const fTahun = document.getElementById('filterTahunAjaran')?.value || '';
+    const fSem = document.getElementById('filterSemester')?.value || '';
+    const fTgl = document.getElementById('filterTanggal')?.value || '';
+    const fKelas = document.getElementById('filterKelas')?.value || '';
+    const fMapel = document.getElementById('filterMapel')?.value || '';
+
+    let list = archivesData;
+    if (currentFilterType !== 'all') {
+        list = list.filter(a => a.type === currentFilterType);
+    }
+
+    if (fTahun) {
+        list = list.filter(a => a.tahun_ajaran && a.tahun_ajaran === fTahun);
+    }
+    if (fSem) {
+        list = list.filter(a => a.semester && a.semester.toLowerCase() === fSem.toLowerCase());
+    }
+    if (fTgl) {
+        list = list.filter(a => a.tanggal_ujian && a.tanggal_ujian === fTgl);
+    }
+    if (fKelas) {
+        list = list.filter(a => a.nama_kelas && (a.nama_kelas === fKelas || (a.class_id && String(a.class_id) === fKelas)));
+    }
+    if (fMapel) {
+        list = list.filter(a => a.mata_pelajaran && a.mata_pelajaran === fMapel);
+    }
+
+    if (search) {
+        list = list.filter(a => 
+            (a.nama_kelas && a.nama_kelas.toLowerCase().includes(search)) ||
+            (a.mata_pelajaran && a.mata_pelajaran.toLowerCase().includes(search)) ||
+            (a.tanggal_ujian && a.tanggal_ujian.toLowerCase().includes(search)) ||
+            (a.nama_pengawas_1 && a.nama_pengawas_1.toLowerCase().includes(search)) ||
+            (a.nama_pengawas_2 && a.nama_pengawas_2.toLowerCase().includes(search)) ||
+            (a.title && a.title.toLowerCase().includes(search)) ||
+            (a.tahun_ajaran && a.tahun_ajaran.toLowerCase().includes(search))
+        );
+    }
+
+    const badge = document.getElementById('badgeTableCount');
+    if (badge) badge.textContent = `${list.length} Dokumen`;
+
+    if (list.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                    <i class="bi bi-inbox" style="font-size: 2.2rem; display: block; margin-bottom: 8px; opacity: 0.4;"></i>
+                    Tidak ada arsip dokumen yang sesuai dengan filter atau pencarian.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    let html = '';
+    list.forEach((doc, idx) => {
+        const isDh = doc.type === 'daftar_hadir';
+        const typeBadge = isDh 
+            ? `<span class="archive-badge-dh"><i class="bi bi-clipboard-check"></i> Daftar Hadir</span>`
+            : `<span class="archive-badge-ba"><i class="bi bi-file-earmark-text"></i> Berita Acara</span>`;
+
+        const hadirPill = `
+            <div style="font-size: 0.78rem; display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                <span style="font-weight: 700; color: #065F46; background: #ECFDF5; padding: 1px 6px; border-radius: 4px;">
+                    Hadir: ${doc.peserta_hadir || 0} / ${doc.peserta_seharusnya || 0}
+                </span>
+                ${(doc.peserta_tidak_hadir > 0) ? `<span style="font-weight: 600; color: #991B1B; font-size: 0.72rem;">Tidak Hadir: ${doc.peserta_tidak_hadir}</span>` : ''}
+            </div>
+        `;
+
+        const proctorStr = doc.nama_pengawas_1 
+            ? `${doc.nama_pengawas_1}${doc.nama_pengawas_2 ? ', ' + doc.nama_pengawas_2 : ''}` 
+            : '-';
+
+        const createdDate = doc.created_at ? new Date(doc.created_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }) : '-';
+
+        html += `
+            <tr>
+                <td style="font-weight: 600; color: var(--text-muted);">${idx + 1}</td>
+                <td>${typeBadge}</td>
+                <td><strong style="color: var(--text-heading);">${doc.tanggal_ujian || '-'}</strong></td>
+                <td>
+                    <div style="font-weight: 700; color: var(--text-heading);">${doc.mata_pelajaran || '-'}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Kelas: <strong style="color: var(--primary);">${doc.nama_kelas || '-'}</strong> ${doc.ruang ? '• ' + doc.ruang : ''}</div>
+                </td>
+                <td style="text-align: center;">${hadirPill}</td>
+                <td><div style="font-size: 0.84rem; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${proctorStr}">${proctorStr}</div></td>
+                <td style="font-size: 0.8rem; color: var(--text-muted);">${createdDate}</td>
+                <td style="text-align: center;">
+                    <div style="display: inline-flex; gap: 6px;">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="openPreviewDoc(${doc.id})" title="Lihat Dokumen & Cetak">
+                            <i class="bi bi-eye"></i> Lihat
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="quickDownloadPdf(${doc.id})" title="Unduh Berkas PDF">
+                            <i class="bi bi-download"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+}
+
+function openPreviewDoc(docId) {
+    const doc = archivesData.find(a => Number(a.id) === Number(docId));
+    if (!doc) return;
+
+    activePreviewDoc = doc;
+    document.getElementById('previewModalTitle').textContent = doc.title || 'Pratinjau Dokumen';
+    document.getElementById('previewModalSubtitle').textContent = `${doc.mata_pelajaran || ''} | Kelas: ${doc.nama_kelas || ''} | Tanggal: ${doc.tanggal_ujian || ''}`;
+
+    const container = document.getElementById('modalRenderContainer');
+    container.innerHTML = doc.html_content || '<div style="padding: 2rem; text-align: center;">Konten dokumen tidak tersedia.</div>';
+
+    document.getElementById('previewArchiveModal').style.display = 'flex';
+}
+
+function closePreviewModal() {
+    document.getElementById('previewArchiveModal').style.display = 'none';
+    activePreviewDoc = null;
+}
+
+function printModalDoc() {
+    const container = document.getElementById('modalRenderContainer');
+    if (!container) return;
+
+    // Bersihkan DOM pratinjau sebelum dicetak agar margin & page-break sempurna di setiap lembar
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = container.innerHTML;
+
+    tempDiv.querySelectorAll('.a4-page').forEach(page => {
+        page.removeAttribute('style');
+        page.style.width = '100%';
+        page.style.minHeight = 'auto';
+        page.style.padding = '0';
+        page.style.margin = '0';
+        page.style.boxShadow = 'none';
+        page.style.border = 'none';
+    });
+
+    tempDiv.querySelectorAll('#pvPageSeparator').forEach(el => el.remove());
+
+    const page2 = tempDiv.querySelector('#a4Page2');
+    if (page2) {
+        page2.style.pageBreakBefore = 'always';
+        page2.style.breakBefore = 'page';
+    }
+
+    const docTitle = activePreviewDoc ? activePreviewDoc.title : 'Dokumen Ujian';
+    const printWin = window.open('', '', 'width=950,height=750');
+    printWin.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>${docTitle}</title>
+            <link rel="stylesheet" href="/assets/css/preview-a4.css">
+            <style>
+                @page {
+                    size: A4 portrait;
+                    margin: 12mm 15mm 12mm 15mm;
+                }
+                body, html {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    background: #ffffff !important;
+                    font-family: 'Times New Roman', Times, serif;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
+                .a4-wrapper {
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    display: block !important;
+                    width: 100% !important;
+                }
+                .a4-page {
+                    width: 100% !important;
+                    min-height: auto !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    border: none !important;
+                    box-shadow: none !important;
+                    page-break-after: auto !important;
+                    break-after: auto !important;
+                }
+                #pvPageSeparator {
+                    display: none !important;
+                }
+                #a4Page2 {
+                    page-break-before: always !important;
+                    break-before: page !important;
+                    display: block !important;
+                    margin-top: 5mm !important;
+                }
+                table.attendance-table {
+                    width: 100% !important;
+                    border-collapse: collapse !important;
+                    page-break-inside: auto !important;
+                }
+                table.attendance-table thead {
+                    display: table-header-group !important;
+                }
+                table.attendance-table tr {
+                    page-break-inside: avoid !important;
+                    break-inside: avoid !important;
+                }
+                .rekap-box {
+                    page-break-inside: avoid !important;
+                    break-inside: avoid !important;
+                    margin-top: 14px !important;
+                }
+                .signature-section {
+                    page-break-inside: avoid !important;
+                    break-inside: avoid !important;
+                    margin-top: 20px !important;
+                }
+            </style>
+        </head>
+        <body>
+            ${tempDiv.innerHTML}
+            <script>
+                window.onload = function() {
+                    window.print();
+                    setTimeout(function() { window.close(); }, 500);
+                };
+            <\/script>
+        </body>
+        </html>
+    `);
+    printWin.document.close();
+}
+
+async function downloadArchivePdf(htmlContent, filename) {
+    if (!htmlContent) {
+        showToast('Konten dokumen tidak ditemukan.', 'danger');
+        return;
+    }
+    showToast('Sedang menyiapkan dan mengunduh berkas PDF...', 'info');
+
+    // 1. Buat wrapper di lapisan belakang agar proses render tidak mengganggu tampilan layar
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'fixed';
+    wrapper.style.top = '0';
+    wrapper.style.left = '0';
+    wrapper.style.width = '100%';
+    wrapper.style.height = '100%';
+    wrapper.style.zIndex = '-99999';
+    wrapper.style.overflow = 'hidden';
+    wrapper.style.pointerEvents = 'none';
+
+    // 2. Buat container persis selebar kertas A4 (210mm) sesuai pratinjau agar tabel tidak terpotong di kanan
+    const exportDiv = document.createElement('div');
+    exportDiv.style.width = '210mm';
+    exportDiv.style.margin = '0 auto';
+    exportDiv.style.background = '#ffffff';
+    exportDiv.innerHTML = htmlContent;
+
+    // Hilangkan indikator pemisah halaman visual layar jika ada
+    exportDiv.querySelectorAll('#pvPageSeparator').forEach(el => el.remove());
+
+    wrapper.appendChild(exportDiv);
+    document.body.appendChild(wrapper);
+
+    // Tunggu seluruh aset gambar (kop surat, tanda tangan, foto dokumentasi) selesai dimuat
+    const imgs = Array.from(exportDiv.querySelectorAll('img'));
+    await Promise.all(imgs.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(r => { img.onload = r; img.onerror = r; });
+    }));
+
+    const opt = {
+        margin: 0, // Margin 0 agar pemetaan 1:1 persis seperti pratinjau (tidak memotong kolom Kehadiran di sisi kanan)
+        filename: filename || 'Dokumen_Ujian.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+            scale: 2,
+            useCORS: true,
+            letterRendering: true,
+            logging: false,
+            scrollX: 0,
+            scrollY: 0
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: {
+            mode: ['css', 'legacy'], // Tanpa 'avoid-all' agar tabel tidak melompat ke halaman 2
+            avoid: ['tr', '.rekap-box', '.signature-section']
+        }
+    };
+
+    try {
+        await html2pdf().set(opt).from(exportDiv).save();
+        showToast('Berkas PDF berhasil diunduh!', 'success');
+    } catch (err) {
+        console.error('Download PDF error:', err);
+        showToast('Gagal memproses PDF via html2pdf.', 'danger');
+    } finally {
+        if (wrapper && wrapper.parentNode) {
+            wrapper.parentNode.removeChild(wrapper);
+        }
+    }
+}
+
+function downloadModalPdf() {
+    if (!activePreviewDoc) return;
+    const container = document.getElementById('modalRenderContainer');
+    const content = container ? container.innerHTML : (activePreviewDoc.html_content || '');
+    downloadArchivePdf(content, activePreviewDoc.filename || 'Dokumen_Ujian.pdf');
+}
+
+function quickDownloadPdf(docId) {
+    const doc = archivesData.find(a => Number(a.id) === Number(docId));
+    if (!doc) return;
+    downloadArchivePdf(doc.html_content || '', doc.filename || 'Dokumen_Ujian.pdf');
+}
+
+</script>
+
+</body>
+</html>

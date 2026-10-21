@@ -9,7 +9,7 @@ Aplikasi Web Administrasi Ujian Resmi berbasis Cloud Serverless menggunakan **Go
 ## 🌟 Fitur Utama
 
 1. **Multi-Page Web App Google Apps Script**:
-   - Beranda Publik (`?page=landing`)
+   - Beranda Publik (`?page=index` / root)
    - Generator Daftar Hadir Ujian Resmi A4 (`?page=absensi`)
    - Generator Berita Acara Ujian Resmi A4 (`?page=berita-acara`)
    - Arsip Dokumen Publik (`?page=arsip`)

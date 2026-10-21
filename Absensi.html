@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Daftar Hadir Ujian - <?= schoolSettings.school_name || 'SMK NEGERI FYJ CHANNEL' ?></title>
+    <?!= include('StyleCSS'); ?>
+    <?!= include('PreviewA4CSS'); ?>
+</head>
+<body>
+
+<?!= include('Header'); ?>
+
+<div class="container" style="padding-top: 1rem; padding-bottom: 2.5rem;">
+    <!-- Mobile Tabs Switcher -->
+    <div class="mobile-tabs">
+        <button type="button" class="mobile-tab-btn active" data-tab="form"><i class="bi bi-pencil-square"></i> Formulir Input</button>
+        <button type="button" class="mobile-tab-btn" data-tab="preview"><i class="bi bi-file-earmark-pdf"></i> Pratinjau Kertas A4</button>
+    </div>
+
+    <div class="split-layout">
+        <!-- PANEL FORMULIR (KIRI) -->
+        <div class="panel-form" id="panelForm">
+            <form id="formAbsensi" onsubmit="event.preventDefault();">
+                <input type="hidden" name="ttd_pengawas_1_data" id="ttd_pengawas_1_data">
+                <input type="hidden" name="ttd_pengawas_2_data" id="ttd_pengawas_2_data">
+
+                <!-- 1. Identitas Ujian -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title"><i class="bi bi-calendar-event"></i> 1. Identitas & Jadwal Ujian</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="form-label" for="selectTemplate">Pilih Template Ujian</label>
+                            <select id="selectTemplate" class="form-select" onchange="applyExamTemplate(this.value)">
+                                <option value="" disabled selected>Memuat daftar template ujian...</option>
+                            </select>
+                            <div class="form-hint">Template ujian dikelola melalui Panel Admin (Menu: <em>Template Ujian</em>).</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="nama_ujian">Nama Ujian <span class="required">*</span></label>
+                            <input type="text" name="nama_ujian" id="nama_ujian" class="form-control" 
+                                   value="Sumatif Akhir Semester (SAS) Ganjil" required>
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label" for="tahun_ajaran">Tahun Ajaran <span class="required">*</span></label>
+                                <input type="text" name="tahun_ajaran" id="tahun_ajaran" class="form-control" 
+                                       list="datalist_academic_years" value="<?= schoolSettings.academic_year || '2026/2027' ?>" placeholder="Misal: 2026/2027" required>
+                                <datalist id="datalist_academic_years"></datalist>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="semester">Semester <span class="required">*</span></label>
+                                <select name="semester" id="semester" class="form-select" required>
+                                    <option value="Ganjil" <?= schoolSettings.default_semester === 'Ganjil' ? 'selected' : '' ?>>Ganjil</option>
+                                    <option value="Genap" <?= schoolSettings.default_semester === 'Genap' ? 'selected' : '' ?>>Genap</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label" for="tanggal_ujian">Tanggal Ujian <span class="required">*</span></label>
+                                <input type="date" name="tanggal_ujian" id="tanggal_ujian" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="mata_pelajaran">Mata Pelajaran <span class="required">*</span></label>
+                                <input type="text" name="mata_pelajaran" id="mata_pelajaran" class="form-control" 
+                                       list="datalist_subjects" placeholder="Pilih atau ketik mata pelajaran..." value="" required>
+                                <datalist id="datalist_subjects"></datalist>
+                            </div>
+                        </div>
+
+                        <div class="grid-3">
+                            <div class="form-group">
+                                <label class="form-label" for="sesi">Sesi</label>
+                                <input type="text" name="sesi" id="sesi" class="form-control" placeholder="Contoh: 1" value="1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="ruang">Ruang</label>
+                                <input type="text" name="ruang" id="ruang" class="form-control" placeholder="Contoh: Lab RPL" value="Ruang 01">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Waktu Mulai - Selesai (<?= schoolSettings.timezone || 'WITA' ?>)</label>
+                                <div style="display: flex; gap: 6px; align-items: center;">
+                                    <input type="text" name="jam_mulai" id="jam_mulai" class="form-control time-24h" 
+                                           value="07:30" placeholder="07:30" maxlength="5" required>
+                                    <span style="font-weight: bold; color: var(--slate-600);">-</span>
+                                    <input type="text" name="jam_selesai" id="jam_selesai" class="form-control time-24h" 
+                                           value="09:30" placeholder="09:30" maxlength="5" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Pemilihan Kelas & Kehadiran Siswa -->
+                <div class="card">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                        <span class="card-title"><i class="bi bi-people"></i> 2. Peserta & Status Kehadiran</span>
+                        <button type="button" id="btnSetAllHadir" class="btn btn-secondary btn-sm">
+                            <i class="bi bi-check2-all"></i> Set Semua Hadir
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="form-label" for="class_id">Pilih Kelas Ujian <span class="required">*</span></label>
+                            <select name="class_id" id="class_id" class="form-select" required>
+                                <option value="" selected>-- Pilih Kelas Ujian --</option>
+                            </select>
+                        </div>
+
+                        <!-- Indikator Loading -->
+                        <div id="studentLoading" style="display: none; text-align: center; padding: 1.5rem; color: var(--primary);">
+                            <i class="bi bi-arrow-repeat spin"></i> Memuat daftar peserta ujian dari Google Sheets...
+                        </div>
+
+                        <!-- Container Siswa -->
+                        <div id="studentsContainer">
+                            <div style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                                Silakan pilih kelas ujian terlebih dahulu.
+                            </div>
+                        </div>
+
+                        <!-- Rekapitulasi Kehadiran Form -->
+                        <div style="background: var(--slate-50); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.85rem 1rem; margin-top: 1rem;">
+                            <div style="font-weight: 700; font-size: 0.85rem; color: var(--text-heading); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+                                <i class="bi bi-pie-chart" style="color: var(--primary);"></i> Rekapitulasi Kehadiran:
+                            </div>
+                            <div style="display: flex; gap: 0.85rem; flex-wrap: wrap; font-size: 0.85rem;">
+                                <span>Hadir: <strong id="rekapHadirForm">0</strong></span>
+                                <span>Dispensasi: <strong id="rekapDispensasiForm">0</strong></span>
+                                <span>Izin: <strong id="rekapIzinForm">0</strong></span>
+                                <span>Sakit: <strong id="rekapSakitForm">0</strong></span>
+                                <span>Tidak Hadir: <strong id="rekapTidakHadirForm" style="color: var(--danger);">0</strong></span>
+                                <span>Total: <strong id="rekapTotalForm">0</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Identitas & Tanda Tangan Pengawas -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title"><i class="bi bi-pen"></i> 3. Identitas & Tanda Tangan Pengawas</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="grid-2">
+                            <div>
+                                <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--primary);">Pengawas I</h4>
+                                <div class="form-group">
+                                    <label class="form-label" for="nama_pengawas_1">Nama Lengkap <span class="required">*</span></label>
+                                    <input type="text" name="nama_pengawas_1" id="nama_pengawas_1" class="form-control" 
+                                           list="datalist_pengawas" placeholder="Ketik atau pilih nama pengawas 1..." autocomplete="off" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="nip_pengawas_1">NIP (Otomatis Terisi)</label>
+                                    <input type="text" name="nip_pengawas_1" id="nip_pengawas_1" class="form-control" 
+                                           placeholder="NIP otomatis terisi atau ketik manual...">
+                                </div>
+                            </div>
+                            <div>
+                                <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--primary);">Pengawas II</h4>
+                                <div class="form-group">
+                                    <label class="form-label" for="nama_pengawas_2">Nama Lengkap (Opsional)</label>
+                                    <input type="text" name="nama_pengawas_2" id="nama_pengawas_2" class="form-control" 
+                                           list="datalist_pengawas" placeholder="Ketik atau pilih nama pengawas 2..." autocomplete="off">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="nip_pengawas_2">NIP (Otomatis Terisi)</label>
+                                    <input type="text" name="nip_pengawas_2" id="nip_pengawas_2" class="form-control" 
+                                           placeholder="NIP otomatis terisi atau ketik manual...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Datalist Guru/Pengawas -->
+                        <datalist id="datalist_pengawas"></datalist>
+
+                        <!-- Mode Tanda Tangan -->
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label class="form-label">Mode Tanda Tangan Pengawas:</label>
+                            <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+                                <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.9rem;">
+                                    <input type="radio" name="signature_mode" value="digital" checked>
+                                    <strong>Mode A:</strong> Gambar Tanda Tangan di Layar
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.9rem;">
+                                    <input type="radio" name="signature_mode" value="manual">
+                                    <strong>Mode B:</strong> Tanda Tangan Manual (Setelah Dicetak)
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Canvas Box (Mode A) -->
+                        <div id="canvasContainer">
+                            <div class="grid-2">
+                                <div>
+                                    <label class="form-label" style="font-size: 0.85rem;">Tanda Tangan Pengawas I:</label>
+                                    <div class="signature-box">
+                                        <canvas id="canvas_ttd_pengawas_1"></canvas>
+                                    </div>
+                                    <div class="signature-tools">
+                                        <button type="button" id="btnClearTtd1" class="btn btn-secondary btn-sm"><i class="bi bi-eraser"></i> Bersihkan / Ulangi</button>
+                                        <span style="font-size: 0.75rem; color: var(--text-muted);">Sentuhan / mouse</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="form-label" style="font-size: 0.85rem;">Tanda Tangan Pengawas II:</label>
+                                    <div class="signature-box">
+                                        <canvas id="canvas_ttd_pengawas_2"></canvas>
+                                    </div>
+                                    <div class="signature-tools">
+                                        <button type="button" id="btnClearTtd2" class="btn btn-secondary btn-sm"><i class="bi bi-eraser"></i> Bersihkan / Ulangi</button>
+                                        <span style="font-size: 0.75rem; color: var(--text-muted);">Sentuhan / mouse</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notice Box (Mode B) -->
+                        <div id="manualSignNotice" style="display: none; background: var(--info-light); border: 1px solid #BFDBFE; padding: 0.85rem 1rem; border-radius: var(--radius-md); font-size: 0.85rem; color: #1E40AF;">
+                            <i class="bi bi-info-circle-fill" style="margin-right: 0.35rem;"></i> <strong>Mode Manual Dipilih:</strong> Dokumen PDF akan menyediakan area tanda tangan kosong yang cukup untuk dibubuhi tanda tangan pena basah setelah dicetak.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tombol Aksi Utama -->
+                <div class="form-actions">
+                    <button type="button" id="btnDownloadPdf" class="btn btn-primary" style="flex: 2; padding: 0.85rem; font-size: 1rem;">
+                        <i class="bi bi-file-earmark-arrow-down"></i> Unduh PDF & Arsipkan
+                    </button>
+                    <button type="button" id="btnPrintNative" class="btn btn-secondary" style="padding: 0.85rem;" title="Cetak Langsung Dialog Browser">
+                        <i class="bi bi-printer"></i> Cetak A4
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="confirmResetForm()" style="padding: 0.85rem;">
+                        <i class="bi bi-arrow-counterclockwise"></i> Reset
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- PANEL PRATINJAU KERTAS A4 (KANAN) -->
+        <div class="panel-preview" id="panelPreview">
+            <!-- STICKY CONTROL BAR DI ATAS PRATINJAU -->
+            <div class="panel-preview-header" style="position: sticky; top: 0; z-index: 20; background: #253047; color: #ffffff; width: 100%; padding: 0.65rem 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; box-shadow: 0 2px 6px rgba(37, 48, 71, 0.15);">
+                <div style="font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 0.4rem;">
+                    <span><i class="bi bi-file-earmark-check"></i> Pratinjau Kertas A4 (Live Synchronized)</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.4rem;">
+                    <button type="button" id="btnZoomToggle" class="btn btn-sm" style="font-size: 0.75rem; padding: 4px 12px; background: rgba(255,255,255,0.15); color: #ffffff; border: 1px solid rgba(255,255,255,0.3); cursor: pointer;" onclick="togglePreviewFit()" title="Sesuaikan lebar halaman dengan layar">
+                        <i class="bi bi-aspect-ratio"></i> Pas Lebar
+                    </button>
+                    <button type="button" class="btn btn-sm" style="font-size: 0.75rem; padding: 4px 12px; background: #4657D9; color: #ffffff; border: none; cursor: pointer;" onclick="document.getElementById('btnDownloadPdf').click()">
+                        <i class="bi bi-download"></i> Unduh PDF
+                    </button>
+                </div>
+            </div>
+
+            <div class="a4-wrapper" id="a4Wrapper" style="display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: flex-start !important; width: 100% !important; gap: 30px !important; box-sizing: border-box !important;">
+                <div class="a4-page" id="a4Page" style="margin: 0 auto !important; width: 210mm !important; min-height: 297mm !important; box-sizing: border-box !important; flex-shrink: 0 !important;">
+                    <!-- KOP SURAT SEKOLAH -->
+                    <div class="kop-surat" style="border-bottom: none; padding-bottom: 0; margin-bottom: 8px; text-align: center;">
+                        <img src="<?= schoolSettings.kop_header || '' ?>" alt="Kop Surat Resmi" style="width: 100%; max-height: 105px; object-fit: contain; display: block; margin: 0 auto;" id="pvKopImg">
+                    </div>
+                    
+                    <!-- JUDUL DOKUMEN -->
+                    <div class="doc-title">
+                        DAFTAR HADIR PESERTA UJIAN<br>
+                        <span id="pvNamaUjian">SUMATIF AKHIR SEMESTER (SAS) GANJIL</span><br>
+                        TAHUN AJARAN <span id="pvTahunAjaran"><?= schoolSettings.academic_year || '2026/2027' ?></span>
+                    </div>
+
+                    <!-- METADATA UJIAN -->
+                    <table class="meta-table">
+                        <tr>
+                            <td style="width: 16%;">Hari / Tanggal</td>
+                            <td style="width: 2%;">:</td>
+                            <td style="width: 38%;"><strong id="pvHariTanggal">-</strong></td>
+                            <td style="width: 14%;">Kelas</td>
+                            <td style="width: 2%;">:</td>
+                            <td style="width: 28%;"><strong id="pvKelas">-</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Mata Pelajaran</td>
+                            <td>:</td>
+                            <td><strong id="pvMataPelajaran">-</strong></td>
+                            <td>Sesi / Ruang</td>
+                            <td>:</td>
+                            <td><span id="pvSesi">-</span> / <span id="pvRuang">-</span></td>
+                        </tr>
+                        <tr>
+                            <td>Waktu Ujian</td>
+                            <td>:</td>
+                            <td><span id="pvWaktu">-</span></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </table>
+
+                    <!-- TABEL SISWA -->
+                    <table class="attendance-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 35px;">No</th>
+                                <th style="width: 85px;">NIS</th>
+                                <th>Nama Peserta Didik</th>
+                                <th style="width: 100px;">Kehadiran</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pvStudentTbody">
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 2rem; color: #666;">
+                                    (Silakan pilih kelas ujian terlebih dahulu)
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- REKAPITULASI KEHADIRAN -->
+                    <div class="rekap-box">
+                        <div style="font-weight: bold; font-size: 9.5pt;">Rekapitulasi Kehadiran:</div>
+                        <table class="rekap-table">
+                            <tr>
+                                <td>Hadir</td>
+                                <td>Dispensasi</td>
+                                <td>Izin</td>
+                                <td>Sakit</td>
+                                <td>Tidak Hadir</td>
+                                <td><strong>Total Siswa</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong id="pvRekapHadir">0</strong></td>
+                                <td><strong id="pvRekapDispensasi">0</strong></td>
+                                <td><strong id="pvRekapIzin">0</strong></td>
+                                <td><strong id="pvRekapSakit">0</strong></td>
+                                <td><strong id="pvRekapTidakHadir" style="color: red;">0</strong></td>
+                                <td><strong id="pvRekapTotal">0</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- AREA TANDA TANGAN PENGAWAS -->
+                    <div class="signature-section">
+                        <div class="signature-row" id="pvSignatureRow" style="display: flex; justify-content: space-between;">
+                            <div class="signature-col" id="pvColPengawas2" style="width: 45%; text-align: center; display: none;">
+                                <div>Pengawas II,</div>
+                                <div class="signature-space">
+                                    <img id="pvSignImg2" style="display: none;" alt="TTD Pengawas 2">
+                                </div>
+                                <div class="signature-name" id="pvNamaPengawas2">....................................</div>
+                                <div class="signature-nip" id="pvNipPengawas2">NIP. .........................</div>
+                            </div>
+                            <div class="signature-col" id="pvColPengawas1" style="width: 45%; text-align: center; margin-left: auto;">
+                                <div>Pengawas I,</div>
+                                <div class="signature-space">
+                                    <img id="pvSignImg1" style="display: none;" alt="TTD Pengawas 1">
+                                </div>
+                                <div class="signature-name" id="pvNamaPengawas1">....................................</div>
+                                <div class="signature-nip" id="pvNipPengawas1">NIP. .........................</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?!= include('AppJS'); ?>
+
+<!-- Script Logika Formulir & Live Preview -->
+<script>
+/**
+ * Logika Formulir & Live Preview Daftar Hadir
+ * Generator Absensi dan Berita Acara Ujian - SMK NEGERI FYJ CHANNEL
+ */
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Elemen Formulir
+    const form = document.getElementById('formAbsensi');
+    const classSelect = document.getElementById('class_id');
+    const studentsContainer = document.getElementById('studentsContainer');
+    const studentLoading = document.getElementById('studentLoading');
+    const btnSetAllHadir = document.getElementById('btnSetAllHadir');
+    const signatureModeRadios = document.querySelectorAll('input[name="signature_mode"]');
+    const canvasContainer = document.getElementById('canvasContainer');
+    const manualSignNotice = document.getElementById('manualSignNotice');
+    
+    // Set default tanggal hari ini jika kosong
+    const inputTgl = document.getElementById('tanggal_ujian');
+    if (inputTgl && !inputTgl.value) {
+        const today = new Date().toISOString().split('T')[0];
+        inputTgl.value = today;
+    }
+
+    // Tanda Tangan Canvas
+    const canvas1 = document.getElementById('canvas_ttd_pengawas_1');
+    const canvas2 = document.getElementById('canvas_ttd_pengawas_2');
+    const hiddenTtd1 = document.getElementById('ttd_pengawas_1_data');
+    const hiddenTtd2 = document.getElementById('ttd_pengawas_2_data');
+    const btnClear1 = document.getElementById('btnClearTtd1');
+    const btnClear2 = document.getElementById('btnClearTtd2');
+
+    let pad1 = null;
+    let pad2 = null;
+
+    if (canvas1 && typeof SimpleSignaturePad !== 'undefined') {
+        pad1 = new SimpleSignaturePad(canvas1, {
+            onChange: (dataUrl) => {
+                if (hiddenTtd1) hiddenTtd1.value = dataUrl;
+                updatePreviewSignature();
+            }
+        });
+        if (btnClear1) btnClear1.addEventListener('click', () => pad1.clear());
+    }
+
+    if (canvas2 && typeof SimpleSignaturePad !== 'undefined') {
+        pad2 = new SimpleSignaturePad(canvas2, {
+            onChange: (dataUrl) => {
+                if (hiddenTtd2) hiddenTtd2.value = dataUrl;
+                updatePreviewSignature();
+            }
+        });
+        if (btnClear2) btnClear2.addEventListener('click', () => pad2.clear());
+    }
+
+    // Toggle Mode Tanda Tangan
+    signatureModeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'digital') {
+                if (canvasContainer) canvasContainer.style.display = 'block';
+                if (manualSignNotice) manualSignNotice.style.display = 'none';
+            } else {
+                if (canvasContainer) canvasContainer.style.display = 'none';
+                if (manualSignNotice) manualSignNotice.style.display = 'block';
+            }
+            updatePreviewSignature();
+        });
+    });
+
+    // 2. Mobile Tabs Switcher
+    const tabBtns = document.querySelectorAll('.mobile-tab-btn');
+    const panelForm = document.getElementById('panelForm');
+    const panelPreview = document.getElementById('panelPreview');
+
+    if (window.innerWidth <= 1023 && panelPreview) {
+        panelPreview.style.display = 'none';
+        if (panelForm) panelForm.style.display = 'block';
+    }
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            tabBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            const tab = this.getAttribute('data-tab');
+            if (tab === 'form') {
+                if (panelForm) panelForm.style.display = 'block';
+                if (panelPreview) panelPreview.style.display = 'none';
+            } else {
+                if (panelForm) panelForm.style.display = 'none';
+                if (panelPreview) {
+                    panelPreview.style.display = 'block';
+                    updateLivePreview();
+                }
+            }
+        });
+    });
+
+    // 3. Ambil Siswa saat Kelas Dipilih
+    let activeStudents = [];
+
+    function loadStudentsForClass(classId) {
+        if (!classId) {
+            studentsContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Silakan pilih kelas ujian terlebih dahulu.</div>';
+            activeStudents = [];
+            updateStudentTablePreview([]);
+            updateRekap();
+            updateLivePreview();
+            return;
+        }
+
+        if (studentLoading) studentLoading.style.display = 'block';
+        studentsContainer.innerHTML = '';
+
+        callServer('apiGetStudents', classId).then(students => { var res = { success: true, students: students };
+                if (studentLoading) studentLoading.style.display = 'none';
+                if (res.success && res.students) {
+                    activeStudents = res.students;
+                    renderStudentFormInputs(res.students);
+                    updateStudentTablePreview(res.students);
+                    updateRekap();
+                    updateLivePreview();
+                } else {
+                    studentsContainer.innerHTML = `<div class="alert alert-danger">${res.message || 'Gagal memuat siswa.'}</div>`;
+                }
+            })
+            .catch(err => {
+                if (studentLoading) studentLoading.style.display = 'none';
+                console.warn('API error, attempting local DB fetch:', err);
+                studentsContainer.innerHTML = '<div class="alert alert-danger">Terjadi kesalahan koneksi saat memuat data siswa.</div>';
+            });
+    }
+
+    // 3. Ambil Kelas Dinamis dari Server
+    let teachersList = [];
+
+    function initDynamicClasses() {
+        if (!classSelect) return;
+        callServer('apiGetClasses').then(classes => {
+                if (Array.isArray(classes) && classes.length) {
+                    const prevVal = classSelect.value;
+                    classSelect.innerHTML = '<option value="" selected>-- Pilih Kelas Ujian --</option>';
+                    classes.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c.id;
+                        opt.textContent = `${c.nama_kelas} (${c.program_keahlian || c.tingkat || ''})`;
+                        classSelect.appendChild(opt);
+                    });
+
+                    // Hanya pertahankan nilai jika sebelumnya pengguna sudah memilih kelas
+                    if (prevVal && classes.some(c => String(c.id) === String(prevVal))) {
+                        classSelect.value = prevVal;
+                        loadStudentsForClass(classSelect.value);
+                    } else {
+                        classSelect.value = '';
+                        loadStudentsForClass('');
+                    }
+                } else {
+                    classSelect.innerHTML = '<option value="" selected>-- Belum Ada Kelas Terdaftar --</option>';
+                    loadStudentsForClass('');
+                }
+            })
+            .catch(err => {
+                console.warn('Gagal memuat daftar kelas dinamis:', err);
+            });
+    }
+
+    function initDynamicTeachers() {
+        callServer('apiGetTeachers').then(teachers => {
+                teachersList = teachers || [];
+                const dl = document.getElementById('datalist_pengawas');
+                if (dl) {
+                    dl.innerHTML = '';
+                    teachersList.forEach(t => {
+                        const opt = document.createElement('option');
+                        opt.value = t.nama;
+                        opt.setAttribute('data-nip', t.nip || '');
+                        opt.label = `${t.nama} (NIP: ${t.nip || '-'})`;
+                        dl.appendChild(opt);
+                    });
+                }
+            })
+            .catch(err => console.warn('Gagal memuat data guru:', err));
+    }
+
+    function setupProctorAutocomplete(inputNamaId, inputNipId) {
+        const elNama = document.getElementById(inputNamaId);
+        const elNip = document.getElementById(inputNipId);
+        if (!elNama || !elNip) return;
+
+        function matchTeacher() {
+            const val = elNama.value.trim().toLowerCase();
+            if (!val) return;
+            const match = teachersList.find(t => t.nama.toLowerCase() === val || t.nama.toLowerCase().includes(val));
+            if (match && match.nip && (!elNip.value || elNip.value.trim() === '')) {
+                elNip.value = match.nip;
+            } else if (match && match.nama.toLowerCase() === val && match.nip) {
+                elNip.value = match.nip;
+            }
+            updateLivePreview();
+        }
+
+        elNama.addEventListener('input', matchTeacher);
+        elNama.addEventListener('change', matchTeacher);
+    }
+
+    function initDynamicSettings() {
+        callServer('apiGetSubjects').then(subjects => {
+                const dl = document.getElementById('datalist_subjects');
+                if (dl && Array.isArray(subjects)) {
+                    dl.innerHTML = '';
+                    subjects.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s;
+                        dl.appendChild(opt);
+                    });
+                }
+            })
+            .catch(() => {});
+
+        callServer('apiGetAcademicYears').then(years => {
+                const dl = document.getElementById('datalist_academic_years');
+                if (dl && Array.isArray(years)) {
+                    dl.innerHTML = '';
+                    years.forEach(y => {
+                        const opt = document.createElement('option');
+                        opt.value = y;
+                        dl.appendChild(opt);
+                    });
+                }
+            })
+            .catch(() => {});
+    }
+
+    function initDynamicTemplates() {
+        callServer('apiGetTemplates')
+            .then(tpls => {
+                if (Array.isArray(tpls) && tpls.length) {
+                    window.EXAM_TEMPLATES = tpls;
+                    const select = document.getElementById('selectTemplate');
+                    if (select) {
+                        const curVal = select.value;
+                        select.innerHTML = '';
+
+                        // Cari template yang ditandai aktif oleh admin
+                        const activeTpl = tpls.find(t => t.aktif === 1 || t.aktif === true) || tpls[0];
+
+                        tpls.forEach(t => {
+                            const opt = document.createElement('option');
+                            opt.value = t.id;
+                            opt.setAttribute('data-nama', t.nama_ujian || '');
+                            opt.setAttribute('data-tahun', t.tahun_ajaran || '');
+                            opt.setAttribute('data-semester', t.semester || 'Ganjil');
+                            const isAktif = t.aktif === 1 || t.aktif === true;
+                            opt.textContent = `${t.nama_ujian} (${t.tahun_ajaran || ''}) - ${t.semester || 'Ganjil'}${isAktif ? ' [Aktif]' : ''}`;
+                            select.appendChild(opt);
+                        });
+
+                        if (curVal && tpls.some(t => String(t.id) === String(curVal))) {
+                            select.value = curVal;
+                        } else if (activeTpl) {
+                            select.value = activeTpl.id;
+                        } else {
+                            select.value = tpls[0].id;
+                        }
+                        applyExamTemplate(select.value);
+                    }
+                }
+            })
+            .catch(() => {});
+    }
+
+    window.applyExamTemplate = function(tplId) {
+        const templates = window.EXAM_TEMPLATES || [];
+        const tpl = templates.find(t => String(t.id) === String(tplId)) || templates[0];
+        if (tpl) {
+            const elNamaUjian = document.getElementById('nama_ujian');
+            const elTahun = document.getElementById('tahun_ajaran');
+            const elSemester = document.getElementById('semester');
+            if (elNamaUjian) {
+                elNamaUjian.value = tpl.nama_ujian || '';
+                elNamaUjian.dispatchEvent(new Event('input'));
+            }
+            if (elTahun) {
+                elTahun.value = tpl.tahun_ajaran || '';
+                elTahun.dispatchEvent(new Event('input'));
+            }
+            if (elSemester && tpl.semester) {
+                elSemester.value = tpl.semester;
+                elSemester.dispatchEvent(new Event('change'));
+            }
+            updateLivePreview();
+        }
+    };
+
+    if (classSelect) {
+        classSelect.addEventListener('change', function() {
+            loadStudentsForClass(this.value);
+        });
+    }
+
+    initDynamicClasses();
+    initDynamicTeachers();
+    initDynamicSettings();
+    initDynamicTemplates();
+    setupProctorAutocomplete('nama_pengawas_1', 'nip_pengawas_1');
+    setupProctorAutocomplete('nama_pengawas_2', 'nip_pengawas_2');
+
+    // Render baris input kehadiran siswa di formulir
+    function renderStudentFormInputs(students) {
+        if (students.length === 0) {
+            studentsContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Tidak ada siswa aktif di kelas ini.</div>';
+            return;
+        }
+
+        let html = '<div class="table-responsive"><table class="table" style="font-size: 0.85rem;">';
+        html += '<thead><tr><th style="width:30px;">No</th><th>Nama Siswa</th><th style="text-align:center;">Status Kehadiran</th></tr></thead><tbody>';
+
+        students.forEach((s, idx) => {
+            html += `
+                <tr>
+                    <td>${idx + 1}</td>
+                    <td>
+                        <strong>${escapeHtml(s.nama)}</strong>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">${s.nis ? 'NIS: ' + escapeHtml(s.nis) : ''}</div>
+                        <input type="hidden" name="students[${s.id}][id]" value="${s.id}">
+                        <input type="hidden" name="students[${s.id}][nama]" value="${escapeHtml(s.nama)}">
+                        <input type="hidden" name="students[${s.id}][nis]" value="${escapeHtml(s.nis || '')}">
+                    </td>
+                    <td style="text-align: center; white-space: nowrap;">
+                        <select name="students[${s.id}][status]" class="form-select form-select-sm student-status-select" data-id="${s.id}" style="width: auto; display: inline-block;">
+                            <option value="Hadir" selected>Hadir</option>
+                            <option value="Dispensasi">Dispensasi</option>
+                            <option value="Izin">Izin</option>
+                            <option value="Sakit">Sakit</option>
+                            <option value="Tidak Hadir">Tidak Hadir (Alpa)</option>
+                        </select>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += '</tbody></table></div>';
+        studentsContainer.innerHTML = html;
+
+        // Pasang event change ke seluruh status select
+        document.querySelectorAll('.student-status-select').forEach(select => {
+            select.addEventListener('change', function() {
+                updateStudentStatusInPreview(this.getAttribute('data-id'), this.value);
+                updateRekap();
+            });
+        });
+    }
+
+    // Tombol Cepat: Set Semua Hadir
+    if (btnSetAllHadir) {
+        btnSetAllHadir.addEventListener('click', function() {
+            document.querySelectorAll('.student-status-select').forEach(select => {
+                select.value = 'Hadir';
+            });
+            activeStudents.forEach(s => {
+                updateStudentStatusInPreview(s.id, 'Hadir');
+            });
+            updateRekap();
+        });
+    }
+
+    // 4. Hitung Rekapitulasi Otomatis
+    function updateRekap() {
+        const statuses = {
+            'Hadir': 0,
+            'Dispensasi': 0,
+            'Izin': 0,
+            'Sakit': 0,
+            'Tidak Hadir': 0
+        };
+
+        const selects = document.querySelectorAll('.student-status-select');
+        selects.forEach(s => {
+            if (statuses[s.value] !== undefined) {
+                statuses[s.value]++;
+            }
+        });
+
+        const total = selects.length;
+
+        // Update di Form
+        if (document.getElementById('rekapHadirForm')) document.getElementById('rekapHadirForm').textContent = statuses['Hadir'];
+        if (document.getElementById('rekapDispensasiForm')) document.getElementById('rekapDispensasiForm').textContent = statuses['Dispensasi'];
+        if (document.getElementById('rekapIzinForm')) document.getElementById('rekapIzinForm').textContent = statuses['Izin'];
+        if (document.getElementById('rekapSakitForm')) document.getElementById('rekapSakitForm').textContent = statuses['Sakit'];
+        if (document.getElementById('rekapTidakHadirForm')) document.getElementById('rekapTidakHadirForm').textContent = statuses['Tidak Hadir'];
+        if (document.getElementById('rekapTotalForm')) document.getElementById('rekapTotalForm').textContent = total;
+
+        // Update di Live Preview A4
+        if (document.getElementById('pvRekapHadir')) document.getElementById('pvRekapHadir').textContent = statuses['Hadir'];
+        if (document.getElementById('pvRekapDispensasi')) document.getElementById('pvRekapDispensasi').textContent = statuses['Dispensasi'];
+        if (document.getElementById('pvRekapIzin')) document.getElementById('pvRekapIzin').textContent = statuses['Izin'];
+        if (document.getElementById('pvRekapSakit')) document.getElementById('pvRekapSakit').textContent = statuses['Sakit'];
+        if (document.getElementById('pvRekapTidakHadir')) document.getElementById('pvRekapTidakHadir').textContent = statuses['Tidak Hadir'];
+        if (document.getElementById('pvRekapTotal')) document.getElementById('pvRekapTotal').textContent = total;
+    }
+
+    // 5. Sinkronisasi Live Preview A4
+    const inputFields = [
+        'nama_ujian', 'tahun_ajaran', 'semester', 'tanggal_ujian', 'mata_pelajaran',
+        'sesi', 'ruang', 'jam_mulai', 'jam_selesai',
+        'nama_pengawas_1', 'nip_pengawas_1', 'nama_pengawas_2', 'nip_pengawas_2'
+    ];
+
+    inputFields.forEach(f => {
+        const el = document.getElementById(f);
+        if (el) {
+            el.addEventListener('input', updateLivePreview);
+            el.addEventListener('change', updateLivePreview);
+        }
+    });
+
+    function updateLivePreview() {
+        const namaUjian = document.getElementById('nama_ujian')?.value.trim() || 'SUMATIF AKHIR SEMESTER';
+        const tahunAjaran = document.getElementById('tahun_ajaran')?.value.trim() || '2026/2027';
+        if (document.getElementById('pvNamaUjian')) document.getElementById('pvNamaUjian').textContent = namaUjian.toUpperCase();
+        if (document.getElementById('pvTahunAjaran')) document.getElementById('pvTahunAjaran').textContent = tahunAjaran;
+
+        const tglStr = document.getElementById('tanggal_ujian')?.value;
+        if (document.getElementById('pvHariTanggal')) document.getElementById('pvHariTanggal').textContent = formatTanggalIndo(tglStr);
+        if (document.getElementById('pvMataPelajaran')) document.getElementById('pvMataPelajaran').textContent = document.getElementById('mata_pelajaran')?.value || '-';
+        if (document.getElementById('pvSesi')) document.getElementById('pvSesi').textContent = document.getElementById('sesi')?.value || '-';
+        if (document.getElementById('pvRuang')) document.getElementById('pvRuang').textContent = document.getElementById('ruang')?.value || '-';
+        
+        const jamMulai = document.getElementById('jam_mulai')?.value;
+        const jamSelesai = document.getElementById('jam_selesai')?.value;
+        if (document.getElementById('pvWaktu')) document.getElementById('pvWaktu').textContent = (jamMulai && jamSelesai) ? `${jamMulai} - ${jamSelesai} WITA` : '-';
+
+        const selectedClassOption = classSelect?.options[classSelect.selectedIndex];
+        if (document.getElementById('pvKelas')) document.getElementById('pvKelas').textContent = (selectedClassOption && classSelect.value) ? selectedClassOption.text.split('(')[0].trim() : '-';
+
+        const namaP1 = document.getElementById('nama_pengawas_1')?.value.trim();
+        const nipP1 = document.getElementById('nip_pengawas_1')?.value.trim();
+        if (document.getElementById('pvNamaPengawas1')) {
+            document.getElementById('pvNamaPengawas1').textContent = namaP1 ? namaP1 : '....................................';
+        }
+        if (document.getElementById('pvNipPengawas1')) {
+            document.getElementById('pvNipPengawas1').textContent = nipP1 ? 'NIP. ' + nipP1 : 'NIP. .........................';
+        }
+
+        const rawNamaP2 = document.getElementById('nama_pengawas_2')?.value.trim();
+        const nipP2 = document.getElementById('nip_pengawas_2')?.value.trim();
+        const col1 = document.getElementById('pvColPengawas1');
+        const col2 = document.getElementById('pvColPengawas2');
+
+        if (rawNamaP2 && rawNamaP2 !== '') {
+            if (col2) col2.style.display = 'table-cell';
+            if (col1) col1.style.marginLeft = '0';
+            if (document.getElementById('pvNamaPengawas2')) document.getElementById('pvNamaPengawas2').textContent = rawNamaP2;
+            if (document.getElementById('pvNipPengawas2')) document.getElementById('pvNipPengawas2').textContent = nipP2 ? 'NIP. ' + nipP2 : 'NIP. .........................';
+        } else {
+            if (col2) col2.style.display = 'none';
+            if (col1) col1.style.marginLeft = 'auto';
+        }
+
+        updatePreviewSignature();
+    }
+
+    function updateStudentTablePreview(students) {
+        const tbody = document.getElementById('pvStudentTbody');
+        if (!tbody) return;
+
+        if (students.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 1.5rem; color:#666;">(Silakan pilih kelas ujian terlebih dahulu)</td></tr>';
+            return;
+        }
+
+        let html = '';
+        students.forEach((s, idx) => {
+            html += `
+                <tr id="pvStudentRow_${s.id}">
+                    <td class="center" style="width: 35px; text-align: center;">${idx + 1}</td>
+                    <td class="center" style="width: 85px; text-align: center;">${escapeHtml(s.nis || '-')}</td>
+                    <td style="padding-left: 8px;">${escapeHtml(s.nama)}</td>
+                    <td class="center" id="pvStatus_${s.id}" style="font-weight: 600; width: 100px; text-align: center;">Hadir</td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = html;
+    }
+
+    function updateStudentStatusInPreview(studentId, status) {
+        const el = document.getElementById(`pvStatus_${studentId}`);
+        if (el) {
+            el.textContent = status;
+            if (status === 'Tidak Hadir') {
+                el.style.color = '#dc2626';
+            } else if (status === 'Sakit' || status === 'Izin') {
+                el.style.color = '#ca8a04';
+            } else if (status === 'Dispensasi') {
+                el.style.color = '#0284c7';
+            } else {
+                el.style.color = '#000000';
+            }
+        }
+    }
+
+    function updatePreviewSignature() {
+        const checkedMode = document.querySelector('input[name="signature_mode"]:checked');
+        const isDigital = checkedMode ? checkedMode.value === 'digital' : true;
+        const imgP1 = document.getElementById('pvSignImg1');
+        const imgP2 = document.getElementById('pvSignImg2');
+        const rawNamaP2 = document.getElementById('nama_pengawas_2')?.value.trim();
+
+        if (isDigital) {
+            if (hiddenTtd1 && hiddenTtd1.value && imgP1) {
+                imgP1.src = hiddenTtd1.value;
+                imgP1.style.display = 'block';
+            } else if (imgP1) {
+                imgP1.style.display = 'none';
+            }
+
+            if (rawNamaP2 && hiddenTtd2 && hiddenTtd2.value && imgP2) {
+                imgP2.src = hiddenTtd2.value;
+                imgP2.style.display = 'block';
+            } else if (imgP2) {
+                imgP2.style.display = 'none';
+            }
+        } else {
+            if (imgP1) imgP1.style.display = 'none';
+            if (imgP2) imgP2.style.display = 'none';
+        }
+    }
+
+    // Helper format tanggal Indonesia sederhana
+    function formatTanggalIndo(dateStr) {
+        if (!dateStr) return '-';
+        const parts = dateStr.split('-');
+        if (parts.length !== 3) return dateStr;
+
+        const d = new Date(dateStr);
+        const hariArr = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const bulanArr = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        const hari = hariArr[d.getDay()] || '';
+        const day = parseInt(parts[2], 10);
+        const month = bulanArr[parseInt(parts[1], 10)] || '';
+        const year = parts[0];
+
+        return `${hari}, ${day} ${month} ${year}`;
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    // Fit / Zoom Pratinjau A4
+    let previewIsFit = false;
+    window.togglePreviewFit = function() {
+        const wrapper = document.getElementById('a4Wrapper');
+        const container = document.getElementById('panelPreview');
+        const btn = document.getElementById('btnZoomToggle');
+        const page = document.getElementById('a4Page');
+        if (!wrapper || !container) return;
+
+        previewIsFit = !previewIsFit;
+        if (previewIsFit) {
+            const availWidth = container.clientWidth - 40;
+            const naturalWidth = (page ? page.offsetWidth : 0) || 794;
+            let scale = availWidth / naturalWidth;
+            if (scale > 1) scale = 1;
+            if (scale < 0.35) scale = 0.35;
+            
+            wrapper.style.zoom = scale.toFixed(3);
+            if (!('zoom' in document.body.style)) {
+                wrapper.style.transform = `scale(${scale.toFixed(3)})`;
+                wrapper.style.transformOrigin = 'top center';
+            }
+
+            if (btn) {
+                btn.innerHTML = '<i class="bi bi-zoom-out"></i> 100%';
+                btn.style.background = '#4657D9';
+                btn.style.color = '#ffffff';
+                btn.title = 'Kembali ke ukuran 100%';
+            }
+        } else {
+            wrapper.style.zoom = '1';
+            wrapper.style.transform = 'none';
+            if (btn) {
+                btn.innerHTML = '<i class="bi bi-aspect-ratio"></i> Pas Lebar';
+                btn.style.background = 'rgba(255,255,255,0.15)';
+                btn.style.color = '#ffffff';
+                btn.title = 'Sesuaikan lebar halaman dengan layar';
+            }
+        }
+    };
+
+    window.addEventListener('resize', function() {
+        if (previewIsFit) {
+            window.togglePreviewFit();
+            previewIsFit = false;
+            window.togglePreviewFit();
+        }
+    });
+
+    // 6. Penyimpanan Arsip Dokumen & Tombol Unduh/Cetak
+    function saveArchiveDocument(filename) {
+        const selectedClassOpt = classSelect?.options[classSelect.selectedIndex];
+        const className = selectedClassOpt ? selectedClassOpt.text.split('(')[0].trim() : 'Kelas';
+        const mapel = document.getElementById('mata_pelajaran')?.value || 'Ujian';
+        const tgl = document.getElementById('tanggal_ujian')?.value || '';
+        const namaUjian = document.getElementById('nama_ujian')?.value || 'Sumatif Akhir Semester';
+        const tahunAjaran = document.getElementById('tahun_ajaran')?.value || '2026/2027';
+        const semester = document.getElementById('semester')?.value || 'Ganjil';
+        const ruang = document.getElementById('ruang')?.value || '';
+
+        let hadCount = 0;
+        let thadCount = 0;
+        const absentList = [];
+
+        document.querySelectorAll('.student-status-select').forEach(sel => {
+            const status = (sel.value || '').trim();
+            const studentId = sel.getAttribute('data-id');
+            const studentObj = Array.isArray(activeStudents) ? activeStudents.find(s => String(s.id) === String(studentId)) : null;
+            const studentName = studentObj ? studentObj.nama : (document.querySelector(`input[name="students[${studentId}][nama]"]`)?.value || '');
+
+            if (status === 'Hadir') {
+                hadCount++;
+            } else {
+                thadCount++;
+                let code = 'a';
+                const sLower = status.toLowerCase();
+                if (sLower === 'sakit' || sLower === 's') code = 's';
+                else if (sLower === 'izin' || sLower === 'i') code = 'i';
+                else if (sLower === 'dispensasi' || sLower === 'd') code = 'd';
+                else code = 'a';
+
+                if (studentName) {
+                    absentList.push(`${studentName} (${code})`);
+                }
+            }
+        });
+
+        const totalStudents = hadCount + thadCount;
+        const absentString = absentList.join(', ');
+
+        const payload = {
+            type: 'daftar_hadir',
+            title: `Daftar Hadir ${className} - ${mapel}`,
+            filename: filename,
+            nama_ujian: namaUjian,
+            tahun_ajaran: tahunAjaran,
+            semester: semester,
+            tanggal_ujian: tgl,
+            mata_pelajaran: mapel,
+            nama_kelas: className,
+            class_id: classSelect ? classSelect.value : '',
+            ruang: ruang,
+            peserta_seharusnya: totalStudents,
+            peserta_hadir: hadCount,
+            peserta_tidak_hadir: thadCount,
+            siswa_tidak_hadir: absentString,
+            nama_pengawas_1: document.getElementById('nama_pengawas_1')?.value || '',
+            nip_pengawas_1: document.getElementById('nip_pengawas_1')?.value || '',
+            nama_pengawas_2: document.getElementById('nama_pengawas_2')?.value || '',
+            nip_pengawas_2: document.getElementById('nip_pengawas_2')?.value || '',
+            html_content: document.getElementById('a4Wrapper')?.innerHTML || ''
+        };
+
+        callServer('apiSaveArchive', payload)
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                console.log('Arsip Daftar Hadir berhasil disimpan ke database:', res.archive.id);
+                if (typeof showToast === 'function') {
+                    showToast('Dokumen Daftar Hadir berhasil diarsipkan ke database!', 'success');
+                }
+            }
+        })
+        .catch(e => console.warn('Gagal menyimpan arsip:', e));
+    }
+
+    const btnDownloadPdf = document.getElementById('btnDownloadPdf');
+    if (btnDownloadPdf) {
+        btnDownloadPdf.addEventListener('click', function() {
+            const selectedClassOpt = classSelect?.options[classSelect.selectedIndex];
+            const className = (selectedClassOpt ? selectedClassOpt.text.split('(')[0].trim() : 'Kelas').replace(/\s+/g, '_');
+            const mapel = (document.getElementById('mata_pelajaran')?.value || 'Ujian').replace(/\s+/g, '_');
+            const tgl = document.getElementById('tanggal_ujian')?.value || '2026-10-19';
+            const filename = `DH-SAS_${className}-${mapel}-${tgl}.pdf`;
+
+            saveArchiveDocument(filename);
+
+            if (typeof window.downloadA4AsPdf === 'function') {
+                window.downloadA4AsPdf('a4Wrapper', filename);
+            } else {
+                window.print();
+            }
+        });
+    }
+
+    const btnPrintNative = document.getElementById('btnPrintNative');
+    if (btnPrintNative) {
+        btnPrintNative.addEventListener('click', function() {
+            const selectedClassOpt = classSelect?.options[classSelect.selectedIndex];
+            const className = (selectedClassOpt ? selectedClassOpt.text.split('(')[0].trim() : 'Kelas').replace(/\s+/g, '_');
+            const mapel = (document.getElementById('mata_pelajaran')?.value || 'Ujian').replace(/\s+/g, '_');
+            const tgl = document.getElementById('tanggal_ujian')?.value || '2026-10-19';
+            const filename = `DH-SAS_${className}-${mapel}-${tgl}.pdf`;
+
+            saveArchiveDocument(filename);
+            window.print();
+        });
+    }
+
+    // Dengarkan sinyal penghapusan arsip antar-tab / jendela secara realtime
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'sas_archive_deleted_signal') {
+            document.querySelectorAll('.student-status-select').forEach(select => {
+                select.value = 'Hadir';
+                const id = select.getAttribute('data-id');
+                if (id) updateStudentStatusInPreview(id, 'Hadir');
+            });
+            updateRekap();
+            updateLivePreview();
+        }
+    });
+
+    // Inisialisasi awal
+    updateLivePreview();
+});
+
+
+function togglePreviewFit() {
+    var p = document.getElementById('a4Page');
+    if (!p) return;
+    if (p.style.transform === 'scale(0.85)') {
+        p.style.transform = 'none';
+        p.style.transformOrigin = 'unset';
+    } else {
+        p.style.transform = 'scale(0.85)';
+        p.style.transformOrigin = 'top center';
+    }
+}
+
+async function confirmResetForm() {
+    var confirmed = await showConfirmModal({
+        title: 'Kosongkan Formulir',
+        message: 'Apakah Anda yakin ingin mengosongkan kembali seluruh isian formulir Daftar Hadir?',
+        type: 'warning',
+        confirmText: 'Ya, Kosongkan',
+        confirmIcon: 'bi-arrow-counterclockwise'
+    });
+
+    if (confirmed) {
+        document.getElementById('formAbsensi').reset();
+        window.location.reload();
+    }
+}
+</script>
+
+</body>
+</html>

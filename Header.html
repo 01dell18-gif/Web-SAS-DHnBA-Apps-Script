@@ -1,0 +1,47 @@
+<? if (['dashboard', 'siswa', 'guru', 'template', 'admin-arsip', 'pengaturan', 'users', 'database'].indexOf(currentPage) !== -1) { ?>
+<!-- TOPBAR ADMIN -->
+<header class="admin-topbar">
+    <div class="topbar-left-group">
+        <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="toggleAdminSidebar()" title="Sembunyikan/Tampilkan Bilah Sisi">
+            <i class="bi bi-layout-sidebar"></i>
+        </button>
+        <img src="<?= schoolSettings.school_logo || '' ?>" alt="Logo Sekolah" class="topbar-school-logo navbar-logo" id="topbarSchoolLogo">
+        <div class="topbar-school-info">
+            <div class="topbar-school-name brand-title" id="topbarSchoolName"><?= schoolSettings.school_name || 'SMK NEGERI FYJ CHANNEL' ?></div>
+            <div class="topbar-school-breadcrumb">Sistem SAS • <span id="currentPageBreadcrumb">Panel Administrator</span></div>
+        </div>
+    </div>
+    <div class="topbar-right-group">
+        <span class="topbar-user-badge">
+            <i class="bi bi-person-circle"></i> <span id="adminUsername">Administrator</span>
+        </span>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="navigateTo('index')"><i class="bi bi-house"></i> Beranda Publik</button>
+        <button type="button" class="btn btn-danger btn-sm" onclick="confirmLogout()"><i class="bi bi-box-arrow-right"></i> Keluar</button>
+    </div>
+</header>
+<? } else { ?>
+<!-- NAVBAR PUBLIK -->
+<header class="navbar">
+    <div class="navbar-brand">
+        <a href="javascript:void(0)" onclick="navigateTo('index')" class="brand-link">
+            <img src="<?= schoolSettings.school_logo || '' ?>" alt="Logo Sekolah" class="navbar-logo" id="navSchoolLogo">
+            <div class="brand-text">
+                <span class="brand-title"><?= schoolSettings.school_name || 'SMK NEGERI FYJ CHANNEL' ?></span>
+                <span class="brand-subtitle"><?= schoolSettings.school_tagline || 'Generator Administrasi Ujian' ?></span>
+            </div>
+        </a>
+    </div>
+    <button type="button" class="mobile-nav-toggle" id="btnToggleNav" onclick="toggleMobileNav(event)" aria-label="Toggle Menu">
+        <i class="bi bi-list"></i>
+    </button>
+    <ul class="nav-links" id="navLinks">
+        <li><a href="javascript:void(0)" onclick="navigateTo('index')" class="nav-link <?= (currentPage === 'index' || currentPage === 'landing') ? 'active' : '' ?>"><i class="bi bi-house"></i> Beranda</a></li>
+        <li><a href="javascript:void(0)" onclick="navigateTo('absensi')" class="nav-link <?= currentPage === 'absensi' ? 'active' : '' ?>"><i class="bi bi-clipboard-check"></i> Daftar Hadir</a></li>
+        <li><a href="javascript:void(0)" onclick="navigateTo('berita-acara')" class="nav-link <?= currentPage === 'berita-acara' ? 'active' : '' ?>"><i class="bi bi-file-earmark-text"></i> Berita Acara</a></li>
+        <li><a href="javascript:void(0)" onclick="navigateTo('arsip')" class="nav-link <?= currentPage === 'arsip' ? 'active' : '' ?>"><i class="bi bi-archive"></i> Arsip Dokumen</a></li>
+        <li>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="openAdminPortal()"><i class="bi bi-shield-lock"></i> Admin</button>
+        </li>
+    </ul>
+</header>
+<? } ?>
