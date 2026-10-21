@@ -41,16 +41,25 @@ window.downloadA4AsPdf = async function(wrapperId, filename = 'Dokumen.pdf') {
     if (typeof html2pdf !== 'undefined') {
         const toast = showToast('Sedang menyiapkan berkas PDF...', 'info');
 
-        // Buat salinan DOM terisolasi agar ukuran pas A4 dan tidak memotong tabel
+        // 1. Buat wrapper pelindung yang tetap berada di (0,0) namun di lapisan paling belakang
+        const wrapperEl = document.createElement('div');
+        wrapperEl.style.position = 'fixed';
+        wrapperEl.style.top = '0';
+        wrapperEl.style.left = '0';
+        wrapperEl.style.width = '100%';
+        wrapperEl.style.height = '100%';
+        wrapperEl.style.zIndex = '-99999';
+        wrapperEl.style.overflow = 'hidden';
+        wrapperEl.style.pointerEvents = 'none';
+
+        // 2. Buat salinan DOM terisolasi agar ukuran pas A4 dan tidak memotong tabel
         const exportDiv = document.createElement('div');
-        exportDiv.style.position = 'fixed';
-        exportDiv.style.left = '-9999px';
-        exportDiv.style.top = '0';
         exportDiv.style.width = '190mm'; // 210mm - 20mm total margin
         exportDiv.style.background = '#ffffff';
         exportDiv.style.color = '#000000';
         exportDiv.style.fontFamily = "'Times New Roman', Times, serif";
         exportDiv.style.boxSizing = 'border-box';
+        exportDiv.style.margin = '0 auto';
         exportDiv.innerHTML = wrapper.innerHTML;
 
         // Bersihkan style preview layar yang membatasi ukuran kertas
@@ -100,7 +109,15 @@ window.downloadA4AsPdf = async function(wrapperId, filename = 'Dokumen.pdf') {
             sig.style.marginTop = '18px';
         });
 
-        document.body.appendChild(exportDiv);
+        wrapperEl.appendChild(exportDiv);
+        document.body.appendChild(wrapperEl);
+
+        // Tunggu seluruh gambar selesai dimuat sebelum capture canvas
+        const imgs = Array.from(exportDiv.querySelectorAll('img'));
+        await Promise.all(imgs.map(img => {
+            if (img.complete) return Promise.resolve();
+            return new Promise(r => { img.onload = r; img.onerror = r; });
+        }));
 
         const opt = {
             margin: [10, 10, 10, 10], // Margin merata 10mm di setiap lembar A4
@@ -111,7 +128,8 @@ window.downloadA4AsPdf = async function(wrapperId, filename = 'Dokumen.pdf') {
                 useCORS: true,
                 letterRendering: true,
                 logging: false,
-                windowWidth: 794
+                scrollX: 0,
+                scrollY: 0
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
             pagebreak: {
@@ -122,14 +140,16 @@ window.downloadA4AsPdf = async function(wrapperId, filename = 'Dokumen.pdf') {
 
         try {
             await html2pdf().set(opt).from(exportDiv).save();
-            if (exportDiv.parentNode) document.body.removeChild(exportDiv);
             if (toast) toast.remove();
             showToast('PDF berhasil diunduh!', 'success');
         } catch (err) {
             console.error('HTML2PDF Error:', err);
-            if (exportDiv.parentNode) document.body.removeChild(exportDiv);
             if (toast) toast.remove();
             window.printA4Document(wrapperId, filename.replace('.pdf', ''));
+        } finally {
+            if (wrapperEl && wrapperEl.parentNode) {
+                wrapperEl.parentNode.removeChild(wrapperEl);
+            }
         }
     } else {
         // Fallback langsung cetak dialog browser yang memiliki opsi "Save as PDF"

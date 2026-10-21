@@ -654,22 +654,35 @@ function printModalDoc() {
     printWin.document.close();
 }
 
-function downloadArchivePdf(htmlContent, filename) {
+async function downloadArchivePdf(htmlContent, filename) {
+    if (!htmlContent) {
+        showToast('Konten dokumen tidak ditemukan.', 'danger');
+        return;
+    }
     showToast('Sedang menyiapkan dan mengunduh berkas PDF...', 'info');
 
-    // Buat wadah terisolasi khusus konversi PDF berstandar A4
+    // 1. Buat wrapper pelindung yang tetap berada di (0,0) namun di lapisan paling belakang
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'fixed';
+    wrapper.style.top = '0';
+    wrapper.style.left = '0';
+    wrapper.style.width = '100%';
+    wrapper.style.height = '100%';
+    wrapper.style.zIndex = '-99999';
+    wrapper.style.overflow = 'hidden';
+    wrapper.style.pointerEvents = 'none';
+
+    // 2. Buat elemen konten yang pas dengan area cetak A4
     const exportDiv = document.createElement('div');
-    exportDiv.style.position = 'fixed';
-    exportDiv.style.left = '-9999px';
-    exportDiv.style.top = '0';
-    exportDiv.style.width = '190mm'; // 210mm - (10mm margin kiri + 10mm margin kanan)
+    exportDiv.style.width = '190mm'; // Pas dengan area cetak A4 (210mm - 20mm margin)
     exportDiv.style.background = '#ffffff';
     exportDiv.style.color = '#000000';
     exportDiv.style.fontFamily = "'Times New Roman', Times, serif";
     exportDiv.style.boxSizing = 'border-box';
-    exportDiv.innerHTML = htmlContent || '';
+    exportDiv.style.margin = '0 auto';
+    exportDiv.innerHTML = htmlContent;
 
-    // Bersihkan elemen .a4-page dari styling preview layar yang kaku
+    // Bersihkan elemen .a4-page dari style inline yang kaku
     exportDiv.querySelectorAll('.a4-page').forEach(page => {
         page.removeAttribute('style');
         page.style.width = '100%';
@@ -682,10 +695,10 @@ function downloadArchivePdf(htmlContent, filename) {
         page.style.boxSizing = 'border-box';
     });
 
-    // Hilangkan indikator pemisah halaman visual layar
+    // Hilangkan indikator pemisah halaman layar visual
     exportDiv.querySelectorAll('#pvPageSeparator').forEach(el => el.remove());
 
-    // Tangani Halaman 2 (Lampiran Foto Berita Acara) agar pecah halaman rapi
+    // Tangani halaman 2 (seperti lampiran foto Berita Acara)
     const page2 = exportDiv.querySelector('#a4Page2');
     if (page2) {
         page2.style.pageBreakBefore = 'always';
@@ -693,7 +706,7 @@ function downloadArchivePdf(htmlContent, filename) {
         page2.style.marginTop = '10mm';
     }
 
-    // Pastikan tabel mengalir alami dari halaman 1 tanpa jarak kosong masif
+    // Pastikan tabel mengalir alami tanpa jarak kosong masif
     exportDiv.querySelectorAll('table.attendance-table').forEach(tbl => {
         tbl.style.width = '100%';
         tbl.style.borderCollapse = 'collapse';
@@ -704,7 +717,7 @@ function downloadArchivePdf(htmlContent, filename) {
         tr.style.breakInside = 'avoid';
     });
 
-    // Pastikan rekapitulasi dan tanda tangan tidak terpotong di tengah
+    // Pastikan rekapitulasi dan tanda tangan tidak terbelah
     exportDiv.querySelectorAll('.rekap-box').forEach(box => {
         box.style.pageBreakInside = 'avoid';
         box.style.breakInside = 'avoid';
@@ -716,10 +729,18 @@ function downloadArchivePdf(htmlContent, filename) {
         sig.style.marginTop = '18px';
     });
 
-    document.body.appendChild(exportDiv);
+    wrapper.appendChild(exportDiv);
+    document.body.appendChild(wrapper);
+
+    // Tunggu seluruh gambar (kop surat, tanda tangan, foto) selesai dimuat
+    const imgs = Array.from(exportDiv.querySelectorAll('img'));
+    await Promise.all(imgs.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(r => { img.onload = r; img.onerror = r; });
+    }));
 
     const opt = {
-        margin: [10, 10, 10, 10], // Margin merata 10mm di setiap halaman (Halaman 1, 2, dst)
+        margin: [10, 10, 10, 10], // Margin merata 10mm di setiap lembar A4
         filename: filename || 'Dokumen_Ujian.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
@@ -727,7 +748,8 @@ function downloadArchivePdf(htmlContent, filename) {
             useCORS: true,
             letterRendering: true,
             logging: false,
-            windowWidth: 794 // Lebar standar layar A4 96 DPI
+            scrollX: 0,
+            scrollY: 0
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: {
@@ -736,14 +758,17 @@ function downloadArchivePdf(htmlContent, filename) {
         }
     };
 
-    html2pdf().set(opt).from(exportDiv).save().then(() => {
-        if (exportDiv.parentNode) document.body.removeChild(exportDiv);
+    try {
+        await html2pdf().set(opt).from(exportDiv).save();
         showToast('Berkas PDF berhasil diunduh!', 'success');
-    }).catch(err => {
+    } catch (err) {
         console.error('Download PDF error:', err);
-        if (exportDiv.parentNode) document.body.removeChild(exportDiv);
         showToast('Gagal memproses PDF via html2pdf.', 'danger');
-    });
+    } finally {
+        if (wrapper && wrapper.parentNode) {
+            wrapper.parentNode.removeChild(wrapper);
+        }
+    }
 }
 
 function downloadModalPdf() {
