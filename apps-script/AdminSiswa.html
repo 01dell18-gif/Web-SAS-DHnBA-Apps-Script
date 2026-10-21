@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Siswa & Kelas - <?= schoolSettings.school_name || 'SMK NEGERI FYJ CHANNEL' ?></title>
+    <?!= include('StyleCSS'); ?>
+    <?!= include('PreviewA4CSS'); ?>
+</head>
+<body>
+
+<div class="admin-layout">
+    <!-- 1. SIDEBAR DARK MODERN (SEJAJAR DENGAN TOPBAR) -->
+    <?!= include('Sidebar'); ?>
+
+    <!-- 2. WRAPPER UTAMA KANAN: TOPBAR DI ATAS + CONTENT DI BAWAH -->
+    <div class="admin-main-wrapper">
+        <?!= include('Header'); ?>
+
+        <!-- CONTENT -->
+        <main class="admin-content">
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="card-title" style="margin: 0;"><i class="bi bi-people"></i> Master Data Siswa & Master Kelas</span>
+                    <span id="badgeFilteredCount" class="badge" style="background: var(--primary-light); color: var(--primary); font-weight: 700; padding: 4px 8px; border-radius: 6px;">0 Siswa</span>
+                </div>
+                
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <select id="filterClassSelect" class="form-select form-select-sm" style="width: auto; min-width: 170px;" onchange="onClassFilterChange()">
+                        <option value="">Semua Kelas</option>
+                    </select>
+
+                    <!-- Tombol Hapus Siswa di Kelas Terpilih -->
+                    <button id="btnDeleteClassStudents" class="btn btn-danger btn-sm" style="display: none;" onclick="openDeleteClassModal()" title="Hapus seluruh data siswa di kelas yang dipilih">
+                        <i class="bi bi-trash-fill"></i> Hapus Siswa di Kelas Ini
+                    </button>
+
+                    <!-- Tombol Export Excel -->
+                    <button class="btn btn-secondary btn-sm" onclick="exportStudentsExcel()" title="Ekspor data siswa terpilih ke berkas Microsoft Excel (.xlsx)">
+                        <i class="bi bi-file-earmark-excel" style="color: #10B981;"></i> Export (.xlsx)
+                    </button>
+
+                    <!-- Tombol Import Excel -->
+                    <button class="btn btn-secondary btn-sm" onclick="openImportModal()" title="Impor data siswa dari berkas Excel (.xlsx / .xls)">
+                        <i class="bi bi-file-earmark-arrow-up" style="color: var(--primary);"></i> Import (.xlsx)
+                    </button>
+
+                    <!-- Tombol Tambah Siswa Manual -->
+                    <button class="btn btn-primary btn-sm" onclick="showAddStudentModal()">
+                        <i class="bi bi-plus-lg"></i> Tambah Siswa
+                    </button>
+
+                    <!-- Tombol Hapus Data Siswa (Hapus seluruh siswa dari database) -->
+                    <button class="btn btn-outline-danger btn-sm" onclick="promptDeleteAllStudents()" title="Hapus semua data siswa dari database">
+                        <i class="bi bi-trash3-fill"></i> Hapus Data Siswa
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 10px; align-items: center; flex: 1; max-width: 560px;">
+                        <div style="position: relative; flex: 1;">
+                            <input type="text" id="searchStudentInput" class="form-control form-control-sm" placeholder="Cari berdasarkan NIS atau Nama siswa..." oninput="onStudentSearchInput()">
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">Tampilkan:</span>
+                            <select id="studentPageSizeSelect" class="form-select form-select-sm" style="width: auto; min-width: 110px; font-size: 0.82rem;" onchange="changeStudentPageSize(this.value)">
+                                <option value="20" selected>20 data</option>
+                                <option value="40">40 data</option>
+                                <option value="50">50 data</option>
+                                <option value="100">100 data</option>
+                                <option value="200">200 data</option>
+                                <option value="400">400 data</option>
+                                <option value="500">500 data</option>
+                                <option value="all">Semua data</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.82rem; color: var(--text-muted);">
+                        Format impor mendukung kolom: <code>NIS</code>, <code>NAMA</code>, <code>KELAS</code>.
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table" style="font-size: 0.88rem;">
+                        <thead>
+                            <tr>
+                                <th style="width: 45px;">No</th>
+                                <th style="width: 110px;">NIS</th>
+                                <th>Nama Lengkap Peserta Didik</th>
+                                <th style="width: 120px;">Kelas</th>
+                                <th>Program / Konsentrasi Keahlian</th>
+                                <th style="text-align: center; width: 90px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody">
+                            <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">Memuat data siswa...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- PAGINATION BAR SISWA -->
+                <div id="studentPaginationBar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                    <div style="font-size: 0.82rem; color: var(--text-muted);" id="studentPaginationInfo">
+                        Menampilkan 0 - 0 dari 0 siswa
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnStudentPrev" onclick="studentPrevPage()" style="padding: 4px 10px; font-size: 0.8rem;">
+                            <i class="bi bi-chevron-left"></i> Sebelumnya
+                        </button>
+                        <div id="studentPageButtons" style="display: flex; gap: 4px; flex-wrap: wrap;"></div>
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnStudentNext" onclick="studentNextPage()" style="padding: 4px 10px; font-size: 0.8rem;">
+                            Setelahnya <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </main>
+    </div>
+</div>
+
+<!-- MODAL TAMBAH SISWA MANUAL -->
+<div id="studentModal" class="modal-overlay">
+    <div class="modal-card">
+        <h3 style="margin-bottom: 1rem; font-size: 1.15rem;"><i class="bi bi-person-plus-fill" style="color: var(--primary);"></i> Tambah Siswa Baru</h3>
+        <form onsubmit="submitNewStudent(event)">
+            <div class="form-group">
+                <label class="form-label">Kelas Siswa <span class="required">*</span></label>
+                <input type="text" id="modal_class_input" class="form-control" list="modalClassesDatalist" placeholder="Ketik atau pilih kelas (contoh: XII DKV)" required autocomplete="off">
+                <datalist id="modalClassesDatalist"></datalist>
+                <div class="form-hint">Dapat memilih kelas terdaftar atau mengetik nama kelas baru. Kelas baru otomatis didaftarkan ke sistem.</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nomor Induk Siswa (NIS)</label>
+                <input type="text" id="modal_nis" class="form-control" placeholder="Contoh: 13801" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nama Lengkap Siswa</label>
+                <input type="text" id="modal_nama" class="form-control" placeholder="Nama lengkap siswa" required>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.5rem;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeStudentModal()">Batal</button>
+                <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg"></i> Simpan Siswa</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL EDIT/UPDATE SISWA (KHUSUS HAK AKSES ADMIN) -->
+<div id="editStudentModal" class="modal-overlay">
+    <div class="modal-card">
+        <h3 style="margin-bottom: 1rem; font-size: 1.15rem;"><i class="bi bi-pencil-square" style="color: var(--primary);"></i> Edit Data Peserta Didik</h3>
+        <form onsubmit="submitEditStudent(event)">
+            <input type="hidden" id="edit_student_id">
+            <div class="form-group">
+                <label class="form-label">Nomor Induk Siswa (NIS)</label>
+                <input type="text" id="edit_student_nis" class="form-control" placeholder="Contoh: 13801" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nama Lengkap Siswa <span class="required">*</span></label>
+                <input type="text" id="edit_student_nama" class="form-control" placeholder="Nama lengkap siswa" required autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Kelas Siswa <span class="required">*</span></label>
+                <select id="edit_student_class_id" class="form-select" required>
+                    <!-- Dimuat dinamis dari master kelas -->
+                </select>
+                <div class="form-hint">Program / Konsentrasi Keahlian akan otomatis menyesuaikan dengan kelas yang dipilih.</div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.5rem;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeEditStudentModal()">Batal</button>
+                <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg"></i> Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL IMPORT EXCEL SISWA -->
+<div id="importExcelModal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 680px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="font-size: 1.15rem; margin: 0;"><i class="bi bi-file-earmark-excel" style="color: #10B981;"></i> Impor Data Siswa (.xlsx / .xls)</h3>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="downloadExcelTemplate()" title="Unduh berkas contoh format Excel">
+                <i class="bi bi-download"></i> Unduh Format Contoh
+            </button>
+        </div>
+
+        <div style="background: var(--slate-100); border-radius: var(--radius-sm); padding: 12px; font-size: 0.84rem; margin-bottom: 1.25rem;">
+            <strong>Petunjuk Format Kolom Excel:</strong>
+            <ul style="margin: 4px 0 0 20px;">
+                <li>Kolom 1: <code>NIS</code> (Nomor Induk Siswa)</li>
+                <li>Kolom 2: <code>NAMA</code> (Nama Lengkap Peserta Didik)</li>
+                <li>Kolom 3: <code>KELAS</code> (Nama Kelas, misal: <em>XII DKV</em>, <em>XII TKJ</em>)</li>
+            </ul>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Pilih Berkas Excel (.xlsx / .xls)</label>
+            <input type="file" id="excelFileInput" class="form-control" accept=".xlsx, .xls" onchange="handleExcelFileSelected(event)">
+        </div>
+
+        <div class="form-group" style="margin-top: 1rem;">
+            <label class="form-label">Metode Impor</label>
+            <div style="display: flex; gap: 15px;">
+                <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="radio" name="import_mode" value="merge" checked> Gabungkan & Perbarui (Merge)
+                </label>
+                <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="radio" name="import_mode" value="replace"> Timpa Seluruh Siswa di Kelas Terkait (Replace)
+                </label>
+            </div>
+        </div>
+
+        <div id="importPreviewArea" style="display: none; margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+            <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 6px;" id="importSummaryText">Pratinjau Data:</div>
+            <div style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <table class="table" style="font-size: 0.8rem; margin: 0;">
+                    <tbody id="importPreviewTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.5rem;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="closeImportModal()">Batal</button>
+            <button type="button" id="btnExecuteImport" class="btn btn-primary btn-sm" style="display: none;" onclick="executeImportStudents()">
+                <i class="bi bi-cloud-arrow-up-fill"></i> Simpan ke Database
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL HAPUS PER KELAS -->
+<div id="deleteClassModal" class="modal-overlay">
+    <div class="modal-card">
+        <h3 style="color: var(--danger); margin-bottom: 0.75rem; font-size: 1.15rem;">
+            <i class="bi bi-exclamation-triangle-fill"></i> Konfirmasi Penghapusan Siswa Kelas
+        </h3>
+        <p style="font-size: 0.9rem; line-height: 1.5; color: var(--text-main);">
+            Anda akan menghapus seluruh data siswa di kelas: <strong id="deleteModalClassName" style="color: var(--primary);">-</strong>
+            (Total: <span id="deleteModalCount" style="font-weight: 700;">0</span> Siswa).
+        </p>
+        <div style="margin: 1rem 0; padding: 12px; background: #FEF2F2; border: 1px solid #FCA5A5; border-radius: var(--radius-sm);">
+            <label style="font-size: 0.85rem; display: block; margin-bottom: 6px; cursor: pointer;">
+                <input type="radio" name="delete_type" value="students_only" checked> Hanya hapus seluruh siswa di kelas ini (Kelas tetap ada).
+            </label>
+            <label style="font-size: 0.85rem; display: block; cursor: pointer;">
+                <input type="radio" name="delete_type" value="delete_all"> Hapus seluruh siswa sekaligus hapus kelas ini dari daftar.
+            </label>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 8px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="closeDeleteClassModal()">Batal</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="confirmExecuteDeleteClass()">
+                <i class="bi bi-trash-fill"></i> Ya, Hapus Sekarang
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+<?!= include('AppJS'); ?>
+
+<script>
+
+let db = { classes: [], students: [], teachers: [], templates: [], settings: {}, archives: [], users: [] };
+
+async function loadDatabaseFromAppsScript() {
+    try {
+        const res = await callServer('apiGetInitialData');
+        if (res && res.success) {
+            db.classes = res.classes || [];
+            db.templates = res.templates || [];
+            db.subjects = res.subjects || [];
+            db.academic_years = res.academic_years || [];
+            db.teachers = res.teachers || [];
+            db.settings = res.settings || {};
+        }
+        const [stRes, arRes, usRes] = await Promise.all([
+            callServer('apiGetStudents'),
+            callServer('apiGetArchives'),
+            callServer('apiGetUsers')
+        ]);
+        db.students = stRes || [];
+        db.archives = arRes || [];
+        db.users = usRes || [];
+        return db;
+    } catch(err) {
+        console.error('Error loadDatabaseFromAppsScript:', err);
+        return db;
+    }
+}
+
+
+let targetDeleteClassId = null;
+let parsedExcelData = [];
+
+async function initSiswaPage() {
+    await loadDatabaseFromAppsScript();
+
+    // Cek URL params jika ada filter kelas bawaan
+    const params = new URLSearchParams(window.location.search);
+    const initialClassId = params.get('class_id') || '';
+
+    // Populate dropdown kelas
+    const filterSelect = document.getElementById('filterClassSelect');
+    if (filterSelect) {
+        filterSelect.innerHTML = `<option value="">Semua Kelas (${(db.students || []).length} Siswa)</option>`;
+        (db.classes || []).forEach(c => {
+            const count = (db.students || []).filter(s => String(s.class_id) === String(c.id)).length;
+            const prog = c.program_keahlian || detectProgramKeahlian(c.nama_kelas) || '';
+            const labelProg = prog ? ` - ${prog}` : '';
+            filterSelect.innerHTML += `<option value="${c.id}" ${String(c.id) === String(initialClassId) ? 'selected' : ''}>${c.nama_kelas}${labelProg} (${count} Siswa)</option>`;
+        });
+        if (initialClassId) {
+            filterSelect.value = initialClassId;
+        }
+    }
+
+    const modalDatalist = document.getElementById('modalClassesDatalist');
+    if (modalDatalist) {
+        modalDatalist.innerHTML = (db.classes || []).map(c => `<option value="${c.nama_kelas}">`).join('');
+    }
+
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    const isAdmin = (currentRole === 'admin' || currentRole === 'superadmin');
+    if (!isAdmin) {
+        const btnDeleteAll = document.querySelector('button[onclick="promptDeleteAllStudents()"]');
+        if (btnDeleteAll) btnDeleteAll.style.display = 'none';
+        const btnDeleteClass = document.getElementById('btnDeleteClassStudents');
+        if (btnDeleteClass) btnDeleteClass.style.display = 'none';
+    }
+
+    onClassFilterChange();
+}
+
+let currentStudentPage = 1;
+let studentPageSize = 20;
+
+function detectProgramKeahlian(className) {
+    const upper = (className || '').toUpperCase();
+    if (upper.includes('TKJ')) return 'Teknik Komputer dan Jaringan';
+    if (upper.includes('DKV')) return 'Desain Komunikasi Visual';
+    if (upper.includes('LPKKK') || upper.includes('FARMASI')) return 'Layanan Penunjang Kefarmasian Klinis dan Komunitas';
+    if (upper.includes('LPB') || upper.includes('PERBANKAN')) return 'Layanan Perbankan';
+    if (upper.includes('BD') || upper.includes('BISNIS DIGITAL')) return 'Bisnis Digital';
+    if (upper.includes('MP') || upper.includes('PERKANTORAN')) return 'Manajemen Perkantoran dan Layanan Bisnis';
+    if (upper.includes('AK') || upper.includes('AKUNTANSI')) return 'Akuntansi dan Keuangan Lembaga';
+    if (upper.includes('TSM') || upper.includes('OTOMOTIF')) return 'Teknik Sepeda Motor';
+    return 'Umum';
+}
+
+function changeStudentPageSize(val) {
+    studentPageSize = val === 'all' ? 'all' : parseInt(val, 10);
+    currentStudentPage = 1;
+    renderStudentsTable();
+}
+
+function onStudentSearchInput() {
+    currentStudentPage = 1;
+    renderStudentsTable();
+}
+
+function studentPrevPage() {
+    if (currentStudentPage > 1) {
+        currentStudentPage--;
+        renderStudentsTable();
+    }
+}
+
+function studentNextPage() {
+    const filterId = document.getElementById('filterClassSelect').value;
+    const searchVal = (document.getElementById('searchStudentInput')?.value || '').toLowerCase().trim();
+    let list = filterId ? (db.students || []).filter(s => String(s.class_id) === String(filterId)) : (db.students || []);
+    if (searchVal) {
+        list = list.filter(s => (s.nama && s.nama.toLowerCase().includes(searchVal)) || (s.nis && s.nis.toLowerCase().includes(searchVal)));
+    }
+    const totalPages = studentPageSize === 'all' ? 1 : Math.ceil(list.length / studentPageSize);
+    if (currentStudentPage < totalPages) {
+        currentStudentPage++;
+        renderStudentsTable();
+    }
+}
+
+function goToStudentPage(page) {
+    currentStudentPage = page;
+    renderStudentsTable();
+}
+
+function onClassFilterChange() {
+    currentStudentPage = 1;
+    const filterSelect = document.getElementById('filterClassSelect');
+    const btnDelete = document.getElementById('btnDeleteClassStudents');
+    const val = filterSelect.value;
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    const isAdmin = (currentRole === 'admin' || currentRole === 'superadmin');
+
+    if (val && isAdmin) {
+        btnDelete.style.display = 'inline-flex';
+        const cls = db.classes.find(c => String(c.id) === String(val));
+        if (cls) btnDelete.innerHTML = `<i class="bi bi-trash-fill"></i> Hapus Siswa ${cls.nama_kelas}`;
+    } else {
+        btnDelete.style.display = 'none';
+    }
+
+    renderStudentsTable();
+}
+
+function renderStudentsTable() {
+    const filterId = document.getElementById('filterClassSelect').value;
+    const searchVal = (document.getElementById('searchStudentInput')?.value || '').toLowerCase().trim();
+    const tbody = document.getElementById('studentsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    let list = filterId ? (db.students || []).filter(s => String(s.class_id) === String(filterId)) : (db.students || []);
+
+    if (searchVal) {
+        list = list.filter(s => (s.nama && s.nama.toLowerCase().includes(searchVal)) || (s.nis && s.nis.toLowerCase().includes(searchVal)));
+    }
+
+    document.getElementById('badgeFilteredCount').textContent = `${list.length} Siswa`;
+
+    const paginationBar = document.getElementById('studentPaginationBar');
+    const paginationInfo = document.getElementById('studentPaginationInfo');
+    const btnPrev = document.getElementById('btnStudentPrev');
+    const btnNext = document.getElementById('btnStudentNext');
+    const pageButtons = document.getElementById('studentPageButtons');
+
+    if (list.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                    <i class="bi bi-people" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                    Tidak ada data siswa yang cocok dengan filter.
+                </td>
+            </tr>
+        `;
+        if (paginationInfo) paginationInfo.textContent = 'Menampilkan 0 dari 0 data siswa';
+        if (btnPrev) btnPrev.disabled = true;
+        if (btnNext) btnNext.disabled = true;
+        if (pageButtons) pageButtons.innerHTML = '';
+        return;
+    }
+
+    let paginatedList = list;
+    let startIdx = 0;
+    let endIdx = list.length;
+    let totalPages = 1;
+
+    if (studentPageSize !== 'all') {
+        totalPages = Math.ceil(list.length / studentPageSize) || 1;
+        if (currentStudentPage > totalPages) currentStudentPage = totalPages;
+        if (currentStudentPage < 1) currentStudentPage = 1;
+
+        startIdx = (currentStudentPage - 1) * studentPageSize;
+        endIdx = Math.min(startIdx + studentPageSize, list.length);
+        paginatedList = list.slice(startIdx, endIdx);
+
+        if (paginationInfo) {
+            paginationInfo.textContent = `Menampilkan ${startIdx + 1} - ${endIdx} dari ${list.length} data siswa (Halaman ${currentStudentPage} dari ${totalPages})`;
+        }
+        if (btnPrev) btnPrev.disabled = (currentStudentPage <= 1);
+        if (btnNext) btnNext.disabled = (currentStudentPage >= totalPages);
+
+        if (pageButtons) {
+            let btnsHtml = '';
+            let startP = Math.max(1, currentStudentPage - 2);
+            let endP = Math.min(totalPages, currentStudentPage + 2);
+
+            if (startP > 1) {
+                btnsHtml += `<button type="button" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;" onclick="goToStudentPage(1)">1</button>`;
+                if (startP > 2) btnsHtml += `<span style="padding: 0 4px; font-size: 0.8rem; color: var(--text-muted);">...</span>`;
+            }
+
+            for (let p = startP; p <= endP; p++) {
+                const isActive = (p === currentStudentPage);
+                btnsHtml += `<button type="button" class="btn ${isActive ? 'btn-primary' : 'btn-secondary'} btn-sm" style="padding: 2px 8px; font-size: 0.75rem;" onclick="goToStudentPage(${p})">${p}</button>`;
+            }
+
+            if (endP < totalPages) {
+                if (endP < totalPages - 1) btnsHtml += `<span style="padding: 0 4px; font-size: 0.8rem; color: var(--text-muted);">...</span>`;
+                btnsHtml += `<button type="button" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;" onclick="goToStudentPage(${totalPages})">${totalPages}</button>`;
+            }
+            pageButtons.innerHTML = btnsHtml;
+        }
+    } else {
+        if (paginationInfo) {
+            paginationInfo.textContent = `Menampilkan seluruh ${list.length} data siswa`;
+        }
+        if (btnPrev) btnPrev.disabled = true;
+        if (btnNext) btnNext.disabled = true;
+        if (pageButtons) pageButtons.innerHTML = '';
+    }
+
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    const isAdmin = (currentRole === 'admin' || currentRole === 'superadmin');
+
+    paginatedList.forEach((s, idx) => {
+        const cls = (db.classes || []).find(c => String(c.id) === String(s.class_id));
+        const prog = (cls && cls.program_keahlian) ? cls.program_keahlian : (detectProgramKeahlian(cls ? cls.nama_kelas : s.kelas) || '-');
+        const rowNo = studentPageSize === 'all' ? idx + 1 : startIdx + idx + 1;
+
+        let actionHtml = '';
+        if (isAdmin) {
+            actionHtml = `
+                <div style="display: flex; gap: 5px; justify-content: center; align-items: center;">
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding: 3px 8px; font-size: 0.75rem;" onclick="openEditStudentModal(${s.id})" title="Edit / Perbarui Data Siswa">
+                        <i class="bi bi-pencil-square" style="color: var(--primary);"></i>
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm" style="padding: 3px 8px; font-size: 0.75rem;" onclick="deleteStudent(${s.id})" title="Hapus Siswa">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+        } else {
+            actionHtml = `
+                <span class="badge" style="background: #F1F5F9; color: #94A3B8; font-size: 0.75rem; font-weight: 600; padding: 4px 6px;">
+                    <i class="bi bi-lock-fill"></i> Khusus Admin
+                </span>
+            `;
+        }
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${rowNo}</td>
+                <td><code>${s.nis || '-'}</code></td>
+                <td><strong>${s.nama}</strong></td>
+                <td><span style="font-weight:600; color: var(--primary);">${cls ? cls.nama_kelas : '-'}</span></td>
+                <td><span class="badge" style="background: #F1F5F9; color: #334155; font-size: 0.8rem; font-weight: 600; padding: 4px 8px; border-radius: 4px;">${prog}</span></td>
+                <td style="text-align: center;">${actionHtml}</td>
+            </tr>
+        `;
+    });
+}
+
+// ================= AKSI EDIT/UPDATE SISWA (KHUSUS ADMIN) =================
+function openEditStudentModal(id) {
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    if (currentRole === 'operator') {
+        if (typeof showAlertModal === 'function') {
+            showAlertModal({
+                title: 'Hak Akses Terbatas',
+                message: 'Fitur edit data siswa khusus untuk hak akses Administrator!',
+                type: 'danger'
+            });
+        } else {
+            alert('Fitur edit data siswa khusus untuk hak akses Administrator!');
+        }
+        return;
+    }
+
+    const student = (db.students || []).find(s => Number(s.id) === Number(id));
+    if (!student) {
+        showToast('Data siswa tidak ditemukan di database!', 'danger');
+        return;
+    }
+
+    document.getElementById('edit_student_id').value = student.id;
+    document.getElementById('edit_student_nis').value = student.nis || '';
+    document.getElementById('edit_student_nama').value = student.nama || '';
+
+    // Populate dropdown kelas di modal edit
+    const selClass = document.getElementById('edit_student_class_id');
+    if (selClass) {
+        selClass.innerHTML = (db.classes || []).map(c => {
+            const prog = c.program_keahlian || detectProgramKeahlian(c.nama_kelas) || '';
+            const progLabel = prog ? ` - ${prog}` : '';
+            const isSelected = String(c.id) === String(student.class_id) ? 'selected' : '';
+            return `<option value="${c.id}" ${isSelected}>${c.nama_kelas}${progLabel}</option>`;
+        }).join('');
+    }
+
+    document.getElementById('editStudentModal').style.display = 'flex';
+    setTimeout(() => {
+        document.getElementById('edit_student_nama').focus();
+    }, 100);
+}
+
+function closeEditStudentModal() {
+    document.getElementById('editStudentModal').style.display = 'none';
+}
+
+async function submitEditStudent(e) {
+    e.preventDefault();
+    const id = Number(document.getElementById('edit_student_id').value);
+    const nis = document.getElementById('edit_student_nis').value.trim();
+    const nama = document.getElementById('edit_student_nama').value.trim();
+    const classId = Number(document.getElementById('edit_student_class_id').value);
+
+    if (!nama || !classId) {
+        showToast('Nama siswa dan pilihan kelas wajib diisi.', 'danger');
+        return;
+    }
+
+    const st = db.students.find(s => Number(s.id) === id);
+    if (!st) return;
+
+    st.nis = nis;
+    st.nama = nama;
+    st.class_id = classId;
+
+    const res = await saveAdminDatabase({ students: db.students });
+    if (res.success) {
+        closeEditStudentModal();
+        const currentFilter = document.getElementById('filterClassSelect').value;
+        initSiswaPage();
+        const filterSelect = document.getElementById('filterClassSelect');
+        if (filterSelect && currentFilter) {
+            filterSelect.value = currentFilter;
+        }
+        showToast(`Data siswa "${nama}" berhasil diperbarui!`, 'success');
+    } else {
+        showToast(res.message || 'Gagal menyimpan pembaruan siswa.', 'danger');
+    }
+}
+
+async function promptDeleteAllStudents() {
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    if (currentRole === 'operator') {
+        if (typeof showAlertModal === 'function') {
+            showAlertModal({
+                title: 'Hak Akses Terbatas',
+                message: 'Fitur penghapusan database siswa hanya dapat dilakukan oleh Administrator!',
+                type: 'danger'
+            });
+        } else {
+            alert('Fitur penghapusan database siswa hanya dapat dilakukan oleh Administrator!');
+        }
+        return;
+    }
+
+    const count = (db.students || []).length;
+    if (count === 0) {
+        showToast('Tidak ada data siswa di dalam basis data.', 'info');
+        return;
+    }
+
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: '⚠️ Peringatan Krusial',
+            message: `Apakah Anda yakin ingin MENGHAPUS SEMUA DATA SISWA?\n\nSebanyak ${count} siswa di seluruh kelas akan dikosongkan secara permanen dari basis data.\nTindakan ini tidak dapat dibatalkan.`,
+            type: 'danger',
+            confirmText: 'Ya, Kosongkan Siswa',
+            confirmIcon: 'bi-trash-fill'
+        });
+    } else {
+        confirmed = confirm(`⚠️ PERINGATAN KRUSIAL:\n\nApakah Anda yakin ingin MENGHAPUS SEMUA DATA SISWA?\n\nSebanyak ${count} siswa di seluruh kelas akan dikosongkan secara permanen dari basis data.\nTindakan ini tidak dapat dibatalkan.`);
+    }
+
+    if (confirmed) {
+        let resetClasses = false;
+        if (typeof showConfirmModal === 'function') {
+            resetClasses = await showConfirmModal({
+                title: 'Opsi Kosongkan Daftar Kelas',
+                message: 'Apakah Anda juga ingin MENGOSONGKAN DAFTAR KELAS agar daftar kelas dapat didaftarkan ulang secara bersih saat penginputan data siswa baru berikutnya?\n\n• Pilih [Kosongkan Kelas] untuk mengosongkan siswa dan master kelas.\n• Pilih [Pertahankan Kelas] untuk hanya mengosongkan data siswa.',
+                type: 'warning',
+                confirmText: 'Kosongkan Kelas',
+                cancelText: 'Pertahankan Kelas',
+                confirmIcon: 'bi-building-dash'
+            });
+        } else {
+            resetClasses = confirm("Apakah Anda juga ingin MENGOSONGKAN DAFTAR KELAS?");
+        }
+        executeDeleteAllStudents(resetClasses);
+    }
+}
+
+async function executeDeleteAllStudents(resetClasses = false) {
+    try {
+        const res = await saveAdminDatabase({ delete_all_students: true, reset_classes: resetClasses });
+        if (res.success) {
+            db.students = [];
+            if (resetClasses) db.classes = [];
+            initSiswaPage();
+            showToast(resetClasses ? 'Seluruh data siswa dan daftar kelas berhasil dikosongkan!' : 'Seluruh data siswa berhasil dikosongkan!', 'success');
+        } else {
+            showToast('Gagal menghapus data siswa: ' + res.message, 'danger');
+        }
+    } catch (err) {
+        showToast('Kesalahan koneksi saat menghapus semua siswa: ' + err.message, 'danger');
+    }
+}
+
+async function deleteStudent(id) {
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    if (currentRole === 'operator') {
+        if (typeof showAlertModal === 'function') {
+            showAlertModal({
+                title: 'Hak Akses Terbatas',
+                message: 'Fitur hapus data siswa khusus untuk hak akses Administrator!',
+                type: 'danger'
+            });
+        } else {
+            alert('Fitur hapus data siswa khusus untuk hak akses Administrator!');
+        }
+        return;
+    }
+
+    const st = (db.students || []).find(s => s.id === id);
+    const namaSiswa = st ? st.nama : 'siswa ini';
+
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Hapus Siswa',
+            message: `Apakah Anda yakin ingin menghapus siswa "${namaSiswa}"?`,
+            type: 'danger',
+            confirmText: 'Ya, Hapus Siswa',
+            confirmIcon: 'bi-trash-fill'
+        });
+    } else {
+        confirmed = confirm(`Apakah Anda yakin ingin menghapus "${namaSiswa}"?`);
+    }
+
+    if (confirmed) {
+        db.students = db.students.filter(s => s.id !== id);
+        const res = await saveAdminDatabase({ students: db.students });
+        if (res.success) {
+            renderStudentsTable();
+            showToast(`Siswa "${namaSiswa}" berhasil dihapus.`, 'success');
+        } else {
+            showToast(res.message, 'danger');
+        }
+    }
+}
+
+function showAddStudentModal() {
+    const dl = document.getElementById('modalClassesDatalist');
+    if (dl) {
+        dl.innerHTML = (db.classes || []).map(c => `<option value="${c.nama_kelas}">`).join('');
+    }
+    const inp = document.getElementById('modal_class_input');
+    if (inp) inp.value = '';
+    document.getElementById('modal_nis').value = '';
+    document.getElementById('modal_nama').value = '';
+    document.getElementById('studentModal').style.display = 'flex';
+    if (inp) inp.focus();
+}
+function closeStudentModal() {
+    document.getElementById('studentModal').style.display = 'none';
+}
+
+function detectProgramKeahlian(className) {
+    const upper = (className || '').toUpperCase();
+    if (upper.includes('TKJ')) return 'Teknik Komputer dan Jaringan';
+    if (upper.includes('DKV')) return 'Desain Komunikasi Visual';
+    if (upper.includes('LPKKK') || upper.includes('FARMASI')) return 'Layanan Penunjang Kefarmasian Klinis dan Komunitas';
+    if (upper.includes('LPB') || upper.includes('PERBANKAN')) return 'Layanan Perbankan';
+    if (upper.includes('BD') || upper.includes('BISNIS DIGITAL')) return 'Bisnis Digital';
+    if (upper.includes('MP') || upper.includes('PERKANTORAN')) return 'Manajemen Perkantoran dan Layanan Bisnis';
+    if (upper.includes('AK') || upper.includes('AKUNTANSI')) return 'Akuntansi dan Keuangan Lembaga';
+    if (upper.includes('TSM') || upper.includes('OTOMOTIF')) return 'Teknik Sepeda Motor';
+    return 'Umum';
+}
+
+async function submitNewStudent(e) {
+    e.preventDefault();
+    const classNameInput = document.getElementById('modal_class_input').value.trim();
+    const nis = document.getElementById('modal_nis').value.trim();
+    const nama = document.getElementById('modal_nama').value.trim();
+
+    if (!classNameInput || !nama) {
+        showToast('Nama kelas dan nama siswa wajib diisi.', 'danger');
+        return;
+    }
+
+    // Cari kelas yang sudah ada atau buat kelas baru secara otomatis
+    let cls = (db.classes || []).find(c => c.nama_kelas.toLowerCase() === classNameInput.toLowerCase());
+    let isNewClass = false;
+    if (!cls) {
+        const nextClassId = (db.classes || []).reduce((max, c) => Math.max(max, Number(c.id) || 0), 0) + 1;
+        const detectedProg = detectProgramKeahlian(classNameInput);
+        cls = { id: nextClassId, nama_kelas: classNameInput, tingkat: 'XII', program_keahlian: detectedProg, is_active: 1 };
+        db.classes.push(cls);
+        isNewClass = true;
+    }
+
+    const newId = (db.students.reduce((max, s) => Math.max(max, s.id || 0), 0)) + 1;
+    const newStudent = { id: newId, class_id: cls.id, nis: nis, nama: nama };
+    db.students.push(newStudent);
+
+    const payload = isNewClass ? { classes: db.classes, students: db.students } : { students: db.students };
+    const res = await saveAdminDatabase(payload);
+    if (res.success) {
+        closeStudentModal();
+        initSiswaPage();
+        showToast(`Siswa "${nama}" (${cls.nama_kelas}) berhasil ditambahkan!`, 'success');
+    } else {
+        showToast(res.message, 'danger');
+    }
+}
+
+function openDeleteClassModal() {
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    if (currentRole === 'operator') {
+        if (typeof showAlertModal === 'function') {
+            showAlertModal({
+                title: 'Hak Akses Terbatas',
+                message: 'Fitur penghapusan siswa kelas hanya dapat dilakukan oleh Administrator!',
+                type: 'danger'
+            });
+        } else {
+            alert('Fitur penghapusan siswa kelas hanya dapat dilakukan oleh Administrator!');
+        }
+        return;
+    }
+
+    const filterId = document.getElementById('filterClassSelect').value;
+    if (!filterId) return;
+    targetDeleteClassId = filterId;
+    const cls = db.classes.find(c => String(c.id) === String(filterId));
+    if (!cls) return;
+
+    const count = db.students.filter(s => String(s.class_id) === String(filterId)).length;
+    document.getElementById('deleteModalClassName').textContent = cls.nama_kelas;
+    document.getElementById('deleteModalCount').textContent = count;
+    document.getElementById('deleteClassModal').style.display = 'flex';
+}
+
+function closeDeleteClassModal() {
+    document.getElementById('deleteClassModal').style.display = 'none';
+    targetDeleteClassId = null;
+}
+
+async function confirmExecuteDeleteClass() {
+    const deleteType = document.querySelector('input[name="delete_type"]:checked').value;
+    const isDeleteClassToo = deleteType === 'delete_all';
+
+    showToast('Memproses penghapusan kelas...', 'info');
+    try {
+        const result = await callServer('apiDeleteClassStudents', targetDeleteClassId, isDeleteClassToo);
+        if (result && result.success) {
+            db.students = db.students.filter(s => String(s.class_id) !== String(targetDeleteClassId));
+            if (isDeleteClassToo) {
+                db.classes = db.classes.filter(c => String(c.id) !== String(targetDeleteClassId));
+                document.getElementById('filterClassSelect').value = '';
+            }
+            closeDeleteClassModal();
+            initSiswaPage();
+            showToast(result.message || 'Data berhasil dihapus.', 'success');
+        } else {
+            showToast('Gagal: ' + ((result && result.message) || 'Error'), 'danger');
+        }
+    } catch (e) {
+        showToast('Kesalahan koneksi: ' + e.message, 'danger');
+    }
+}
+
+function exportStudentsExcel() {
+    if (!db || !db.students || !db.students.length) {
+        showToast('Tidak ada data siswa untuk diekspor.', 'danger');
+        return;
+    }
+    // Sertakan SEMUA data siswa dari database secara lengkap
+    const list = db.students;
+
+    const rows = list.map((s, idx) => {
+        const cls = (db.classes || []).find(c => String(c.id) === String(s.class_id));
+        return {
+            'NO': idx + 1,
+            'NIS': s.nis ? String(s.nis) : '',
+            'NAMA': s.nama || '',
+            'KELAS': cls ? cls.nama_kelas : (s.kelas || ''),
+            'TINGKAT': cls ? (cls.tingkat || 'XII') : 'XII',
+            'PROGRAM_KEAHLIAN': cls ? (cls.program_keahlian || detectProgramKeahlian(cls.nama_kelas)) : (detectProgramKeahlian(s.kelas) || '')
+        };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{ wch: 6 }, { wch: 15 }, { wch: 38 }, { wch: 18 }, { wch: 12 }, { wch: 45 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'DATA_SISWA');
+    XLSX.writeFile(wb, 'Data_Siswa_SMK_NEGERI_FYJ_CHANNEL.xlsx');
+    showToast(`Seluruh data siswa (${rows.length} siswa) berhasil diekspor ke Excel (.xlsx)!`, 'success');
+}
+
+function downloadExcelTemplate() {
+    const rows = [
+        ['NIS', 'NAMA', 'KELAS'],
+        ['13801', 'I Komang Arya Wiguna', 'XII TKJ'],
+        ['13802', 'Ni Kadek Dwi Lestari', 'XII TKJ'],
+        ['13803', 'I Putu Bagus Saputra', 'XII DKV'],
+        ['13804', 'Ni Wayan Desi Purnami', 'XII BD 1']
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{ wch: 15 }, { wch: 35 }, { wch: 18 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Template_Siswa');
+    XLSX.writeFile(wb, 'Template_Import_Siswa_SMK_NEGERI_FYJ_CHANNEL.xlsx');
+    showToast('Template Excel berhasil diunduh.', 'info');
+}
+
+function openImportModal() {
+    parsedExcelData = [];
+    document.getElementById('excelFileInput').value = '';
+    document.getElementById('importPreviewArea').style.display = 'none';
+    document.getElementById('btnExecuteImport').style.display = 'none';
+    document.getElementById('importExcelModal').style.display = 'flex';
+}
+function closeImportModal() {
+    document.getElementById('importExcelModal').style.display = 'none';
+}
+
+function handleExcelFileSelected(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rawJson = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+            if (rawJson.length < 2) {
+                showToast('Berkas Excel tidak memiliki baris data.', 'danger');
+                return;
+            }
+
+            const headerRow = rawJson[0].map(h => String(h || '').trim().toLowerCase());
+            let colNis = headerRow.findIndex(h => h.includes('nis'));
+            let colNama = headerRow.findIndex(h => h.includes('nama'));
+            let colKelas = headerRow.findIndex(h => h.includes('kelas'));
+            if (colNis === -1) colNis = 0;
+            if (colNama === -1) colNama = 1;
+            if (colKelas === -1) colKelas = 2;
+
+            parsedExcelData = [];
+            for (let i = 1; i < rawJson.length; i++) {
+                const row = rawJson[i];
+                if (!row || !row.length) continue;
+                const nis = String(row[colNis] || '').trim();
+                const nama = String(row[colNama] || '').trim();
+                const kelas = String(row[colKelas] || '').trim();
+                if (nama || nis) parsedExcelData.push({ nis, nama, kelas });
+            }
+
+            if (parsedExcelData.length === 0) {
+                showToast('Tidak ada data siswa terbaca.', 'danger');
+                return;
+            }
+
+            document.getElementById('importPreviewArea').style.display = 'block';
+            document.getElementById('btnExecuteImport').style.display = 'inline-flex';
+            document.getElementById('importSummaryText').textContent = `Ditemukan ${parsedExcelData.length} siswa dalam berkas:`;
+
+            const tbody = document.getElementById('importPreviewTableBody');
+            tbody.innerHTML = '';
+            parsedExcelData.slice(0, 15).forEach((item, idx) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td><code>${item.nis || '-'}</code></td>
+                        <td><strong>${item.nama}</strong></td>
+                        <td>${item.kelas || '(Belum diset)'}</td>
+                    </tr>
+                `;
+            });
+            showToast(`${parsedExcelData.length} siswa terbaca dari Excel!`, 'info');
+        } catch (err) {
+            showToast('Gagal memproses berkas Excel: ' + err.message, 'danger');
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+async function executeImportStudents() {
+    if (!parsedExcelData || !parsedExcelData.length) return;
+    const mode = document.querySelector('input[name="import_mode"]:checked').value;
+
+    let maxStudentId = db.students.reduce((max, s) => Math.max(max, s.id || 0), 0);
+    let maxClassId = db.classes.reduce((max, c) => Math.max(max, c.id || 0), 0);
+
+    const classMap = new Map();
+    db.classes.forEach(c => classMap.set(c.nama_kelas.toLowerCase().trim(), c));
+
+    if (mode === 'replace') {
+        const targetClasses = new Set();
+        parsedExcelData.forEach(item => {
+            const k = (item.kelas || '').toLowerCase().trim();
+            if (classMap.has(k)) targetClasses.add(String(classMap.get(k).id));
+        });
+        db.students = db.students.filter(s => !targetClasses.has(String(s.class_id)));
+    }
+
+    let added = 0, updated = 0;
+    parsedExcelData.forEach(item => {
+        let cName = (item.kelas || 'XII').trim();
+        let targetCls = classMap.get(cName.toLowerCase());
+        if (!targetCls) {
+            maxClassId++;
+            const detectedProg = detectProgramKeahlian(cName);
+            targetCls = { id: maxClassId, nama_kelas: cName, tingkat: 'XII', program_keahlian: detectedProg, is_active: 1 };
+            db.classes.push(targetCls);
+            classMap.set(cName.toLowerCase(), targetCls);
+        }
+
+        const existing = item.nis ? db.students.find(s => String(s.nis).trim() === String(item.nis).trim()) : null;
+        if (existing && mode === 'merge') {
+            existing.nama = item.nama || existing.nama;
+            existing.class_id = targetCls.id;
+            updated++;
+        } else {
+            maxStudentId++;
+            db.students.push({ id: maxStudentId, class_id: targetCls.id, nis: item.nis || '', nama: item.nama || '' });
+            added++;
+        }
+    });
+
+    const res = await saveAdminDatabase({ classes: db.classes, students: db.students });
+    if (res.success) {
+        closeImportModal();
+        initSiswaPage();
+        showToast(`Impor Sukses: ${added} siswa ditambahkan, ${updated} diperbarui.`, 'success');
+    } else {
+        showToast(res.message, 'danger');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initSiswaPage);
+</script>
+</body>
+</html>

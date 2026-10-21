@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengaturan Sekolah, Kelas & Kop - <?= schoolSettings.school_name || 'SMK NEGERI FYJ CHANNEL' ?></title>
+    <?!= include('StyleCSS'); ?>
+    <?!= include('PreviewA4CSS'); ?>
+</head>
+<body>
+
+<div class="admin-layout">
+    <!-- 1. SIDEBAR DARK MODERN (SEJAJAR DENGAN TOPBAR) -->
+    <?!= include('Sidebar'); ?>
+
+    <!-- 2. WRAPPER UTAMA KANAN: TOPBAR DI ATAS + CONTENT DI BAWAH -->
+    <div class="admin-main-wrapper">
+        <?!= include('Header'); ?>
+
+        <!-- CONTENT -->
+        <main class="admin-content">
+        <!-- 1. KARTU PENGATURAN IDENTITAS, LOGO & KOP SURAT -->
+        <div class="card" style="margin-bottom: 1.75rem;">
+            <div class="card-header">
+                <span class="card-title"><i class="bi bi-sliders"></i> Pengaturan Identitas Sekolah, Logo & Kop Surat Resmi</span>
+            </div>
+            <div class="card-body">
+                <form id="settingsForm" onsubmit="event.preventDefault(); saveAllPengaturan();">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Nama Sekolah Resmi</label>
+                            <input type="text" id="set_school_name" class="form-control" value="SMK NEGERI FYJ CHANNEL" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tagline Aplikasi</label>
+                            <input type="text" id="set_school_tagline" class="form-control" value="Generator Administrasi Ujian">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Tahun Ajaran Aktif <span class="required">*</span></label>
+                            <select id="set_academic_year" class="form-select" onchange="onActiveYearSelectChange(this.value)">
+                                <!-- Populated dynamically -->
+                            </select>
+                            <div class="form-hint">Otomatis disinkronkan dari Master Daftar Tahun Ajaran di bawah.</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Zona Waktu Ujian</label>
+                            <input type="text" id="set_timezone" class="form-control" value="WITA">
+                        </div>
+                    </div>
+
+                    <!-- PENGATURAN & UPLOAD LOGO SEKOLAH -->
+                    <div class="form-group" style="margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border);">
+                        <label class="form-label" style="font-weight: 700; display: flex; justify-content: space-between; align-items: center;">
+                            <span><i class="bi bi-image" style="color: var(--primary);"></i> Pratinjau & Penggantian Logo Sekolah</span>
+                            <span style="font-size: 0.78rem; font-weight: normal; color: var(--text-muted);">Tampil pada Navbar & Dokumen</span>
+                        </label>
+
+                        <div style="display: flex; gap: 16px; align-items: center; background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px;">
+                            <div style="width: 80px; height: 80px; border-radius: var(--radius-sm); background: #ffffff; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; padding: 6px; box-shadow: var(--shadow-xs);">
+                                <img id="logoPreviewImg" src="/assets/img/logo.png" alt="Logo Sekolah" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                            </div>
+                            <div style="flex: 1;">
+                                <div id="logoSelectedNotice" style="display: none; margin-bottom: 8px; padding: 6px 12px; background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: var(--radius-sm); font-size: 0.82rem; color: #065F46;">
+                                    <i class="bi bi-check-circle-fill"></i> Logo baru dipilih: <strong id="logoSelectedFilename">-</strong>. Klik tombol <strong>Perbarui Pengaturan</strong> di bawah untuk menerapkan.
+                                </div>
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                    <input type="file" id="logoFileInput" accept="image/png, image/jpeg, image/jpg" style="display: none;" onchange="handleLogoFileSelected(event)">
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('logoFileInput').click()">
+                                        <i class="bi bi-upload"></i> Pilih Berkas Logo Baru (PNG/JPG)
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="resetLogoDefault()">
+                                        <i class="bi bi-arrow-counterclockwise"></i> Reset ke Logo Standar
+                                    </button>
+                                </div>
+                                <div class="form-hint" style="margin-top: 6px;">Format yang didukung: PNG transparan atau JPG persegi (rekomendasi 256x256 px).</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MENU UPLOAD KOP SURAT RESMI -->
+                    <div class="form-group" style="margin-top: 1.25rem;">
+                        <label class="form-label" style="font-weight: 700; display: flex; justify-content: space-between; align-items: center;">
+                            <span><i class="bi bi-card-heading" style="color: var(--primary);"></i> Pratinjau & Penggantian Kop Surat Resmi</span>
+                            <span style="font-size: 0.78rem; font-weight: normal; color: var(--text-muted);">Header Absensi & Berita Acara</span>
+                        </label>
+
+                        <div style="border: 2px dashed var(--border); padding: 16px; border-radius: var(--radius-md); text-align: center; background: #ffffff; margin-bottom: 10px; position: relative;">
+                            <img id="kopPreviewImg" src="/assets/img/kop-header.png" alt="Pratinjau Kop Surat" style="max-height: 110px; max-width: 100%; object-fit: contain; display: inline-block;">
+                        </div>
+
+                        <div id="kopSelectedNotice" style="display: none; margin-bottom: 10px; padding: 10px 14px; background: var(--success-light); border: 1px solid #A7F3D0; border-radius: var(--radius-sm); font-size: 0.85rem; color: #065F46;">
+                            <i class="bi bi-check-circle-fill"></i> Berkas kop baru siap disimpan: <strong id="kopSelectedFilename">-</strong>. Klik tombol <strong>Perbarui Pengaturan</strong> di bawah untuk menerapkan perubahan.
+                        </div>
+
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                            <input type="file" id="kopFileInput" accept="image/png, image/jpeg, image/jpg" style="display: none;" onchange="handleKopFileSelected(event)">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('kopFileInput').click()">
+                                <i class="bi bi-cloud-arrow-up-fill"></i> Pilih Berkas Kop Baru (PNG/JPG)
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="resetKopDefault()">
+                                <i class="bi bi-arrow-counterclockwise"></i> Reset ke Kop Standar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 2. KARTU MASTER DAFTAR KELAS RESMI (DENGAN EXPORT & IMPORT EXCEL) -->
+        <div class="card" style="margin-bottom: 1.75rem;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <span class="card-title" style="margin: 0;"><i class="bi bi-building"></i> Master Daftar Kelas Resmi</span>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                        Daftar kelas aktif yang dapat dipilih pada saat penginputan data siswa dan pembuatan dokumen ujian.
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <span id="badgeClassCount" class="badge" style="background: var(--primary-light); color: var(--primary); font-weight: 700; padding: 6px 10px; border-radius: 6px;">0 Kelas</span>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="syncClassesFromStudents()" title="Ambil dan sinkronkan kelas unik yang ada dari Master Data Siswa">
+                        <i class="bi bi-arrow-repeat"></i> Ambil dari Master Siswa
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="exportClassesExcel()" title="Ekspor daftar kelas ke Excel (.xlsx)">
+                        <i class="bi bi-file-earmark-excel" style="color: #10B981;"></i> Export (.xlsx)
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="openImportClassesModal()" title="Impor daftar kelas dari Excel (.xlsx)">
+                        <i class="bi bi-file-earmark-arrow-up" style="color: var(--primary);"></i> Import (.xlsx)
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="openAddClassModal()">
+                        <i class="bi bi-plus-lg"></i> Tambah Kelas Baru
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table" style="font-size: 0.88rem;">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">No</th>
+                                <th>Nama Kelas</th>
+                                <th style="width: 100px;">Tingkat</th>
+                                <th>Program / Konsentrasi Keahlian</th>
+                                <th style="text-align: center; width: 140px;">Siswa Terdaftar</th>
+                                <th style="text-align: center; width: 130px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="classesTableBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. KARTU MASTER DAFTAR MATA PELAJARAN RESMI (DENGAN EXPORT & IMPORT EXCEL) -->
+        <div class="card" style="margin-bottom: 1.75rem;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <span class="card-title" style="margin: 0;"><i class="bi bi-journal-bookmark-fill" style="color: var(--primary);"></i> Master Daftar Mata Pelajaran Resmi</span>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                        Mata pelajaran ini otomatis menjadi autocomplete & daftar pilihan pada formulir Berita Acara dan Daftar Hadir.
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <span id="badgeSubjectCount" class="badge" style="background: var(--primary-light); color: var(--primary); font-weight: 700; padding: 6px 10px; border-radius: 6px;">0 Mapel</span>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="exportSubjectsExcel()" title="Ekspor daftar mapel ke Excel (.xlsx)">
+                        <i class="bi bi-file-earmark-excel" style="color: #10B981;"></i> Export (.xlsx)
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="openImportSubjectsModal()" title="Impor daftar mapel dari Excel (.xlsx)">
+                        <i class="bi bi-file-earmark-arrow-up" style="color: var(--primary);"></i> Import (.xlsx)
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div id="subjectsTagContainer" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; min-height: 48px; padding: 14px; background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                    <!-- Populated by JS -->
+                </div>
+
+                <div style="display: flex; gap: 8px; max-width: 480px;">
+                    <input type="text" id="newSubjectInput" class="form-control form-control-sm" placeholder="Ketik nama mata pelajaran baru..." onkeydown="if(event.key==='Enter'){event.preventDefault();addNewSubject();}">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="addNewSubject()" style="white-space: nowrap;">
+                        <i class="bi bi-plus-lg"></i> Tambah Mapel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. KARTU MASTER DAFTAR TAHUN AJARAN -->
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <span class="card-title" style="margin: 0;"><i class="bi bi-calendar-range-fill" style="color: #D97706;"></i> Master Daftar Tahun Ajaran</span>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                        Tahun ajaran yang aktif digunakan pada template berita acara dan filter administrasi ujian.
+                    </div>
+                </div>
+                <span id="badgeYearCount" class="badge" style="background: #FEF3C7; color: #92400E; font-weight: 700; padding: 6px 10px; border-radius: 6px;">0 Tahun</span>
+            </div>
+
+            <div class="card-body">
+                <div id="academicYearsTagContainer" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; min-height: 48px; padding: 14px; background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                    <!-- Populated by JS -->
+                </div>
+
+                <div style="display: flex; gap: 8px; max-width: 400px;">
+                    <input type="text" id="newYearInput" class="form-control form-control-sm" placeholder="Contoh: 2027/2028" onkeydown="if(event.key==='Enter'){event.preventDefault();addNewAcademicYear();}">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="addNewAcademicYear()" style="white-space: nowrap;">
+                        <i class="bi bi-plus-lg"></i> Tambah Tahun
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. KARTU SIMPAN SELURUH PEMBARUAN PENGATURAN DI PALING BAWAH -->
+        <div class="card" style="margin-top: 2rem; margin-bottom: 2.5rem; background: #ffffff; border: 2px solid #E0E7FF; box-shadow: 0 10px 25px -5px rgba(70, 87, 217, 0.15); border-radius: var(--radius-md);">
+            <div class="card-body" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; padding: 1.5rem 1.75rem;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-weight: 800; font-size: 1.05rem; color: var(--slate-900);">
+                            <i class="bi bi-shield-check" style="color: var(--primary);"></i> Simpan Seluruh Pembaruan Pengaturan
+                        </span>
+                        <span id="unsavedStatusBadge" class="badge" style="background: #F1F5F9; color: #64748B; font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 700;">
+                            <i class="bi bi-check2"></i> Belum Ada Perubahan
+                        </span>
+                    </div>
+                    <div style="font-size: 0.83rem; color: var(--text-muted); margin-top: 4px;">
+                        Menyimpan seluruh konfigurasi identitas sekolah, berkas logo baru, kop surat resmi, daftar kelas, mata pelajaran, dan tahun ajaran secara permanen ke database.
+                    </div>
+                </div>
+                <div>
+                    <button type="button" id="btnSaveAllPengaturan" class="btn btn-primary" onclick="saveAllPengaturan()" style="padding: 0.85rem 1.75rem; font-size: 0.95rem; font-weight: 700; box-shadow: 0 4px 14px rgba(70, 87, 217, 0.35); display: inline-flex; align-items: center; gap: 8px;">
+                        <i class="bi bi-check-circle-fill"></i> Perbarui Pengaturan
+                    </button>
+                </div>
+            </div>
+        </div>
+        </main>
+    </div>
+</div>
+
+<!-- ================= MODALS ================= -->
+
+<!-- 1. MODAL TAMBAH / EDIT KELAS -->
+<div id="classModal" class="modal-overlay">
+    <div class="modal-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1rem;">
+            <h3 id="classModalTitle" style="font-size: 1.15rem; margin: 0;">Tambah Kelas Baru</h3>
+            <button type="button" onclick="closeClassModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+        </div>
+        <form id="classForm" onsubmit="submitClassForm(event)">
+            <input type="hidden" id="class_id">
+            <div class="form-group">
+                <label class="form-label">Nama Kelas <span class="required">*</span></label>
+                <input type="text" id="class_nama" class="form-control" placeholder="Contoh: XII DKV atau XII TKJ 1" oninput="autoFillKeahlianFromNama(this.value)" required>
+            </div>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">Tingkat Kelas <span class="required">*</span></label>
+                    <select id="class_tingkat" class="form-select" required>
+                        <option value="X">Kelas X</option>
+                        <option value="XI">Kelas XI</option>
+                        <option value="XII" selected>Kelas XII</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Program / Konsentrasi Keahlian</label>
+                    <input type="text" id="class_keahlian" class="form-control" list="programKeahlianDatalist" placeholder="Pilih atau ketik program keahlian...">
+                    <datalist id="programKeahlianDatalist">
+                        <option value="Desain Komunikasi Visual">
+                        <option value="Teknik Komputer dan Jaringan">
+                        <option value="Teknik Sepeda Motor">
+                        <option value="Layanan Penunjang Kefarmasian Klinis dan Komunitas">
+                        <option value="Bisnis Digital">
+                        <option value="Manajemen Perkantoran dan Layanan Bisnis">
+                        <option value="Akuntansi dan Keuangan Lembaga">
+                        <option value="Layanan Perbankan">
+                    </datalist>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeClassModal()">Batal</button>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check2"></i> Simpan Kelas</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 2. MODAL IMPORT KELAS DARI EXCEL -->
+<div id="importClassesModal" class="modal-overlay">
+    <div class="modal-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-file-earmark-excel-fill" style="color: #10B981; font-size: 1.3rem;"></i>
+                <h3 style="font-size: 1.15rem; margin: 0;">Import Master Daftar Kelas (.xlsx)</h3>
+            </div>
+            <button type="button" onclick="closeImportClassesModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+        </div>
+
+        <div style="background: #F8FAFC; border: 1px solid var(--border); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <div style="font-size: 0.85rem; font-weight: 700;">Unduh Template Format Kelas</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">Kolom: NAMA_KELAS, TINGKAT, PROGRAM_KEAHLIAN</div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="downloadClassesExcelTemplate()">
+                <i class="bi bi-download"></i> Unduh Template (.xlsx)
+            </button>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Pilih Berkas Excel Kelas (.xlsx / .xls)</label>
+            <input type="file" id="classExcelFileInput" class="form-control" accept=".xlsx, .xls" onchange="handleClassExcelFileSelected(event)">
+        </div>
+
+        <div id="classExcelPreviewArea" style="display: none; margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 0.75rem;">
+            <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 6px;" id="classExcelSummary">Pratinjau:</div>
+            <div style="max-height: 180px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <table class="table" style="font-size: 0.8rem; margin: 0;">
+                    <tbody id="classExcelPreviewBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeImportClassesModal()">Batal</button>
+            <button type="button" id="btnExecuteClassImport" class="btn btn-primary" style="display: none;" onclick="executeImportClasses()">
+                <i class="bi bi-cloud-arrow-up-fill"></i> Simpan Kelas ke Database
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 3. MODAL IMPORT MAPEL DARI EXCEL -->
+<div id="importSubjectsModal" class="modal-overlay">
+    <div class="modal-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-file-earmark-excel-fill" style="color: #10B981; font-size: 1.3rem;"></i>
+                <h3 style="font-size: 1.15rem; margin: 0;">Import Master Mata Pelajaran (.xlsx)</h3>
+            </div>
+            <button type="button" onclick="closeImportSubjectsModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+        </div>
+
+        <div style="background: #F8FAFC; border: 1px solid var(--border); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <div style="font-size: 0.85rem; font-weight: 700;">Unduh Template Format Mapel</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">Kolom tunggal: MATA_PELAJARAN</div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="downloadSubjectsExcelTemplate()">
+                <i class="bi bi-download"></i> Unduh Template (.xlsx)
+            </button>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Pilih Berkas Excel Mapel (.xlsx / .xls)</label>
+            <input type="file" id="subjectExcelFileInput" class="form-control" accept=".xlsx, .xls" onchange="handleSubjectExcelFileSelected(event)">
+        </div>
+
+        <div id="subjectExcelPreviewArea" style="display: none; margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 0.75rem;">
+            <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 6px;" id="subjectExcelSummary">Pratinjau:</div>
+            <div style="max-height: 180px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <table class="table" style="font-size: 0.8rem; margin: 0;">
+                    <tbody id="subjectExcelPreviewBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeImportSubjectsModal()">Batal</button>
+            <button type="button" id="btnExecuteSubjectImport" class="btn btn-primary" style="display: none;" onclick="executeImportSubjects()">
+                <i class="bi bi-cloud-arrow-up-fill"></i> Simpan Mapel ke Database
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 5. MODAL KONFIRMASI PERUBAHAN BELUM DISIMPAN SAAT BUKA MENU LAIN -->
+<div id="unsavedModal" class="modal-overlay" style="display: none; z-index: 10000;">
+    <div class="modal-card" style="max-width: 480px; box-shadow: 0 20px 35px -5px rgba(0,0,0,0.3);">
+        <div style="display: flex; align-items: flex-start; gap: 14px; margin-bottom: 1.25rem;">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: #FEF3C7; color: #D97706; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0;">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+            <div>
+                <h3 style="margin: 0 0 6px 0; font-size: 1.15rem; color: var(--slate-900);">Simpan Pembaruan Terlebih Dahulu?</h3>
+                <p style="margin: 0; font-size: 0.88rem; color: var(--text-muted); line-height: 1.5;">
+                    Anda telah melakukan pembaruan di menu <strong>Pengaturan Sekolah & Kop</strong> namun belum menyimpannya. Apakah Anda ingin menyimpan perubahan tersebut sebelum berpindah ke menu lain?
+                </p>
+            </div>
+        </div>
+        <div style="display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 0.75rem;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="cancelUnsavedNavigation()">
+                Batal
+            </button>
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="discardAndNavigate()">
+                Abaikan & Lanjutkan
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" id="btnModalSaveAndNavigate" onclick="saveAndNavigate()">
+                <i class="bi bi-check-circle-fill"></i> Simpan & Lanjutkan
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+<?!= include('AppJS'); ?>
+
+<script>
+
+let db = { classes: [], students: [], teachers: [], templates: [], settings: {}, archives: [], users: [] };
+
+async function loadDatabaseFromAppsScript() {
+    try {
+        const res = await callServer('apiGetInitialData');
+        if (res && res.success) {
+            db.classes = res.classes || [];
+            db.templates = res.templates || [];
+            db.subjects = res.subjects || [];
+            db.academic_years = res.academic_years || [];
+            db.teachers = res.teachers || [];
+            db.settings = res.settings || {};
+        }
+        const [stRes, arRes, usRes] = await Promise.all([
+            callServer('apiGetStudents'),
+            callServer('apiGetArchives'),
+            callServer('apiGetUsers')
+        ]);
+        db.students = stRes || [];
+        db.archives = arRes || [];
+        db.users = usRes || [];
+        return db;
+    } catch(err) {
+        console.error('Error loadDatabaseFromAppsScript:', err);
+        return db;
+    }
+}
+
+
+let pendingKopBase64 = null;
+let pendingLogoBase64 = null;
+let parsedClassExcelData = [];
+let parsedSubjectExcelData = [];
+let isDirty = false;
+let targetNavigationUrl = null;
+
+function markDirty(status = true) {
+    isDirty = status;
+    const badge = document.getElementById('unsavedStatusBadge');
+    if (badge) {
+        if (isDirty) {
+            badge.style.background = '#FEF3C7';
+            badge.style.color = '#B45309';
+            badge.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> Ada Perubahan Belum Disimpan';
+        } else {
+            badge.style.background = '#ECFDF5';
+            badge.style.color = '#065F46';
+            badge.innerHTML = '<i class="bi bi-check2"></i> Semua Data Tersimpan';
+        }
+    }
+}
+
+function initSettingsForm() {
+    if (!db || !db.settings) return;
+    const s = db.settings;
+    if (s.school_name) document.getElementById('set_school_name').value = s.school_name;
+    if (s.school_tagline) document.getElementById('set_school_tagline').value = s.school_tagline;
+    if (s.timezone) document.getElementById('set_timezone').value = s.timezone;
+    
+    // Kop
+    if (s.kop_header) {
+        document.getElementById('kopPreviewImg').src = s.kop_header + '?t=' + Date.now();
+    }
+    // Logo
+    if (s.school_logo) {
+        document.getElementById('logoPreviewImg').src = s.school_logo + '?t=' + Date.now();
+    }
+
+    renderSettingsSubjectsAndYears();
+    renderClassesTable();
+
+    // Pantau perubahan pada input pengaturan sekolah
+    ['set_school_name', 'set_school_tagline', 'set_timezone', 'set_academic_year'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', () => markDirty(true));
+            el.addEventListener('change', () => markDirty(true));
+        }
+    });
+    markDirty(false);
+}
+
+// ================= 1. RENDER MAPEL & TAHUN AJARAN =================
+function renderSettingsSubjectsAndYears() {
+    if (!db) return;
+    if (!db.settings) db.settings = {};
+
+    // 1. Mapel
+    const subjects = db.settings.subjects || db.subjects || [];
+    const subjCont = document.getElementById('subjectsTagContainer');
+    document.getElementById('badgeSubjectCount').textContent = subjects.length + ' Mapel';
+
+    if (subjects.length === 0) {
+        subjCont.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">Belum ada daftar mata pelajaran tersimpan. Klik Import atau Tambah Mapel.</span>';
+    } else {
+        subjCont.innerHTML = subjects.map(sub => `
+            <span style="display: inline-flex; align-items: center; gap: 6px; background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; padding: 4px 10px; border-radius: 20px; font-size: 0.82rem; font-weight: 600;">
+                ${sub}
+                <button type="button" onclick="removeSubject('${sub.replace(/'/g, "\\'")}')" style="background: none; border: none; color: #EF4444; cursor: pointer; padding: 0 2px; font-weight: bold;" title="Hapus mata pelajaran">&times;</button>
+            </span>
+        `).join('');
+    }
+
+    // 2. Tahun Ajaran
+    const years = db.settings.academic_years || db.academic_years || ["2026/2027", "2027/2028"];
+    const yrCont = document.getElementById('academicYearsTagContainer');
+    document.getElementById('badgeYearCount').textContent = years.length + ' Tahun';
+
+    if (years.length === 0) {
+        yrCont.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">Belum ada tahun ajaran tersimpan.</span>';
+    } else {
+        yrCont.innerHTML = years.map(yr => {
+            const isActive = db.settings.academic_year === yr;
+            return `
+                <span style="display: inline-flex; align-items: center; gap: 6px; background: ${isActive ? '#D1FAE5' : '#FEF3C7'}; color: ${isActive ? '#065F46' : '#92400E'}; border: 1px solid ${isActive ? '#A7F3D0' : '#FDE68A'}; padding: 4px 10px; border-radius: 20px; font-size: 0.82rem; font-weight: 600;">
+                    ${isActive ? '<i class="bi bi-check-circle-fill"></i> ' : ''}${yr}
+                    ${isActive ? '<span style="font-size: 0.72rem; opacity: 0.8;">(Aktif)</span>' : ''}
+                    <button type="button" onclick="removeAcademicYear('${yr.replace(/'/g, "\\'")}')" style="background: none; border: none; color: #EF4444; cursor: pointer; padding: 0 2px; font-weight: bold;" title="Hapus tahun ajaran">&times;</button>
+                </span>
+            `;
+        }).join('');
+    }
+
+    // 3. Dropdown Tahun Ajaran Aktif
+    const yearSelect = document.getElementById('set_academic_year');
+    const currentActive = db.settings.academic_year || (years[0] || '2026/2027');
+    yearSelect.innerHTML = years.map(yr => `
+        <option value="${yr}" ${yr === currentActive ? 'selected' : ''}>${yr}${yr === currentActive ? ' (Aktif Saat Ini)' : ''}</option>
+    `).join('');
+}
+
+function onActiveYearSelectChange(newVal) {
+    if (db && db.settings) {
+        db.settings.academic_year = newVal;
+        renderSettingsSubjectsAndYears();
+        markDirty(true);
+    }
+}
+
+async function addNewSubject() {
+    const input = document.getElementById('newSubjectInput');
+    const val = input.value.trim();
+    if (!val) return;
+
+    if (!db.settings) db.settings = {};
+    if (!Array.isArray(db.settings.subjects)) db.settings.subjects = [];
+
+    if (db.settings.subjects.includes(val)) {
+        showToast(`Mata pelajaran "${val}" sudah ada.`, 'info');
+        return;
+    }
+
+    db.settings.subjects.push(val);
+    input.value = '';
+
+    await saveAdminDatabase({ subjects: db.settings.subjects, settings: db.settings });
+    renderSettingsSubjectsAndYears();
+    markDirty(true);
+    showToast(`Mata pelajaran "${val}" berhasil ditambahkan!`, 'success');
+}
+
+async function removeSubject(sub) {
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Hapus Mata Pelajaran',
+            message: `Hapus mata pelajaran "${sub}" dari master data?`,
+            type: 'danger',
+            confirmText: 'Ya, Hapus Mapel',
+            confirmIcon: 'bi-trash-fill'
+        });
+    } else {
+        confirmed = confirm(`Hapus mata pelajaran "${sub}" dari master?`);
+    }
+    if (!confirmed) return;
+
+    if (!db.settings || !Array.isArray(db.settings.subjects)) return;
+    db.settings.subjects = db.settings.subjects.filter(s => s !== sub);
+
+    await saveAdminDatabase({ subjects: db.settings.subjects, settings: db.settings });
+    renderSettingsSubjectsAndYears();
+    markDirty(true);
+    showToast(`Mata pelajaran "${sub}" dihapus.`, 'info');
+}
+
+async function addNewAcademicYear() {
+    const input = document.getElementById('newYearInput');
+    const val = input.value.trim();
+    if (!val) return;
+
+    if (!db.settings) db.settings = {};
+    if (!Array.isArray(db.settings.academic_years)) db.settings.academic_years = [];
+
+    if (db.settings.academic_years.includes(val)) {
+        showToast(`Tahun ajaran "${val}" sudah terdaftar.`, 'info');
+        return;
+    }
+
+    db.settings.academic_years.push(val);
+    input.value = '';
+
+    await saveAdminDatabase({ academic_years: db.settings.academic_years, settings: db.settings });
+    renderSettingsSubjectsAndYears();
+    markDirty(true);
+    showToast(`Tahun ajaran "${val}" berhasil ditambahkan!`, 'success');
+}
+
+async function removeAcademicYear(yr) {
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Hapus Tahun Ajaran',
+            message: `Hapus tahun ajaran "${yr}" dari master data?`,
+            type: 'danger',
+            confirmText: 'Ya, Hapus Tahun',
+            confirmIcon: 'bi-trash-fill'
+        });
+    } else {
+        confirmed = confirm(`Hapus tahun ajaran "${yr}" dari master?`);
+    }
+    if (!confirmed) return;
+
+    if (!db.settings || !Array.isArray(db.settings.academic_years)) return;
+    if (db.settings.academic_years.length <= 1) {
+        showToast('Minimal harus ada 1 tahun ajaran.', 'danger');
+        return;
+    }
+
+    db.settings.academic_years = db.settings.academic_years.filter(y => y !== yr);
+    if (db.settings.academic_year === yr) {
+        db.settings.academic_year = db.settings.academic_years[0];
+    }
+
+    await saveAdminDatabase({ academic_years: db.settings.academic_years, settings: db.settings });
+    renderSettingsSubjectsAndYears();
+    markDirty(true);
+    showToast(`Tahun ajaran "${yr}" telah dihapus.`, 'info');
+}
+
+// ================= 2. MASTER DAFTAR KELAS =================
+function renderClassesTable() {
+    const tbody = document.getElementById('classesTableBody');
+    if (!tbody) return;
+
+    const classes = db.classes || [];
+    document.getElementById('badgeClassCount').textContent = `${classes.length} Kelas`;
+
+    if (classes.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                    <i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 6px; opacity: 0.4;"></i>
+                    Belum ada kelas terdaftar. Klik "+ Tambah Kelas Baru" atau "Import (.xlsx)".
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    const isAdmin = (currentRole === 'admin' || currentRole === 'superadmin');
+    let html = '';
+
+    classes.forEach((c, idx) => {
+        const stCount = (db.students || []).filter(s => String(s.class_id) === String(c.id)).length;
+        const countBadge = stCount > 0 
+            ? `<span style="font-weight: 700; color: #065F46; background: #ECFDF5; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">${stCount} Siswa</span>`
+            : `<span style="color: var(--text-muted); font-size: 0.8rem;">0 Siswa</span>`;
+
+        let actionHtml = '';
+        if (isAdmin) {
+            actionHtml = `
+                <div style="display: flex; gap: 4px; justify-content: center;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="openEditClassModal(${c.id})" title="Edit Kelas">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteClass(${c.id}, '${c.nama_kelas.replace(/'/g, "\\'")}', ${stCount})" title="Hapus Kelas">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+        } else {
+            actionHtml = `
+                <span class="badge" style="background: #F1F5F9; color: #94A3B8; font-size: 0.75rem; font-weight: 600; padding: 4px 6px;">
+                    <i class="bi bi-lock-fill"></i> Khusus Admin
+                </span>
+            `;
+        }
+
+        html += `
+            <tr>
+                <td>${idx + 1}</td>
+                <td><strong>${c.nama_kelas}</strong></td>
+                <td><span class="badge" style="background: #F1F5F9; color: #334155; padding: 3px 8px; border-radius: 4px;">${c.tingkat || 'XII'}</span></td>
+                <td>${c.program_keahlian || '-'}</td>
+                <td style="text-align: center;">${countBadge}</td>
+                <td style="text-align: center;">${actionHtml}</td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+}
+
+function detectProgramKeahlian(className) {
+    const upper = (className || '').toUpperCase();
+    if (upper.includes('TKJ')) return 'Teknik Komputer dan Jaringan';
+    if (upper.includes('DKV')) return 'Desain Komunikasi Visual';
+    if (upper.includes('LPKKK') || upper.includes('FARMASI')) return 'Layanan Penunjang Kefarmasian Klinis dan Komunitas';
+    if (upper.includes('LPB') || upper.includes('PERBANKAN')) return 'Layanan Perbankan';
+    if (upper.includes('BD') || upper.includes('BISNIS DIGITAL')) return 'Bisnis Digital';
+    if (upper.includes('MP') || upper.includes('PERKANTORAN')) return 'Manajemen Perkantoran dan Layanan Bisnis';
+    if (upper.includes('AK') || upper.includes('AKUNTANSI')) return 'Akuntansi dan Keuangan Lembaga';
+    if (upper.includes('TSM') || upper.includes('OTOMOTIF')) return 'Teknik Sepeda Motor';
+    return '';
+}
+
+function autoFillKeahlianFromNama(val) {
+    const inputKeahlian = document.getElementById('class_keahlian');
+    if (!inputKeahlian) return;
+    const detected = detectProgramKeahlian(val);
+    if (detected && (!inputKeahlian.value || inputKeahlian.value === 'Umum')) {
+        inputKeahlian.value = detected;
+    }
+}
+
+function openAddClassModal() {
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    if (currentRole === 'operator') {
+        showAlertModal({ title: 'Hak Akses Terbatas', message: 'Fitur tambah kelas khusus untuk Administrator!', type: 'danger' });
+        return;
+    }
+    document.getElementById('classModalTitle').textContent = 'Tambah Kelas Baru';
+    document.getElementById('class_id').value = '';
+    document.getElementById('class_nama').value = '';
+    document.getElementById('class_tingkat').value = 'XII';
+    document.getElementById('class_keahlian').value = '';
+    document.getElementById('classModal').style.display = 'flex';
+}
+
+function openEditClassModal(classId) {
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    if (currentRole === 'operator') {
+        showAlertModal({ title: 'Hak Akses Terbatas', message: 'Fitur edit kelas khusus untuk Administrator!', type: 'danger' });
+        return;
+    }
+    const c = (db.classes || []).find(x => Number(x.id) === Number(classId));
+    if (!c) return;
+
+    document.getElementById('classModalTitle').textContent = `Edit Kelas (${c.nama_kelas})`;
+    document.getElementById('class_id').value = c.id;
+    document.getElementById('class_nama').value = c.nama_kelas;
+    document.getElementById('class_tingkat').value = c.tingkat || 'XII';
+    document.getElementById('class_keahlian').value = c.program_keahlian || detectProgramKeahlian(c.nama_kelas) || '';
+    document.getElementById('classModal').style.display = 'flex';
+}
+
+function closeClassModal() {
+    document.getElementById('classModal').style.display = 'none';
+}
+
+async function submitClassForm(e) {
+    e.preventDefault();
+    const id = document.getElementById('class_id').value;
+    const nama = document.getElementById('class_nama').value.trim();
+    const tingkat = document.getElementById('class_tingkat').value;
+    const keahlian = document.getElementById('class_keahlian').value.trim() || detectProgramKeahlian(nama) || 'Umum';
+
+    if (!nama) {
+        showToast('Nama kelas harus diisi.', 'danger');
+        return;
+    }
+
+    if (!Array.isArray(db.classes)) db.classes = [];
+
+    let oldName = '';
+    if (id) {
+        const cls = db.classes.find(c => Number(c.id) === Number(id));
+        if (cls) {
+            oldName = cls.nama_kelas;
+            cls.nama_kelas = nama;
+            cls.tingkat = tingkat;
+            cls.program_keahlian = keahlian;
+
+            // Sinkronkan seluruh data siswa yang terhubung ke kelas ini
+            if (Array.isArray(db.students)) {
+                db.students.forEach(s => {
+                    if (String(s.class_id) === String(id) || s.kelas === oldName || s.nama_kelas === oldName) {
+                        s.class_id = Number(id);
+                        s.kelas = nama;
+                        s.nama_kelas = nama;
+                    }
+                });
+            }
+
+            // Sinkronkan data arsip jika ada
+            if (Array.isArray(db.archives)) {
+                db.archives.forEach(a => {
+                    if (String(a.class_id) === String(id) || a.nama_kelas === oldName) {
+                        a.nama_kelas = nama;
+                    }
+                });
+            }
+        }
+    } else {
+        const nextId = db.classes.reduce((max, c) => Math.max(max, Number(c.id) || 0), 0) + 1;
+        db.classes.push({
+            id: nextId,
+            nama_kelas: nama,
+            tingkat: tingkat,
+            program_keahlian: keahlian,
+            is_active: 1
+        });
+    }
+
+    const payload = { classes: db.classes };
+    if (Array.isArray(db.students)) payload.students = db.students;
+    if (Array.isArray(db.archives)) payload.archives = db.archives;
+
+    const res = await saveAdminDatabase(payload);
+    if (res.success) {
+        closeClassModal();
+        renderClassesTable();
+        markDirty(true);
+        showToast(`Kelas "${nama}" berhasil disimpan & data siswa telah diperbarui!`, 'success');
+    } else {
+        showToast('Gagal: ' + res.message, 'danger');
+    }
+}
+
+async function deleteClass(classId, className, studentCount) {
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    if (currentRole === 'operator') {
+        showAlertModal({ title: 'Hak Akses Terbatas', message: 'Fitur hapus kelas khusus untuk Administrator!', type: 'danger' });
+        return;
+    }
+    let msg = `Hapus kelas "${className}" dari master data?`;
+    if (studentCount > 0) {
+        msg = `⚠️ PERINGATAN: Terdapat ${studentCount} siswa terdaftar di kelas "${className}".\nMenghapus kelas ini juga akan menghapus/memutus relasi seluruh siswa di kelas ini.\n\nApakah Anda yakin ingin melanjutkan?`;
+    }
+
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Hapus Master Kelas',
+            message: msg,
+            type: 'danger',
+            confirmText: 'Ya, Hapus Kelas',
+            confirmIcon: 'bi-trash-fill'
+        });
+    } else {
+        confirmed = confirm(msg);
+    }
+    if (!confirmed) return;
+
+    db.classes = (db.classes || []).filter(c => Number(c.id) !== Number(classId));
+    db.students = (db.students || []).filter(s => Number(s.class_id) !== Number(classId));
+
+    const res = await saveAdminDatabase({ classes: db.classes, students: db.students });
+    if (res.success) {
+        renderClassesTable();
+        markDirty(true);
+        showToast(`Kelas "${className}" telah dihapus.`, 'info');
+    } else {
+        showToast('Gagal menghapus: ' + res.message, 'danger');
+    }
+}
+
+// ================= SINKRONISASI KELAS DARI MASTER DATA SISWA =================
+async function syncClassesFromStudents() {
+    try {
+        if (!db.students || db.students.length === 0 || !db.classes || db.classes.length === 0) {
+            const [stRes, clRes] = await Promise.all([
+                callServer('apiGetStudents').catch(() => []),
+                callServer('apiGetClasses').catch(() => [])
+            ]);
+            if (stRes && (!db.students || db.students.length === 0)) db.students = stRes;
+            if (clRes && (!db.classes || db.classes.length === 0)) db.classes = clRes;
+        }
+
+        if (!db.students || db.students.length === 0) {
+            if (typeof showAlertModal === 'function') {
+                showAlertModal({
+                    title: 'Data Siswa Kosong',
+                    message: 'Tidak ditemukan data siswa pada Master Data Siswa. Silakan tambahkan atau import data siswa terlebih dahulu.',
+                    type: 'warning'
+                });
+            } else {
+                alert('Tidak ditemukan data siswa pada Master Data Siswa.');
+            }
+            return;
+        }
+
+        if (!Array.isArray(db.classes)) db.classes = [];
+
+        // Himpun seluruh nama kelas unik dari siswa
+        const existingClassNames = new Set(db.classes.map(c => (c.nama_kelas || '').trim().toUpperCase()));
+        let maxId = db.classes.reduce((max, c) => Math.max(max, parseInt(c.id) || 0), 0);
+        let addedCount = 0;
+
+        const studentClassNames = new Set();
+        db.students.forEach(s => {
+            const name = (s.kelas || s.nama_kelas || s.class_name || '').trim();
+            if (name) studentClassNames.add(name);
+        });
+
+        studentClassNames.forEach(className => {
+            if (!existingClassNames.has(className.toUpperCase())) {
+                maxId++;
+                const tingkat = detectClassTingkat(className);
+                const program = detectProgramKeahlian(className) || 'Umum';
+                db.classes.push({
+                    id: maxId,
+                    nama_kelas: className,
+                    tingkat: tingkat,
+                    program_keahlian: program,
+                    is_active: 1
+                });
+                existingClassNames.add(className.toUpperCase());
+                addedCount++;
+            }
+        });
+
+        // Urutkan kelas berdasarkan nama kelas
+        db.classes.sort((a, b) => (a.nama_kelas || '').localeCompare(b.nama_kelas || '', undefined, { numeric: true }));
+
+        renderClassesTable();
+        markDirty(true);
+
+        if (addedCount > 0) {
+            if (typeof showAlertModal === 'function') {
+                showAlertModal({
+                    title: 'Sinkronisasi Berhasil',
+                    message: `Berhasil mengambil dan menambahkan ${addedCount} kelas baru dari Master Data Siswa! Klik tombol "Perbarui Pengaturan" di bawah untuk menyimpan perubahan secara permanen ke database.`,
+                    type: 'success'
+                });
+            } else {
+                showToast(`Berhasil menambahkan ${addedCount} kelas baru dari data siswa!`, 'success');
+            }
+        } else {
+            const totalStudents = db.students.length;
+            const totalClasses = db.classes.length;
+            if (typeof showAlertModal === 'function') {
+                showAlertModal({
+                    title: 'Daftar Kelas Lengkap & Sinkron',
+                    message: `Master Daftar Kelas Resmi telah sinkron dengan seluruh data siswa (${totalClasses} kelas aktif terhubung dengan ${totalStudents} siswa terdaftar). Seluruh data kelas telah dimuat ke tabel.`,
+                    type: 'success'
+                });
+            } else {
+                showToast(`Seluruh kelas (${totalClasses} kelas) sudah sinkron dengan ${totalStudents} siswa.`, 'success');
+            }
+        }
+    } catch (err) {
+        showToast('Gagal menyinkronkan kelas dari data siswa: ' + err.message, 'danger');
+    }
+}
+
+function detectClassTingkat(className) {
+    const upper = (className || '').toUpperCase().trim();
+    if (upper.startsWith('XII') || upper.startsWith('12')) return 'XII';
+    if (upper.startsWith('XI') || upper.startsWith('11')) return 'XI';
+    if (upper.startsWith('X') || upper.startsWith('10')) return 'X';
+    return 'XII';
+}
+
+// ================= 3. EXPORT & IMPORT EXCEL KELAS =================
+function exportClassesExcel() {
+    const classes = db.classes || [];
+    if (classes.length === 0) {
+        showToast('Tidak ada daftar kelas untuk diekspor.', 'info');
+        return;
+    }
+
+    const rows = classes.map((c, idx) => {
+        const count = (db.students || []).filter(s => String(s.class_id) === String(c.id)).length;
+        return {
+            'NO': idx + 1,
+            'NAMA_KELAS': c.nama_kelas,
+            'TINGKAT': c.tingkat || 'XII',
+            'PROGRAM_KEAHLIAN': c.program_keahlian || '',
+            'JUMLAH_SISWA': count
+        };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{ wch: 6 }, { wch: 18 }, { wch: 12 }, { wch: 45 }, { wch: 16 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Master_Kelas");
+    XLSX.writeFile(wb, "Master_Daftar_Kelas_SMK_NEGERI_FYJ_CHANNEL.xlsx");
+    showToast(`Seluruh data kelas (${rows.length} kelas) berhasil diekspor ke Excel (.xlsx)!`, 'success');
+}
+
+function downloadClassesExcelTemplate() {
+    const rows = [
+        ['NAMA_KELAS', 'TINGKAT', 'PROGRAM_KEAHLIAN'],
+        ['XII DKV', 'XII', 'Desain Komunikasi Visual'],
+        ['XII TKJ 1', 'XII', 'Teknik Komputer dan Jaringan'],
+        ['XII TSM', 'XII', 'Teknik Sepeda Motor'],
+        ['XI DKV', 'XI', 'Desain Komunikasi Visual']
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{ wch: 18 }, { wch: 12 }, { wch: 35 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template_Kelas");
+    XLSX.writeFile(wb, "Template_Import_Kelas.xlsx");
+    showToast('Template Excel Kelas berhasil diunduh.', 'info');
+}
+
+function openImportClassesModal() {
+    parsedClassExcelData = [];
+    document.getElementById('classExcelFileInput').value = '';
+    document.getElementById('classExcelPreviewArea').style.display = 'none';
+    document.getElementById('btnExecuteClassImport').style.display = 'none';
+    document.getElementById('importClassesModal').style.display = 'flex';
+}
+
+function closeImportClassesModal() {
+    document.getElementById('importClassesModal').style.display = 'none';
+}
+
+function handleClassExcelFileSelected(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        try {
+            const data = new Uint8Array(evt.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
+
+            parsedClassExcelData = [];
+            json.forEach(row => {
+                let nama = '', tingkat = 'XII', keahlian = '';
+                for (const [k, v] of Object.entries(row)) {
+                    const key = k.trim().toUpperCase();
+                    const val = String(v).trim();
+                    if (key.includes('NAMA') || key === 'KELAS') nama = val;
+                    else if (key.includes('TINGKAT') || key.includes('GRADE')) tingkat = val || 'XII';
+                    else if (key.includes('KEAHLIAN') || key.includes('JURUSAN') || key.includes('PROGRAM')) keahlian = val;
+                }
+                if (nama) {
+                    parsedClassExcelData.push({ nama_kelas: nama, tingkat, program_keahlian: keahlian });
+                }
+            });
+
+            if (parsedClassExcelData.length === 0) {
+                showToast('Tidak ada data kelas yang valid terbaca dari berkas.', 'danger');
+                return;
+            }
+
+            const tbody = document.getElementById('classExcelPreviewBody');
+            tbody.innerHTML = '';
+            parsedClassExcelData.forEach((c, idx) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td><strong>${c.nama_kelas}</strong></td>
+                        <td>${c.tingkat}</td>
+                        <td>${c.program_keahlian || '-'}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('classExcelSummary').textContent = `Ditemukan ${parsedClassExcelData.length} kelas dalam berkas:`;
+            document.getElementById('classExcelPreviewArea').style.display = 'block';
+            document.getElementById('btnExecuteClassImport').style.display = 'inline-flex';
+            showToast(`${parsedClassExcelData.length} kelas terbaca dari Excel!`, 'info');
+        } catch (err) {
+            showToast('Gagal memproses berkas Excel: ' + err.message, 'danger');
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+async function executeImportClasses() {
+    if (!parsedClassExcelData || !parsedClassExcelData.length) return;
+
+    if (!Array.isArray(db.classes)) db.classes = [];
+    let nextId = db.classes.reduce((max, c) => Math.max(max, Number(c.id) || 0), 0) + 1;
+
+    let added = 0, updated = 0;
+    parsedClassExcelData.forEach(item => {
+        const existing = db.classes.find(c => c.nama_kelas.toLowerCase().trim() === item.nama_kelas.toLowerCase().trim());
+        if (existing) {
+            existing.tingkat = item.tingkat || existing.tingkat;
+            existing.program_keahlian = item.program_keahlian || existing.program_keahlian;
+            updated++;
+        } else {
+            db.classes.push({
+                id: nextId++,
+                nama_kelas: item.nama_kelas,
+                tingkat: item.tingkat || 'XII',
+                program_keahlian: item.program_keahlian || '',
+                is_active: 1
+            });
+            added++;
+        }
+    });
+
+    const res = await saveAdminDatabase({ classes: db.classes });
+    if (res.success) {
+        closeImportClassesModal();
+        renderClassesTable();
+        markDirty(true);
+        showToast(`Impor Kelas Sukses: ${added} kelas baru ditambahkan, ${updated} diperbarui!`, 'success');
+    } else {
+        showToast('Gagal menyimpan: ' + res.message, 'danger');
+    }
+}
+
+// ================= 4. EXPORT & IMPORT EXCEL MATA PELAJARAN =================
+function exportSubjectsExcel() {
+    const subjects = (db.settings && db.settings.subjects) || db.subjects || [];
+    if (subjects.length === 0) {
+        showToast('Tidak ada daftar mata pelajaran untuk diekspor.', 'info');
+        return;
+    }
+
+    const rows = subjects.map((s, idx) => ({
+        'NO': idx + 1,
+        'MATA_PELAJARAN': s
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{ wch: 6 }, { wch: 40 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Master_Mapel");
+    XLSX.writeFile(wb, "Master_Mata_Pelajaran_SMK_NEGERI_FYJ_CHANNEL.xlsx");
+    showToast(`Seluruh data mata pelajaran (${rows.length} mapel) berhasil diekspor ke Excel (.xlsx)!`, 'success');
+}
+
+function downloadSubjectsExcelTemplate() {
+    const rows = [
+        ['MATA_PELAJARAN'],
+        ['Desain Komunikasi Visual'],
+        ['Teknik Komputer dan Jaringan'],
+        ['Matematika'],
+        ['Bahasa Indonesia'],
+        ['Bahasa Inggris']
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{ wch: 35 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template_Mapel");
+    XLSX.writeFile(wb, "Template_Import_Mapel.xlsx");
+    showToast('Template Excel Mapel berhasil diunduh.', 'info');
+}
+
+function openImportSubjectsModal() {
+    parsedSubjectExcelData = [];
+    document.getElementById('subjectExcelFileInput').value = '';
+    document.getElementById('subjectExcelPreviewArea').style.display = 'none';
+    document.getElementById('btnExecuteSubjectImport').style.display = 'none';
+    document.getElementById('importSubjectsModal').style.display = 'flex';
+}
+
+function closeImportSubjectsModal() {
+    document.getElementById('importSubjectsModal').style.display = 'none';
+}
+
+function handleSubjectExcelFileSelected(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        try {
+            const data = new Uint8Array(evt.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
+
+            parsedSubjectExcelData = [];
+            json.forEach(row => {
+                for (const [k, v] of Object.entries(row)) {
+                    const val = String(v).trim();
+                    if (val && !val.toUpperCase().includes('MATA') && !parsedSubjectExcelData.includes(val)) {
+                        parsedSubjectExcelData.push(val);
+                    }
+                }
+            });
+
+            if (parsedSubjectExcelData.length === 0) {
+                showToast('Tidak ada data mata pelajaran yang valid terbaca.', 'danger');
+                return;
+            }
+
+            const tbody = document.getElementById('subjectExcelPreviewBody');
+            tbody.innerHTML = '';
+            parsedSubjectExcelData.forEach((s, idx) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="width: 40px;">${idx + 1}</td>
+                        <td><strong>${s}</strong></td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('subjectExcelSummary').textContent = `Ditemukan ${parsedSubjectExcelData.length} mapel dalam berkas:`;
+            document.getElementById('subjectExcelPreviewArea').style.display = 'block';
+            document.getElementById('btnExecuteSubjectImport').style.display = 'inline-flex';
+            showToast(`${parsedSubjectExcelData.length} mapel terbaca dari Excel!`, 'info');
+        } catch (err) {
+            showToast('Gagal memproses berkas Excel: ' + err.message, 'danger');
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+async function executeImportSubjects() {
+    if (!parsedSubjectExcelData || !parsedSubjectExcelData.length) return;
+
+    if (!db.settings) db.settings = {};
+    if (!Array.isArray(db.settings.subjects)) db.settings.subjects = [];
+
+    let added = 0;
+    parsedSubjectExcelData.forEach(sub => {
+        if (!db.settings.subjects.includes(sub)) {
+            db.settings.subjects.push(sub);
+            added++;
+        }
+    });
+
+    const res = await saveAdminDatabase({ subjects: db.settings.subjects, settings: db.settings });
+    if (res.success) {
+        closeImportSubjectsModal();
+        renderSettingsSubjectsAndYears();
+        markDirty(true);
+        showToast(`Impor Mapel Berhasil: ${added} mapel baru ditambahkan ke database!`, 'success');
+    } else {
+        showToast('Gagal menyimpan: ' + res.message, 'danger');
+    }
+}
+
+// ================= 5. UPLOAD & RESET LOGO / KOP =================
+function handleLogoFileSelected(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        showToast('Berkas logo harus berupa gambar (PNG/JPG).', 'danger');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        pendingLogoBase64 = e.target.result;
+        document.getElementById('logoPreviewImg').src = pendingLogoBase64;
+        const topLogo = document.getElementById('topNavbarLogo');
+        if (topLogo) topLogo.src = pendingLogoBase64;
+        document.getElementById('logoSelectedFilename').textContent = file.name + ` (${Math.round(file.size / 1024)} KB)`;
+        document.getElementById('logoSelectedNotice').style.display = 'block';
+        markDirty(true);
+        showToast('Logo sekolah baru dipilih! Klik "Perbarui Pengaturan, Logo & Kop Surat" di bagian bawah untuk menerapkan.', 'info');
+    };
+    reader.readAsDataURL(file);
+}
+
+async function resetLogoDefault() {
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Reset Logo Sekolah',
+            message: 'Apakah Anda yakin ingin mereset logo sekolah ke standar bawaan?',
+            type: 'warning',
+            confirmText: 'Ya, Reset Logo',
+            confirmIcon: 'bi-arrow-counterclockwise'
+        });
+    } else {
+        confirmed = confirm('Apakah Anda yakin ingin mereset logo sekolah ke standar bawaan?');
+    }
+
+    if (confirmed) {
+        try {
+            const res = await callServer('apiResetLogo');
+            const result = await res.json();
+            if (result.success) {
+                pendingLogoBase64 = null;
+                document.getElementById('logoSelectedNotice').style.display = 'none';
+                document.getElementById('logoPreviewImg').src = result.url;
+                const topLogo = document.getElementById('topNavbarLogo');
+                if (topLogo) topLogo.src = result.url;
+                markDirty(true);
+                showToast(result.message, 'success');
+            } else {
+                showToast(result.message, 'danger');
+            }
+        } catch (err) {
+            showToast('Gagal mereset logo: ' + err.message, 'danger');
+        }
+    }
+}
+
+function handleKopFileSelected(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        showToast('Berkas harus berupa gambar (PNG/JPG).', 'danger');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        pendingKopBase64 = e.target.result;
+        document.getElementById('kopPreviewImg').src = pendingKopBase64;
+        document.getElementById('kopSelectedFilename').textContent = file.name + ` (${Math.round(file.size / 1024)} KB)`;
+        document.getElementById('kopSelectedNotice').style.display = 'block';
+        markDirty(true);
+        showToast('Gambar kop surat baru dipilih! Klik "Perbarui Pengaturan, Logo & Kop Surat" di bagian bawah untuk menerapkan.', 'info');
+    };
+    reader.readAsDataURL(file);
+}
+
+async function resetKopDefault() {
+    const schoolName = (db && db.settings && db.settings.school_name) || 'Sekolah';
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Reset Kop Surat',
+            message: `Apakah Anda yakin ingin mereset kop surat ke standar bawaan ${schoolName}?`,
+            type: 'warning',
+            confirmText: 'Ya, Reset Kop',
+            confirmIcon: 'bi-arrow-counterclockwise'
+        });
+    } else {
+        confirmed = confirm(`Apakah Anda yakin ingin mereset kop surat ke standar bawaan ${schoolName}?`);
+    }
+
+    if (confirmed) {
+        try {
+            const res = await callServer('apiResetKop');
+            const result = await res.json();
+            if (result.success) {
+                pendingKopBase64 = null;
+                document.getElementById('kopSelectedNotice').style.display = 'none';
+                document.getElementById('kopPreviewImg').src = result.url;
+                markDirty(true);
+                showToast(result.message, 'success');
+            } else {
+                showToast(result.message, 'danger');
+            }
+        } catch (err) {
+            showToast('Gagal mereset kop: ' + err.message, 'danger');
+        }
+    }
+}
+
+// ================= 6. SIMPAN SEMUA PEMBARUAN PENGATURAN DI PALING BAWAH =================
+async function saveAllPengaturan(notify = true) {
+    if (!db) return false;
+    const btn = document.getElementById('btnSaveAllPengaturan');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Menyimpan Perubahan...';
+    }
+
+    try {
+                // 1. Upload Logo jika ada yang baru dipilih
+        if (pendingLogoBase64) {
+            try {
+                const resLogo = await callServer('apiUploadLogo', pendingLogoBase64);
+                if (resLogo && resLogo.success) {
+                    pendingLogoBase64 = null;
+                    const notif = document.getElementById('logoSelectedNotice');
+                    if (notif) notif.style.display = 'none';
+                    if (resLogo.url) {
+                        document.getElementById('logoPreviewImg').src = resLogo.url;
+                        const topLogo = document.getElementById('topNavbarLogo');
+                        if (topLogo) topLogo.src = resLogo.url;
+                    }
+                }
+            } catch (err) {
+                console.warn('Gagal upload logo:', err);
+            }
+        }
+
+        // 2. Upload Kop jika ada yang baru dipilih
+        if (pendingKopBase64) {
+            try {
+                const resKop = await callServer('apiUploadKop', pendingKopBase64);
+                if (resKop && resKop.success) {
+                    pendingKopBase64 = null;
+                    const notif = document.getElementById('kopSelectedNotice');
+                    if (notif) notif.style.display = 'none';
+                    if (resKop.url) {
+                        document.getElementById('kopPreviewImg').src = resKop.url;
+                    }
+                }
+            } catch (err) {
+                console.warn('Gagal upload kop:', err);
+            }
+        }
+
+        // 3. Simpan Nilai Formulir Identitas Sekolah
+        if (!db.settings) db.settings = {};
+        db.settings.school_name = document.getElementById('set_school_name').value.trim();
+        db.settings.school_tagline = document.getElementById('set_school_tagline').value.trim();
+        db.settings.academic_year = document.getElementById('set_academic_year').value.trim();
+        db.settings.timezone = document.getElementById('set_timezone').value.trim();
+
+        // 4. Simpan seluruh dataset konfigurasi ke database
+        const res = await saveAdminDatabase({ 
+            settings: db.settings,
+            classes: db.classes || [],
+            students: db.students || [],
+            subjects: db.settings.subjects || db.subjects || [],
+            academic_years: db.settings.academic_years || db.academic_years || []
+        });
+
+        if (res.success) {
+            markDirty(false);
+            renderSettingsSubjectsAndYears();
+            renderClassesTable();
+            if (notify) {
+                showToast('Semua pembaruan pengaturan sekolah, logo, kop, kelas & mapel berhasil disimpan!', 'success');
+            }
+            return true;
+        } else {
+            showToast('Gagal menyimpan: ' + res.message, 'danger');
+            return false;
+        }
+    } catch (e) {
+        showToast('Terjadi kesalahan saat menyimpan: ' + e.message, 'danger');
+        return false;
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Perbarui Pengaturan';
+        }
+    }
+}
+
+function saveSettings(e) {
+    if (e) e.preventDefault();
+    return saveAllPengaturan(true);
+}
+
+// ================= 7. MEKANISME INTERSEP NAVIGASI SAAT BELUM DISIMPAN =================
+function cancelUnsavedNavigation() {
+    document.getElementById('unsavedModal').style.display = 'none';
+    targetNavigationUrl = null;
+}
+
+function discardAndNavigate() {
+    isDirty = false;
+    document.getElementById('unsavedModal').style.display = 'none';
+    if (targetNavigationUrl === 'LOGOUT_ACTION') {
+        localStorage.removeItem('sas_admin_auth');
+        localStorage.removeItem('sas_admin_user');
+        localStorage.removeItem('sas_admin_name');
+        localStorage.removeItem('sas_admin_role');
+        window.location.href = '/admin/login.html';
+    } else if (targetNavigationUrl) {
+        window.location.href = targetNavigationUrl;
+    }
+}
+
+async function saveAndNavigate() {
+    const btn = document.getElementById('btnModalSaveAndNavigate');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Menyimpan...';
+    }
+
+    const success = await saveAllPengaturan(false);
+    if (success) {
+        isDirty = false;
+        document.getElementById('unsavedModal').style.display = 'none';
+        if (targetNavigationUrl === 'LOGOUT_ACTION') {
+            localStorage.removeItem('sas_admin_auth');
+            localStorage.removeItem('sas_admin_user');
+            localStorage.removeItem('sas_admin_name');
+            localStorage.removeItem('sas_admin_role');
+            window.location.href = '/admin/login.html';
+        } else if (targetNavigationUrl) {
+            window.location.href = targetNavigationUrl;
+        }
+    } else {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Simpan & Lanjutkan';
+        }
+    }
+}
+
+// Intersep seluruh klik tautan pada halaman ketika isDirty aktif
+document.addEventListener('click', function(e) {
+    if (!isDirty) return;
+
+    const link = e.target.closest('a');
+    if (!link) return;
+
+    const href = link.getAttribute('href');
+    if (!href || href === '#' || href.startsWith('javascript:')) return;
+
+    // Abaikan jika menuju halaman yang sama
+    const currentPath = window.location.pathname;
+    if (href === currentPath || href === window.location.href) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    targetNavigationUrl = href;
+    document.getElementById('unsavedModal').style.display = 'flex';
+}, true);
+
+// Intersep tombol logout jika isDirty aktif
+const origLogoutPengaturan = window.logout;
+window.logout = async function() {
+    if (isDirty) {
+        targetNavigationUrl = 'LOGOUT_ACTION';
+        document.getElementById('unsavedModal').style.display = 'flex';
+    } else {
+        const schoolName = (db && db.settings && db.settings.school_name) || 'Sekolah';
+        let confirmed = false;
+        if (typeof showConfirmModal === 'function') {
+            confirmed = await showConfirmModal({
+                title: 'Konfirmasi Keluar',
+                message: `Apakah Anda yakin ingin keluar dari Panel Administrator ${schoolName}?`,
+                type: 'warning',
+                confirmText: 'Ya, Keluar',
+                confirmIcon: 'bi-box-arrow-right'
+            });
+        } else {
+            confirmed = confirm(`Apakah Anda yakin ingin keluar dari Panel Administrator ${schoolName}?`);
+        }
+
+        if (confirmed) {
+            localStorage.removeItem('sas_admin_auth');
+            localStorage.removeItem('sas_admin_user');
+            localStorage.removeItem('sas_admin_name');
+            localStorage.removeItem('sas_admin_role');
+            window.location.href = '/admin/login.html';
+        }
+    }
+};
+
+// Warning standar sebelum reload / menutup tab
+window.addEventListener('beforeunload', function(e) {
+    if (isDirty) {
+        e.preventDefault();
+        e.returnValue = 'Anda memiliki perubahan pengaturan yang belum disimpan.';
+        return e.returnValue;
+    }
+});
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadDatabaseFromAppsScript();
+    initSettingsForm();
+});
+</script>
+</body>
+</html>

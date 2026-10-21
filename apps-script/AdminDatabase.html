@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backup & Database - <?= schoolSettings.school_name || 'SMK NEGERI FYJ CHANNEL' ?></title>
+    <?!= include('StyleCSS'); ?>
+    <?!= include('PreviewA4CSS'); ?>
+</head>
+<body>
+
+<div class="admin-layout">
+    <!-- 1. SIDEBAR DARK MODERN (SEJAJAR DENGAN TOPBAR) -->
+    <?!= include('Sidebar'); ?>
+
+    <!-- 2. WRAPPER UTAMA KANAN: TOPBAR DI ATAS + CONTENT DI BAWAH -->
+    <div class="admin-main-wrapper">
+        <?!= include('Header'); ?>
+
+        <!-- MAIN CONTENT -->
+        <main class="admin-content">
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <div class="card-header">
+                <span class="card-title"><i class="bi bi-database-down"></i> Ekspor & Backup Basis Data Relasional</span>
+            </div>
+            <div class="card-body">
+                <p style="color: var(--text-muted); line-height: 1.6; margin-bottom: 1.5rem;">
+                    Anda dapat mengunduh seluruh skema database relasional lengkap dengan master kelas, data siswa, master guru/pengawas, template berita acara, arsip dokumen tersimpan, serta pengguna sistem dalam format MySQL/MariaDB (.sql), Excel (.xlsx), maupun JSON untuk migrasi atau pencadangan berkala. Setiap kali data diubah di aplikasi, file <code>database.sql</code> secara otomatis diperbarui secara realtime di server.
+                </p>
+
+                <!-- 4 KARTU UNDUH UTAMA -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+                    <!-- 1. MySQL Dump -->
+                    <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: #fff; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
+                                <i class="bi bi-filetype-sql" style="font-size: 1.6rem; color: var(--primary);"></i>
+                                <h4 style="font-size: 1rem; margin: 0;">MySQL / MariaDB Dump (.sql)</h4>
+                            </div>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+                                File SQL dump lengkap dengan struktur <code>CREATE TABLE</code> dan <code>INSERT</code> untuk <code>classes</code>, <code>students</code>, <code>teachers</code>, <code>exam_templates</code>, <code>users</code>, dan <code>archives</code>.
+                            </p>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button class="btn btn-primary btn-sm btn-block" onclick="downloadSqlDump()">
+            <i class="bi bi-download"></i> Unduh database.sql
+        </button>
+        <button class="btn btn-outline-primary btn-sm btn-block" onclick="openGoogleSpreadsheet()">
+            <i class="bi bi-box-arrow-up-right"></i> Buka Google Sheets
+        </button>
+    </div>
+                    </div>
+
+                    <!-- 2. Excel Siswa -->
+                    <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: #fff; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
+                                <i class="bi bi-file-earmark-excel" style="font-size: 1.6rem; color: #10B981;"></i>
+                                <h4 style="font-size: 1rem; margin: 0;">Master Siswa Excel (.xlsx)</h4>
+                            </div>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+                                Ekspor seluruh data siswa lengkap dengan NIS, Nama, Kelas, Tingkat, dan Program Keahlian dalam lembar kerja Excel siap pakai.
+                            </p>
+                        </div>
+                        <button class="btn btn-outline-success btn-sm btn-block" onclick="exportStudentsExcel()">
+                            <i class="bi bi-download"></i> Unduh Data_Siswa.xlsx
+                        </button>
+                    </div>
+
+                    <!-- 3. Excel Guru -->
+                    <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: #fff; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
+                                <i class="bi bi-person-workspace" style="font-size: 1.6rem; color: #D97706;"></i>
+                                <h4 style="font-size: 1rem; margin: 0;">Master Guru & Pengawas (.xlsx)</h4>
+                            </div>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+                                Ekspor seluruh data dewan guru dan pengawas ujian lengkap dengan NIP dan Nama Lengkap bertitel resmi.
+                            </p>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm btn-block" onclick="exportTeachersExcel()">
+                            <i class="bi bi-download"></i> Unduh Data_Guru.xlsx
+                        </button>
+                    </div>
+
+                    <!-- 4. JSON Dump -->
+                    <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: #fff; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
+                                <i class="bi bi-filetype-json" style="font-size: 1.6rem; color: #6366F1;"></i>
+                                <h4 style="font-size: 1rem; margin: 0;">JSON Database Dump (.json)</h4>
+                            </div>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+                                Seluruh struktur objek basis data yang dapat diimpor langsung oleh engine Node.js atau disimpan offline.
+                            </p>
+                        </div>
+                        <button class="btn btn-secondary btn-sm btn-block" onclick="downloadJsonDb()">
+                            <i class="bi bi-download"></i> Unduh db.json
+                        </button>
+                    </div>
+                </div>
+
+                
+                <!-- RESET DATABASE ZONE -->
+                <div style="border: 1px solid #FECDD3; background: #FFF1F2; border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <div style="font-weight: 700; color: #E11D48; display: flex; align-items: center; gap: 6px; font-size: 0.95rem;">
+                            <i class="bi bi-exclamation-octagon-fill"></i> Inisialisasi & Reset Ulang Basis Data
+                        </div>
+                        <div style="font-size: 0.82rem; color: #9F1239; margin-top: 4px;">
+                            Mengembalikan seluruh 9 sheet Google Spreadsheet ke struktur dan data seeder default resmi SMK NEGERI FYJ CHANNEL.
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="resetDatabaseToDefaults()">
+                        <i class="bi bi-arrow-counterclockwise"></i> Reset Database ke Pengaturan Awal
+                    </button>
+                </div>
+
+                <!-- STATUS RINGKASAN DATABASE -->
+                <div style="border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                    <h3 style="font-size: 1.05rem; margin-bottom: 1rem; color: var(--text-heading);"><i class="bi bi-speedometer2"></i> Metrik Kapasitas Basis Data</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+                        <div class="metric-card">
+                            <div style="font-size: 2rem; color: var(--primary);"><i class="bi bi-building"></i></div>
+                            <div>
+                                <div style="font-size: 1.4rem; font-weight: 800;" id="statClasses">11</div>
+                                <div style="font-size: 0.78rem; color: var(--text-muted);">Kelas Master</div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div style="font-size: 2rem; color: #10B981;"><i class="bi bi-people-fill"></i></div>
+                            <div>
+                                <div style="font-size: 1.4rem; font-weight: 800;" id="statStudents">258</div>
+                                <div style="font-size: 0.78rem; color: var(--text-muted);">Siswa Terdaftar</div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div style="font-size: 2rem; color: #D97706;"><i class="bi bi-person-video3"></i></div>
+                            <div>
+                                <div style="font-size: 1.4rem; font-weight: 800;" id="statTeachers">50</div>
+                                <div style="font-size: 0.78rem; color: var(--text-muted);">Guru & Pengawas</div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div style="font-size: 2rem; color: #8B5CF6;"><i class="bi bi-file-earmark-code"></i></div>
+                            <div>
+                                <div style="font-size: 1.4rem; font-weight: 800;" id="statTemplates">2</div>
+                                <div style="font-size: 0.78rem; color: var(--text-muted);">Template Ujian</div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div style="font-size: 2rem; color: #EC4899;"><i class="bi bi-archive-fill"></i></div>
+                            <div>
+                                <div style="font-size: 1.4rem; font-weight: 800;" id="statArchives">0</div>
+                                <div style="font-size: 0.78rem; color: var(--text-muted);">Dokumen Tersimpan</div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div style="font-size: 2rem; color: #0EA5E9;"><i class="bi bi-shield-check"></i></div>
+                            <div>
+                                <div style="font-size: 1.4rem; font-weight: 800;" id="statUsers">1</div>
+                                <div style="font-size: 0.78rem; color: var(--text-muted);">Pengguna Sistem</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </main>
+    </div>
+</div>
+
+
+
+<?!= include('AppJS'); ?>
+
+<script>
+
+let db = { classes: [], students: [], teachers: [], templates: [], settings: {}, archives: [], users: [] };
+
+async function loadDatabaseFromAppsScript() {
+    try {
+        const res = await callServer('apiGetInitialData');
+        if (res && res.success) {
+            db.classes = res.classes || [];
+            db.templates = res.templates || [];
+            db.subjects = res.subjects || [];
+            db.academic_years = res.academic_years || [];
+            db.teachers = res.teachers || [];
+            db.settings = res.settings || {};
+        }
+        const [stRes, arRes, usRes] = await Promise.all([
+            callServer('apiGetStudents'),
+            callServer('apiGetArchives'),
+            callServer('apiGetUsers')
+        ]);
+        db.students = stRes || [];
+        db.archives = arRes || [];
+        db.users = usRes || [];
+        return db;
+    } catch(err) {
+        console.error('Error loadDatabaseFromAppsScript:', err);
+        return db;
+    }
+}
+
+
+function renderMetrics() {
+    if (!db) return;
+    const activeClassIds = new Set((db.students || []).map(s => String(s.class_id)));
+    document.getElementById('statClasses').textContent = (db.classes || []).filter(c => activeClassIds.has(String(c.id))).length;
+    document.getElementById('statStudents').textContent = (db.students || []).length;
+    document.getElementById('statTeachers').textContent = (db.teachers || []).length;
+    document.getElementById('statTemplates').textContent = (db.templates || []).length;
+    document.getElementById('statArchives').textContent = (db.archives || []).length;
+    document.getElementById('statUsers').textContent = (db.users || []).length;
+}
+
+function detectProgramKeahlian(className) {
+    const upper = (className || '').toUpperCase();
+    if (upper.includes('TKJ')) return 'Teknik Komputer dan Jaringan';
+    if (upper.includes('DKV')) return 'Desain Komunikasi Visual';
+    if (upper.includes('LPKKK') || upper.includes('FARMASI')) return 'Layanan Penunjang Kefarmasian Klinis dan Komunitas';
+    if (upper.includes('LPB') || upper.includes('PERBANKAN')) return 'Layanan Perbankan';
+    if (upper.includes('BD') || upper.includes('BISNIS DIGITAL')) return 'Bisnis Digital';
+    if (upper.includes('MP') || upper.includes('PERKANTORAN')) return 'Manajemen Perkantoran dan Layanan Bisnis';
+    if (upper.includes('AK') || upper.includes('AKUNTANSI')) return 'Akuntansi dan Keuangan Lembaga';
+    if (upper.includes('TSM') || upper.includes('OTOMOTIF')) return 'Teknik Sepeda Motor';
+    return '-';
+}
+
+function exportStudentsExcel() {
+    if (!db || !db.students || db.students.length === 0) {
+        showToast('Tidak ada data siswa untuk diekspor.', 'info');
+        return;
+    }
+
+    const data = db.students.map((s, idx) => {
+        const cls = (db.classes || []).find(c => String(c.id) === String(s.class_id));
+        const className = cls ? cls.nama_kelas : (s.kelas || '-');
+        const tingkat = cls ? (cls.tingkat || 'XII') : 'XII';
+        const programKeahlian = cls ? (cls.program_keahlian || detectProgramKeahlian(cls.nama_kelas)) : (detectProgramKeahlian(s.kelas) || '-');
+        return {
+            'No': idx + 1,
+            'NIS': s.nis ? String(s.nis) : '',
+            'Nama Lengkap Peserta Didik': s.nama || '',
+            'Kelas': className,
+            'Tingkat': tingkat,
+            'Program / Konsentrasi Keahlian': programKeahlian
+        };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    ws['!cols'] = [{ wch: 6 }, { wch: 15 }, { wch: 38 }, { wch: 18 }, { wch: 12 }, { wch: 45 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Master_Siswa");
+    XLSX.writeFile(wb, "Data_Siswa_SMK_NEGERI_FYJ_CHANNEL.xlsx");
+    showToast(`Seluruh data siswa (${data.length} siswa) berhasil diunduh sesuai database!`, 'success');
+}
+
+function exportTeachersExcel() {
+    if (!db || !db.teachers || db.teachers.length === 0) {
+        showToast('Tidak ada data guru untuk diekspor.', 'info');
+        return;
+    }
+
+    const data = (db.teachers || []).map((t, idx) => ({
+        'NO': idx + 1,
+        'Nama Lengkap & Gelar': t.nama || '',
+        'NIP': t.nip ? String(t.nip) : '-',
+        'Mata Pelajaran Diampu': t.mapel || t.mata_pelajaran || '-',
+        'Jabatan / Peran': t.jabatan || 'Guru Mata Pelajaran'
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    ws['!cols'] = [{ wch: 6 }, { wch: 35 }, { wch: 24 }, { wch: 30 }, { wch: 25 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Master_Guru");
+    XLSX.writeFile(wb, "Data_Guru_SMK_NEGERI_FYJ_CHANNEL.xlsx");
+    showToast(`Seluruh data guru & pengawas (${data.length} guru) berhasil diunduh sesuai database!`, 'success');
+}
+
+
+let currentSpreadsheetUrl = '';
+
+async function openGoogleSpreadsheet() {
+    if (currentSpreadsheetUrl) {
+        window.open(currentSpreadsheetUrl, '_blank');
+    } else {
+        showToast('Menghubungkan ke Google Spreadsheet...', 'info');
+        try {
+            const stats = await callServer('apiGetDatabaseStats');
+            if (stats && stats.spreadsheetUrl) {
+                currentSpreadsheetUrl = stats.spreadsheetUrl;
+                window.open(stats.spreadsheetUrl, '_blank');
+            } else {
+                showToast('Gagal memuat URL Spreadsheet.', 'danger');
+            }
+        } catch(e) {
+            showToast('Kesalahan koneksi ke Google Apps Script.', 'danger');
+        }
+    }
+}
+
+function downloadSqlDump() {
+    if (!db) return;
+    let sql = `-- ==========================================================\n`;
+    sql += `-- DATABASE DUMP: DB_SAS_SMK_NEGERI_FYJ_CHANNEL\n`;
+    sql += `-- Generated: ${new Date().toISOString()}\n`;
+    sql += `-- ==========================================================\n\n`;
+
+    // 1. Classes
+    sql += `DROP TABLE IF EXISTS \`classes\`;\n`;
+    sql += `CREATE TABLE \`classes\` (\n  \`id\` int(11) NOT NULL AUTO_INCREMENT,\n  \`nama_kelas\` varchar(100) NOT NULL,\n  \`tingkat\` varchar(10) DEFAULT 'XII',\n  \`program_keahlian\` varchar(150) DEFAULT NULL,\n  \`is_active\` tinyint(1) DEFAULT 1,\n  PRIMARY KEY (\`id\`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;\n\n`;
+    if (Array.isArray(db.classes) && db.classes.length) {
+        sql += `INSERT INTO \`classes\` (\`id\`, \`nama_kelas\`, \`tingkat\`, \`program_keahlian\`, \`is_active\`) VALUES\n`;
+        const cRows = db.classes.map(c => `(${c.id}, '${(c.nama_kelas||'').replace(/'/g, "''")}', '${(c.tingkat||'XII').replace(/'/g, "''")}', '${(c.program_keahlian||'').replace(/'/g, "''")}', ${c.is_active || 1})`);
+        sql += cRows.join(',\n') + ';\n\n';
+    }
+
+    // 2. Students
+    sql += `DROP TABLE IF EXISTS \`students\`;\n`;
+    sql += `CREATE TABLE \`students\` (\n  \`id\` int(11) NOT NULL AUTO_INCREMENT,\n  \`class_id\` int(11) NOT NULL,\n  \`nis\` varchar(30) DEFAULT '',\n  \`nama\` varchar(200) NOT NULL,\n  PRIMARY KEY (\`id\`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;\n\n`;
+    if (Array.isArray(db.students) && db.students.length) {
+        sql += `INSERT INTO \`students\` (\`id\`, \`class_id\`, \`nis\`, \`nama\`) VALUES\n`;
+        const sRows = db.students.map(s => `(${s.id}, ${s.class_id || 1}, '${(s.nis||'').replace(/'/g, "''")}', '${(s.nama||'').replace(/'/g, "''")}')`);
+        sql += sRows.join(',\n') + ';\n\n';
+    }
+
+    // 3. Teachers
+    sql += `DROP TABLE IF EXISTS \`teachers\`;\n`;
+    sql += `CREATE TABLE \`teachers\` (\n  \`id\` int(11) NOT NULL AUTO_INCREMENT,\n  \`nama\` varchar(200) NOT NULL,\n  \`nip\` varchar(50) DEFAULT '',\n  \`mapel\` varchar(150) DEFAULT '',\n  \`jabatan\` varchar(100) DEFAULT '',\n  PRIMARY KEY (\`id\`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;\n\n`;
+    if (Array.isArray(db.teachers) && db.teachers.length) {
+        sql += `INSERT INTO \`teachers\` (\`id\`, \`nama\`, \`nip\`, \`mapel\`, \`jabatan\`) VALUES\n`;
+        const tRows = db.teachers.map(t => `(${t.id}, '${(t.nama||'').replace(/'/g, "''")}', '${(t.nip||'').replace(/'/g, "''")}', '${(t.mapel||'').replace(/'/g, "''")}', '${(t.jabatan||'').replace(/'/g, "''")}')`);
+        sql += tRows.join(',\n') + ';\n\n';
+    }
+
+    // 4. Templates
+    sql += `DROP TABLE IF EXISTS \`exam_templates\`;\n`;
+    sql += `CREATE TABLE \`exam_templates\` (\n  \`id\` int(11) NOT NULL AUTO_INCREMENT,\n  \`nama_ujian\` varchar(150) NOT NULL,\n  \`tahun_ajaran\` varchar(20) DEFAULT '',\n  \`semester\` varchar(20) DEFAULT '',\n  \`judul_berita_acara\` text,\n  \`redaksi_isi\` longtext,\n  \`aktif\` tinyint(1) DEFAULT 1,\n  PRIMARY KEY (\`id\`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;\n\n`;
+    if (Array.isArray(db.templates) && db.templates.length) {
+        sql += `INSERT INTO \`exam_templates\` (\`id\`, \`nama_ujian\`, \`tahun_ajaran\`, \`semester\`, \`judul_berita_acara\`, \`redaksi_isi\`, \`aktif\`) VALUES\n`;
+        const tplRows = db.templates.map(t => `(${t.id}, '${(t.nama_ujian||'').replace(/'/g, "''")}', '${(t.tahun_ajaran||'').replace(/'/g, "''")}', '${(t.semester||'').replace(/'/g, "''")}', '${(t.judul_berita_acara||'').replace(/'/g, "''")}', '${(t.redaksi_isi||'').replace(/'/g, "''")}', ${t.aktif || 1})`);
+        sql += tplRows.join(',\n') + ';\n\n';
+    }
+
+    // 5. Users
+    sql += `DROP TABLE IF EXISTS \`users\`;\n`;
+    sql += `CREATE TABLE \`users\` (\n  \`id\` int(11) NOT NULL AUTO_INCREMENT,\n  \`username\` varchar(50) NOT NULL,\n  \`password\` varchar(255) NOT NULL,\n  \`nama\` varchar(150) DEFAULT '',\n  \`role\` varchar(30) DEFAULT 'admin',\n  \`created_at\` datetime DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY (\`id\`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;\n\n`;
+    if (Array.isArray(db.users) && db.users.length) {
+        sql += `INSERT INTO \`users\` (\`id\`, \`username\`, \`password\`, \`nama\`, \`role\`, \`created_at\`) VALUES\n`;
+        const uRows = db.users.map(u => `(${u.id}, '${(u.username||'').replace(/'/g, "''")}', '${(u.password||'').replace(/'/g, "''")}', '${(u.nama||'').replace(/'/g, "''")}', '${(u.role||'admin').replace(/'/g, "''")}', '${u.created_at || '2025-01-01'}')`);
+        sql += uRows.join(',\n') + ';\n\n';
+    }
+
+    const blob = new Blob([sql], { type: 'application/sql;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'database_sas_fyj_channel.sql';
+    link.click();
+    showToast('Berkas database.sql berhasil diekspor dan diunduh!', 'success');
+}
+
+async function resetDatabaseToDefaults() {
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: '⚠️ Reset Basis Data Spreadsheet',
+            message: 'Apakah Anda yakin ingin MERESET ULANG seluruh basis data ke kondisi awal?\n\nSemua master data akan diinisialisasi ulang dengan data seeder default resmi SMK NEGERI FYJ CHANNEL.',
+            type: 'danger',
+            confirmText: 'Ya, Reset Database',
+            confirmIcon: 'bi-arrow-counterclockwise'
+        });
+    } else {
+        confirmed = confirm('Apakah Anda yakin ingin MERESET ULANG seluruh basis data?');
+    }
+    if (!confirmed) return;
+
+    showToast('Sedang mereset database...', 'info');
+    try {
+        const res = await callServer('apiResetDatabase');
+        if (res && res.success) {
+            await loadDatabaseFromAppsScript();
+            renderMetrics();
+            showToast('Basis data Google Spreadsheet berhasil di-reset ke kondisi awal!', 'success');
+        } else {
+            showToast('Gagal mereset: ' + ((res && res.message) || 'Error'), 'danger');
+        }
+    } catch(err) {
+        showToast('Kesalahan koneksi saat reset database: ' + err.message, 'danger');
+    }
+}
+
+function downloadJsonDb() {
+    if (!db) return;
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
+    const dlAnchorElem = document.createElement('a');
+    dlAnchorElem.setAttribute("href", dataStr);
+    dlAnchorElem.setAttribute("download", "db_sas_fyj_channel.json");
+    dlAnchorElem.click();
+    showToast('Berkas db.json berhasil diunduh.', 'info');
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadDatabaseFromAppsScript();
+    renderMetrics();
+});
+</script>
+</body>
+</html>

@@ -1,1 +1,0 @@
-{"success":false,"message":"Parameter class_id tidak valid."}

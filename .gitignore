@@ -1,4 +1,13 @@
-node_modules/
+# Scratch and temporary build artifacts
 scratch/
+.system_generated/
+*.tmp
+*.log
+
+# OS generated files
 .DS_Store
 Thumbs.db
+Desktop.ini
+
+# Node modules if any
+node_modules/

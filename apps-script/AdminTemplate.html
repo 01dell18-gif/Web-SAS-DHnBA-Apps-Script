@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Ujian & Redaksi - <?= schoolSettings.school_name || 'SMK NEGERI FYJ CHANNEL' ?></title>
+    <?!= include('StyleCSS'); ?>
+    <?!= include('PreviewA4CSS'); ?>
+</head>
+<body>
+
+<div class="admin-layout">
+    <!-- 1. SIDEBAR DARK MODERN (SEJAJAR DENGAN TOPBAR) -->
+    <?!= include('Sidebar'); ?>
+
+    <!-- 2. WRAPPER UTAMA KANAN: TOPBAR DI ATAS + CONTENT DI BAWAH -->
+    <div class="admin-main-wrapper">
+        <?!= include('Header'); ?>
+
+        <!-- CONTENT -->
+        <main class="admin-content">
+        <!-- 1. Riwayat & Master Template Tersimpan -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <span class="card-title" style="margin: 0;"><i class="bi bi-clock-history"></i> Riwayat & Master Template Ujian</span>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                        Pilih template dari basis data untuk digunakan dan diedit, atau tambahkan template baru.
+                    </div>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" onclick="createNewTemplate()">
+                    <i class="bi bi-plus-lg"></i> Buat Template Baru
+                </button>
+            </div>
+            <div class="card-body">
+                <!-- BANNER & MENU PILIH TEMPLATE AKTIF -->
+                <div style="background: linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%); border: 1px solid #A7F3D0; border-radius: 10px; padding: 14px 18px; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 42px; height: 42px; border-radius: 10px; background: #10B981; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);">
+                            <i class="bi bi-patch-check-fill"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.76rem; text-transform: uppercase; font-weight: 800; color: #047857; letter-spacing: 0.5px;">
+                                Template Ujian Aktif Saat Ini (Daftar Hadir & Berita Acara)
+                            </div>
+                            <div style="font-size: 1.05rem; font-weight: 800; color: #064E3B; margin-top: 2px;" id="bannerActiveTemplateName">
+                                Memuat...
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <label for="selectActiveTemplateMenu" style="font-size: 0.82rem; font-weight: 700; color: #065F46; margin: 0; white-space: nowrap;">
+                            <i class="bi bi-hand-index-thumb"></i> Pilih Template yang Diaktifkan:
+                        </label>
+                        <select id="selectActiveTemplateMenu" class="form-select form-select-sm" onchange="setActiveTemplate(this.value)" style="min-width: 260px; font-weight: 700; border-color: #10B981; background-color: #ffffff; color: #065F46;">
+                            <option value="" disabled selected>Memuat daftar template...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table" style="font-size: 0.88rem;">
+                        <thead>
+                            <tr>
+                                <th style="width: 45px;">ID</th>
+                                <th>Nama Ujian Resmi</th>
+                                <th style="width: 110px;">Tahun Ajaran</th>
+                                <th style="width: 90px;">Semester</th>
+                                <th style="width: 130px; text-align: center;">Status Penggunaan</th>
+                                <th>Judul Berita Acara</th>
+                                <th style="text-align: center; width: 270px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="templatesHistoryTableBody">
+                            <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">Memuat daftar template...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Editor Template & Redaksi Berita Acara -->
+        <div class="card" style="margin-bottom: 1.5rem;" id="templateEditorCard">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="card-title" style="margin: 0;"><i class="bi bi-file-earmark-code"></i> Editor Template & Redaksi Berita Acara</span>
+                        <span id="badgeCurrentEditingTemplate" class="badge" style="background: #E0E7FF; color: #4338CA; font-weight: 700; padding: 4px 8px; border-radius: 6px;">Mengedit: ID 1</span>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                        Sesuaikan redaksi resmi berita acara dengan mudah tanpa perlu memahami kode tag HTML yang rumit.
+                    </div>
+                </div>
+                <!-- Pilihan Preset Format Cepat -->
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                    <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">Format Standar:</span>
+                    <button type="button" class="preset-badge" onclick="loadPresetTemplate('sas')">🌟 Standar SAS</button>
+                    <button type="button" class="preset-badge" onclick="loadPresetTemplate('abm')">📋 Asesmen (ABM)</button>
+                    <button type="button" class="preset-badge" onclick="loadPresetTemplate('us')">🏫 Ujian Sekolah / UKK</button>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <form id="templateForm" onsubmit="saveTemplate(event)">
+                    <input type="hidden" id="tpl_id" value="1">
+                    <div class="form-group">
+                        <label class="form-label" for="tpl_nama_ujian">Nama Ujian Resmi</label>
+                        <input type="text" id="tpl_nama_ujian" class="form-control" value="Sumatif Akhir Semester (SAS) Ganjil" required oninput="updateEditorPreview()">
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="tpl_tahun_ajaran">Tahun Ajaran</label>
+                            <input type="text" id="tpl_tahun_ajaran" class="form-control" value="2026/2027" required oninput="updateEditorPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="tpl_semester">Semester</label>
+                            <select id="tpl_semester" class="form-select" onchange="updateEditorPreview()">
+                                <option value="Ganjil" selected>Ganjil</option>
+                                <option value="Genap">Genap</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="tpl_judul">Format Judul Berita Acara (Mendukung Enter & Placeholder)</label>
+                        <textarea id="tpl_judul" class="form-control" rows="3" oninput="updateEditorPreview()">BERITA ACARA 
+PENYELENGGARAAN SUMATIF AKHIR SEMESTER (SAS) GANJIL
+TAHUN AJARAN [tahun_ajaran]</textarea>
+                    </div>
+
+                    <!-- PILIHAN STATUS TEMPLATE AKTIF -->
+                    <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 10px 14px; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="tpl_is_active" style="width: 1.15rem; height: 1.15rem; cursor: pointer; accent-color: #10B981;">
+                        <label for="tpl_is_active" style="margin: 0; font-size: 0.88rem; font-weight: 700; color: #065F46; cursor: pointer;">
+                            <i class="bi bi-patch-check-fill text-success"></i> Jadikan sebagai Template Ujian Aktif (Otomatis dipilih di menu <em>Daftar Hadir</em> & <em>Berita Acara</em>)
+                        </label>
+                    </div>
+
+                    <!-- TOGGLE MODE EDIT -->
+                    <div style="background: var(--slate-100); border-radius: var(--radius-sm); padding: 4px; display: inline-flex; gap: 4px; margin-bottom: 1rem;">
+                        <button type="button" id="btnModeSimple" class="btn btn-sm" style="background:#fff; color:var(--primary); font-weight:700; border:1px solid #CBD5E1;" onclick="setEditorMode('simple')">
+                            <i class="bi bi-pencil-square"></i> Mode Formulir Mudah (Bebas Tag HTML)
+                        </button>
+                        <button type="button" id="btnModeHtml" class="btn btn-sm" style="background:transparent; color:var(--text-muted); font-weight:600; border:none;" onclick="setEditorMode('html')">
+                            <i class="bi bi-code-slash"></i> Mode Kode HTML Asli (Lanjutan)
+                        </button>
+                    </div>
+
+                    <!-- TOOLBAR VARIABEL INTERAKTIF (DILENGKAPI [semester]) -->
+                    <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 1.25rem;">
+                        <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+                            <i class="bi bi-lightning-charge-fill" style="color: var(--warning);"></i> Klik Variabel di bawah untuk menyisipkan otomatis ke isian:
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                            <span class="var-chip" onclick="insertVariable('[hari]')">[hari]</span>
+                            <span class="var-chip" onclick="insertVariable('[tanggal]')">[tanggal]</span>
+                            <span class="var-chip" onclick="insertVariable('[tanggal_teks]')">[tanggal_teks]</span>
+                            <span class="var-chip" onclick="insertVariable('[bulan]')">[bulan]</span>
+                            <span class="var-chip" onclick="insertVariable('[tahun]')">[tahun]</span>
+                            <span class="var-chip" onclick="insertVariable('[tahun_teks]')">[tahun_teks]</span>
+                            <span class="var-chip" onclick="insertVariable('[nama_ujian]')">[nama_ujian]</span>
+                            <span class="var-chip" onclick="insertVariable('[tahun_ajaran]')">[tahun_ajaran]</span>
+                            <span class="var-chip" onclick="insertVariable('[semester]')">[semester]</span>
+                            <span class="var-chip" onclick="insertVariable('[jam_mulai]')">[jam_mulai]</span>
+                            <span class="var-chip" onclick="insertVariable('[jam_selesai]')">[jam_selesai]</span>
+                            <span class="var-chip" onclick="insertVariable('[sekolah]')">[sekolah]</span>
+                            <span class="var-chip" onclick="insertVariable('[kelas]')">[kelas]</span>
+                            <span class="var-chip" onclick="insertVariable('[mata_pelajaran]')">[mata_pelajaran]</span>
+                            <span class="var-chip" onclick="insertVariable('[ruang]')">[ruang]</span>
+                            <span class="var-chip" onclick="insertVariable('[peserta_seharusnya]')">[peserta_seharusnya]</span>
+                            <span class="var-chip" onclick="insertVariable('[peserta_hadir]')">[peserta_hadir]</span>
+                            <span class="var-chip" onclick="insertVariable('[peserta_tidak_hadir]')">[peserta_tidak_hadir]</span>
+                            <span class="var-chip" onclick="insertVariable('[blangko_berita_acara]')">[blangko_berita_acara]</span>
+                            <span class="var-chip" onclick="insertVariable('[blangko_daftar_hadir]')">[blangko_daftar_hadir]</span>
+                            <span class="var-chip" onclick="insertVariable('[catatan_pelaksanaan]')">[catatan_pelaksanaan]</span>
+                        </div>
+                    </div>
+
+                    <!-- 1. MODE FORMULIR TERSTRUKTUR -->
+                    <div id="editorModeSimpleContainer">
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 700;">1. Kalimat Pembuka Hari & Tanggal Pelaksanaan</label>
+                            <input type="text" id="tpl_field_pembuka" class="form-control" onfocus="setCurrentActiveField(this)" oninput="updateEditorPreview()"
+                                   value="Pada hari ini [hari], tanggal [tanggal] ([tanggal_teks]) bulan [bulan] tahun [tahun] ([tahun_teks]):">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 700;">2. Butir Poin 1 - Kalimat Pelaksanaan Ujian</label>
+                            <textarea id="tpl_field_poin1" class="form-control" rows="2" onfocus="setCurrentActiveField(this)" oninput="updateEditorPreview()">Telah diselenggarakan [nama_ujian] Tahun Ajaran [tahun_ajaran] dari pukul [jam_mulai] sampai dengan pukul [jam_selesai] WITA.</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 700;">3. Butir Poin 2 - Penyerahan Lembar Blangko</label>
+                            <textarea id="tpl_field_poin2" class="form-control" rows="3" onfocus="setCurrentActiveField(this)" oninput="updateEditorPreview()">Telah mengisi lembar blangko berita acara sebanyak [blangko_berita_acara] eksemplar dan blangko daftar hadir sebanyak [blangko_daftar_hadir] eksemplar, untuk Mata Pelajaran [mata_pelajaran] di ruang [ruang] dan kelas [kelas] dengan disaksikan oleh para peserta.</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 700;">4. Butir Poin 3 - Judul Catatan Pelaksanaan</label>
+                            <input type="text" id="tpl_field_catatan" class="form-control" onfocus="setCurrentActiveField(this)" oninput="updateEditorPreview()"
+                                   value="Catatan selama pelaksanaan ujian (kendala teknis, kejadian khusus, atau keterangan lain):">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 700;">5. Kalimat Penutup Dokumen</label>
+                            <input type="text" id="tpl_field_penutup" class="form-control" onfocus="setCurrentActiveField(this)" oninput="updateEditorPreview()"
+                                   value="Demikian Berita Acara ini dibuat dengan sesungguhnya.">
+                        </div>
+                    </div>
+
+                    <!-- 2. MODE KODE HTML (LANJUTAN) -->
+                    <div id="editorModeHtmlContainer" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label">Kode HTML Lengkap Redaksi Berita Acara</label>
+                            <textarea id="tpl_redaksi" class="form-control" rows="9" style="font-family: monospace; font-size: 0.82rem;" onfocus="setCurrentActiveField(this)" oninput="updateEditorPreview()"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- PRATINJAU REALISTIS -->
+                    <div style="margin: 1.5rem 0; border: 1px solid var(--border); border-radius: var(--radius-md); background: #ffffff; padding: 1.5rem; box-shadow: var(--shadow-sm);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1rem;">
+                            <span style="font-weight: 700; font-size: 0.88rem; color: var(--primary);">
+                                <i class="bi bi-eye-fill"></i> Pratinjau Tampilan Berita Acara (Simulasi Data Cetak)
+                            </span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">Font: Times New Roman 11pt</span>
+                        </div>
+                        <div id="livePreviewBox" style="font-family: 'Times New Roman', serif; font-size: 11pt; line-height: 1.5; color: #000; text-align: justify;">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Simpan Perubahan Template (Update)</button>
+                        <button type="button" class="btn btn-success" onclick="saveAsNewTemplate()"><i class="bi bi-plus-circle"></i> Simpan Sebagai Template Baru</button>
+                        <button type="button" class="btn btn-secondary" onclick="createNewTemplate()"><i class="bi bi-arrow-counterclockwise"></i> Reset / Template Baru</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        </main>
+    </div>
+</div>
+
+
+
+<?!= include('AppJS'); ?>
+
+<script>
+
+let db = { classes: [], students: [], teachers: [], templates: [], settings: {}, archives: [], users: [] };
+
+async function loadDatabaseFromAppsScript() {
+    try {
+        const res = await callServer('apiGetInitialData');
+        if (res && res.success) {
+            db.classes = res.classes || [];
+            db.templates = res.templates || [];
+            db.subjects = res.subjects || [];
+            db.academic_years = res.academic_years || [];
+            db.teachers = res.teachers || [];
+            db.settings = res.settings || {};
+        }
+        const [stRes, arRes, usRes] = await Promise.all([
+            callServer('apiGetStudents'),
+            callServer('apiGetArchives'),
+            callServer('apiGetUsers')
+        ]);
+        db.students = stRes || [];
+        db.archives = arRes || [];
+        db.users = usRes || [];
+        return db;
+    } catch(err) {
+        console.error('Error loadDatabaseFromAppsScript:', err);
+        return db;
+    }
+}
+
+
+let currentEditorMode = 'simple';
+let currentActiveField = null;
+
+const PRESET_TEMPLATES = {
+    sas: {
+        nama_ujian: 'Sumatif Akhir Semester (SAS) Ganjil',
+        tahun_ajaran: '2026/2027',
+        semester: 'Ganjil',
+        judul: 'BERITA ACARA \nPENYELENGGARAAN SUMATIF AKHIR SEMESTER (SAS) GANJIL\nTAHUN AJARAN [tahun_ajaran]',
+        pembuka: 'Pada hari ini [hari], tanggal [tanggal] ([tanggal_teks]) bulan [bulan] tahun [tahun] ([tahun_teks]):',
+        poin1: 'Telah diselenggarakan [nama_ujian] Tahun Ajaran [tahun_ajaran] dari pukul [jam_mulai] sampai dengan pukul [jam_selesai] WITA.',
+        poin2: 'Telah mengisi lembar blangko berita acara sebanyak [blangko_berita_acara] eksemplar dan blangko daftar hadir sebanyak [blangko_daftar_hadir] eksemplar, untuk Mata Pelajaran [mata_pelajaran] di ruang [ruang] dan kelas [kelas] dengan disaksikan oleh para peserta.',
+        catatan: 'Catatan selama pelaksanaan ujian (kendala teknis, kejadian khusus, atau keterangan lain):',
+        penutup: 'Demikian Berita Acara ini dibuat dengan sesungguhnya.'
+    },
+    abm: {
+        nama_ujian: 'Asesmen Bakat Minat (ABM)',
+        tahun_ajaran: '2026/2027',
+        semester: 'Ganjil',
+        judul: 'BERITA ACARA \nPELAKSANAAN ASESMEN BAKAT MINAT (ABM)\nTAHUN AJARAN [tahun_ajaran]',
+        pembuka: 'Pada hari ini [hari], tanggal [tanggal] ([tanggal_teks]) bulan [bulan] tahun [tahun] ([tahun_teks]):',
+        poin1: 'Telah diselenggarakan Asesmen Bakat Minat (ABM) berbasis komputer dari pukul [jam_mulai] sampai dengan pukul [jam_selesai] WITA.',
+        poin2: 'Telah mengisi blangko berita acara sebanyak [blangko_berita_acara] eksemplar dan daftar presensi peserta sebanyak [blangko_daftar_hadir] eksemplar.',
+        catatan: 'Catatan khusus selama pelaksanaan sesi asesmen:',
+        penutup: 'Berita acara ini dibuat sesuai dengan fakta pelaksanaan sesungguhnya di laboratorium.'
+    },
+    us: {
+        nama_ujian: 'Ujian Sekolah / Uji Kompetensi Keahlian (UKK)',
+        tahun_ajaran: '2026/2027',
+        semester: 'Genap',
+        judul: 'BERITA ACARA \nPELAKSANAAN UJI KOMPETENSI KEAHLIAN (UKK)\nTAHUN AJARAN [tahun_ajaran]',
+        pembuka: 'Pada hari ini [hari], tanggal [tanggal] ([tanggal_teks]) bulan [bulan] tahun [tahun] ([tahun_teks]):',
+        poin1: 'Telah dilaksanakan Uji Kompetensi Keahlian (UKK) Praktik Kejuruan dari pukul [jam_mulai] sampai dengan pukul [jam_selesai] WITA.',
+        poin2: 'Telah mendistribusikan lembar soal praktik dan lembar penilaian portofolio kepada asesor dan peserta uji kompetensi.',
+        catatan: 'Catatan keselamatan kerja dan catatan verifikasi penguji eksternal:',
+        penutup: 'Demikian berita acara pelaksanaan UKK ini dibuat dengan penuh tanggung jawab.'
+    }
+};
+
+async function initTemplatePage() {
+    await loadDatabaseFromAppsScript();
+    renderTemplatesHistory();
+    if (db.templates && db.templates.length) {
+        editTemplate(db.templates[0].id);
+    }
+}
+
+function renderTemplatesHistory() {
+    const tbody = document.getElementById('templatesHistoryTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const curEditingId = document.getElementById('tpl_id')?.value || '';
+
+    // Pastikan setidaknya ada 1 template yang berstatus aktif
+    let activeTpl = (db.templates || []).find(t => t.aktif === 1 || t.aktif === true);
+    if (!activeTpl && db.templates && db.templates.length) {
+        db.templates[0].aktif = 1;
+        activeTpl = db.templates[0];
+    }
+    const activeId = activeTpl ? String(activeTpl.id) : '';
+
+    // Update Banner Info Template Aktif
+    const bannerName = document.getElementById('bannerActiveTemplateName');
+    if (bannerName) {
+        if (activeTpl) {
+            bannerName.innerHTML = `${activeTpl.nama_ujian} <span style="font-size:0.85rem; font-weight:600; opacity:0.85;">(${activeTpl.tahun_ajaran || '-'} - ${activeTpl.semester || 'Ganjil'})</span>`;
+        } else {
+            bannerName.textContent = 'Belum ada template aktif';
+        }
+    }
+
+    // Update Dropdown Menu Pemilihan Template Aktif
+    const selectMenu = document.getElementById('selectActiveTemplateMenu');
+    if (selectMenu) {
+        selectMenu.innerHTML = '';
+        (db.templates || []).forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.id;
+            const isAktif = String(t.id) === activeId;
+            opt.textContent = `${t.nama_ujian} (${t.tahun_ajaran || '-'}) - ${t.semester || 'Ganjil'}${isAktif ? ' ★ (Aktif Saat Ini)' : ''}`;
+            if (isAktif) opt.selected = true;
+            selectMenu.appendChild(opt);
+        });
+    }
+
+    (db.templates || []).forEach(t => {
+        const isEditing = String(t.id) === String(curEditingId);
+        const isAktif = String(t.id) === activeId;
+        tbody.innerHTML += `
+            <tr style="${isAktif ? 'background: #F0FDF4;' : (isEditing ? 'background: #F8FAFC;' : '')}">
+                <td><strong>#${t.id}</strong></td>
+                <td>
+                    <strong>${t.nama_ujian || '-'}</strong>
+                    ${isEditing ? '<span class="badge" style="background:#EEF2FF; color:#4338CA; border:1px solid #C7D2FE; font-size:0.7rem; margin-left:6px;"><i class="bi bi-pencil"></i> Sedang Diedit</span>' : ''}
+                </td>
+                <td><span class="badge" style="background:#EFF6FF; color:#1D4ED8;">${t.tahun_ajaran || '-'}</span></td>
+                <td><span class="badge" style="background:${t.semester === 'Genap' ? '#FAF5FF' : '#FFFBEB'}; color:${t.semester === 'Genap' ? '#7C3AED' : '#B45309'};">${t.semester || 'Ganjil'}</span></td>
+                <td style="text-align: center;">
+                    ${isAktif 
+                        ? '<span class="badge" style="background:#10B981; color:#fff; font-size:0.75rem; font-weight:700; padding: 4px 8px;"><i class="bi bi-check-circle-fill"></i> Aktif Utama</span>' 
+                        : '<span class="badge" style="background:#F1F5F9; color:#64748B; font-size:0.75rem; font-weight:600; padding: 4px 8px;">Tersimpan</span>'}
+                </td>
+                <td><div style="max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.8rem; color: var(--text-muted);">${(t.judul_berita_acara || '').replace(/\r\n|\r|\n/g, ' ')}</div></td>
+                <td style="text-align: center;">
+                    <div style="display: flex; gap: 4px; justify-content: center; flex-wrap: wrap;">
+                        ${isAktif 
+                            ? '<button type="button" class="btn btn-sm" style="background:#10B981; color:#fff; cursor:default; font-size:0.78rem; font-weight:700;" disabled title="Template ini sedang aktif digunakan di Daftar Hadir & Berita Acara"><i class="bi bi-check-circle-fill"></i> Sedang Aktif</button>' 
+                            : `<button type="button" class="btn btn-outline-success btn-sm" style="font-size:0.78rem; font-weight:600;" onclick="setActiveTemplate(${t.id})" title="Aktifkan template ini agar otomatis digunakan di menu Daftar Hadir dan Berita Acara"><i class="bi bi-check2-circle"></i> Aktifkan</button>`}
+                        <button type="button" class="btn btn-primary btn-sm" style="font-size:0.78rem;" onclick="editTemplate(${t.id})" title="Gunakan dan edit template ini di formulir">
+                            <i class="bi bi-pencil-square"></i> Gunakan & Edit
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" style="font-size:0.78rem;" onclick="deleteTemplate(${t.id})" title="Hapus template dari database">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+async function setActiveTemplate(id) {
+    const targetId = Number(id);
+    const tpl = (db.templates || []).find(t => Number(t.id) === targetId);
+    if (!tpl) return;
+
+    if (typeof setActiveExamTemplate === 'function') {
+        const res = await setActiveExamTemplate(targetId);
+        if (res.success) {
+            renderTemplatesHistory();
+            showToast(`Template "${tpl.nama_ujian}" berhasil diaktifkan untuk menu Daftar Hadir & Berita Acara!`, 'success');
+        } else {
+            showToast(res.message, 'danger');
+        }
+    } else {
+        (db.templates || []).forEach(t => t.aktif = (Number(t.id) === targetId ? 1 : 0));
+        await saveAdminDatabase({ templates: db.templates });
+        renderTemplatesHistory();
+        showToast(`Template "${tpl.nama_ujian}" berhasil diaktifkan untuk menu Daftar Hadir & Berita Acara!`, 'success');
+    }
+}
+
+function editTemplate(id) {
+    const t = (db.templates || []).find(item => Number(item.id) === Number(id)) || (db.templates || [])[0];
+    if (!t) return;
+
+    document.getElementById('tpl_id').value = t.id;
+    document.getElementById('tpl_nama_ujian').value = t.nama_ujian || '';
+    document.getElementById('tpl_tahun_ajaran').value = t.tahun_ajaran || '';
+    document.getElementById('tpl_semester').value = t.semester || 'Ganjil';
+    document.getElementById('tpl_judul').value = t.judul_berita_acara || '';
+    const chkActive = document.getElementById('tpl_is_active');
+    if (chkActive) chkActive.checked = Boolean(t.aktif === 1 || t.aktif === true);
+
+    const rawHtml = t.redaksi_isi || '';
+    document.getElementById('tpl_redaksi').value = rawHtml;
+    parseHtmlToSimpleFields(rawHtml);
+    updateEditorPreview();
+
+    const badge = document.getElementById('badgeCurrentEditingTemplate');
+    if (badge) {
+        badge.textContent = `Mengedit: ${t.nama_ujian} (ID: ${t.id})`;
+        badge.style.background = '#E0E7FF';
+        badge.style.color = '#4338CA';
+    }
+
+    renderTemplatesHistory();
+}
+
+function createNewTemplate() {
+    document.getElementById('tpl_id').value = '';
+    document.getElementById('tpl_nama_ujian').value = 'Ujian Baru (SAS)';
+    document.getElementById('tpl_tahun_ajaran').value = db.settings?.academic_year || '2026/2027';
+    document.getElementById('tpl_semester').value = 'Ganjil';
+    document.getElementById('tpl_judul').value = 'BERITA ACARA\nPENYELENGGARAAN UJIAN BARU\nTAHUN AJARAN [tahun_ajaran]';
+    const chkActive = document.getElementById('tpl_is_active');
+    if (chkActive) chkActive.checked = false;
+
+    document.getElementById('tpl_field_pembuka').value = 'Pada hari ini [hari], tanggal [tanggal] ([tanggal_teks]) bulan [bulan] tahun [tahun] ([tahun_teks]):';
+    document.getElementById('tpl_field_poin1').value = 'Telah diselenggarakan [nama_ujian] Tahun Ajaran [tahun_ajaran] dari pukul [jam_mulai] sampai dengan pukul [jam_selesai] WITA.';
+    document.getElementById('tpl_field_poin2').value = 'Telah mengisi lembar blangko berita acara sebanyak [blangko_berita_acara] eksemplar dan blangko daftar hadir sebanyak [blangko_daftar_hadir] eksemplar, untuk Mata Pelajaran [mata_pelajaran] di ruang [ruang] dan kelas [kelas] dengan disaksikan oleh para peserta.';
+    document.getElementById('tpl_field_catatan').value = 'Catatan selama pelaksanaan ujian (kendala teknis, kejadian khusus, atau keterangan lain):';
+    document.getElementById('tpl_field_penutup').value = 'Demikian Berita Acara ini dibuat dengan sesungguhnya.';
+
+    document.getElementById('tpl_redaksi').value = buildHtmlFromSimpleFields();
+    updateEditorPreview();
+
+    const badge = document.getElementById('badgeCurrentEditingTemplate');
+    if (badge) {
+        badge.textContent = 'Mode: Pembuatan Template Baru';
+        badge.style.background = '#FEF3C7';
+        badge.style.color = '#92400E';
+    }
+
+    renderTemplatesHistory();
+    document.getElementById('templateEditorCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    showToast('Formulir direset untuk membuat template baru.', 'info');
+}
+
+function parseHtmlToSimpleFields(html) {
+    let pembuka = 'Pada hari ini [hari], tanggal [tanggal] ([tanggal_teks]) bulan [bulan] tahun [tahun] ([tahun_teks]):';
+    let poin1 = 'Telah diselenggarakan [nama_ujian] Tahun Ajaran [tahun_ajaran] dari pukul [jam_mulai] sampai dengan pukul [jam_selesai] WITA.';
+    let poin2 = 'Telah mengisi lembar blangko berita acara sebanyak [blangko_berita_acara] eksemplar dan blangko daftar hadir sebanyak [blangko_daftar_hadir] eksemplar, untuk Mata Pelajaran [mata_pelajaran] di ruang [ruang] dan kelas [kelas] dengan disaksikan oleh para peserta.';
+    let catatan = 'Catatan selama pelaksanaan ujian (kendala teknis, kejadian khusus, atau keterangan lain):';
+    let penutup = 'Demikian Berita Acara ini dibuat dengan sesungguhnya.';
+
+    if (html) {
+        const clean = html.replace(/&nbsp;/g, ' ');
+        const mPembuka = clean.match(/<p[^>]*>(.*?)<\/p>/i);
+        if (mPembuka) pembuka = mPembuka[1].replace(/<[^>]*>/g, '').trim();
+
+        const mPoin1 = clean.match(/<li[^>]*>(.*?)<ul/i);
+        if (mPoin1) poin1 = mPoin1[1].replace(/<[^>]*>/g, '').trim();
+
+        const mLi = clean.match(/<li[^>]*style="margin-bottom: 8px;">(.*?)<\/li>/gi);
+        if (mLi && mLi.length >= 2) poin2 = mLi[1].replace(/<[^>]*>/g, '').trim();
+
+        const mCatatan = clean.match(/<li[^>]*>(Catatan.*?)<br>/i);
+        if (mCatatan) catatan = mCatatan[1].replace(/<[^>]*>/g, '').trim();
+
+        const mPenutup = clean.match(/<p[^>]*>(Demikian Berita Acara.*?)<\/p>/i);
+        if (mPenutup) penutup = mPenutup[1].replace(/<[^>]*>/g, '').trim();
+    }
+
+    document.getElementById('tpl_field_pembuka').value = pembuka;
+    document.getElementById('tpl_field_poin1').value = poin1;
+    document.getElementById('tpl_field_poin2').value = poin2;
+    document.getElementById('tpl_field_catatan').value = catatan;
+    document.getElementById('tpl_field_penutup').value = penutup;
+}
+
+function buildHtmlFromSimpleFields() {
+    const pembuka = document.getElementById('tpl_field_pembuka').value.trim();
+    const poin1 = document.getElementById('tpl_field_poin1').value.trim();
+    const poin2 = document.getElementById('tpl_field_poin2').value.trim();
+    const catatan = document.getElementById('tpl_field_catatan').value.trim();
+    const penutup = document.getElementById('tpl_field_penutup').value.trim();
+
+    return `<p>${pembuka}</p>
+<ol style="margin-top: 6px; margin-bottom: 12px;">
+<li style="margin-bottom: 8px;">${poin1}
+<ul style="margin-bottom: 6px; margin-left: 20px; list-style-type: disc;">
+<li>Pada Sekolah:&nbsp;<strong>[sekolah]</strong></li>
+<li>Kelas:&nbsp;<strong>[kelas]</strong></li>
+<li>Mata Pelajaran:&nbsp;<strong>[mata_pelajaran]</strong></li>
+<li>Ruang:&nbsp;<strong>[ruang]</strong></li>
+<li>Jumlah Peserta Seharusnya:&nbsp;<strong>[peserta_seharusnya]</strong>&nbsp;orang</li>
+<li>Jumlah Peserta yang Tidak Hadir:&nbsp;<strong>[peserta_tidak_hadir]</strong>&nbsp;orang</li>
+<li>Jumlah Peserta yang Hadir:&nbsp;<strong>[peserta_hadir]</strong>&nbsp;orang</li>
+</ul>
+</li>
+<li style="margin-bottom: 8px;">${poin2}</li>
+<li style="margin-bottom: 8px;">${catatan}<br><em>[catatan_pelaksanaan]</em></li>
+</ol>
+<p style="margin-top: 15px;">${penutup}</p>
+<p style="margin-top: 15px;"><span style="font-size: 14.6667px;"><br></span></p>
+<p style="text-align: center; margin-top: 15px;"><span style="font-size: 14.6667px;">Yang membuat berita acara :</span></p>`;
+}
+
+function setEditorMode(mode) {
+    currentEditorMode = mode;
+    const btnSimple = document.getElementById('btnModeSimple');
+    const btnHtml = document.getElementById('btnModeHtml');
+    const containerSimple = document.getElementById('editorModeSimpleContainer');
+    const containerHtml = document.getElementById('editorModeHtmlContainer');
+
+    if (mode === 'simple') {
+        btnSimple.style.background = '#fff';
+        btnSimple.style.color = 'var(--primary)';
+        btnSimple.style.border = '1px solid #CBD5E1';
+        btnHtml.style.background = 'transparent';
+        btnHtml.style.color = 'var(--text-muted)';
+        btnHtml.style.border = 'none';
+        containerSimple.style.display = 'block';
+        containerHtml.style.display = 'none';
+        parseHtmlToSimpleFields(document.getElementById('tpl_redaksi').value);
+    } else {
+        btnHtml.style.background = '#fff';
+        btnHtml.style.color = 'var(--primary)';
+        btnHtml.style.border = '1px solid #CBD5E1';
+        btnSimple.style.background = 'transparent';
+        btnSimple.style.color = 'var(--text-muted)';
+        btnSimple.style.border = 'none';
+        containerHtml.style.display = 'block';
+        containerSimple.style.display = 'none';
+        document.getElementById('tpl_redaksi').value = buildHtmlFromSimpleFields();
+    }
+    updateEditorPreview();
+}
+
+async function loadPresetTemplate(presetKey) {
+    const preset = PRESET_TEMPLATES[presetKey];
+    if (!preset) return;
+
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Terapkan Format Standar',
+            message: `Muat format "${preset.nama_ujian}" ke formulir template?`,
+            type: 'info',
+            confirmText: 'Muat Format',
+            confirmIcon: 'bi-box-arrow-in-down'
+        });
+    } else {
+        confirmed = confirm(`Muat format "${preset.nama_ujian}" ke formulir?`);
+    }
+
+    if (confirmed) {
+        document.getElementById('tpl_nama_ujian').value = preset.nama_ujian;
+        document.getElementById('tpl_tahun_ajaran').value = preset.tahun_ajaran;
+        document.getElementById('tpl_semester').value = preset.semester;
+        document.getElementById('tpl_judul').value = preset.judul;
+
+        document.getElementById('tpl_field_pembuka').value = preset.pembuka;
+        document.getElementById('tpl_field_poin1').value = preset.poin1;
+        document.getElementById('tpl_field_poin2').value = preset.poin2;
+        document.getElementById('tpl_field_catatan').value = preset.catatan;
+        document.getElementById('tpl_field_penutup').value = preset.penutup;
+
+        document.getElementById('tpl_redaksi').value = buildHtmlFromSimpleFields();
+        updateEditorPreview();
+        showToast(`Format "${preset.nama_ujian}" dimuat.`, 'info');
+    }
+}
+
+function setCurrentActiveField(el) {
+    currentActiveField = el;
+}
+
+function insertVariable(varTag) {
+    if (!currentActiveField) {
+        currentActiveField = currentEditorMode === 'simple' ? document.getElementById('tpl_field_pembuka') : document.getElementById('tpl_redaksi');
+    }
+    const el = currentActiveField;
+    const start = el.selectionStart || 0;
+    const end = el.selectionEnd || 0;
+    const text = el.value;
+
+    el.value = text.substring(0, start) + varTag + text.substring(end);
+    el.selectionStart = el.selectionEnd = start + varTag.length;
+    el.focus();
+
+    updateEditorPreview();
+}
+
+function updateEditorPreview() {
+    let htmlContent = currentEditorMode === 'simple' ? buildHtmlFromSimpleFields() : document.getElementById('tpl_redaksi').value;
+
+    const sampleVars = {
+        hari: 'Senin',
+        tanggal: '20',
+        tanggal_teks: 'dua puluh',
+        bulan: 'Oktober',
+        tahun: '2026',
+        tahun_teks: 'dua ribu dua puluh enam',
+        nama_ujian: document.getElementById('tpl_nama_ujian').value || 'Sumatif Akhir Semester (SAS)',
+        tahun_ajaran: document.getElementById('tpl_tahun_ajaran').value || '2026/2027',
+        semester: document.getElementById('tpl_semester').value || 'Ganjil',
+        Semester: document.getElementById('tpl_semester').value || 'Ganjil',
+        jam_mulai: '07:30',
+        jam_selesai: '09:30',
+        sekolah: (db && db.settings && db.settings.school_name) || window.SCHOOL_NAME || 'SMK NEGERI FYJ CHANNEL',
+        kelas: 'XII TKJ',
+        mata_pelajaran: 'Teknik Jaringan Komputer',
+        ruang: 'Lab Komputer 1',
+        peserta_seharusnya: '20',
+        peserta_hadir: '20',
+        peserta_tidak_hadir: '0',
+        blangko_berita_acara: '1',
+        blangko_daftar_hadir: '1',
+        catatan_pelaksanaan: 'Pelaksanaan ujian berjalan tertib, aman, dan lancar.'
+    };
+
+    let rendered = htmlContent;
+    for (const [k, v] of Object.entries(sampleVars)) {
+        rendered = rendered.replace(new RegExp('\\[' + k + '\\]', 'gi'), `<strong>${v}</strong>`);
+    }
+
+    const previewBox = document.getElementById('livePreviewBox');
+    if (previewBox) previewBox.innerHTML = rendered;
+}
+
+async function saveTemplate(e) {
+    e.preventDefault();
+    if (!db.templates) db.templates = [];
+
+    const tplId = document.getElementById('tpl_id').value;
+    const finalHtml = currentEditorMode === 'simple' ? buildHtmlFromSimpleFields() : document.getElementById('tpl_redaksi').value;
+    document.getElementById('tpl_redaksi').value = finalHtml;
+
+    const namaUjian = document.getElementById('tpl_nama_ujian').value.trim();
+    const tahunAjaran = document.getElementById('tpl_tahun_ajaran').value.trim();
+    const semester = document.getElementById('tpl_semester').value.trim();
+    const judul = document.getElementById('tpl_judul').value.trim();
+
+    let existingTpl = tplId ? db.templates.find(t => String(t.id) === String(tplId)) : null;
+    const isActiveChecked = document.getElementById('tpl_is_active')?.checked;
+
+    if (existingTpl) {
+        existingTpl.nama_ujian = namaUjian;
+        existingTpl.tahun_ajaran = tahunAjaran;
+        existingTpl.semester = semester;
+        existingTpl.judul_berita_acara = judul;
+        existingTpl.redaksi_isi = finalHtml;
+        if (isActiveChecked) {
+            db.templates.forEach(t => t.aktif = 0);
+            existingTpl.aktif = 1;
+            if (!db.settings) db.settings = {};
+            db.settings.active_template_id = existingTpl.id;
+        }
+    } else {
+        const nextId = (db.templates.reduce((max, t) => Math.max(max, Number(t.id) || 0), 0)) + 1;
+        if (isActiveChecked) {
+            db.templates.forEach(t => t.aktif = 0);
+            if (!db.settings) db.settings = {};
+            db.settings.active_template_id = nextId;
+        }
+        const newTpl = { id: nextId, nama_ujian: namaUjian, tahun_ajaran: tahunAjaran, semester: semester, judul_berita_acara: judul, redaksi_isi: finalHtml, aktif: isActiveChecked ? 1 : 0 };
+        db.templates.push(newTpl);
+        document.getElementById('tpl_id').value = nextId;
+        existingTpl = newTpl;
+    }
+
+    const res = await saveAdminDatabase({ templates: db.templates });
+    if (res.success) {
+        renderTemplatesHistory();
+        const badge = document.getElementById('badgeCurrentEditingTemplate');
+        if (badge && existingTpl) {
+            badge.textContent = `Mengedit: ${existingTpl.nama_ujian} (ID: ${existingTpl.id})`;
+            badge.style.background = '#E0E7FF';
+            badge.style.color = '#4338CA';
+        }
+        showToast(`Template "${namaUjian}" berhasil disimpan ke database!`, 'success');
+    } else {
+        showToast(res.message, 'danger');
+    }
+}
+
+async function saveAsNewTemplate() {
+    if (!db.templates) db.templates = [];
+    const finalHtml = currentEditorMode === 'simple' ? buildHtmlFromSimpleFields() : document.getElementById('tpl_redaksi').value;
+    const namaUjian = document.getElementById('tpl_nama_ujian').value.trim();
+    const tahunAjaran = document.getElementById('tpl_tahun_ajaran').value.trim();
+    const semester = document.getElementById('tpl_semester').value.trim();
+    const judul = document.getElementById('tpl_judul').value.trim();
+
+    const nextId = (db.templates.reduce((max, t) => Math.max(max, Number(t.id) || 0), 0)) + 1;
+    const newTpl = { id: nextId, nama_ujian: namaUjian + ' (Salinan)', tahun_ajaran: tahunAjaran, semester: semester, judul_berita_acara: judul, redaksi_isi: finalHtml };
+
+    db.templates.push(newTpl);
+    document.getElementById('tpl_id').value = nextId;
+    document.getElementById('tpl_nama_ujian').value = newTpl.nama_ujian;
+
+    const res = await saveAdminDatabase({ templates: db.templates });
+    if (res.success) {
+        renderTemplatesHistory();
+        showToast(`Template baru "${newTpl.nama_ujian}" berhasil dibuat dan disimpan!`, 'success');
+    } else {
+        showToast(res.message, 'danger');
+    }
+}
+
+async function deleteTemplate(id) {
+    if (!db.templates || db.templates.length <= 1) {
+        showToast('Sistem memerlukan setidaknya 1 template ujian aktif.', 'danger');
+        return;
+    }
+
+    const tpl = db.templates.find(t => Number(t.id) === Number(id));
+    if (!tpl) return;
+
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Hapus Template',
+            message: `Apakah Anda yakin ingin menghapus template "${tpl.nama_ujian}" dari basis data?`,
+            type: 'danger',
+            confirmText: 'Ya, Hapus Template',
+            confirmIcon: 'bi-trash-fill'
+        });
+    } else {
+        confirmed = confirm(`Apakah Anda yakin ingin menghapus template "${tpl.nama_ujian}" dari database?`);
+    }
+    if (!confirmed) return;
+
+    db.templates = db.templates.filter(t => Number(t.id) !== Number(id));
+
+    if (String(document.getElementById('tpl_id').value) === String(id)) {
+        editTemplate(db.templates[0].id);
+    }
+
+    const res = await saveAdminDatabase({ templates: db.templates });
+    if (res.success) {
+        renderTemplatesHistory();
+        showToast(`Template "${tpl.nama_ujian}" berhasil dihapus dari database.`, 'info');
+    } else {
+        showToast(res.message, 'danger');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initTemplatePage);
+</script>
+</body>
+</html>

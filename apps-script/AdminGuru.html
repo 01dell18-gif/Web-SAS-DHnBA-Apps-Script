@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Guru & Pengawas - <?= schoolSettings.school_name || 'SMK NEGERI FYJ CHANNEL' ?></title>
+    <?!= include('StyleCSS'); ?>
+    <?!= include('PreviewA4CSS'); ?>
+</head>
+<body>
+
+<div class="admin-layout">
+    <!-- 1. SIDEBAR DARK MODERN (SEJAJAR DENGAN TOPBAR) -->
+    <?!= include('Sidebar'); ?>
+
+    <!-- 2. WRAPPER UTAMA KANAN: TOPBAR DI ATAS + CONTENT DI BAWAH -->
+    <div class="admin-main-wrapper">
+        <?!= include('Header'); ?>
+
+        <!-- CONTENT -->
+        <main class="admin-content">
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="card-title" style="margin: 0;"><i class="bi bi-person-workspace"></i> Master Data Guru & Pengawas Ujian</span>
+                    <span id="badgeTeacherCount" class="badge" style="background: #E0E7FF; color: #4338CA; font-weight: 700; padding: 4px 8px; border-radius: 6px;">0 Guru</span>
+                </div>
+                
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <!-- Tombol Export Excel Guru -->
+                    <button class="btn btn-secondary btn-sm" onclick="exportTeachersExcel()" title="Ekspor data guru & pengawas ke berkas Excel (.xlsx)">
+                        <i class="bi bi-file-earmark-excel" style="color: #10B981;"></i> Export (.xlsx)
+                    </button>
+
+                    <!-- Tombol Import Excel Guru -->
+                    <button class="btn btn-secondary btn-sm" onclick="openImportTeachersModal()" title="Impor data guru dari berkas Excel (.xlsx / .xls)">
+                        <i class="bi bi-file-earmark-arrow-up" style="color: var(--primary);"></i> Import (.xlsx)
+                    </button>
+
+                    <!-- Tombol Tambah Guru Manual -->
+                    <button class="btn btn-primary btn-sm" onclick="showAddTeacherModal()">
+                        <i class="bi bi-plus-lg"></i> Tambah Guru Baru
+                    </button>
+
+                    <!-- Tombol Hapus Data Guru -->
+                    <button class="btn btn-outline-danger btn-sm" onclick="promptDeleteAllTeachers()" title="Hapus semua data guru dari database">
+                        <i class="bi bi-trash3-fill"></i> Hapus Data Guru
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 10px; align-items: center; flex: 1; max-width: 560px;">
+                        <div style="position: relative; flex: 1;">
+                            <input type="text" id="searchTeacherInput" class="form-control form-control-sm" placeholder="Cari NIP, Nama Guru, atau Mapel..." oninput="onTeacherSearchInput()">
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">Tampilkan:</span>
+                            <select id="teacherPageSizeSelect" class="form-select form-select-sm" style="width: auto; min-width: 110px; font-size: 0.82rem;" onchange="changeTeacherPageSize(this.value)">
+                                <option value="20" selected>20 data</option>
+                                <option value="40">40 data</option>
+                                <option value="50">50 data</option>
+                                <option value="100">100 data</option>
+                                <option value="200">200 data</option>
+                                <option value="400">400 data</option>
+                                <option value="500">500 data</option>
+                                <option value="all">Semua data</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.82rem; color: var(--text-muted);">
+                        💡 Data guru ini otomatis menjadi daftar saran & autocomplete pengawas pada Berita Acara dan Daftar Hadir.
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table" style="font-size: 0.88rem;">
+                        <thead>
+                            <tr>
+                                <th style="width: 45px;">No</th>
+                                <th>Nama Lengkap & Gelar</th>
+                                <th style="width: 190px;">NIP</th>
+                                <th>Mata Pelajaran Diampu</th>
+                                <th>Jabatan / Peran</th>
+                                <th style="text-align: center; width: 120px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teachersTableBody">
+                            <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">Memuat data guru...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- PAGINATION BAR GURU -->
+                <div id="teacherPaginationBar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                    <div style="font-size: 0.82rem; color: var(--text-muted);" id="teacherPaginationInfo">
+                        Menampilkan 0 - 0 dari 0 guru
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnTeacherPrev" onclick="teacherPrevPage()" style="padding: 4px 10px; font-size: 0.8rem;">
+                            <i class="bi bi-chevron-left"></i> Sebelumnya
+                        </button>
+                        <div id="teacherPageButtons" style="display: flex; gap: 4px; flex-wrap: wrap;"></div>
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnTeacherNext" onclick="teacherNextPage()" style="padding: 4px 10px; font-size: 0.8rem;">
+                            Setelahnya <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    </div>
+</div>
+
+<!-- MODAL TAMBAH/EDIT GURU -->
+<div id="teacherModal" class="modal-overlay">
+    <div class="modal-card">
+        <h3 id="teacherModalTitle" style="margin-bottom: 1rem; font-size: 1.15rem;"><i class="bi bi-person-workspace" style="color: var(--primary);"></i> Tambah Guru / Pengawas Baru</h3>
+        <form onsubmit="submitTeacherForm(event)">
+            <input type="hidden" id="modal_teacher_id">
+            <div class="form-group">
+                <label class="form-label">Nama Lengkap & Gelar <span class="required">*</span></label>
+                <input type="text" id="modal_teacher_nama" class="form-control" placeholder="Contoh: I Wayan Sukadana, S.Pd." required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nomor Induk Pegawai (NIP)</label>
+                <input type="text" id="modal_teacher_nip" class="form-control" placeholder="Contoh: 19820514 200801 1 012">
+                <div class="form-hint">Dapat dikosongkan untuk guru non-PNS/PPPK.</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Mata Pelajaran Diampu</label>
+                <input type="text" id="modal_teacher_mapel" class="form-control" placeholder="Contoh: Teknik Jaringan Komputer">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Jabatan / Peran</label>
+                <input type="text" id="modal_teacher_jabatan" class="form-control" value="Guru Mata Pelajaran" placeholder="Contoh: Guru Madya / Pengawas">
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.5rem;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeTeacherModal()">Batal</button>
+                <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg"></i> Simpan Data Guru</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL IMPORT EXCEL GURU -->
+<div id="importTeacherModal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 680px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="font-size: 1.15rem; margin: 0;"><i class="bi bi-file-earmark-excel" style="color: #10B981;"></i> Impor Data Guru & Pengawas (.xlsx)</h3>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="downloadTeacherExcelTemplate()">
+                <i class="bi bi-download"></i> Unduh Format Contoh
+            </button>
+        </div>
+
+        <div style="background: var(--slate-100); border-radius: var(--radius-sm); padding: 12px; font-size: 0.84rem; margin-bottom: 1.25rem;">
+            <strong>Format Kolom Excel:</strong> <code>NO</code>, <code>NAMA</code>, <code>NIP</code>, <code>MAPEL</code>, <code>JABATAN</code>.
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Pilih Berkas Excel (.xlsx / .xls)</label>
+            <input type="file" id="teacherExcelFileInput" class="form-control" accept=".xlsx, .xls" onchange="handleTeacherExcelFileSelected(event)">
+        </div>
+
+        <div class="form-group" style="margin-top: 1rem;">
+            <label class="form-label">Metode Impor</label>
+            <div style="display: flex; gap: 15px;">
+                <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="radio" name="import_teacher_mode" value="merge" checked> Gabungkan & Perbarui (Merge)
+                </label>
+                <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="radio" name="import_teacher_mode" value="replace"> Ganti Seluruh Data Guru (Replace)
+                </label>
+            </div>
+        </div>
+
+        <div id="importTeacherPreviewArea" style="display: none; margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+            <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 6px;" id="importTeacherSummaryText">Pratinjau Data Guru:</div>
+            <div style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <table class="table" style="font-size: 0.8rem; margin: 0;">
+                    <thead>
+                        <tr style="background: var(--slate-100); font-weight: 700; border-bottom: 1px solid var(--border);">
+                            <th style="width: 45px;">No</th>
+                            <th>Nama Lengkap & Gelar</th>
+                            <th>NIP</th>
+                            <th>Mata Pelajaran</th>
+                            <th>Jabatan / Peran</th>
+                        </tr>
+                    </thead>
+                    <tbody id="importTeacherPreviewTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.5rem;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="closeImportTeachersModal()">Batal</button>
+            <button type="button" id="btnExecuteTeacherImport" class="btn btn-primary btn-sm" style="display: none;" onclick="executeImportTeachers()">
+                <i class="bi bi-cloud-arrow-up-fill"></i> Simpan ke Database
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+<?!= include('AppJS'); ?>
+
+<script>
+
+let db = { classes: [], students: [], teachers: [], templates: [], settings: {}, archives: [], users: [] };
+
+async function loadDatabaseFromAppsScript() {
+    try {
+        const res = await callServer('apiGetInitialData');
+        if (res && res.success) {
+            db.classes = res.classes || [];
+            db.templates = res.templates || [];
+            db.subjects = res.subjects || [];
+            db.academic_years = res.academic_years || [];
+            db.teachers = res.teachers || [];
+            db.settings = res.settings || {};
+        }
+        const [stRes, arRes, usRes] = await Promise.all([
+            callServer('apiGetStudents'),
+            callServer('apiGetArchives'),
+            callServer('apiGetUsers')
+        ]);
+        db.students = stRes || [];
+        db.archives = arRes || [];
+        db.users = usRes || [];
+        return db;
+    } catch(err) {
+        console.error('Error loadDatabaseFromAppsScript:', err);
+        return db;
+    }
+}
+
+
+let parsedTeacherExcelData = [];
+
+async function initGuruPage() {
+    await loadDatabaseFromAppsScript();
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    const isAdmin = (currentRole === 'admin' || currentRole === 'superadmin');
+    if (!isAdmin) {
+        const btnDeleteAll = document.querySelector('button[onclick="promptDeleteAllTeachers()"]');
+        if (btnDeleteAll) btnDeleteAll.style.display = 'none';
+        const btnAdd = document.querySelector('button[onclick="showAddTeacherModal()"]');
+        if (btnAdd) btnAdd.style.display = 'none';
+    }
+    renderTeachersTable();
+}
+
+let currentTeacherPage = 1;
+let teacherPageSize = 20;
+
+function onTeacherSearchInput() {
+    currentTeacherPage = 1;
+    renderTeachersTable();
+}
+
+function changeTeacherPageSize(val) {
+    teacherPageSize = val === 'all' ? 'all' : parseInt(val, 10);
+    currentTeacherPage = 1;
+    renderTeachersTable();
+}
+
+function teacherPrevPage() {
+    if (currentTeacherPage > 1) {
+        currentTeacherPage--;
+        renderTeachersTable();
+    }
+}
+
+function teacherNextPage() {
+    const list = getFilteredTeachers();
+    const totalPages = teacherPageSize === 'all' ? 1 : Math.max(1, Math.ceil(list.length / teacherPageSize));
+    if (currentTeacherPage < totalPages) {
+        currentTeacherPage++;
+        renderTeachersTable();
+    }
+}
+
+function goToTeacherPage(p) {
+    currentTeacherPage = p;
+    renderTeachersTable();
+}
+
+function getFilteredTeachers() {
+    const searchVal = (document.getElementById('searchTeacherInput')?.value || '').toLowerCase().trim();
+    let list = db.teachers || [];
+    if (searchVal) {
+        list = list.filter(t => 
+            (t.nama && t.nama.toLowerCase().includes(searchVal)) || 
+            (t.nip && t.nip.toLowerCase().includes(searchVal)) ||
+            (t.mapel && t.mapel.toLowerCase().includes(searchVal)) ||
+            (t.jabatan && t.jabatan.toLowerCase().includes(searchVal))
+        );
+    }
+    return list;
+}
+
+function renderTeachersTable() {
+    const tbody = document.getElementById('teachersTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const list = getFilteredTeachers();
+    const totalRecords = list.length;
+    document.getElementById('badgeTeacherCount').textContent = `${totalRecords} Guru`;
+
+    const totalPages = teacherPageSize === 'all' ? 1 : Math.max(1, Math.ceil(totalRecords / teacherPageSize));
+    if (currentTeacherPage > totalPages) currentTeacherPage = totalPages;
+    if (currentTeacherPage < 1) currentTeacherPage = 1;
+
+    let paginatedList = list;
+    let startIdx = 0;
+    let endIdx = totalRecords;
+
+    if (teacherPageSize !== 'all' && totalRecords > 0) {
+        startIdx = (currentTeacherPage - 1) * teacherPageSize;
+        endIdx = Math.min(startIdx + teacherPageSize, totalRecords);
+        paginatedList = list.slice(startIdx, endIdx);
+    }
+
+    const infoEl = document.getElementById('teacherPaginationInfo');
+    const btnPrev = document.getElementById('btnTeacherPrev');
+    const btnNext = document.getElementById('btnTeacherNext');
+    const pageButtons = document.getElementById('teacherPageButtons');
+
+    if (totalRecords > 0) {
+        if (infoEl) {
+            infoEl.textContent = `Menampilkan ${startIdx + 1} - ${endIdx} dari ${totalRecords} guru`;
+        }
+        if (btnPrev) btnPrev.disabled = (currentTeacherPage <= 1);
+        if (btnNext) btnNext.disabled = (currentTeacherPage >= totalPages || teacherPageSize === 'all');
+
+        if (pageButtons) {
+            pageButtons.innerHTML = '';
+            if (teacherPageSize !== 'all' && totalPages > 1) {
+                const maxVisible = 5;
+                let startPage = Math.max(1, currentTeacherPage - Math.floor(maxVisible / 2));
+                let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+                if (endPage - startPage + 1 < maxVisible) {
+                    startPage = Math.max(1, endPage - maxVisible + 1);
+                }
+
+                for (let p = startPage; p <= endPage; p++) {
+                    const isActive = p === currentTeacherPage;
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = `btn btn-sm ${isActive ? 'btn-primary' : 'btn-secondary'}`;
+                    btn.style.padding = '4px 9px';
+                    btn.style.fontSize = '0.8rem';
+                    btn.textContent = p;
+                    btn.onclick = () => goToTeacherPage(p);
+                    pageButtons.appendChild(btn);
+                }
+            }
+        }
+    } else {
+        if (infoEl) infoEl.textContent = 'Menampilkan 0 - 0 dari 0 guru';
+        if (btnPrev) btnPrev.disabled = true;
+        if (btnNext) btnNext.disabled = true;
+        if (pageButtons) pageButtons.innerHTML = '';
+    }
+
+    if (list.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                    <i class="bi bi-person-workspace" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                    Tidak ada data guru yang cocok dengan filter pencarian.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    const isAdmin = (currentRole === 'admin' || currentRole === 'superadmin');
+
+    paginatedList.forEach((t, idx) => {
+        const rowNo = teacherPageSize === 'all' ? idx + 1 : startIdx + idx + 1;
+        let actionHtml = '';
+        if (isAdmin) {
+            actionHtml = `
+                <div style="display: flex; gap: 4px; justify-content: center;">
+                    <button class="btn btn-secondary btn-sm" style="padding: 2px 7px; font-size: 0.75rem;" onclick="editTeacher(${t.id})" title="Edit Data Guru">
+                        <i class="bi bi-pencil-square" style="color: var(--primary);"></i>
+                    </button>
+                    <button class="btn btn-danger btn-sm" style="padding: 2px 7px; font-size: 0.75rem;" onclick="deleteTeacher(${t.id})" title="Hapus Guru">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+        } else {
+            actionHtml = `
+                <span class="badge" style="background: #F1F5F9; color: #94A3B8; font-size: 0.75rem; font-weight: 600; padding: 4px 6px;">
+                    <i class="bi bi-lock-fill"></i> Khusus Admin
+                </span>
+            `;
+        }
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${rowNo}</td>
+                <td><strong>${t.nama}</strong></td>
+                <td><code>${t.nip || '-'}</code></td>
+                <td><span style="font-weight:600; color: var(--primary);">${t.mapel || '-'}</span></td>
+                <td><span class="badge" style="background: var(--slate-100); color: var(--slate-700); padding: 4px 8px; border-radius: 4px;">${t.jabatan || 'Guru Mata Pelajaran'}</span></td>
+                <td style="text-align: center;">${actionHtml}</td>
+            </tr>
+        `;
+    });
+}
+
+function showAddTeacherModal() {
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    if (currentRole === 'operator') {
+        showAlertModal({ title: 'Hak Akses Terbatas', message: 'Fitur tambah data guru khusus untuk Administrator!', type: 'danger' });
+        return;
+    }
+    document.getElementById('teacherModalTitle').textContent = 'Tambah Guru / Pengawas Baru';
+    document.getElementById('modal_teacher_id').value = '';
+    document.getElementById('modal_teacher_nip').value = '';
+    document.getElementById('modal_teacher_nama').value = '';
+    document.getElementById('modal_teacher_mapel').value = '';
+    document.getElementById('modal_teacher_jabatan').value = 'Guru Mata Pelajaran';
+    document.getElementById('teacherModal').style.display = 'flex';
+}
+
+function editTeacher(id) {
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    if (currentRole === 'operator') {
+        showAlertModal({ title: 'Hak Akses Terbatas', message: 'Fitur edit data guru khusus untuk Administrator!', type: 'danger' });
+        return;
+    }
+    const t = (db.teachers || []).find(item => Number(item.id) === Number(id));
+    if (!t) return;
+
+    document.getElementById('teacherModalTitle').textContent = 'Edit Data Guru / Pengawas';
+    document.getElementById('modal_teacher_id').value = t.id;
+    document.getElementById('modal_teacher_nip').value = t.nip || '';
+    document.getElementById('modal_teacher_nama').value = t.nama || '';
+    document.getElementById('modal_teacher_mapel').value = t.mapel || '';
+    document.getElementById('modal_teacher_jabatan').value = t.jabatan || 'Guru Mata Pelajaran';
+    document.getElementById('teacherModal').style.display = 'flex';
+}
+
+function closeTeacherModal() {
+    document.getElementById('teacherModal').style.display = 'none';
+}
+
+async function submitTeacherForm(e) {
+    e.preventDefault();
+    if (!db.teachers) db.teachers = [];
+
+    const idVal = document.getElementById('modal_teacher_id').value;
+    const nipVal = document.getElementById('modal_teacher_nip').value.trim();
+    const namaVal = document.getElementById('modal_teacher_nama').value.trim();
+    const mapelVal = document.getElementById('modal_teacher_mapel').value.trim();
+    const jabatanVal = document.getElementById('modal_teacher_jabatan').value.trim() || 'Guru Mata Pelajaran';
+
+    if (!namaVal) {
+        showToast('Nama guru wajib diisi!', 'danger');
+        return;
+    }
+
+    if (idVal) {
+        const existing = db.teachers.find(t => String(t.id) === String(idVal));
+        if (existing) {
+            existing.nama = namaVal;
+            existing.nip = nipVal;
+            existing.mapel = mapelVal;
+            existing.jabatan = jabatanVal;
+        }
+    } else {
+        const newId = db.teachers.reduce((max, t) => Math.max(max, Number(t.id) || 0), 0) + 1;
+        db.teachers.push({ id: newId, nama: namaVal, nip: nipVal, mapel: mapelVal, jabatan: jabatanVal });
+    }
+
+    const res = await saveAdminDatabase({ teachers: db.teachers });
+    if (res.success) {
+        closeTeacherModal();
+        renderTeachersTable();
+        showToast('Data guru berhasil disimpan!', 'success');
+    } else {
+        showToast(res.message, 'danger');
+    }
+}
+
+async function deleteTeacher(id) {
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    if (currentRole === 'operator') {
+        showAlertModal({ title: 'Hak Akses Terbatas', message: 'Fitur hapus data guru khusus untuk Administrator!', type: 'danger' });
+        return;
+    }
+    const t = (db.teachers || []).find(item => Number(item.id) === Number(id));
+    if (!t) return;
+
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: 'Hapus Guru / Pengawas',
+            message: `Apakah Anda yakin ingin menghapus guru "${t.nama}"?`,
+            type: 'danger',
+            confirmText: 'Ya, Hapus',
+            confirmIcon: 'bi-trash-fill'
+        });
+    } else {
+        confirmed = confirm(`Apakah Anda yakin ingin menghapus guru "${t.nama}"?`);
+    }
+    if (!confirmed) return;
+
+    db.teachers = db.teachers.filter(item => Number(item.id) !== Number(id));
+    const res = await saveAdminDatabase({ teachers: db.teachers });
+    if (res.success) {
+        renderTeachersTable();
+        showToast('Data guru berhasil dihapus.', 'info');
+    } else {
+        showToast(res.message, 'danger');
+    }
+}
+
+async function promptDeleteAllTeachers() {
+    const currentRole = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    if (currentRole === 'operator') {
+        showAlertModal({ title: 'Hak Akses Terbatas', message: 'Fitur pengosongan data guru khusus untuk Administrator!', type: 'danger' });
+        return;
+    }
+    const count = (db.teachers || []).length;
+    if (count === 0) {
+        showToast('Tidak ada data guru & pengawas di dalam basis data.', 'info');
+        return;
+    }
+
+    let confirmed = false;
+    if (typeof showConfirmModal === 'function') {
+        confirmed = await showConfirmModal({
+            title: '⚠️ Peringatan Krusial',
+            message: `Apakah Anda yakin ingin MENGHAPUS SEMUA DATA GURU & PENGAWAS?\n\nSebanyak ${count} guru & pengawas akan dikosongkan secara permanen dari basis data.\nTindakan ini tidak dapat dibatalkan.`,
+            type: 'danger',
+            confirmText: 'Ya, Kosongkan Semua Guru',
+            confirmIcon: 'bi-trash-fill'
+        });
+    } else {
+        confirmed = confirm(`⚠️ Peringatan: Hapus semua ${count} guru?`);
+    }
+    if (!confirmed) return;
+
+    const res = await saveAdminDatabase({ delete_all_teachers: true, teachers: [] });
+    if (res.success) {
+        db.teachers = [];
+        renderTeachersTable();
+        showToast('Seluruh data guru & pengawas berhasil dihapus dan dikosongkan!', 'success');
+    } else {
+        showToast('Gagal: ' + res.message, 'danger');
+    }
+}
+
+function exportTeachersExcel() {
+    if (!db || !db.teachers || db.teachers.length === 0) {
+        showToast('Belum ada data guru untuk diekspor.', 'danger');
+        return;
+    }
+    // Urutan kolom konsisten: NO, NAMA, NIP, MAPEL, JABATAN
+    const rows = (db.teachers || []).map((t, idx) => ({
+        'NO': idx + 1,
+        'NAMA': t.nama || '',
+        'NIP': t.nip ? String(t.nip) : '',
+        'MAPEL': t.mapel || t.mata_pelajaran || '',
+        'JABATAN': t.jabatan || 'Guru Mata Pelajaran'
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{ wch: 6 }, { wch: 35 }, { wch: 24 }, { wch: 28 }, { wch: 25 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'DATA_GURU');
+    XLSX.writeFile(wb, 'Data_Guru_Pengawas_SMK_NEGERI_FYJ_CHANNEL.xlsx');
+    showToast(`Seluruh data guru (${rows.length} guru) berhasil diekspor ke Excel (.xlsx)!`, 'success');
+}
+
+function openImportTeachersModal() {
+    parsedTeacherExcelData = [];
+    document.getElementById('importTeacherPreviewArea').style.display = 'none';
+    document.getElementById('btnExecuteTeacherImport').style.display = 'none';
+    const input = document.getElementById('teacherExcelFileInput');
+    if (input) input.value = '';
+    document.getElementById('importTeacherModal').style.display = 'flex';
+}
+function closeImportTeachersModal() {
+    document.getElementById('importTeacherModal').style.display = 'none';
+}
+
+function downloadTeacherExcelTemplate() {
+    const sampleRows = [
+        { 'NO': 1, 'NAMA': 'I Wayan Sukadana, S.Pd.', 'NIP': '19820514 200801 1 012', 'MAPEL': 'Desain Komunikasi Visual', 'JABATAN': 'Guru Produktif DKV' },
+        { 'NO': 2, 'NAMA': 'Ni Made Rai Artini, S.Kom.', 'NIP': '19870921 201101 2 008', 'MAPEL': 'Animasi 2D & 3D', 'JABATAN': 'Wali Kelas / Guru Produktif' }
+    ];
+    const ws = XLSX.utils.json_to_sheet(sampleRows);
+    ws['!cols'] = [{ wch: 6 }, { wch: 35 }, { wch: 24 }, { wch: 28 }, { wch: 25 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'TEMPLATE_GURU');
+    XLSX.writeFile(wb, 'Template_Import_Guru_SMK_NEGERI_FYJ_CHANNEL.xlsx');
+    showToast('Template Excel guru berhasil diunduh.', 'success');
+}
+
+function handleTeacherExcelFileSelected(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
+
+            parsedTeacherExcelData = [];
+            json.forEach(row => {
+                let nama = '', nip = '', mapel = '', jabatan = 'Guru Mata Pelajaran';
+                for (const [key, val] of Object.entries(row)) {
+                    const k = key.trim().toUpperCase();
+                    const v = String(val).trim();
+                    if (k === 'NIP') nip = v;
+                    else if (k.includes('NAMA') || k.includes('GURU')) nama = v;
+                    else if (k.includes('MAPEL') || k.includes('PELAJARAN')) mapel = v;
+                    else if (k.includes('JABATAN') || k.includes('PERAN')) jabatan = v;
+                }
+                if (nama) parsedTeacherExcelData.push({ nama, nip, mapel, jabatan });
+            });
+
+            if (parsedTeacherExcelData.length === 0) {
+                showToast('Tidak ditemukan kolom NAMA pada berkas.', 'danger');
+                return;
+            }
+
+            const tbody = document.getElementById('importTeacherPreviewTableBody');
+            tbody.innerHTML = '';
+            parsedTeacherExcelData.slice(0, 20).forEach((t, i) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td><strong>${t.nama}</strong></td>
+                        <td><code>${t.nip || '-'}</code></td>
+                        <td>${t.mapel || '-'}</td>
+                        <td>${t.jabatan || '-'}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('importTeacherSummaryText').textContent = `Ditemukan ${parsedTeacherExcelData.length} baris guru:`;
+            document.getElementById('importTeacherPreviewArea').style.display = 'block';
+            document.getElementById('btnExecuteTeacherImport').style.display = 'inline-flex';
+            showToast(`${parsedTeacherExcelData.length} guru terbaca dari Excel!`, 'info');
+        } catch (err) {
+            showToast('Gagal membaca berkas: ' + err.message, 'danger');
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+async function executeImportTeachers() {
+    if (!parsedTeacherExcelData || !parsedTeacherExcelData.length) return;
+    const mode = document.querySelector('input[name="import_teacher_mode"]:checked')?.value || 'merge';
+
+    if (mode === 'replace') db.teachers = [];
+    let nextId = (db.teachers || []).reduce((max, t) => Math.max(max, Number(t.id) || 0), 0) + 1;
+
+    let added = 0, updated = 0;
+    parsedTeacherExcelData.forEach(item => {
+        const existing = (db.teachers || []).find(t => 
+            (item.nip && t.nip && String(t.nip) === String(item.nip)) || 
+            (t.nama.toLowerCase() === item.nama.toLowerCase())
+        );
+
+        if (existing) {
+            existing.nama = item.nama || existing.nama;
+            existing.nip = item.nip || existing.nip;
+            existing.mapel = item.mapel || existing.mapel;
+            existing.jabatan = item.jabatan || existing.jabatan;
+            updated++;
+        } else {
+            db.teachers.push({ id: nextId++, nama: item.nama, nip: item.nip, mapel: item.mapel, jabatan: item.jabatan });
+            added++;
+        }
+    });
+
+    const res = await saveAdminDatabase({ teachers: db.teachers });
+    if (res.success) {
+        closeImportTeachersModal();
+        renderTeachersTable();
+        showToast(`Impor Berhasil: ${added} guru baru ditambahkan, ${updated} diperbarui.`, 'success');
+    } else {
+        showToast(res.message, 'danger');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initGuruPage);
+</script>
+</body>
+</html>

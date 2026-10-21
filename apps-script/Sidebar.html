@@ -1,0 +1,69 @@
+<aside class="admin-sidebar" id="adminSidebar">
+    <div>
+        <div class="sidebar-brand-wrapper">
+            <div class="sidebar-brand-icon"><i class="bi bi-shield-check"></i></div>
+            <div class="sidebar-brand-text">
+                <span class="sidebar-brand-title">PANEL SAS</span>
+                <span class="sidebar-brand-sub">ADMIN PORTAL</span>
+            </div>
+        </div>
+
+        <ul class="admin-nav">
+            <li>
+                <a href="javascript:void(0)" onclick="navigateTo('dashboard')" class="admin-nav-item <?= currentPage === 'dashboard' ? 'active' : '' ?>">
+                    <i class="bi bi-grid-fill"></i> Dashboard
+                </a>
+            </li>
+        </ul>
+
+        <div class="admin-nav-category">DATA MASTER</div>
+        <ul class="admin-nav">
+            <li>
+                <a href="javascript:void(0)" onclick="navigateTo('guru')" class="admin-nav-item <?= currentPage === 'guru' ? 'active' : '' ?>">
+                    <i class="bi bi-person-workspace"></i> Data Guru & Pengawas
+                </a>
+            </li>
+            <li>
+                <a href="javascript:void(0)" onclick="navigateTo('siswa')" class="admin-nav-item <?= currentPage === 'siswa' ? 'active' : '' ?>">
+                    <i class="bi bi-people"></i> Data Siswa & Kelas
+                </a>
+            </li>
+        </ul>
+
+        <div class="admin-nav-category">PENCATATAN & DOKUMEN</div>
+        <ul class="admin-nav">
+            <li>
+                <a href="javascript:void(0)" onclick="navigateTo('template')" class="admin-nav-item <?= currentPage === 'template' ? 'active' : '' ?>">
+                    <i class="bi bi-file-earmark-text"></i> Template Ujian
+                </a>
+            </li>
+            <li>
+                <a href="javascript:void(0)" onclick="navigateTo('admin-arsip')" class="admin-nav-item <?= currentPage === 'admin-arsip' ? 'active' : '' ?>">
+                    <i class="bi bi-archive-fill"></i> Arsip Dokumen Ujian
+                </a>
+            </li>
+        </ul>
+
+        <div class="admin-nav-category">PENGATURAN SISTEM</div>
+        <ul class="admin-nav">
+            <li>
+                <a href="javascript:void(0)" onclick="navigateTo('pengaturan')" class="admin-nav-item <?= currentPage === 'pengaturan' ? 'active' : '' ?>">
+                    <i class="bi bi-sliders"></i> Pengaturan Sekolah & Kop
+                </a>
+            </li>
+            <li class="admin-only-menu">
+                <a href="javascript:void(0)" onclick="navigateTo('users')" class="admin-nav-item <?= currentPage === 'users' ? 'active' : '' ?>">
+                    <i class="bi bi-person-badge-fill"></i> Manajemen User
+                </a>
+            </li>
+            <li class="admin-only-menu">
+                <a href="javascript:void(0)" onclick="navigateTo('database')" class="admin-nav-item <?= currentPage === 'database' ? 'active' : '' ?>">
+                    <i class="bi bi-database"></i> Backup & Database
+                </a>
+            </li>
+        </ul>
+    </div>
+    <div style="font-size: 0.78rem; color: #64748B; padding: 12px 10px 0; border-top: 1px solid rgba(255,255,255,0.06); margin-top: 1.5rem;">
+        Sistem SAS v2.5<br><span class="brand-title"><?= schoolSettings.school_name || 'SMK NEGERI FYJ CHANNEL' ?></span>
+    </div>
+</aside>
