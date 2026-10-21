@@ -734,6 +734,38 @@ document.addEventListener('DOMContentLoaded', function() {
     const hiddenFotoBase64 = document.getElementById('fotoKegiatanBase64');
 
     let loadedPhotos = [];
+    let currentPhotoFitMode = 'contain';
+
+    window.changePhotoFitMode = function(mode) {
+        currentPhotoFitMode = mode || 'contain';
+        
+        // Visual style tombol radio pilihan
+        const lblContain = document.getElementById('labelFitContain');
+        const lblFill = document.getElementById('labelFitFill');
+        const lblCover = document.getElementById('labelFitCover');
+
+        if (lblContain) {
+            const isC = currentPhotoFitMode === 'contain';
+            lblContain.style.background = isC ? '#ECFDF5' : '#ffffff';
+            lblContain.style.borderColor = isC ? '#10B981' : '#CBD5E1';
+            lblContain.style.color = isC ? '#047857' : 'var(--text-main)';
+        }
+        if (lblFill) {
+            const isF = currentPhotoFitMode === 'fill';
+            lblFill.style.background = isF ? '#ECFDF5' : '#ffffff';
+            lblFill.style.borderColor = isF ? '#10B981' : '#CBD5E1';
+            lblFill.style.color = isF ? '#047857' : 'var(--text-main)';
+        }
+        if (lblCover) {
+            const isCv = currentPhotoFitMode === 'cover';
+            lblCover.style.background = isCv ? '#ECFDF5' : '#ffffff';
+            lblCover.style.borderColor = isCv ? '#10B981' : '#CBD5E1';
+            lblCover.style.color = isCv ? '#047857' : 'var(--text-main)';
+        }
+
+        renderPhotoThumbnails();
+        renderPhotoGridPreview();
+    };
 
     function compressImageFile(file, maxDimension = 1200, quality = 0.82) {
         return new Promise((resolve) => {
@@ -808,8 +840,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let html = '';
         loadedPhotos.forEach((p, idx) => {
             html += `
-                <div style="position:relative;border:1px solid #cbd5e1;border-radius:6px;overflow:hidden;background:#fff;aspect-ratio:4/3;">
-                    <img src="${p.dataUrl}" style="width:100%;height:100%;object-fit:cover;">
+                <div style="position:relative;border:1px solid #cbd5e1;border-radius:6px;overflow:hidden;background:#ffffff;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;">
+                    <img src="${p.dataUrl}" style="width:100%;height:100%;object-fit:${currentPhotoFitMode};">
                     <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.6);color:#fff;font-size:0.65rem;text-align:center;padding:2px 0;">Foto ${idx+1}</div>
                 </div>
             `;
@@ -833,12 +865,16 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        const fitMode = typeof currentPhotoFitMode !== 'undefined' ? currentPhotoFitMode : 'contain';
+
         let html = '';
         loadedPhotos.forEach((p, idx) => {
             html += `
-                <div style="border: 1px solid #94a3b8; border-radius: 4px; overflow: hidden; background: #fff; text-align: center; padding: 4px;">
-                    <img src="${p.dataUrl}" alt="Bukti Pelaksanaan ${idx+1}" style="width: 100%; height: 160px; object-fit: cover; display: block; border-radius: 2px;">
-                    <div style="font-size: 8.5pt; font-family: 'Times New Roman', serif; margin-top: 4px; color: #000; font-weight: bold;">
+                <div style="border: 1px solid #94a3b8; border-radius: 4px; overflow: hidden; background: #ffffff; text-align: center; padding: 5px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div style="width: 100%; height: 165px; display: flex; align-items: center; justify-content: center; background: #ffffff; border-radius: 2px; overflow: hidden;">
+                        <img src="${p.dataUrl}" alt="Bukti Pelaksanaan ${idx+1}" style="width: 100%; height: 100%; object-fit: ${fitMode}; display: block; margin: 0 auto;">
+                    </div>
+                    <div style="font-size: 8.5pt; font-family: 'Times New Roman', serif; margin-top: 5px; color: #000; font-weight: bold;">
                         Foto ${idx + 1}: Suasana Pelaksanaan Ujian
                     </div>
                 </div>

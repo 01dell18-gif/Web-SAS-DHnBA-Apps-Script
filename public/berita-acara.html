@@ -287,6 +287,30 @@
                             </div>
                         </div>
 
+                        <!-- Pilihan Mode Tampilan Foto Lampiran -->
+                        <div style="margin-top: 10px; background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px;">
+                            <label class="form-label" style="font-size: 0.82rem; font-weight: 700; color: var(--text-heading); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                                <i class="bi bi-aspect-ratio" style="color: var(--primary);"></i> Mode Tampilan Foto di Lampiran Halaman 2:
+                            </label>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <label id="labelFitContain" style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 700; cursor: pointer; background: #ECFDF5; padding: 6px 12px; border-radius: 6px; border: 1.5px solid #10B981; color: #047857;">
+                                    <input type="radio" name="photo_fit_mode" value="contain" checked onchange="changePhotoFitMode(this.value)" style="accent-color: #10B981; cursor: pointer;">
+                                    <span>★ Utuh (Tidak Kepotong)</span>
+                                </label>
+                                <label id="labelFitFill" style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 600; cursor: pointer; background: #ffffff; padding: 6px 12px; border-radius: 6px; border: 1px solid #CBD5E1; color: var(--text-main);">
+                                    <input type="radio" name="photo_fit_mode" value="fill" onchange="changePhotoFitMode(this.value)" style="cursor: pointer;">
+                                    <span>Penuh / Fill Kotak</span>
+                                </label>
+                                <label id="labelFitCover" style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 600; cursor: pointer; background: #ffffff; padding: 6px 12px; border-radius: 6px; border: 1px solid #CBD5E1; color: var(--text-main);">
+                                    <input type="radio" name="photo_fit_mode" value="cover" onchange="changePhotoFitMode(this.value)" style="cursor: pointer;">
+                                    <span>Potong Sisi (Cover)</span>
+                                </label>
+                            </div>
+                            <div class="form-hint" style="margin-top: 6px; font-size: 0.76rem;">
+                                Rekomendasi: <strong>Utuh (Tidak Kepotong)</strong> agar gambar/logo tampil lengkap 100% tanpa terpotong. Pilih <strong>Penuh / Fill Kotak</strong> untuk mengisi kotak secara penuh.
+                            </div>
+                        </div>
+
                         <!-- Wadah Thumbnail Foto yang Dipilih -->
                         <div id="fotoPreviewBox" style="display: none; margin-top: 12px; background: var(--slate-50); padding: 12px; border-radius: var(--radius-md); border: 1.5px dashed var(--slate-300);">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
