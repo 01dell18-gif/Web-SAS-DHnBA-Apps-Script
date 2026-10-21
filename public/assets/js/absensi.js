@@ -251,20 +251,29 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (select) {
                         const curVal = select.value;
                         select.innerHTML = '';
+
+                        // Cari template yang ditandai aktif oleh admin
+                        const activeTpl = tpls.find(t => t.aktif === 1 || t.aktif === true) || tpls[0];
+
                         tpls.forEach(t => {
                             const opt = document.createElement('option');
                             opt.value = t.id;
                             opt.setAttribute('data-nama', t.nama_ujian || '');
                             opt.setAttribute('data-tahun', t.tahun_ajaran || '');
                             opt.setAttribute('data-semester', t.semester || 'Ganjil');
-                            opt.textContent = `${t.nama_ujian} (${t.tahun_ajaran || ''}) - ${t.semester || 'Ganjil'}`;
+                            const isAktif = t.aktif === 1 || t.aktif === true;
+                            opt.textContent = `${t.nama_ujian} (${t.tahun_ajaran || ''}) - ${t.semester || 'Ganjil'}${isAktif ? ' [Aktif]' : ''}`;
                             select.appendChild(opt);
                         });
+
                         if (curVal && tpls.some(t => String(t.id) === String(curVal))) {
                             select.value = curVal;
+                        } else if (activeTpl) {
+                            select.value = activeTpl.id;
                         } else {
                             select.value = tpls[0].id;
                         }
+                        applyExamTemplate(select.value);
                     }
                 }
             })

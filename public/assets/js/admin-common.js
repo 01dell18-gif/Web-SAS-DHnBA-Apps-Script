@@ -113,6 +113,41 @@ async function saveAdminDatabase(payload) {
     }
 }
 
+// 4b. Helper Set Active Exam Template
+async function setActiveExamTemplate(templateId) {
+    const targetId = Number(templateId);
+    try {
+        const res = await fetch('/api/set-active-template', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: targetId })
+        });
+        const json = await res.json();
+        if (json.success) {
+            if (Array.isArray(db.templates)) {
+                db.templates.forEach(t => {
+                    t.aktif = (Number(t.id) === targetId) ? 1 : 0;
+                });
+            }
+            if (!db.settings) db.settings = {};
+            db.settings.active_template_id = targetId;
+            localStorage.setItem('sas_offline_db', JSON.stringify(db));
+            return { success: true, message: json.message, templates: db.templates };
+        }
+        return { success: false, message: json.message || 'Gagal mengaktifkan template' };
+    } catch (e) {
+        if (Array.isArray(db.templates)) {
+            db.templates.forEach(t => {
+                t.aktif = (Number(t.id) === targetId) ? 1 : 0;
+            });
+        }
+        if (!db.settings) db.settings = {};
+        db.settings.active_template_id = targetId;
+        localStorage.setItem('sas_offline_db', JSON.stringify(db));
+        return { success: true, message: 'Template ujian aktif berhasil diperbarui (Mode Lokal).', templates: db.templates };
+    }
+}
+
 // 5. Toast Notification
 function showToast(message, type = 'info') {
     if (typeof window.showNotification === 'function') {

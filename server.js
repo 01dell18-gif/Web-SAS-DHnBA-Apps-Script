@@ -214,7 +214,7 @@ function syncSqlFile(data) {
         // Insert Templates
         if (Array.isArray(data.templates)) {
             data.templates.forEach(t => {
-                lines.push(`INSERT INTO \`exam_templates\` (\`id\`, \`nama_ujian\`, \`tahun_ajaran\`, \`semester\`, \`judul_berita_acara\`, \`redaksi_isi\`, \`aktif\`) VALUES (${t.id}, ${esc(t.nama_ujian)}, ${esc(t.tahun_ajaran)}, ${esc(t.semester || 'Ganjil')}, ${esc(t.judul_berita_acara)}, ${esc(t.redaksi_isi)}, 1);`);
+                lines.push(`INSERT INTO \`exam_templates\` (\`id\`, \`nama_ujian\`, \`tahun_ajaran\`, \`semester\`, \`judul_berita_acara\`, \`redaksi_isi\`, \`aktif\`) VALUES (${t.id}, ${esc(t.nama_ujian)}, ${esc(t.tahun_ajaran)}, ${esc(t.semester || 'Ganjil')}, ${esc(t.judul_berita_acara)}, ${esc(t.redaksi_isi)}, ${t.aktif ? 1 : 0});`);
             });
             lines.push('');
         }
@@ -359,6 +359,46 @@ const server = http.createServer((req, res) => {
         const db = getDatabase();
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(db.templates));
+        return;
+    }
+
+    // 4b. REST API: POST /api/set-active-template (Memilih template ujian yang diaktifkan)
+    if (req.method === 'POST' && pathname === '/api/set-active-template') {
+        readRequestBody(req, (rawBody) => {
+            try {
+                const payload = JSON.parse(rawBody || '{}');
+                const targetId = Number(payload.id);
+                if (!targetId) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: false, message: 'ID template diperlukan.' }));
+                    return;
+                }
+                const db = getDatabase();
+                if (!Array.isArray(db.templates)) db.templates = [];
+                let activatedName = '';
+                db.templates.forEach(t => {
+                    if (Number(t.id) === targetId) {
+                        t.aktif = 1;
+                        activatedName = t.nama_ujian;
+                    } else {
+                        t.aktif = 0;
+                    }
+                });
+                if (!db.settings) db.settings = {};
+                db.settings.active_template_id = targetId;
+                saveDatabase(db);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    success: true,
+                    message: `Template "${activatedName}" berhasil diaktifkan untuk menu Daftar Hadir & Berita Acara!`,
+                    active_id: targetId,
+                    templates: db.templates
+                }));
+            } catch (err) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, message: 'Gagal mengaktifkan template: ' + err.message }));
+            }
+        });
         return;
     }
 

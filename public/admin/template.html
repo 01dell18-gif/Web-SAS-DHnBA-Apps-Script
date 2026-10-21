@@ -112,20 +112,46 @@
                 </button>
             </div>
             <div class="card-body">
+                <!-- BANNER & MENU PILIH TEMPLATE AKTIF -->
+                <div style="background: linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%); border: 1px solid #A7F3D0; border-radius: 10px; padding: 14px 18px; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 42px; height: 42px; border-radius: 10px; background: #10B981; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);">
+                            <i class="bi bi-patch-check-fill"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.76rem; text-transform: uppercase; font-weight: 800; color: #047857; letter-spacing: 0.5px;">
+                                Template Ujian Aktif Saat Ini (Daftar Hadir & Berita Acara)
+                            </div>
+                            <div style="font-size: 1.05rem; font-weight: 800; color: #064E3B; margin-top: 2px;" id="bannerActiveTemplateName">
+                                Memuat...
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <label for="selectActiveTemplateMenu" style="font-size: 0.82rem; font-weight: 700; color: #065F46; margin: 0; white-space: nowrap;">
+                            <i class="bi bi-hand-index-thumb"></i> Pilih Template yang Diaktifkan:
+                        </label>
+                        <select id="selectActiveTemplateMenu" class="form-select form-select-sm" onchange="setActiveTemplate(this.value)" style="min-width: 260px; font-weight: 700; border-color: #10B981; background-color: #ffffff; color: #065F46;">
+                            <option value="" disabled selected>Memuat daftar template...</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="table-responsive">
                     <table class="table" style="font-size: 0.88rem;">
                         <thead>
                             <tr>
                                 <th style="width: 45px;">ID</th>
                                 <th>Nama Ujian Resmi</th>
-                                <th style="width: 120px;">Tahun Ajaran</th>
-                                <th style="width: 100px;">Semester</th>
+                                <th style="width: 110px;">Tahun Ajaran</th>
+                                <th style="width: 90px;">Semester</th>
+                                <th style="width: 130px; text-align: center;">Status Penggunaan</th>
                                 <th>Judul Berita Acara</th>
-                                <th style="text-align: center; width: 180px;">Aksi</th>
+                                <th style="text-align: center; width: 270px;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="templatesHistoryTableBody">
-                            <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">Memuat daftar template...</td></tr>
+                            <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">Memuat daftar template...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -179,6 +205,14 @@
                         <textarea id="tpl_judul" class="form-control" rows="3" oninput="updateEditorPreview()">BERITA ACARA 
 PENYELENGGARAAN SUMATIF AKHIR SEMESTER (SAS) GANJIL
 TAHUN AJARAN [tahun_ajaran]</textarea>
+                    </div>
+
+                    <!-- PILIHAN STATUS TEMPLATE AKTIF -->
+                    <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 10px 14px; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="tpl_is_active" style="width: 1.15rem; height: 1.15rem; cursor: pointer; accent-color: #10B981;">
+                        <label for="tpl_is_active" style="margin: 0; font-size: 0.88rem; font-weight: 700; color: #065F46; cursor: pointer;">
+                            <i class="bi bi-patch-check-fill text-success"></i> Jadikan sebagai Template Ujian Aktif (Otomatis dipilih di menu <em>Daftar Hadir</em> & <em>Berita Acara</em>)
+                        </label>
                     </div>
 
                     <!-- TOGGLE MODE EDIT -->
@@ -341,24 +375,65 @@ function renderTemplatesHistory() {
 
     const curEditingId = document.getElementById('tpl_id')?.value || '';
 
+    // Pastikan setidaknya ada 1 template yang berstatus aktif
+    let activeTpl = (db.templates || []).find(t => t.aktif === 1 || t.aktif === true);
+    if (!activeTpl && db.templates && db.templates.length) {
+        db.templates[0].aktif = 1;
+        activeTpl = db.templates[0];
+    }
+    const activeId = activeTpl ? String(activeTpl.id) : '';
+
+    // Update Banner Info Template Aktif
+    const bannerName = document.getElementById('bannerActiveTemplateName');
+    if (bannerName) {
+        if (activeTpl) {
+            bannerName.innerHTML = `${activeTpl.nama_ujian} <span style="font-size:0.85rem; font-weight:600; opacity:0.85;">(${activeTpl.tahun_ajaran || '-'} - ${activeTpl.semester || 'Ganjil'})</span>`;
+        } else {
+            bannerName.textContent = 'Belum ada template aktif';
+        }
+    }
+
+    // Update Dropdown Menu Pemilihan Template Aktif
+    const selectMenu = document.getElementById('selectActiveTemplateMenu');
+    if (selectMenu) {
+        selectMenu.innerHTML = '';
+        (db.templates || []).forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.id;
+            const isAktif = String(t.id) === activeId;
+            opt.textContent = `${t.nama_ujian} (${t.tahun_ajaran || '-'}) - ${t.semester || 'Ganjil'}${isAktif ? ' ★ (Aktif Saat Ini)' : ''}`;
+            if (isAktif) opt.selected = true;
+            selectMenu.appendChild(opt);
+        });
+    }
+
     (db.templates || []).forEach(t => {
         const isEditing = String(t.id) === String(curEditingId);
+        const isAktif = String(t.id) === activeId;
         tbody.innerHTML += `
-            <tr style="${isEditing ? 'background: #F0FDF4;' : ''}">
+            <tr style="${isAktif ? 'background: #F0FDF4;' : (isEditing ? 'background: #F8FAFC;' : '')}">
                 <td><strong>#${t.id}</strong></td>
                 <td>
                     <strong>${t.nama_ujian || '-'}</strong>
-                    ${isEditing ? '<span class="badge" style="background:#10B981; color:#fff; font-size:0.7rem; margin-left:6px;">Aktif Diedit</span>' : ''}
+                    ${isEditing ? '<span class="badge" style="background:#EEF2FF; color:#4338CA; border:1px solid #C7D2FE; font-size:0.7rem; margin-left:6px;"><i class="bi bi-pencil"></i> Sedang Diedit</span>' : ''}
                 </td>
                 <td><span class="badge" style="background:#EFF6FF; color:#1D4ED8;">${t.tahun_ajaran || '-'}</span></td>
                 <td><span class="badge" style="background:${t.semester === 'Genap' ? '#FAF5FF' : '#FFFBEB'}; color:${t.semester === 'Genap' ? '#7C3AED' : '#B45309'};">${t.semester || 'Ganjil'}</span></td>
-                <td><div style="max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.8rem; color: var(--text-muted);">${(t.judul_berita_acara || '').replace(/\r\n|\r|\n/g, ' ')}</div></td>
                 <td style="text-align: center;">
-                    <div style="display: flex; gap: 4px; justify-content: center;">
-                        <button type="button" class="btn btn-primary btn-sm" onclick="editTemplate(${t.id})" title="Gunakan dan edit template ini">
+                    ${isAktif 
+                        ? '<span class="badge" style="background:#10B981; color:#fff; font-size:0.75rem; font-weight:700; padding: 4px 8px;"><i class="bi bi-check-circle-fill"></i> Aktif Utama</span>' 
+                        : '<span class="badge" style="background:#F1F5F9; color:#64748B; font-size:0.75rem; font-weight:600; padding: 4px 8px;">Tersimpan</span>'}
+                </td>
+                <td><div style="max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.8rem; color: var(--text-muted);">${(t.judul_berita_acara || '').replace(/\r\n|\r|\n/g, ' ')}</div></td>
+                <td style="text-align: center;">
+                    <div style="display: flex; gap: 4px; justify-content: center; flex-wrap: wrap;">
+                        ${isAktif 
+                            ? '<button type="button" class="btn btn-sm" style="background:#10B981; color:#fff; cursor:default; font-size:0.78rem; font-weight:700;" disabled title="Template ini sedang aktif digunakan di Daftar Hadir & Berita Acara"><i class="bi bi-check-circle-fill"></i> Sedang Aktif</button>' 
+                            : `<button type="button" class="btn btn-outline-success btn-sm" style="font-size:0.78rem; font-weight:600;" onclick="setActiveTemplate(${t.id})" title="Aktifkan template ini agar otomatis digunakan di menu Daftar Hadir dan Berita Acara"><i class="bi bi-check2-circle"></i> Aktifkan</button>`}
+                        <button type="button" class="btn btn-primary btn-sm" style="font-size:0.78rem;" onclick="editTemplate(${t.id})" title="Gunakan dan edit template ini di formulir">
                             <i class="bi bi-pencil-square"></i> Gunakan & Edit
                         </button>
-                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteTemplate(${t.id})" title="Hapus template dari database">
+                        <button type="button" class="btn btn-outline-danger btn-sm" style="font-size:0.78rem;" onclick="deleteTemplate(${t.id})" title="Hapus template dari database">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
@@ -366,6 +441,27 @@ function renderTemplatesHistory() {
             </tr>
         `;
     });
+}
+
+async function setActiveTemplate(id) {
+    const targetId = Number(id);
+    const tpl = (db.templates || []).find(t => Number(t.id) === targetId);
+    if (!tpl) return;
+
+    if (typeof setActiveExamTemplate === 'function') {
+        const res = await setActiveExamTemplate(targetId);
+        if (res.success) {
+            renderTemplatesHistory();
+            showToast(`Template "${tpl.nama_ujian}" berhasil diaktifkan untuk menu Daftar Hadir & Berita Acara!`, 'success');
+        } else {
+            showToast(res.message, 'danger');
+        }
+    } else {
+        (db.templates || []).forEach(t => t.aktif = (Number(t.id) === targetId ? 1 : 0));
+        await saveAdminDatabase({ templates: db.templates });
+        renderTemplatesHistory();
+        showToast(`Template "${tpl.nama_ujian}" berhasil diaktifkan untuk menu Daftar Hadir & Berita Acara!`, 'success');
+    }
 }
 
 function editTemplate(id) {
@@ -377,6 +473,8 @@ function editTemplate(id) {
     document.getElementById('tpl_tahun_ajaran').value = t.tahun_ajaran || '';
     document.getElementById('tpl_semester').value = t.semester || 'Ganjil';
     document.getElementById('tpl_judul').value = t.judul_berita_acara || '';
+    const chkActive = document.getElementById('tpl_is_active');
+    if (chkActive) chkActive.checked = Boolean(t.aktif === 1 || t.aktif === true);
 
     const rawHtml = t.redaksi_isi || '';
     document.getElementById('tpl_redaksi').value = rawHtml;
@@ -399,6 +497,8 @@ function createNewTemplate() {
     document.getElementById('tpl_tahun_ajaran').value = db.settings?.academic_year || '2026/2027';
     document.getElementById('tpl_semester').value = 'Ganjil';
     document.getElementById('tpl_judul').value = 'BERITA ACARA\nPENYELENGGARAAN UJIAN BARU\nTAHUN AJARAN [tahun_ajaran]';
+    const chkActive = document.getElementById('tpl_is_active');
+    if (chkActive) chkActive.checked = false;
 
     document.getElementById('tpl_field_pembuka').value = 'Pada hari ini [hari], tanggal [tanggal] ([tanggal_teks]) bulan [bulan] tahun [tahun] ([tahun_teks]):';
     document.getElementById('tpl_field_poin1').value = 'Telah diselenggarakan [nama_ujian] Tahun Ajaran [tahun_ajaran] dari pukul [jam_mulai] sampai dengan pukul [jam_selesai] WITA.';
@@ -618,6 +718,7 @@ async function saveTemplate(e) {
     const judul = document.getElementById('tpl_judul').value.trim();
 
     let existingTpl = tplId ? db.templates.find(t => String(t.id) === String(tplId)) : null;
+    const isActiveChecked = document.getElementById('tpl_is_active')?.checked;
 
     if (existingTpl) {
         existingTpl.nama_ujian = namaUjian;
@@ -625,9 +726,20 @@ async function saveTemplate(e) {
         existingTpl.semester = semester;
         existingTpl.judul_berita_acara = judul;
         existingTpl.redaksi_isi = finalHtml;
+        if (isActiveChecked) {
+            db.templates.forEach(t => t.aktif = 0);
+            existingTpl.aktif = 1;
+            if (!db.settings) db.settings = {};
+            db.settings.active_template_id = existingTpl.id;
+        }
     } else {
         const nextId = (db.templates.reduce((max, t) => Math.max(max, Number(t.id) || 0), 0)) + 1;
-        const newTpl = { id: nextId, nama_ujian: namaUjian, tahun_ajaran: tahunAjaran, semester: semester, judul_berita_acara: judul, redaksi_isi: finalHtml };
+        if (isActiveChecked) {
+            db.templates.forEach(t => t.aktif = 0);
+            if (!db.settings) db.settings = {};
+            db.settings.active_template_id = nextId;
+        }
+        const newTpl = { id: nextId, nama_ujian: namaUjian, tahun_ajaran: tahunAjaran, semester: semester, judul_berita_acara: judul, redaksi_isi: finalHtml, aktif: isActiveChecked ? 1 : 0 };
         db.templates.push(newTpl);
         document.getElementById('tpl_id').value = nextId;
         existingTpl = newTpl;

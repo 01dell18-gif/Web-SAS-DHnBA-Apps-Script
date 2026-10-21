@@ -1741,6 +1741,15 @@
       "redaksi_poin_2": "Telah dibagikan tautan soal ujian online untuk Mata Pelajaran [mata_pelajaran] di ruang [ruang] dengan disaksikan oleh para peserta, serta telah dibagikan lembar blangko berita acara sebanyak [blangko_berita_acara] eksemplar dan blangko daftar hadir sebanyak [blangko_daftar_hadir] eksemplar.",
       "label_catatan": "Catatan selama pelaksanaan ujian (kendala teknis, kejadian khusus, atau keterangan lain):",
       "aktif": 1
+    },
+    {
+      "id": 2,
+      "nama_ujian": "Ujian Sekolah / Uji Kompetensi Keahlian (UKK)",
+      "tahun_ajaran": "2026/2027",
+      "semester": "Genap",
+      "judul_berita_acara": "BERITA ACARA \nPELAKSANAAN UJI KOMPETENSI KEAHLIAN (UKK)\nTAHUN AJARAN [tahun_ajaran]",
+      "redaksi_isi": "<p>Pada hari ini [hari], tanggal [tanggal] ([tanggal_teks]) bulan [bulan] tahun [tahun] ([tahun_teks]):</p>\n<ol style=\"margin-top: 6px; margin-bottom: 12px;\">\n<li style=\"margin-bottom: 8px;\">Telah diselenggarakan [nama_ujian] Tahun Ajaran [tahun_ajaran] dari pukul [jam_mulai] sampai dengan pukul [jam_selesai] WITA.\n<ul style=\"margin-bottom: 6px; margin-left: 20px; list-style-type: disc;\">\n<li>Pada Sekolah:&nbsp;<strong>[sekolah]</strong></li>\n<li>Kelas:&nbsp;<strong>[kelas]</strong></li>\n<li>Mata Pelajaran:&nbsp;<strong>[mata_pelajaran]</strong></li>\n<li>Ruang:&nbsp;<strong>[ruang]</strong></li>\n<li>Jumlah Peserta Seharusnya:&nbsp;<strong>[peserta_seharusnya]</strong>&nbsp;orang</li>\n<li>Jumlah Peserta yang Tidak Hadir:&nbsp;<strong>[peserta_tidak_hadir]</strong>&nbsp;orang</li>\n<li>Jumlah Peserta yang Hadir:&nbsp;<strong>[peserta_hadir]</strong>&nbsp;orang</li>\n</ul>\n</li>\n<li style=\"margin-bottom: 8px;\">Catatan keselamatan kerja dan catatan verifikasi penguji eksternal:[catatan_pelaksanaan]</li>\n<li style=\"margin-bottom: 8px;\">Catatan keselamatan kerja dan catatan verifikasi penguji eksternal:<br><em>[catatan_pelaksanaan]</em></li>\n</ol>\n<p style=\"margin-top: 15px;\">Demikian berita acara pelaksanaan UKK ini dibuat dengan penuh tanggung jawab.</p>\n<p style=\"margin-top: 15px;\"><span style=\"font-size: 14.6667px;\"><br></span></p>\n<p style=\"text-align: center; margin-top: 15px;\"><span style=\"font-size: 14.6667px;\">Yang membuat berita acara :</span></p>",
+      "aktif": 0
     }
   ],
   "settings": {
@@ -1774,7 +1783,8 @@
       "Mapel Pilihan",
       "Seni Budaya",
       "Kreativitas, Inovasi dan Kewirausahaan"
-    ]
+    ],
+    "active_template_id": 1
   },
   "users": [
     {

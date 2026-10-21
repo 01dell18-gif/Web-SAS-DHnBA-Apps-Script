@@ -401,6 +401,34 @@
             });
         }
 
+        // 14e. POST /api/set-active-template
+        if (pathname.includes('/api/set-active-template') && method === 'POST') {
+            const payload = JSON.parse(options.body || '{}');
+            const targetId = Number(payload.id);
+            if (!Array.isArray(db.templates)) db.templates = [];
+            let activatedName = '';
+            db.templates.forEach(t => {
+                if (Number(t.id) === targetId) {
+                    t.aktif = 1;
+                    activatedName = t.nama_ujian;
+                } else {
+                    t.aktif = 0;
+                }
+            });
+            if (!db.settings) db.settings = {};
+            db.settings.active_template_id = targetId;
+            localStorage.setItem('sas_offline_db', JSON.stringify(db));
+            return new Response(JSON.stringify({
+                success: true,
+                message: `Template "${activatedName}" berhasil diaktifkan untuk menu Daftar Hadir & Berita Acara!`,
+                active_id: targetId,
+                templates: db.templates
+            }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
         // 15. POST /api/save-db
         if (pathname.includes('/api/save-db') && method === 'POST') {
             const payload = JSON.parse(options.body || '{}');
