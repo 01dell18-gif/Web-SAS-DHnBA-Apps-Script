@@ -57,12 +57,7 @@
                     </div>
                     <div class="card-body">
                         <div class="form-group">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-                                <label class="form-label" for="selectTemplate" style="margin: 0;">Pilih Template Ujian</label>
-                                <a href="/admin/template.html" target="_blank" style="font-size: 0.78rem; color: var(--primary); font-weight: 600; text-decoration: none;" title="Buka Editor Master Template Ujian di Panel Admin">
-                                    <i class="bi bi-pencil-square"></i> Edit / Kelola Template di Admin
-                                </a>
-                            </div>
+                            <label class="form-label" for="selectTemplate">Pilih Template Ujian</label>
                             <select id="selectTemplate" class="form-select" onchange="applyExamTemplate(this.value)">
                                 <option value="" disabled selected>Memuat daftar template ujian...</option>
                             </select>

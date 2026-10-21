@@ -11,6 +11,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
+const os = require('os');
 
 const PORT = process.env.PORT || 3003;
 const DB_FILE = path.join(__dirname, 'data', 'db.json');
@@ -1064,11 +1065,23 @@ const server = http.createServer((req, res) => {
     });
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`====================================================`);
     console.log(` Generator Absensi & Berita Acara Ujian SAS`);
     console.log(` SMK NEGERI FYJ CHANNEL`);
-    console.log(` Server berjalan aktif di: http://localhost:${PORT}`);
+    console.log(` Server berjalan aktif!`);
+    console.log(` - Akses Lokal (PC ini):     http://localhost:${PORT}`);
+    
+    // Tampilkan IP lokal untuk akses dari perangkat lain (HP / PC lain di LAN)
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+        for (const net of interfaces[name]) {
+            if (net.family === 'IPv4' && !net.internal) {
+                console.log(` - Akses Jaringan/PC Lain:   http://${net.address}:${PORT} (${name})`);
+            }
+        }
+    }
     console.log(` Mode: Standalone Node.js (Zero Dependency)`);
     console.log(`====================================================`);
 });
+
