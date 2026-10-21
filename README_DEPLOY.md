@@ -67,13 +67,16 @@ Berikut adalah rekapitulasi seluruh tombol aksi di aplikasi, fungsinya, dan lemb
 ## 🚀 3. Panduan Deployment Cepat
 
 ### Langkah 1: Buat Google Spreadsheet Baru (Database Aktif)
+
 1. Kunjungi [Google Sheets](https://sheets.new).
 2. Beri nama: `DB_ADMINISTRASI_UJIAN_SMK_FYJ`.
 3. Buka menu **Ekstensi** (*Extensions*) > **Apps Script**.
 4. *Script otomatis mendeteksi spreadsheet yang aktif tanpa perlu input ID Spreadsheet manual.*
 
 ### Langkah 2: Salin Berkas Proyek
+
 Salin seluruh berkas ke editor Apps Script:
+
 - `Code.gs` (Server script)
 - `StyleCSS.html`, `Header.html`, `Sidebar.html`, `AppJS.html`, `PreviewA4CSS.html` (Komponen bersama)
 - `Index.html`, `Absensi.html`, `BeritaAcara.html`, `Arsip.html`, `Login.html` (Publik)
@@ -81,12 +84,14 @@ Salin seluruh berkas ke editor Apps Script:
 - `appsscript.json` (Setelan manifes: timezone `Asia/Makassar`, akses webapp `ANYONE`).
 
 ### Langkah 3: Jalankan Inisialisasi Data Awal (*Seeder*)
+
 1. Pada toolbar atas Apps Script, pilih fungsi **`jalankanIsiDataAwal`** (atau `setupSpreadsheetDatabase`).
 2. Klik tombol **Jalankan** (*Run*).
 3. Setujui dialog izin otorisasi Google (*Review Permissions* > Akun Google > *Advanced* > *Allow*).
 4. Sembilan (9) sheet basis data beserta data awal akan otomatis terbuat.
 
 ### Langkah 4: Terapkan Sebagai Aplikasi Web (*Web App Deployment*)
+
 1. Klik **Terapkan** (*Deploy*) > **Penerapan Baru** (*New deployment*).
 2. Pilih jenis **Aplikasi Web** (*Web app*).
 3. Konfigurasi wajib:
@@ -97,12 +102,14 @@ Salin seluruh berkas ke editor Apps Script:
 ---
 
 ## 🔑 4. Akun & Kredensial Bawaan
+
 - **Super Admin**: Username `admin` / Password `admin123`
 - **Operator**: Username `guru` atau `operator` / Password `guru123` atau `operator123`
 
 ---
 
 ## 🖼️ 5. Aset Bawaan (Default Assets)
+
 - **Logo Sekolah**: `https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI`
 - **Kop Surat**: `https://drive.google.com/thumbnail?id=1Z80pVGJv9v-GFwjE1_kBi_G9uRlR2gN7`
 - **Folder Google Drive**: `https://drive.google.com/drive/folders/19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR` (ID: `19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR`)

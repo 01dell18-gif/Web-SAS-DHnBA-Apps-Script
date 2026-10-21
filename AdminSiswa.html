@@ -263,34 +263,22 @@
 
 <?!= include('AppJS'); ?>
 
+<script id="serverParamsJson" type="application/json"><?!= JSON.stringify(params || {}) ?></script>
 <script>
 
 let db = { classes: [], students: [], teachers: [], templates: [], settings: {}, archives: [], users: [] };
 
 async function loadDatabaseFromAppsScript() {
     try {
-        const res = await callServer('apiGetInitialData');
-        if (res && res.success) {
-            db.classes = res.classes || [];
-            db.templates = res.templates || [];
-            db.subjects = res.subjects || [];
-            db.academic_years = res.academic_years || [];
-            db.teachers = res.teachers || [];
-            db.settings = res.settings || {};
+        if (typeof loadAdminDatabase === 'function') {
+            const loadedDb = await loadAdminDatabase();
+            if (loadedDb) db = loadedDb;
+            return db;
         }
-        const [stRes, arRes, usRes] = await Promise.all([
-            callServer('apiGetStudents'),
-            callServer('apiGetArchives'),
-            callServer('apiGetUsers')
-        ]);
-        db.students = stRes || [];
-        db.archives = arRes || [];
-        db.users = usRes || [];
-        return db;
     } catch(err) {
         console.error('Error loadDatabaseFromAppsScript:', err);
-        return db;
     }
+    return db;
 }
 
 
@@ -303,7 +291,8 @@ async function initSiswaPage() {
     // Cek server params dan URL params jika ada filter kelas bawaan (misal dari tombol Lihat Siswa di Dashboard)
     let initialClassId = '';
     try {
-        const serverParams = <?!= JSON.stringify(params || {}) ?>;
+        const elParams = document.getElementById('serverParamsJson');
+        const serverParams = elParams ? JSON.parse(elParams.textContent || '{}') : {};
         if (serverParams && serverParams.class_id) initialClassId = String(serverParams.class_id);
     } catch (e) {}
     if (!initialClassId) {

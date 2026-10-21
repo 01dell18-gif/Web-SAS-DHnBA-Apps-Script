@@ -122,6 +122,7 @@ erDiagram
 ## 📋 2. Rincian 9 Sheet Database
 
 ### 1. Sheet `Pengaturan`
+
 Menyimpan konfigurasi identitas sekolah, logo, kop surat, semester, dan tahun ajaran aktif.
 
 | Kolom | Tipe Data | Keterangan | Contoh Nilai |
@@ -130,6 +131,7 @@ Menyimpan konfigurasi identitas sekolah, logo, kop surat, semester, dan tahun aj
 | `value` | String / JSON | Nilai konfigurasi / string base64 / JSON array | `SMK NEGERI FYJ CHANNEL` |
 
 **Daftar Kunci Bawaan:**
+
 - `school_name`: Nama resmi sekolah (`SMK NEGERI FYJ CHANNEL`).
 - `school_tagline`: Tagline sekolah (`Generator Administrasi Ujian`).
 - `school_logo`: String URL Thumbnail / Base64 logo resmi sekolah (`https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI`).
@@ -144,6 +146,7 @@ Menyimpan konfigurasi identitas sekolah, logo, kop surat, semester, dan tahun aj
 ---
 
 ### 2. Sheet `Kelas`
+
 Master daftar kelas resmi beserta program keahlian dan tingkat pendidikan.
 
 | Kolom | Tipe Data | Keterangan |
@@ -157,6 +160,7 @@ Master daftar kelas resmi beserta program keahlian dan tingkat pendidikan.
 ---
 
 ### 3. Sheet `Siswa`
+
 Master data peserta didik yang terdaftar per kelas.
 
 | Kolom | Tipe Data | Keterangan |
@@ -169,6 +173,7 @@ Master data peserta didik yang terdaftar per kelas.
 ---
 
 ### 4. Sheet `Guru`
+
 Master data dewan guru dan pengawas ujian sekolah.
 
 | Kolom | Tipe Data | Keterangan |
@@ -183,6 +188,7 @@ Master data dewan guru dan pengawas ujian sekolah.
 ---
 
 ### 5. Sheet `MataPelajaran`
+
 Daftar mata pelajaran resmi yang diujikan di sekolah. Dikelola melalui **Textarea** di menu Pengaturan Sekolah (satu baris untuk setiap mapel).
 
 | Kolom | Tipe Data | Keterangan |
@@ -193,6 +199,7 @@ Daftar mata pelajaran resmi yang diujikan di sekolah. Dikelola melalui **Textare
 ---
 
 ### 6. Sheet `TahunAjaran`
+
 Daftar tahun ajaran akademik yang tersedia. Dikelola melalui **Textarea** di menu Pengaturan Sekolah (satu baris untuk setiap tahun, contoh: `2026/2027`).
 
 | Kolom | Tipe Data | Keterangan |
@@ -203,6 +210,7 @@ Daftar tahun ajaran akademik yang tersedia. Dikelola melalui **Textarea** di men
 ---
 
 ### 7. Sheet `TemplateUjian`
+
 Template redaksi format Berita Acara Ujian.
 
 | Kolom | Tipe Data | Keterangan |
@@ -222,6 +230,7 @@ Template redaksi format Berita Acara Ujian.
 ---
 
 ### 8. Sheet `ArsipDokumen`
+
 Penyimpanan riwayat dokumen yang telah dicetak atau diunduh sebagai PDF resmi.
 
 | Kolom | Tipe Data | Keterangan |
@@ -252,6 +261,7 @@ Penyimpanan riwayat dokumen yang telah dicetak atau diunduh sebagai PDF resmi.
 ---
 
 ### 9. Sheet `Users`
+
 Akun pengguna yang memiliki otorisasi masuk ke Panel Administrator.
 
 | Kolom | Tipe Data | Keterangan |
