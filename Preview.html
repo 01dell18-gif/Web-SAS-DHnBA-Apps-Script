@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pratinjau Dokumen Ujian A4 - <?= (settings && settings.nama_sekolah) ? settings.nama_sekolah : 'SMK NEGERI FYJ Channel' ?></title>
+    <?!= include('StyleCSS'); ?>
+    <?!= include('PreviewA4CSS'); ?>
+    <style>
+        .floating-preview-toolbar {
+            position: fixed;
+            top: 15px;
+            right: 20px;
+            z-index: 999999;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 0.5rem 0.85rem;
+            display: flex;
+            gap: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        @media print {
+            .floating-preview-toolbar { display: none !important; }
+        }
+    </style>
+</head>
+<body style="background: #F1F5F9; padding: 1.5rem 0;">
+
+<!-- Floating Toolbar -->
+<div class="floating-preview-toolbar">
+    <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
+        <i class="bi bi-printer"></i> Cetak Dokumen / Simpan PDF
+    </button>
+    <button type="button" class="btn btn-secondary btn-sm" onclick="window.close()">
+        <i class="bi bi-x-lg"></i> Tutup
+    </button>
+</div>
+
+<div class="a4-wrapper" id="previewStandaloneContainer">
+    <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+        <i class="bi bi-arrow-repeat spin" style="font-size: 2rem;"></i><br><br>Memuat dokumen cetak A4...
+    </div>
+</div>
+
+<?!= include('AppJS'); ?>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var serverType = '<?= (params && params.type) ? params.type : "" ?>';
+    var serverId = '<?= (params && params.id) ? params.id : "" ?>';
+    var urlParams = new URLSearchParams(window.location.search);
+    var type = serverType || urlParams.get('type') || 'absensi';
+    var id = serverId || urlParams.get('id');
+
+    google.script.run
+        .withSuccessHandler(function(data) {
+            window.AppStore.data = data;
+            renderDocument(type, id);
+        })
+        .apiGetInitialData();
+});
+
+function renderDocument(type, id) {
+    var container = document.getElementById('previewStandaloneContainer');
+    var settings = (window.AppStore.data && window.AppStore.data.settings) || {};
+    var logoUrl = settings.logo_path || '';
+
+    var kopHtml = '<div class="kop-surat">' +
+        '<div class="kop-logo"><img src="' + logoUrl + '"></div>' +
+        '<div class="kop-text">' +
+        '<div class="kop-line-1">' + (settings.kop_baris_1 || 'PEMERINTAH PROVINSI FYJ') + '</div>' +
+        '<div class="kop-line-2">' + (settings.kop_baris_2 || 'DINAS PENDIDIKAN KEPEMUDAAN DAN OLAHRAGA') + '</div>' +
+        '<div class="kop-line-3">' + (settings.kop_baris_3 || 'SMK NEGERI FYJ Channel') + '</div>' +
+        '<div class="kop-contact">' + (settings.kop_telepon || '') + ' &bull; ' + (settings.kop_website || '') + '</div>' +
+        '</div></div>';
+
+    if (type === 'absensi') {
+        var rec = (window.AppStore.data.absensi || []).find(function(a) { return String(a.id) === String(id); });
+        if (!rec) {
+            container.innerHTML = '<div class="alert alert-danger" style="margin-top: 3rem;">Berkas Daftar Hadir tidak ditemukan.</div>';
+            return;
+        }
+
+        var students = [];
+        try {
+            students = typeof rec.data_siswa === 'string' ? JSON.parse(rec.data_siswa) : rec.data_siswa;
+        } catch (e) {}
+
+        var rowsHtml = '';
+        students.forEach(function(s, idx) {
+            var num = idx + 1;
+            var sign = (num % 2 === 1) ? num + '. .............' : '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + num + '. .............';
+            rowsHtml += '<tr>' +
+                '<td style="text-align: center; padding: 4px;">' + num + '</td>' +
+                '<td style="text-align: center; padding: 4px;">' + (s.nis || '-') + '</td>' +
+                '<td style="padding: 4px;">' + s.nama + '</td>' +
+                '<td style="text-align: center; padding: 4px;">' + s.status + '</td>' +
+                '<td style="padding: 4px; font-size: 8.5pt;">' + sign + '</td>' +
+                '</tr>';
+        });
+
+        var signImg1 = rec.ttd_pengawas_1 ? '<img src="' + rec.ttd_pengawas_1 + '" style="max-height: 55px;">' : '';
+        var signImg2 = rec.ttd_pengawas_2 ? '<img src="' + rec.ttd_pengawas_2 + '" style="max-height: 55px;">' : '';
+
+        var html = '<div class="a4-page">' +
+            kopHtml +
+            '<div style="text-align: center; margin-bottom: 12px;">' +
+            '<h2 style="font-size: 13pt; font-weight: bold; margin: 0; text-transform: uppercase;">DAFTAR HADIR PESERTA</h2>' +
+            '<h3 style="font-size: 11pt; font-weight: bold; margin: 2px 0 0 0; text-transform: uppercase;">' + (rec.nama_ujian || 'SUMATIF AKHIR SEMESTER').toUpperCase() + '</h3>' +
+            '<div style="font-size: 11pt; font-weight: bold; text-transform: uppercase;">TAHUN AJARAN ' + (rec.tahun_ajaran || '2026/2027') + '</div>' +
+            '</div>' +
+            '<table style="width: 100%; font-size: 10pt; margin-bottom: 10px;">' +
+            '<tr><td style="width:18%; font-weight:bold;">Mata Pelajaran</td><td style="width:2%;">:</td><td style="width:40%; font-weight:bold;">' + rec.mata_pelajaran + '</td>' +
+            '<td style="width:15%; font-weight:bold;">Tanggal</td><td style="width:2%;">:</td><td>' + rec.tanggal_ujian + '</td></tr>' +
+            '<tr><td style="font-weight:bold;">Kelas</td><td>:</td><td style="font-weight:bold;">' + rec.nama_kelas + '</td>' +
+            '<td style="font-weight:bold;">Ruang / Sesi</td><td>:</td><td>' + rec.ruang + ' / Sesi ' + rec.sesi + '</td></tr>' +
+            '</table>' +
+            '<table class="table-preview-a4" style="width: 100%; border-collapse: collapse; font-size: 9.5pt; margin-bottom: 12px;" border="1">' +
+            '<thead><tr style="background:#f1f5f9; text-align:center;"><th style="width:32px;">No</th><th style="width:80px;">NIS</th><th>Nama Siswa</th><th style="width:75px;">Kehadiran</th><th style="width:100px;">Tanda Tangan</th></tr></thead>' +
+            '<tbody>' + rowsHtml + '</tbody>' +
+            '</table>' +
+            '<table style="width: 100%; font-size: 9.5pt; border-collapse: collapse; margin-bottom: 18px;" border="1">' +
+            '<tr style="background:#f8fafc; font-weight:bold; text-align:center;"><td>H</td><td>D</td><td>I</td><td>S</td><td>A</td><td style="background:#e2e8f0;">Total</td></tr>' +
+            '<tr style="text-align:center; font-weight:bold;"><td>' + (rec.peserta_hadir || 0) + '</td><td>' + (rec.peserta_dispensasi || 0) + '</td><td>' + (rec.peserta_izin || 0) + '</td><td>' + (rec.peserta_sakit || 0) + '</td><td>' + (rec.peserta_tidak_hadir || 0) + '</td><td style="background:#f1f5f9;">' + (rec.total_peserta || 0) + '</td></tr>' +
+            '</table>' +
+            '<div style="display: flex; justify-content: space-between; font-size: 10pt; margin-top: 15px;">' +
+            '<div style="width: 45%; text-align: center;"><div>Pengawas 1,</div><div style="height: 60px; display: flex; align-items: center; justify-content: center;">' + signImg1 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (rec.nama_pengawas_1 || '( ........................................ )') + '</div><div style="font-size: 8.5pt;">NIP. ' + (rec.nip_pengawas_1 || '-') + '</div></div>' +
+            '<div style="width: 45%; text-align: center;"><div>Pengawas 2,</div><div style="height: 60px; display: flex; align-items: center; justify-content: center;">' + signImg2 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (rec.nama_pengawas_2 || '( ........................................ )') + '</div><div style="font-size: 8.5pt;">NIP. ' + (rec.nip_pengawas_2 || '-') + '</div></div>' +
+            '</div>' +
+            '</div>';
+
+        container.innerHTML = html;
+
+    } else {
+        // Berita Acara (2 Halaman)
+        var recBA = (window.AppStore.data.berita_acara || []).find(function(b) { return String(b.id) === String(id); });
+        if (!recBA) {
+            container.innerHTML = '<div class="alert alert-danger" style="margin-top: 3rem;">Berkas Berita Acara tidak ditemukan.</div>';
+            return;
+        }
+
+        var photos = [];
+        try {
+            photos = typeof recBA.foto_dokumentasi === 'string' ? JSON.parse(recBA.foto_dokumentasi) : recBA.foto_dokumentasi;
+        } catch (e) {}
+
+        var signImg1 = recBA.ttd_pengawas_1 ? '<img src="' + recBA.ttd_pengawas_1 + '" style="max-height: 55px;">' : '';
+        var signImg2 = recBA.ttd_pengawas_2 ? '<img src="' + recBA.ttd_pengawas_2 + '" style="max-height: 55px;">' : '';
+
+        var redaksi = '<p>Pada hari ini, tanggal <strong>' + (recBA.tanggal_ujian || '-') + '</strong>:</p>' +
+            '<ol style="margin-top: 6px; margin-bottom: 12px; padding-left: 20px;">' +
+            '<li style="margin-bottom: 8px;">Telah diselenggarakan <strong>' + recBA.nama_ujian + '</strong> Tahun Ajaran <strong>' + recBA.tahun_ajaran + '</strong> dari pukul <strong>' + recBA.jam_mulai + '</strong> sampai dengan pukul <strong>' + recBA.jam_selesai + '</strong> WITA.' +
+            '<ul style="margin-top: 4px; margin-bottom: 6px; margin-left: 18px; list-style-type: disc;">' +
+            '<li>Pada Sekolah: <strong>SMK NEGERI FYJ Channel</strong></li>' +
+            '<li>Kelas: <strong>' + recBA.nama_kelas + '</strong></li>' +
+            '<li>Mata Pelajaran: <strong>' + recBA.mata_pelajaran + '</strong></li>' +
+            '<li>Ruang: <strong>' + recBA.ruang + '</strong></li>' +
+            '<li>Jumlah Peserta Seharusnya: <strong>' + recBA.peserta_seharusnya + '</strong> orang</li>' +
+            '<li>Jumlah Peserta yang Tidak Hadir: <strong>' + recBA.peserta_tidak_hadir + '</strong> orang</li>' +
+            '<li>Jumlah Peserta yang Hadir: <strong>' + recBA.peserta_hadir + '</strong> orang</li>' +
+            '</ul>' +
+            '</li>' +
+            '<li style="margin-bottom: 8px;">Telah mengisi lembar blangko berita acara sebanyak <strong>' + (recBA.blangko_berita_acara || 1) + '</strong> eksemplar dan blangko daftar hadir sebanyak <strong>' + (recBA.blangko_daftar_hadir || 1) + '</strong> eksemplar, untuk Mata Pelajaran <strong>' + recBA.mata_pelajaran + '</strong> di ruang <strong>' + recBA.ruang + '</strong> dan kelas <strong>' + recBA.nama_kelas + '</strong> dengan disaksikan oleh para peserta.</li>' +
+            '<li style="margin-bottom: 8px;">Catatan selama pelaksanaan ujian:<br><em>' + (recBA.catatan_pelaksanaan || 'Nihil') + '</em></li>' +
+            '</ol>' +
+            '<p style="margin-top: 15px;">Demikian Berita Acara ini dibuat dengan sesungguhnya.</p>';
+
+        var photosHtml = '';
+        for (var p = 0; p < 4; p++) {
+            if (photos[p]) {
+                photosHtml += '<div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px; text-align: center; height: 180px; background: #ffffff;">' +
+                    '<img src="' + photos[p] + '" style="width: 100%; height: 150px; object-fit: cover; border-radius: 4px;">' +
+                    '<div style="font-size: 8.5pt; color: #475569; margin-top: 4px; font-weight: 600;">Dokumentasi ' + (p + 1) + '</div>' +
+                    '</div>';
+            } else {
+                photosHtml += '<div style="border: 1px dashed #cbd5e1; border-radius: 6px; padding: 6px; text-align: center; height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8fafc;">' +
+                    '<span style="font-size: 9pt; color: #94a3b8;">Foto Dokumentasi ' + (p + 1) + '</span>' +
+                    '</div>';
+            }
+        }
+
+        var html = '<!-- HALAMAN 1 -->' +
+            '<div class="a4-page">' +
+            kopHtml +
+            '<div style="text-align: center; margin-bottom: 14px;">' +
+            '<h2 style="font-size: 13pt; font-weight: bold; margin: 0; text-transform: uppercase;">BERITA ACARA</h2>' +
+            '<h3 style="font-size: 11pt; font-weight: bold; margin: 2px 0 0 0; text-transform: uppercase;">' + (recBA.nama_ujian || 'PENYELENGGARAAN SUMATIF AKHIR SEMESTER').toUpperCase() + '</h3>' +
+            '<div style="font-size: 11pt; font-weight: bold; text-transform: uppercase;">TAHUN AJARAN ' + (recBA.tahun_ajaran || '2026/2027') + '</div>' +
+            '</div>' +
+            '<div style="font-size: 11pt; line-height: 1.5; text-align: justify; margin-bottom: 20px;">' + redaksi + '</div>' +
+            '<div style="text-align: center; margin-top: 20px; font-size: 11pt;"><div>Yang membuat berita acara :</div></div>' +
+            '<div style="display: flex; justify-content: space-between; font-size: 10.5pt; margin-top: 15px;">' +
+            '<div style="width: 45%; text-align: center;"><div>Pengawas 1,</div><div style="height: 60px; display: flex; align-items: center; justify-content: center;">' + signImg1 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (recBA.nama_pengawas_1 || '( ........................................ )') + '</div><div style="font-size: 9pt;">NIP. ' + (recBA.nip_pengawas_1 || '-') + '</div></div>' +
+            '<div style="width: 45%; text-align: center;"><div>Pengawas 2,</div><div style="height: 60px; display: flex; align-items: center; justify-content: center;">' + signImg2 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (recBA.nama_pengawas_2 || '( ........................................ )') + '</div><div style="font-size: 9pt;">NIP. ' + (recBA.nip_pengawas_2 || '-') + '</div></div>' +
+            '</div>' +
+            '</div>' +
+
+            '<!-- HALAMAN 2 -->' +
+            '<div class="a4-page">' +
+            kopHtml +
+            '<div style="text-align: center; margin-bottom: 15px;">' +
+            '<h2 style="font-size: 12pt; font-weight: bold; margin: 0; text-transform: uppercase;">LAMPIRAN BUKTI DOKUMENTASI PELAKSANAAN UJIAN</h2>' +
+            '<div style="font-size: 10pt; color: #475569; margin-top: 3px;">Foto Bukti Pengawasan & Kegiatan Ruangan Ujian</div>' +
+            '</div>' +
+            '<table style="width: 100%; font-size: 10pt; margin-bottom: 15px;">' +
+            '<tr><td style="width:20%; font-weight:bold;">Mata Pelajaran</td><td style="width:2%;">:</td><td style="width:38%;">' + recBA.mata_pelajaran + '</td><td style="width:15%; font-weight:bold;">Tanggal</td><td style="width:2%;">:</td><td>' + recBA.tanggal_ujian + '</td></tr>' +
+            '<tr><td style="font-weight:bold;">Kelas</td><td>:</td><td>' + recBA.nama_kelas + '</td><td style="font-weight:bold;">Ruang</td><td>:</td><td>' + recBA.ruang + '</td></tr>' +
+            '</table>' +
+            '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px;">' + photosHtml + '</div>' +
+            '<div style="display: flex; justify-content: space-between; font-size: 10pt; margin-top: 20px;">' +
+            '<div style="width: 45%; text-align: center;"><div>Pengawas 1,</div><div style="height: 55px; display: flex; align-items: center; justify-content: center;">' + signImg1 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (recBA.nama_pengawas_1 || '( ........................................ )') + '</div></div>' +
+            '<div style="width: 45%; text-align: center;"><div>Pengawas 2,</div><div style="height: 55px; display: flex; align-items: center; justify-content: center;">' + signImg2 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (recBA.nama_pengawas_2 || '( ........................................ )') + '</div></div>' +
+            '</div>' +
+            '</div>';
+
+        container.innerHTML = html;
+    }
+}
+</script>
+</body>
+</html>

@@ -3,441 +3,242 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manajemen User - <?= schoolSettings.school_name || 'SMK NEGERI FYJ CHANNEL' ?></title>
+    <title>Manajemen User - <?= (settings && settings.nama_sekolah) ? settings.nama_sekolah : 'SMK NEGERI FYJ Channel' ?></title>
     <?!= include('StyleCSS'); ?>
-    <?!= include('PreviewA4CSS'); ?>
 </head>
 <body>
+<?!= include('Header'); ?>
 
-<div class="admin-layout">
-    <!-- 1. SIDEBAR DARK MODERN (SEJAJAR DENGAN TOPBAR) -->
+<div class="admin-sidebar-layout">
     <?!= include('Sidebar'); ?>
-
-    <!-- 2. WRAPPER UTAMA KANAN: TOPBAR DI ATAS + CONTENT DI BAWAH -->
-    <div class="admin-main-wrapper">
-        <?!= include('Header'); ?>
-
-        <!-- MAIN CONTENT -->
-        <main class="admin-content">
-        <div class="card">
-            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <div>
-                    <span class="card-title" style="margin: 0;"><i class="bi bi-person-badge-fill"></i> Manajemen User & Hak Akses</span>
-                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
-                        Kelola akun operator dan administrator yang memiliki otorisasi masuk ke Panel Administrator SAS.
-                    </div>
-                </div>
-                <div style="display: flex; gap: 8px;">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="fetchUsers()"><i class="bi bi-arrow-clockwise"></i> Segarkan</button>
-                    <button type="button" class="btn btn-primary btn-sm" onclick="openCreateUserModal()"><i class="bi bi-person-plus-fill"></i> Tambah User Baru</button>
-                </div>
+    <main class="admin-main">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-heading); margin: 0;">Manajemen Pengguna (RBAC)</h1>
+                <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Kelola hak akses akun Administrator dan Operator sistem SAS</p>
             </div>
-
-            <div class="card-body">
-                <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-heading);" id="userCountSummary">
-                        Total: 0 Pengguna Terdaftar
-                    </span>
-                    <div style="position: relative; max-width: 280px; width: 100%;">
-                        <input type="text" id="searchUserInput" class="form-control form-control-sm" placeholder="Cari username atau nama..." oninput="renderUsersTable()">
-                    </div>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table" style="font-size: 0.88rem;">
-                        <thead>
-                            <tr>
-                                <th style="width: 45px;">No</th>
-                                <th>Username</th>
-                                <th>Nama Lengkap</th>
-                                <th style="width: 180px;">Password</th>
-                                <th style="width: 140px;">Hak Akses / Peran</th>
-                                <th style="width: 160px;">Tanggal Dibuat</th>
-                                <th style="text-align: center; width: 120px;">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="usersTableBody">
-                            <tr>
-                                <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-                                    <i class="bi bi-hourglass-split" style="font-size: 2rem; display: block; margin-bottom: 6px; opacity: 0.4;"></i>
-                                    Memuat data pengguna...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button type="button" class="btn btn-primary btn-sm" onclick="openUserModal()">
+                    <i class="bi bi-person-plus"></i> Tambah Pengguna
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="exportUsersExcel()">
+                    <i class="bi bi-file-earmark-excel"></i> Ekspor Excel
+                </button>
             </div>
         </div>
-        </main>
-    </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title"><i class="bi bi-shield-lock"></i> Daftar Akun Pengguna Terdaftar</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table" style="font-size: 0.875rem;">
+                    <thead>
+                        <tr>
+                            <th style="width: 35px;">No</th>
+                            <th>Username</th>
+                            <th>Nama Lengkap</th>
+                            <th>Peran (Role)</th>
+                            <th>Password</th>
+                            <th style="text-align: center; width: 120px;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableUsersBody">
+                        <tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);"><i class="bi bi-arrow-repeat spin"></i> Memuat data user...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
 </div>
 
-<!-- MODAL TAMBAH / EDIT USER -->
-<div id="userModal" class="modal-overlay" style="display: none;">
-    <div class="modal-card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
-            <h3 id="userModalTitle" style="font-size: 1.15rem; margin: 0;">Tambah User Pengguna</h3>
-            <button type="button" onclick="closeUserModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+<!-- Modal Form User -->
+<div id="modalFormUser" class="custom-modal" style="display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6); z-index: 999999; align-items: center; justify-content: center;">
+    <div style="background: #ffffff; width: 90%; max-width: 460px; border-radius: 14px; padding: 1.5rem; box-shadow: 0 20px 45px rgba(0,0,0,0.25);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3 id="modalUserTitle" style="font-size: 1.15rem; font-weight: 700; margin: 0;">Tambah Pengguna</h3>
+            <button type="button" onclick="closeUserModal()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:#94a3b8;">&times;</button>
         </div>
-        <form id="userForm" onsubmit="handleSaveUser(event)">
-            <input type="hidden" id="user_id">
-            
+        <form id="formUserInput" onsubmit="handleSaveUser(event)">
+            <input type="hidden" id="user_id" value="">
             <div class="form-group">
-                <label class="form-label">Username <span class="required">*</span></label>
-                <input type="text" id="user_username" class="form-control" placeholder="Contoh: operator1" required autocomplete="off">
-                <div class="form-hint">Digunakan saat proses login. Huruf kecil, angka, atau garis bawah tanpa spasi.</div>
+                <label class="form-label" for="user_username">Username <span class="required">*</span></label>
+                <input type="text" id="user_username" class="form-control" placeholder="Contoh: operator1" required>
             </div>
-
             <div class="form-group">
-                <label class="form-label">Nama Lengkap Pengguna <span class="required">*</span></label>
-                <div style="position: relative;">
-                    <input type="text" id="user_nama" class="form-control" list="userGuruDatalist" placeholder="Ketik atau pilih dari Master Guru..." required autocomplete="off">
-                    <datalist id="userGuruDatalist"></datalist>
-                </div>
-                <div class="form-hint">Dapat diketik manual secara bebas atau dipilih dari Master Data Guru resmi.</div>
+                <label class="form-label" for="user_nama">Nama Lengkap <span class="required">*</span></label>
+                <input type="text" id="user_nama" class="form-control" placeholder="Contoh: Budi Santoso" required>
             </div>
-
             <div class="form-group">
-                <label class="form-label">Peran / Hak Akses <span class="required">*</span></label>
-                <select id="user_role" class="form-select" required>
+                <label class="form-label" for="user_role">Peran (Hak Akses)</label>
+                <select id="user_role" class="form-select">
+                    <option value="operator">Operator (Operasional Ujian)</option>
                     <option value="admin">Administrator (Akses Penuh)</option>
-                    <option value="operator">Operator Ujian (Kelola Data & Dokumen)</option>
                 </select>
             </div>
-
             <div class="form-group">
-                <label class="form-label" id="userPasswordLabel">Password <span class="required" id="userPassRequiredStar">*</span></label>
-                <div style="position: relative;">
-                    <input type="password" id="user_password" class="form-control" placeholder="Ketik kata sandi..." autocomplete="new-password">
-                    <button type="button" id="btnToggleUserPass" onclick="toggleUserPasswordVisibility()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1.1rem; padding: 4px;" title="Lihat / Sembunyikan Password">
-                        <i class="bi bi-eye"></i>
-                    </button>
-                </div>
-                <div class="form-hint" id="userPassHint">Minimal 4 karakter.</div>
+                <label class="form-label" for="user_password">Password</label>
+                <input type="text" id="user_password" class="form-control" placeholder="Masukkan password (kosongkan jika tidak diubah)">
             </div>
-
-            <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 1.75rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
                 <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Batal</button>
-                <button type="submit" class="btn btn-primary" id="btnSubmitUser"><i class="bi bi-check2"></i> Simpan User</button>
+                <button type="submit" id="btnSaveUser" class="btn btn-primary">Simpan User</button>
             </div>
         </form>
     </div>
 </div>
 
-
-
+<?!= include('Modals'); ?>
 <?!= include('AppJS'); ?>
 
 <script>
+var usersList = [];
 
-let db = { classes: [], students: [], teachers: [], templates: [], settings: {}, archives: [], users: [] };
+document.addEventListener('DOMContentLoaded', function() {
+    loadUsersData();
+});
 
-async function loadDatabaseFromAppsScript() {
-    try {
-        const res = await callServer('apiGetInitialData');
-        if (res && res.success) {
-            db.classes = res.classes || [];
-            db.templates = res.templates || [];
-            db.subjects = res.subjects || [];
-            db.academic_years = res.academic_years || [];
-            db.teachers = res.teachers || [];
-            db.settings = res.settings || {};
-        }
-        const [stRes, arRes, usRes] = await Promise.all([
-            callServer('apiGetStudents'),
-            callServer('apiGetArchives'),
-            callServer('apiGetUsers')
-        ]);
-        db.students = stRes || [];
-        db.archives = arRes || [];
-        db.users = usRes || [];
-        return db;
-    } catch(err) {
-        console.error('Error loadDatabaseFromAppsScript:', err);
-        return db;
-    }
+function loadUsersData() {
+    google.script.run
+        .withSuccessHandler(function(data) {
+            window.AppStore.data = data;
+            usersList = data.users || [];
+            renderUsersTable(usersList);
+        })
+        .apiGetInitialData();
 }
 
-
-let usersList = [];
-
-async function fetchUsers() {
-    try {
-        const res = await callServer('apiGetUsers');
-        if (Array.isArray(res) && res.length) {
-            usersList = res;
-        } else if (db && Array.isArray(db.users) && db.users.length) {
-            usersList = db.users;
-        }
-    } catch (e) {
-        if (db && Array.isArray(db.users)) {
-            usersList = db.users;
-        }
-    }
-
-    if (!Array.isArray(usersList) || usersList.length === 0) {
-        usersList = [
-            { id: 1, username: 'admin', nama: 'Administrator Utama', role: 'admin', created_at: '2025-01-01' }
-        ];
-    }
-
-    renderUsersTable();
-}
-
-function renderUsersTable() {
-    const tbody = document.getElementById('usersTableBody');
-    if (!tbody) return;
-
-    const search = (document.getElementById('searchUserInput')?.value || '').toLowerCase().trim();
-    let filtered = usersList;
-
-    if (search) {
-        filtered = filtered.filter(u => 
-            (u.username && u.username.toLowerCase().includes(search)) ||
-            (u.nama && u.nama.toLowerCase().includes(search)) ||
-            (u.role && u.role.toLowerCase().includes(search))
-        );
-    }
-
-    document.getElementById('userCountSummary').textContent = `Total: ${filtered.length} Pengguna Terdaftar`;
-
-    if (filtered.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-                    <i class="bi bi-people" style="font-size: 2rem; display: block; margin-bottom: 6px; opacity: 0.4;"></i>
-                    Tidak ada pengguna yang cocok dengan pencarian.
-                </td>
-            </tr>
-        `;
+function renderUsersTable(users) {
+    var tbody = document.getElementById('tableUsersBody');
+    if (!users || users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">Belum ada akun pengguna.</td></tr>';
         return;
     }
 
-    let html = '';
-    filtered.forEach((user, idx) => {
-        const isMasterAdmin = user.username === 'admin';
-        const roleBadge = user.role === 'admin' 
-            ? `<span class="badge" style="background:#EEF2FF; color:#4338CA; font-weight:700;"><i class="bi bi-shield-lock-fill"></i> Admin</span>`
-            : `<span class="badge" style="background:#F0FDF4; color:#166534; font-weight:700;"><i class="bi bi-person-gear"></i> Operator</span>`;
+    var html = '';
+    users.forEach(function(u, idx) {
+        var roleBadge = (u.role === 'admin') ? '<span class="badge-role-admin">👑 Admin</span>' : '<span class="badge-role-operator">🛡️ Operator</span>';
+        var pwPlain = u.password_plain || '******';
 
-        const createdStr = user.created_at ? new Date(user.created_at).toLocaleDateString('id-ID', { dateStyle: 'medium' }) : '-';
-
-        html += `
-            <tr>
-                <td>${idx + 1}</td>
-                <td>
-                    <strong><i class="bi bi-person-fill" style="color: var(--primary);"></i> ${user.username}</strong>
-                    ${isMasterAdmin ? ' <span style="font-size: 0.72rem; color: #D97706; font-weight: 700;">(Akun Utama)</span>' : ''}
-                </td>
-                <td><strong>${user.nama || '-'}</strong></td>
-                <td>
-                    <div style="display: inline-flex; align-items: center; gap: 8px;">
-                        <span id="userPassText_${user.id}" data-masked="1" style="font-family: monospace; font-size: 0.95rem; font-weight: 600; letter-spacing: 2px;">••••••••</span>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleRowPassword(${user.id})" title="Tampilkan / Sembunyikan Password" style="padding: 2px 7px; font-size: 0.75rem;">
-                            <i id="userPassEye_${user.id}" class="bi bi-eye"></i>
-                        </button>
-                    </div>
-                </td>
-                <td>${roleBadge}</td>
-                <td style="font-size: 0.82rem; color: var(--text-muted);">${createdStr}</td>
-                <td style="text-align: center;">
-                    <div style="display: flex; gap: 4px; justify-content: center;">
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="openEditUserModal(${user.id})" title="Edit User">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        ${isMasterAdmin ? `
-                            <button type="button" class="btn btn-outline-danger btn-sm" disabled title="Akun admin utama tidak dapat dihapus" style="opacity: 0.4; cursor: not-allowed;">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        ` : `
-                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteUser(${user.id}, '${user.username}')" title="Hapus User">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        `}
-                    </div>
-                </td>
-            </tr>
-        `;
+        html += '<tr>' +
+            '<td>' + (idx + 1) + '</td>' +
+            '<td><code>' + u.username + '</code></td>' +
+            '<td><strong>' + (u.nama_lengkap || '-') + '</strong></td>' +
+            '<td>' + roleBadge + '</td>' +
+            '<td>' +
+            '<span id="pwText_' + u.id + '" style="font-family: monospace;">••••••••</span> ' +
+            '<button type="button" class="btn btn-secondary btn-sm" onclick="togglePasswordPeek(' + u.id + ', \'' + pwPlain + '\')" style="padding: 1px 6px; font-size: 0.75rem;"><i class="bi bi-eye"></i></button>' +
+            '</td>' +
+            '<td style="text-align: center; white-space: nowrap;">' +
+            '<button type="button" class="btn btn-secondary btn-sm" onclick="editUser(' + u.id + ')" title="Edit User" style="padding: 2px 7px;"><i class="bi bi-pencil-square"></i></button> ' +
+            '<button type="button" class="btn btn-danger-soft btn-sm" onclick="deleteUser(' + u.id + ', \'' + u.username + '\')" title="Hapus User" style="padding: 2px 7px;"><i class="bi bi-trash"></i></button>' +
+            '</td>' +
+            '</tr>';
     });
-
     tbody.innerHTML = html;
 }
 
-function toggleRowPassword(userId) {
-    const user = usersList.find(u => Number(u.id) === Number(userId));
-    if (!user) return;
-    const textEl = document.getElementById(`userPassText_${userId}`);
-    const eyeEl = document.getElementById(`userPassEye_${userId}`);
-    if (!textEl || !eyeEl) return;
-
-    const isMasked = textEl.getAttribute('data-masked') === '1';
-    if (isMasked) {
-        textEl.textContent = user.password || '(Kosong)';
-        textEl.style.letterSpacing = 'normal';
-        textEl.setAttribute('data-masked', '0');
-        eyeEl.className = 'bi bi-eye-slash';
+function togglePasswordPeek(id, plain) {
+    var el = document.getElementById('pwText_' + id);
+    if (!el) return;
+    if (el.textContent === '••••••••') {
+        el.textContent = plain;
     } else {
-        textEl.textContent = '••••••••';
-        textEl.style.letterSpacing = '2px';
-        textEl.setAttribute('data-masked', '1');
-        eyeEl.className = 'bi bi-eye';
+        el.textContent = '••••••••';
     }
 }
 
-function populateUserGuruDatalist() {
-    const dl = document.getElementById('userGuruDatalist');
-    if (!dl) return;
-    const teachers = (db && Array.isArray(db.teachers)) ? db.teachers : [];
-    dl.innerHTML = teachers.map(t => {
-        const nip = t.nip ? ` - NIP. ${t.nip}` : '';
-        const mapel = t.mapel ? ` (${t.mapel})` : '';
-        return `<option value="${t.nama}">${t.nama}${nip}${mapel}</option>`;
-    }).join('');
-}
-
-function openCreateUserModal() {
-    populateUserGuruDatalist();
-    document.getElementById('userModalTitle').textContent = 'Tambah User Pengguna Baru';
+function openUserModal() {
+    document.getElementById('modalUserTitle').textContent = 'Tambah Pengguna Baru';
     document.getElementById('user_id').value = '';
     document.getElementById('user_username').value = '';
-    document.getElementById('user_username').disabled = false;
     document.getElementById('user_nama').value = '';
-    document.getElementById('user_role').value = 'admin';
-    const passInput = document.getElementById('user_password');
-    passInput.value = '';
-    passInput.type = 'password';
-    passInput.required = true;
-    document.getElementById('btnToggleUserPass').innerHTML = '<i class="bi bi-eye"></i>';
-    document.getElementById('userPassRequiredStar').style.display = 'inline';
-    document.getElementById('userPassHint').textContent = 'Kata sandi minimal 4 karakter.';
-    document.getElementById('userModal').style.display = 'flex';
-    document.getElementById('user_username').focus();
+    document.getElementById('user_role').value = 'operator';
+    document.getElementById('user_password').value = '123456';
+    document.getElementById('modalFormUser').style.display = 'flex';
 }
 
-function openEditUserModal(userId) {
-    const user = usersList.find(u => Number(u.id) === Number(userId));
-    if (!user) return;
-
-    populateUserGuruDatalist();
-    document.getElementById('userModalTitle').textContent = `Edit User (${user.username})`;
-    document.getElementById('user_id').value = user.id;
-    document.getElementById('user_username').value = user.username;
-    // Master admin username cannot be changed
-    document.getElementById('user_username').disabled = (user.username === 'admin');
-    document.getElementById('user_nama').value = user.nama || '';
-    document.getElementById('user_role').value = user.role || 'admin';
-    const passInput = document.getElementById('user_password');
-    passInput.value = user.password || '';
-    passInput.type = 'password';
-    passInput.required = false;
-    document.getElementById('btnToggleUserPass').innerHTML = '<i class="bi bi-eye"></i>';
-    document.getElementById('userPassRequiredStar').style.display = 'none';
-    document.getElementById('userPassHint').textContent = 'Klik tombol mata untuk melihat kata sandi saat ini atau ketik untuk menggantinya.';
-    document.getElementById('userModal').style.display = 'flex';
+function editUser(id) {
+    var u = usersList.find(function(item) { return String(item.id) === String(id); });
+    if (!u) return;
+    document.getElementById('modalUserTitle').textContent = 'Edit Data Pengguna';
+    document.getElementById('user_id').value = u.id;
+    document.getElementById('user_username').value = u.username;
+    document.getElementById('user_nama').value = u.nama_lengkap || '';
+    document.getElementById('user_role').value = u.role || 'operator';
+    document.getElementById('user_password').value = u.password_plain || '';
+    document.getElementById('modalFormUser').style.display = 'flex';
 }
 
 function closeUserModal() {
-    document.getElementById('userModal').style.display = 'none';
+    document.getElementById('modalFormUser').style.display = 'none';
 }
 
-function toggleUserPasswordVisibility() {
-    const passInput = document.getElementById('user_password');
-    const toggleBtn = document.getElementById('btnToggleUserPass');
-    if (passInput.type === 'password') {
-        passInput.type = 'text';
-        toggleBtn.innerHTML = '<i class="bi bi-eye-slash"></i>';
-    } else {
-        passInput.type = 'password';
-        toggleBtn.innerHTML = '<i class="bi bi-eye"></i>';
-    }
-}
-
-async function handleSaveUser(e) {
+function handleSaveUser(e) {
     e.preventDefault();
-    const id = document.getElementById('user_id').value;
-    const username = document.getElementById('user_username').value.trim();
-    const nama = document.getElementById('user_nama').value.trim();
-    const role = document.getElementById('user_role').value;
-    const password = document.getElementById('user_password').value;
+    var id = document.getElementById('user_id').value;
+    var username = document.getElementById('user_username').value.trim();
+    var nama = document.getElementById('user_nama').value.trim();
+    var role = document.getElementById('user_role').value;
+    var pw = document.getElementById('user_password').value.trim();
 
-    if (!username || !nama) {
-        showToast('Username dan nama lengkap harus diisi.', 'danger');
-        return;
-    }
+    var btn = document.getElementById('btnSaveUser');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Menyimpan...';
 
-    if (!id && !password) {
-        showToast('Password wajib diisi untuk pengguna baru.', 'danger');
-        return;
-    }
-
-    const payload = {
-        id: id || undefined,
-        username,
-        nama,
-        role,
-        password: password || undefined
+    var payload = {
+        id: id || null,
+        username: username,
+        nama_lengkap: nama,
+        role: role
     };
+    if (pw) {
+        payload.password = pw;
+        payload.password_plain = pw;
+    }
 
-    try {
-        const result = await callServer('apiSaveUser', payload);
-        if (result && result.success) {
+    google.script.run
+        .withSuccessHandler(function() {
+            btn.disabled = false;
+            btn.innerHTML = 'Simpan User';
             closeUserModal();
-            showToast(result.message || 'User berhasil disimpan!', 'success');
-            await fetchUsers();
-        } else {
-            showToast('Gagal: ' + ((result && result.message) || 'Error'), 'danger');
-        }
-    } catch (err) {
-        showToast('Kesalahan koneksi saat menyimpan user: ' + err.message, 'danger');
-    }
+            showGlobalNotificationDialog('Berhasil', 'Pengguna ' + username + ' berhasil disimpan.', 'success');
+            loadUsersData();
+        })
+        .withFailureHandler(function(err) {
+            btn.disabled = false;
+            btn.innerHTML = 'Simpan User';
+            showGlobalNotificationDialog('Gagal', err.message, 'danger');
+        })
+        .apiSaveUser(payload);
 }
 
-async function deleteUser(userId, username) {
-    if (username === 'admin') {
-        if (typeof showAlertModal === 'function') {
-            showAlertModal({
-                title: 'Tindakan Ditolak',
-                message: 'Akun Administrator Utama sistem tidak dapat dihapus!',
-                type: 'warning'
-            });
-        } else {
-            showToast('Akun administrator utama tidak dapat dihapus!', 'danger');
-        }
-        return;
-    }
-
-    let confirmed = false;
-    if (typeof showConfirmModal === 'function') {
-        confirmed = await showConfirmModal({
-            title: 'Hapus Pengguna',
-            message: `Hapus pengguna "${username}" secara permanen dari sistem?`,
-            type: 'danger',
-            confirmText: 'Ya, Hapus Pengguna',
-            confirmIcon: 'bi-trash-fill'
-        });
-    } else {
-        confirmed = confirm(`⚠️ Hapus pengguna "${username}" secara permanen dari sistem?`);
-    }
-    if (!confirmed) return;
-
-    try {
-        const result = await callServer('apiDeleteUser', userId);
-        if (result && result.success) {
-            showToast(result.message || 'User berhasil dihapus.', 'info');
-            await fetchUsers();
-        } else {
-            showToast('Gagal: ' + ((result && result.message) || 'Error'), 'danger');
-        }
-    } catch (err) {
-        showToast('Kesalahan koneksi saat menghapus user: ' + err.message, 'danger');
-    }
+function deleteUser(id, username) {
+    showGlobalConfirmDialog(
+        'Konfirmasi Hapus Pengguna',
+        'Apakah Anda yakin ingin menghapus akun pengguna ' + username + '?',
+        function() {
+            google.script.run
+                .withSuccessHandler(function() {
+                    showGlobalNotificationDialog('Berhasil', 'User ' + username + ' berhasil dihapus.', 'success');
+                    loadUsersData();
+                })
+                .apiDeleteUser(id);
+        },
+        'Hapus',
+        true
+    );
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-    await loadDatabaseFromAppsScript();
-    populateUserGuruDatalist();
-    await fetchUsers();
-});
+function exportUsersExcel() {
+    var filename = 'Data_Pengguna_SAS_' + new Date().toISOString().split('T')[0] + '.xls';
+    var headers = ['No', 'Username', 'Nama Lengkap', 'Role', 'Password Plain'];
+    var rows = [];
+    usersList.forEach(function(u, idx) {
+        rows.push([idx + 1, u.username, u.nama_lengkap, u.role, u.password_plain || '******']);
+    });
+    downloadExcelXLS(filename, headers, rows);
+}
 </script>
 </body>
 </html>

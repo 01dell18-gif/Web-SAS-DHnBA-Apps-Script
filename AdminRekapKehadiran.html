@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rekap Kehadiran Siswa Matriks - <?= (settings && settings.nama_sekolah) ? settings.nama_sekolah : 'SMK NEGERI FYJ Channel' ?></title>
+    <?!= include('StyleCSS'); ?>
+    <?!= include('PreviewA4CSS'); ?>
+</head>
+<body>
+<?!= include('Header'); ?>
+
+<div class="admin-sidebar-layout">
+    <?!= include('Sidebar'); ?>
+    <main class="admin-main">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-heading); margin: 0;">Laporan Rekap Kehadiran Siswa</h1>
+                <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Matriks kehadiran kumulatif seluruh mata pelajaran per rombel kelas</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button type="button" class="btn btn-primary btn-sm" onclick="openSubjectAttendanceModal()">
+                    <i class="bi bi-pencil-square"></i> Input Presensi Mapel
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="exportMatrixExcel()">
+                    <i class="bi bi-file-earmark-excel"></i> Ekspor Excel
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="window.print()">
+                    <i class="bi bi-printer"></i> Cetak Matriks A4
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter Kelas -->
+        <div class="horizontal-filter-card">
+            <div class="horizontal-filter-item" style="max-width: 280px;">
+                <label>Pilih Kelas Ujian</label>
+                <select id="selectMatrixClass" class="form-select form-select-sm" onchange="renderMatrixReport(this.value)"></select>
+            </div>
+            <div style="display: flex; gap: 0.75rem; align-items: center; font-size: 0.825rem; margin-top: 1.25rem;">
+                <span class="badge-status-h">H: Hadir</span>
+                <span class="badge-status-d">D: Dispensasi</span>
+                <span class="badge-status-i">I: Izin</span>
+                <span class="badge-status-s">S: Sakit</span>
+                <span class="badge-status-a">A: Alpa</span>
+            </div>
+        </div>
+
+        <!-- Tabel Matriks Kehadiran -->
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="card-title" id="matrixTitleText"><i class="bi bi-grid-3x3"></i> Matriks Kehadiran Kelas</span>
+                <span id="matrixStatsBadge" class="badge" style="background:#e0e7ff; color:#4338ca; font-weight:700;">0 Mapel Terdata</span>
+            </div>
+            <div class="table-matrix-wrapper">
+                <table class="table-matrix" id="tableMatrixEl">
+                    <thead id="matrixHead">
+                        <tr><th colspan="10" style="padding: 2rem; color: var(--text-muted);"><i class="bi bi-arrow-repeat spin"></i> Memuat matriks kehadiran...</th></tr>
+                    </thead>
+                    <tbody id="matrixBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal Input Presensi Mapel -->
+<div id="modalSubjectAttendance" class="custom-modal" style="display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6); z-index: 999999; align-items: center; justify-content: center;">
+    <div style="background: #ffffff; width: 92%; max-width: 600px; max-height: 90vh; border-radius: 14px; padding: 1.5rem; display: flex; flex-direction: column; box-shadow: 0 20px 45px rgba(0,0,0,0.25);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0;">Input Presensi Mata Pelajaran</h3>
+            <button type="button" onclick="closeSubjectAttendanceModal()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:#94a3b8;">&times;</button>
+        </div>
+        <div style="flex: 1; overflow-y: auto;">
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">Mata Pelajaran</label>
+                    <input type="text" id="modalMapelInput" class="form-control form-control-sm" list="modalDatalistMapel" placeholder="Pilih mapel..." required>
+                    <datalist id="modalDatalistMapel"></datalist>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tanggal Ujian</label>
+                    <input type="date" id="modalTanggalInput" class="form-control form-control-sm" required>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin: 0.75rem 0 0.5rem 0;">
+                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-heading);">Daftar Kehadiran Siswa</span>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="setModalAllHadir()">
+                    <i class="bi bi-check2-all"></i> Set Semua Hadir
+                </button>
+            </div>
+
+            <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+                <table class="table" style="font-size: 0.825rem;">
+                    <thead><tr><th style="width:30px;">No</th><th>Nama Siswa</th><th style="text-align:center;">Status</th></tr></thead>
+                    <tbody id="modalStudentListBody"></tbody>
+                </table>
+            </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 1rem;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="closeSubjectAttendanceModal()">Batal</button>
+            <button type="button" id="btnSaveSubjectAtt" class="btn btn-primary btn-sm" onclick="saveSubjectAttendance()">
+                Simpan Presensi Mapel
+            </button>
+        </div>
+    </div>
+</div>
+
+<?!= include('Modals'); ?>
+<?!= include('AppJS'); ?>
+
+<script>
+var currentMatrixClassId = null;
+var currentClassStudents = [];
+var classSubjectSessions = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    google.script.run
+        .withSuccessHandler(function(data) {
+            window.AppStore.data = data;
+            
+            var cSelect = document.getElementById('selectMatrixClass');
+            cSelect.innerHTML = '';
+            data.classes.forEach(function(c) {
+                var opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.nama_kelas;
+                cSelect.appendChild(opt);
+            });
+
+            // Modal mapel datalist
+            var dl = document.getElementById('modalDatalistMapel');
+            data.mapels.forEach(function(m) {
+                var opt = document.createElement('option');
+                opt.value = m.nama_mapel;
+                dl.appendChild(opt);
+            });
+
+            var serverCid = '<?= (params && params.class_id) ? params.class_id : "" ?>';
+            var urlParams = new URLSearchParams(window.location.search);
+            var initialCid = serverCid || urlParams.get('class_id');
+            if (initialCid && data.classes.some(function(c) { return String(c.id) === String(initialCid); })) {
+                cSelect.value = initialCid;
+                renderMatrixReport(initialCid);
+            } else if (data.classes.length > 0) {
+                renderMatrixReport(data.classes[0].id);
+            }
+        })
+        .apiGetInitialData();
+});
+
+function renderMatrixReport(classId) {
+    if (!window.AppStore.data) return;
+    currentMatrixClassId = classId;
+    var data = window.AppStore.data;
+    var cls = data.classes.find(function(c) { return String(c.id) === String(classId); });
+    var namaKelas = cls ? cls.nama_kelas : 'Kelas';
+    document.getElementById('matrixTitleText').innerHTML = '<i class="bi bi-grid-3x3"></i> Matriks Kehadiran: ' + namaKelas;
+
+    // Get students of this class
+    currentClassStudents = data.students.filter(function(s) {
+        return String(s.class_id) === String(classId);
+    }).sort(function(a, b) { return a.nama.localeCompare(b.nama); });
+
+    // Get all absensi records for this class
+    classSubjectSessions = (data.absensi || []).filter(function(a) {
+        return String(a.class_id) === String(classId);
+    });
+
+    document.getElementById('matrixStatsBadge').textContent = classSubjectSessions.length + ' Mapel Terdata';
+
+    var thead = document.getElementById('matrixHead');
+    var tbody = document.getElementById('matrixBody');
+
+    // Build Header
+    var headerHtml = '<tr>' +
+        '<th class="th-student" style="width: 32px; text-align: center;">No</th>' +
+        '<th class="th-student" style="width: 75px; text-align: center;">NIS</th>' +
+        '<th class="th-student">Nama Siswa</th>';
+
+    classSubjectSessions.forEach(function(sess) {
+        headerHtml += '<th class="th-subject">' +
+            '<div class="rotated-subject-title" title="' + sess.mata_pelajaran + '">' + sess.mata_pelajaran + '</div>' +
+            '<div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 4px;">' + (sess.tanggal_ujian ? sess.tanggal_ujian.substring(5) : '') + '</div>' +
+            '</th>';
+    });
+
+    headerHtml += '<th style="width: 34px; background: #f8fafc;">H</th>' +
+        '<th style="width: 34px; background: #f8fafc;">D</th>' +
+        '<th style="width: 34px; background: #f8fafc;">I</th>' +
+        '<th style="width: 34px; background: #f8fafc;">S</th>' +
+        '<th style="width: 34px; background: #f8fafc;">A</th>' +
+        '<th style="width: 58px; background: #f1f5f9;">% Hadir</th>' +
+        '</tr>';
+
+    thead.innerHTML = headerHtml;
+
+    // Build Body
+    if (currentClassStudents.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="20" style="text-align: center; padding: 2rem; color: var(--text-muted);">Tidak ada siswa di kelas ini.</td></tr>';
+        return;
+    }
+
+    var bodyHtml = '';
+    currentClassStudents.forEach(function(st, idx) {
+        var cH = 0, cD = 0, cI = 0, cS = 0, cA = 0;
+        var cells = '';
+
+        classSubjectSessions.forEach(function(sess) {
+            var studentStatus = 'Hadir';
+            try {
+                var list = typeof sess.data_siswa === 'string' ? JSON.parse(sess.data_siswa) : sess.data_siswa;
+                var found = list.find(function(item) { return String(item.id) === String(st.id); });
+                if (found && found.status) studentStatus = found.status;
+            } catch (e) {}
+
+            var badge = '';
+            if (studentStatus === 'Hadir') { cH++; badge = '<span class="badge-status-h">H</span>'; }
+            else if (studentStatus === 'Dispensasi') { cD++; badge = '<span class="badge-status-d">D</span>'; }
+            else if (studentStatus === 'Izin') { cI++; badge = '<span class="badge-status-i">I</span>'; }
+            else if (studentStatus === 'Sakit') { cS++; badge = '<span class="badge-status-s">S</span>'; }
+            else { cA++; badge = '<span class="badge-status-a">A</span>'; }
+
+            cells += '<td>' + badge + '</td>';
+        });
+
+        var totalMapel = classSubjectSessions.length;
+        var percentage = totalMapel > 0 ? Math.round(((cH + cD) / totalMapel) * 100) : 100;
+        var pctColor = percentage >= 85 ? '#15803d' : (percentage >= 70 ? '#4338ca' : '#b91c1c');
+
+        bodyHtml += '<tr>' +
+            '<td style="text-align: center;">' + (idx + 1) + '</td>' +
+            '<td style="text-align: center;">' + (st.nis || '-') + '</td>' +
+            '<td class="td-student"><strong>' + st.nama + '</strong></td>' +
+            cells +
+            '<td style="font-weight: 700; color: #15803d;">' + cH + '</td>' +
+            '<td style="font-weight: 700; color: #4338ca;">' + cD + '</td>' +
+            '<td style="font-weight: 700; color: #a16207;">' + cI + '</td>' +
+            '<td style="font-weight: 700; color: #c2410c;">' + cS + '</td>' +
+            '<td style="font-weight: 700; color: #b91c1c;">' + cA + '</td>' +
+            '<td style="font-weight: 800; color: ' + pctColor + ';">' + percentage + '%</td>' +
+            '</tr>';
+    });
+
+    tbody.innerHTML = bodyHtml;
+}
+
+function openSubjectAttendanceModal() {
+    if (!currentMatrixClassId || currentClassStudents.length === 0) {
+        showGlobalNotificationDialog('Peringatan', 'Pilih kelas dengan data siswa terlebih dahulu.', 'warning');
+        return;
+    }
+    document.getElementById('modalTanggalInput').value = new Date().toISOString().split('T')[0];
+    document.getElementById('modalMapelInput').value = '';
+
+    var tbody = document.getElementById('modalStudentListBody');
+    var html = '';
+    currentClassStudents.forEach(function(s, idx) {
+        html += '<tr>' +
+            '<td>' + (idx + 1) + '</td>' +
+            '<td>' + s.nama + '</td>' +
+            '<td style="text-align: center;">' +
+            '<select class="form-select form-select-sm modal-student-status" data-id="' + s.id + '" style="width:auto; display:inline-block;">' +
+            '<option value="Hadir" selected>Hadir</option>' +
+            '<option value="Dispensasi">Dispensasi</option>' +
+            '<option value="Izin">Izin</option>' +
+            '<option value="Sakit">Sakit</option>' +
+            '<option value="Tidak Hadir">Tidak Hadir</option>' +
+            '</select>' +
+            '</td>' +
+            '</tr>';
+    });
+    tbody.innerHTML = html;
+    document.getElementById('modalSubjectAttendance').style.display = 'flex';
+}
+
+function closeSubjectAttendanceModal() {
+    document.getElementById('modalSubjectAttendance').style.display = 'none';
+}
+
+function setModalAllHadir() {
+    document.querySelectorAll('.modal-student-status').forEach(function(sel) {
+        sel.value = 'Hadir';
+    });
+}
+
+function saveSubjectAttendance() {
+    var mapel = document.getElementById('modalMapelInput').value.trim();
+    var tgl = document.getElementById('modalTanggalInput').value;
+    if (!mapel) {
+        showGlobalNotificationDialog('Peringatan', 'Silakan isi mata pelajaran.', 'warning');
+        return;
+    }
+
+    var btn = document.getElementById('btnSaveSubjectAtt');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Menyimpan...';
+
+    var dataSiswa = [];
+    var cH = 0, cD = 0, cI = 0, cS = 0, cA = 0;
+    document.querySelectorAll('.modal-student-status').forEach(function(sel) {
+        var sid = sel.getAttribute('data-id');
+        var stObj = currentClassStudents.find(function(s) { return String(s.id) === String(sid); });
+        var status = sel.value;
+        if (status === 'Hadir') cH++;
+        else if (status === 'Dispensasi') cD++;
+        else if (status === 'Izin') cI++;
+        else if (status === 'Sakit') cS++;
+        else cA++;
+
+        dataSiswa.push({
+            id: sid,
+            nis: stObj ? stObj.nis : '',
+            nama: stObj ? stObj.nama : '',
+            status: status
+        });
+    });
+
+    var cls = window.AppStore.data.classes.find(function(c) { return String(c.id) === String(currentMatrixClassId); });
+    var namaKelas = cls ? cls.nama_kelas : 'Kelas';
+
+    var payload = {
+        nama_ujian: 'Sumatif Akhir Semester (SAS) Ganjil',
+        tahun_ajaran: '2026/2027',
+        semester: 'Ganjil',
+        class_id: currentMatrixClassId,
+        nama_kelas: namaKelas,
+        tingkat: 'XII',
+        mata_pelajaran: mapel,
+        sesi: '1',
+        ruang: namaKelas,
+        tanggal_ujian: tgl,
+        jam_mulai: '07:30',
+        jam_selesai: '09:30',
+        peserta_hadir: cH,
+        peserta_dispensasi: cD,
+        peserta_izin: cI,
+        peserta_sakit: cS,
+        peserta_tidak_hadir: cA,
+        total_peserta: dataSiswa.length,
+        nama_pengawas_1: '-',
+        nip_pengawas_1: '-',
+        signature_mode: 'manual',
+        data_siswa: JSON.stringify(dataSiswa)
+    };
+
+    google.script.run
+        .withSuccessHandler(function() {
+            btn.disabled = false;
+            btn.innerHTML = 'Simpan Presensi Mapel';
+            closeSubjectAttendanceModal();
+            showGlobalNotificationDialog('Berhasil', 'Presensi mapel ' + mapel + ' berhasil diperbarui!', 'success');
+            // Refresh Data
+            google.script.run
+                .withSuccessHandler(function(fresh) {
+                    window.AppStore.data = fresh;
+                    renderMatrixReport(currentMatrixClassId);
+                })
+                .apiGetInitialData();
+        })
+        .apiSaveSubjectAttendance(payload);
+}
+
+function exportMatrixExcel() {
+    var cls = window.AppStore.data.classes.find(function(c) { return String(c.id) === String(currentMatrixClassId); });
+    var namaKelas = cls ? cls.nama_kelas.replace(/\s+/g, '_') : 'Kelas';
+    var filename = 'Rekap_Kehadiran_Matriks_' + namaKelas + '_' + new Date().toISOString().split('T')[0] + '.xls';
+
+    var headers = ['No', 'NIS', 'Nama Siswa'];
+    classSubjectSessions.forEach(function(s) {
+        headers.push(s.mata_pelajaran + ' (' + s.tanggal_ujian + ')');
+    });
+    headers.push('H', 'D', 'I', 'S', 'A', '% Hadir');
+
+    var rows = [];
+    currentClassStudents.forEach(function(st, idx) {
+        var row = [idx + 1, st.nis || '-', st.nama];
+        var cH = 0, cD = 0, cI = 0, cS = 0, cA = 0;
+        classSubjectSessions.forEach(function(sess) {
+            var status = 'H';
+            try {
+                var list = typeof sess.data_siswa === 'string' ? JSON.parse(sess.data_siswa) : sess.data_siswa;
+                var found = list.find(function(item) { return String(item.id) === String(st.id); });
+                if (found && found.status) status = found.status;
+            } catch (e) {}
+
+            if (status === 'Hadir') { cH++; row.push('H'); }
+            else if (status === 'Dispensasi') { cD++; row.push('D'); }
+            else if (status === 'Izin') { cI++; row.push('I'); }
+            else if (status === 'Sakit') { cS++; row.push('S'); }
+            else { cA++; row.push('A'); }
+        });
+
+        var total = classSubjectSessions.length;
+        var pct = total > 0 ? Math.round(((cH + cD) / total) * 100) : 100;
+        row.push(cH, cD, cI, cS, cA, pct + '%');
+        rows.push(row);
+    });
+
+    downloadExcelXLS(filename, headers, rows);
+}
+</script>
+</body>
+</html>

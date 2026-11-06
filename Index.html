@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beranda - <?= schoolSettings.school_name || 'SMK NEGERI FYJ CHANNEL' ?></title>
+    <title>Sistem Administrasi Ujian (SAS) - <?= (settings && settings.nama_sekolah) ? settings.nama_sekolah : 'SMK NEGERI FYJ Channel' ?></title>
     <?!= include('StyleCSS'); ?>
     <style>
         .home-hero {
@@ -12,200 +12,165 @@
             padding: 3.5rem 1.25rem 4.5rem 1.25rem;
             text-align: center;
             border-bottom: 3px solid #3746BF;
-            position: relative;
-            overflow: hidden;
-        }
-        .home-hero::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.08) 10%, transparent 60%);
-            pointer-events: none;
         }
         .home-hero-logo {
-            width: 76px;
-            height: 76px;
+            width: 72px;
+            height: 72px;
             object-fit: contain;
             margin-bottom: 1rem;
-            filter: drop-shadow(0 6px 14px rgba(0,0,0,0.25));
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.2));
             border-radius: var(--radius-sm);
-            background: #ffffff;
-            padding: 6px;
         }
         .home-title {
             color: #ffffff;
-            font-size: 2rem;
+            font-size: 1.85rem;
             margin-bottom: 0.5rem;
             font-weight: 800;
             letter-spacing: -0.02em;
         }
         .home-subtitle {
-            font-size: 1.05rem;
-            opacity: 0.95;
+            font-size: 0.95rem;
+            opacity: 0.92;
             color: #E0E5FF;
             letter-spacing: 0.2px;
-            max-width: 600px;
-            margin: 0 auto;
         }
         .choices-container {
-            max-width: 1040px;
-            margin: -2.5rem auto 3.5rem auto;
-            padding: 0 1.25rem;
-            position: relative;
-            z-index: 10;
+            max-width: 960px;
+            margin: -2.5rem auto 3rem auto;
+            padding: 0 1rem;
         }
         .choices-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.75rem;
+            gap: 1.5rem;
         }
         .choice-card {
             background: #ffffff;
             border-radius: var(--radius-lg);
             border: 1px solid var(--border);
             padding: 2.25rem 1.75rem;
-            box-shadow: 0 10px 25px -5px rgba(37, 48, 71, 0.08), 0 4px 10px -2px rgba(37, 48, 71, 0.04);
+            box-shadow: var(--shadow-md);
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            align-items: center;
             text-align: center;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            text-decoration: none;
+            color: inherit;
         }
         .choice-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 20px 35px -8px rgba(37, 48, 71, 0.14);
-            border-color: #C7CDED;
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
         }
-        .choice-icon {
-            width: 72px;
-            height: 72px;
-            border-radius: 16px;
-            display: inline-flex;
+        .choice-icon-box {
+            width: 64px;
+            height: 64px;
+            border-radius: var(--radius-md);
+            background: var(--primary-light);
+            color: var(--primary);
+            display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.2rem;
-            margin: 0 auto 1.25rem auto;
-            transition: transform 0.25s ease;
+            font-size: 2rem;
+            margin-bottom: 1.25rem;
+            transition: background 0.2s ease, color 0.2s ease;
         }
-        .choice-card:hover .choice-icon {
-            transform: scale(1.08);
+        .choice-card:hover .choice-icon-box {
+            background: var(--primary);
+            color: #ffffff;
         }
         .choice-title {
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             font-weight: 700;
             color: var(--text-heading);
-            margin-bottom: 0.6rem;
-            letter-spacing: -0.01em;
+            margin-bottom: 0.5rem;
         }
         .choice-desc {
-            font-size: 0.92rem;
+            font-size: 0.885rem;
             color: var(--text-muted);
-            margin-bottom: 1.75rem;
-            line-height: 1.6;
-        }
-        @media (max-width: 640px) {
-            .home-hero {
-                padding: 2.25rem 1rem 3rem 1rem;
-            }
-            .home-title {
-                font-size: 1.5rem;
-            }
-            .choices-container {
-                margin-top: -1.75rem;
-            }
-            .choice-card {
-                padding: 1.75rem 1.25rem;
-            }
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
         }
     </style>
 </head>
 <body>
 
-<?!= include('Header'); ?>
+<header class="navbar">
+    <div class="navbar-brand">
+        <a href="<?= appUrl ?>?page=index" class="brand-link">
+            <img src="<?= (settings && settings.logo_path) ? settings.logo_path : 'https://cdn-icons-png.flaticon.com/512/2997/2997295.png' ?>" alt="Logo Sekolah" class="navbar-logo">
+            <div class="brand-text">
+                <span class="brand-title"><?= (settings && settings.nama_sekolah) ? settings.nama_sekolah : 'SMK NEGERI FYJ Channel' ?></span>
+                <span class="brand-subtitle">Sistem Administrasi Ujian Resmi</span>
+            </div>
+        </a>
+    </div>
+    <button type="button" class="mobile-nav-toggle btn-sidebar-toggle" onclick="toggleMobileNav(event)" aria-label="Toggle Menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </button>
+    <ul class="nav-links" id="navLinks">
+        <li><a href="<?= appUrl ?>?page=index" class="nav-link active"><i class="bi bi-house"></i> Beranda</a></li>
+        <li><a href="<?= appUrl ?>?page=absensi" class="nav-link"><i class="bi bi-clipboard-check"></i> Daftar Hadir</a></li>
+        <li><a href="<?= appUrl ?>?page=berita-acara" class="nav-link"><i class="bi bi-file-earmark-text"></i> Berita Acara</a></li>
+        <li><a href="<?= appUrl ?>?page=arsip" class="nav-link"><i class="bi bi-archive"></i> Arsip Dokumen</a></li>
+        <li><a href="<?= appUrl ?>?page=login" class="btn btn-secondary btn-sm"><i class="bi bi-shield-lock"></i> Admin</a></li>
+    </ul>
+</header>
 
 <section class="home-hero">
-    <div class="container">
-        <img src="<?= schoolSettings.school_logo || '' ?>" alt="Logo Sekolah" class="home-hero-logo" id="homeLogo">
-        <h1 class="home-title" id="homeTitle"><?= schoolSettings.school_name || 'SMK NEGERI FYJ CHANNEL' ?></h1>
-        <p class="home-subtitle" id="homeSubtitle">
-            Sistem Generator Administrasi Ujian Resmi Format A4 Berbasis Google Apps Script & Google Sheets
-        </p>
-    </div>
+    <img src="<?= (settings && settings.logo_path) ? settings.logo_path : 'https://cdn-icons-png.flaticon.com/512/2997/2997295.png' ?>" alt="Logo Sekolah" class="home-hero-logo">
+    <h1 class="home-title"><?= (settings && settings.nama_sekolah) ? settings.nama_sekolah : 'SMK NEGERI FYJ Channel' ?></h1>
+    <p class="home-subtitle">Generator Administrasi Ujian Resmi Format A4 PDF & Excel (.xls)</p>
 </section>
 
 <div class="choices-container">
     <div class="choices-grid">
-        <!-- 1. Daftar Hadir Ujian -->
-        <div class="choice-card">
-            <div>
-                <div class="choice-icon" style="background: #EEF2FF; color: #4657D9;">
-                    <i class="bi bi-clipboard-check"></i>
-                </div>
-                <h2 class="choice-title">Daftar Hadir Ujian</h2>
-                <p class="choice-desc">
-                    Pembuatan daftar hadir peserta ujian otomatis standar resmi A4, dilengkapi nomor urut, NIS, nama siswa, tanda tangan pengawas & rekapitulasi kehadiran instan.
-                </p>
+        <!-- Pilihan 1: Daftar Hadir -->
+        <a href="<?= appUrl ?>?page=absensi" class="choice-card">
+            <div class="choice-icon-box">
+                <i class="bi bi-clipboard-check"></i>
             </div>
-            <button type="button" class="btn btn-primary btn-block" onclick="navigateTo('absensi')">
-                <i class="bi bi-pencil-square"></i> Buat Daftar Hadir
-            </button>
-        </div>
+            <h2 class="choice-title">Daftar Hadir Ujian</h2>
+            <p class="choice-desc">Generator presensi peserta ujian resmi berstandar A4 dengan live preview, tanda tangan digital/manual pengawas, rekap kehadiran otomatis, dan cetak PDF.</p>
+            <span class="btn btn-primary" style="width: 100%;">
+                Buka Formulir <i class="bi bi-arrow-right"></i>
+            </span>
+        </a>
 
-        <!-- 2. Berita Acara Ujian -->
-        <div class="choice-card">
-            <div>
-                <div class="choice-icon" style="background: #F5F3FF; color: #7C3AED;">
-                    <i class="bi bi-file-earmark-text"></i>
-                </div>
-                <h2 class="choice-title">Berita Acara Ujian</h2>
-                <p class="choice-desc">
-                    Penyusunan berita acara penyelenggaraan ujian format resmi A4 (2 Halaman) dengan redaksi baku, sinkronisasi otomatis rekap daftar hadir & catatan pelaksanaan.
-                </p>
+        <!-- Pilihan 2: Berita Acara -->
+        <a href="<?= appUrl ?>?page=berita-acara" class="choice-card">
+            <div class="choice-icon-box">
+                <i class="bi bi-file-earmark-text"></i>
             </div>
-            <button type="button" class="btn btn-primary btn-block" onclick="navigateTo('berita-acara')">
-                <i class="bi bi-journal-check"></i> Buat Berita Acara
-            </button>
-        </div>
+            <h2 class="choice-title">Berita Acara Ujian</h2>
+            <p class="choice-desc">Pembuat Berita Acara resmi 2 halaman A4 dengan redaksi otomatis, validasi kuota peserta, kompresi foto kamera bukti pengawasan, dan tanda tangan digital.</p>
+            <span class="btn btn-primary" style="width: 100%;">
+                Buka Formulir <i class="bi bi-arrow-right"></i>
+            </span>
+        </a>
 
-        <!-- 3. Arsip Dokumen Ujian -->
-        <div class="choice-card">
-            <div>
-                <div class="choice-icon" style="background: #ECFDF5; color: #10B981;">
-                    <i class="bi bi-archive"></i>
-                </div>
-                <h2 class="choice-title">Arsip Dokumen</h2>
-                <p class="choice-desc">
-                    Penyimpanan terpusat seluruh dokumen ujian yang telah dibuat di Google Sheets dengan 5 filter seleksi detail, tinjau ulang kertas A4 dan unduh PDF.
-                </p>
+        <!-- Pilihan 3: Arsip Pengawas -->
+        <a href="<?= appUrl ?>?page=arsip" class="choice-card">
+            <div class="choice-icon-box">
+                <i class="bi bi-archive"></i>
             </div>
-            <button type="button" class="btn btn-primary btn-block" onclick="navigateTo('arsip')">
-                <i class="bi bi-search"></i> Telusuri Arsip
-            </button>
-        </div>
-
-        <!-- 4. Panel Admin -->
-        <div class="choice-card">
-            <div>
-                <div class="choice-icon" style="background: #FFFBEB; color: #D97706;">
-                    <i class="bi bi-shield-lock"></i>
-                </div>
-                <h2 class="choice-title">Panel Administrator</h2>
-                <p class="choice-desc">
-                    Kelola data master siswa & kelas dinamis, master dewan guru, redaksi template ujian, identitas sekolah, logo & kop surat resmi, serta manajemen user.
-                </p>
-            </div>
-            <button type="button" class="btn btn-secondary btn-block" onclick="openAdminPortal()">
-                <i class="bi bi-gear-fill"></i> Masuk Admin
-            </button>
-        </div>
+            <h2 class="choice-title">Arsip Dokumen Ujian</h2>
+            <p class="choice-desc">Portal verifikasi publik bagi pengawas untuk memeriksa status penerbitan presensi dan berita acara, filter sesi ujian, serta pratinjau dokumen langsung.</p>
+            <span class="btn btn-secondary" style="width: 100%;">
+                Lihat Arsip <i class="bi bi-search"></i>
+            </span>
+        </a>
     </div>
 </div>
 
 <footer style="text-align: center; padding: 2rem 1rem; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--border);">
-    &copy; <?= new Date().getFullYear() ?> <strong id="footerSchoolName"><?= schoolSettings.school_name || 'SMK NEGERI FYJ CHANNEL' ?></strong> • Seluruh Hak Cipta Dilindungi.
+    &copy; 2026 <?= (settings && settings.nama_sekolah) ? settings.nama_sekolah : 'SMK NEGERI FYJ Channel' ?> &bull; Sistem Administrasi Ujian Berbasis Cloud
 </footer>
 
 <?!= include('AppJS'); ?>

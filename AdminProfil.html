@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Akun - <?= (settings && settings.nama_sekolah) ? settings.nama_sekolah : 'SMK NEGERI FYJ Channel' ?></title>
+    <?!= include('StyleCSS'); ?>
+</head>
+<body>
+<?!= include('Header'); ?>
+
+<div class="admin-sidebar-layout">
+    <?!= include('Sidebar'); ?>
+    <main class="admin-main">
+        <div style="margin-bottom: 1.5rem;">
+            <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-heading); margin: 0;">Profil Akun Pengguna</h1>
+            <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Identitas akun, foto avatar profil, dan pembaruan password aman</p>
+        </div>
+
+        <div class="card" style="max-width: 600px;">
+            <div class="card-header">
+                <span class="card-title"><i class="bi bi-person-badge"></i> Data Identitas Akun</span>
+            </div>
+            <div class="card-body">
+                <form id="formProfilAkun" onsubmit="handleSaveProfil(event)">
+                    <!-- Avatar Upload -->
+                    <div class="form-group" style="text-align: center; margin-bottom: 1.75rem;">
+                        <div style="width: 90px; height: 90px; border-radius: 50%; background: #e0e7ff; margin: 0 auto 0.75rem auto; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 3px solid #4f46e5;">
+                            <img id="profilAvatarImg" src="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                            <i id="profilAvatarIcon" class="bi bi-person-fill" style="font-size: 3rem; color: #4f46e5;"></i>
+                        </div>
+                        <input type="file" id="fileAvatarInput" accept="image/*" onchange="handleAvatarChange(this)" style="display: none;">
+                        <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('fileAvatarInput').click()">
+                                <i class="bi bi-camera"></i> Ganti Foto Profil
+                            </button>
+                            <button type="button" class="btn btn-danger-soft btn-sm" onclick="removeAvatar()">
+                                Hapus Foto
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="prof_nama">Nama Lengkap</label>
+                        <input type="text" id="prof_nama" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="prof_username">Username</label>
+                        <input type="text" id="prof_username" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="prof_password">Password Baru (Kosongkan bila tidak ingin mengubah)</label>
+                        <input type="password" id="prof_password" class="form-control" placeholder="Ketik password baru jika ingin diubah">
+                    </div>
+
+                    <div style="margin-top: 1.5rem;">
+                        <button type="submit" id="btnSaveProfil" class="btn btn-primary" style="width: 100%;">
+                            <i class="bi bi-check-circle"></i> Simpan Pembaruan Profil
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+
+<?!= include('Modals'); ?>
+<?!= include('AppJS'); ?>
+
+<script>
+var currentAvatarBase64 = null;
+var currentUserId = 1;
+
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        var u = JSON.parse(localStorage.getItem('sas_admin_user') || '{}');
+        if (u.id) currentUserId = u.id;
+        document.getElementById('prof_nama').value = u.nama_lengkap || '';
+        document.getElementById('prof_username').value = u.username || '';
+        if (u.foto) {
+            currentAvatarBase64 = u.foto;
+            document.getElementById('profilAvatarImg').src = u.foto;
+            document.getElementById('profilAvatarImg').style.display = 'block';
+            document.getElementById('profilAvatarIcon').style.display = 'none';
+        }
+    } catch (e) {}
+});
+
+function handleAvatarChange(input) {
+    if (!input.files || input.files.length === 0) return;
+    compressPhoto(input.files[0], function(base64) {
+        currentAvatarBase64 = base64;
+        document.getElementById('profilAvatarImg').src = base64;
+        document.getElementById('profilAvatarImg').style.display = 'block';
+        document.getElementById('profilAvatarIcon').style.display = 'none';
+    });
+}
+
+function removeAvatar() {
+    currentAvatarBase64 = '';
+    document.getElementById('profilAvatarImg').src = '';
+    document.getElementById('profilAvatarImg').style.display = 'none';
+    document.getElementById('profilAvatarIcon').style.display = 'block';
+}
+
+function handleSaveProfil(e) {
+    e.preventDefault();
+    var btn = document.getElementById('btnSaveProfil');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Menyimpan...';
+
+    var payload = {
+        id: currentUserId,
+        nama_lengkap: document.getElementById('prof_nama').value.trim(),
+        username: document.getElementById('prof_username').value.trim(),
+        password_plain: document.getElementById('prof_password').value.trim() || null,
+        foto: currentAvatarBase64
+    };
+
+    google.script.run
+        .withSuccessHandler(function(res) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-circle"></i> Simpan Pembaruan Profil';
+            if (res.success && res.user) {
+                localStorage.setItem('sas_admin_user', JSON.stringify(res.user));
+                showGlobalNotificationDialog('Berhasil', 'Profil akun Anda berhasil diperbarui!', 'success');
+                setTimeout(function() { window.location.reload(); }, 1200);
+            }
+        })
+        .withFailureHandler(function(err) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-circle"></i> Simpan Pembaruan Profil';
+            showGlobalNotificationDialog('Gagal', err.message, 'danger');
+        })
+        .apiUpdateProfil(payload);
+}
+</script>
+</body>
+</html>

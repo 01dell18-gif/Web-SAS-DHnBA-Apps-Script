@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arsip Berita Acara - <?= (settings && settings.nama_sekolah) ? settings.nama_sekolah : 'SMK NEGERI FYJ Channel' ?></title>
+    <?!= include('StyleCSS'); ?>
+</head>
+<body>
+<?!= include('Header'); ?>
+
+<div class="admin-sidebar-layout">
+    <?!= include('Sidebar'); ?>
+    <main class="admin-main">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-heading); margin: 0;">Arsip Berita Acara Ujian</h1>
+                <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Daftar dokumen Berita Acara resmi 2 halaman beserta bukti dokumentasi foto</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="exportArsipExcel()">
+                    <i class="bi bi-file-earmark-excel"></i> Ekspor Rekap Excel
+                </button>
+                <button type="button" class="btn btn-danger-soft btn-sm" onclick="confirmResetAllArsip()">
+                    <i class="bi bi-trash3"></i> Reset Hapus Semua BA
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter Mendatar -->
+        <div class="horizontal-filter-card">
+            <div class="horizontal-filter-item">
+                <label>Pencarian</label>
+                <input type="text" id="filterKeyword" class="form-control form-control-sm" placeholder="Mata pelajaran, pengawas, ruang..." oninput="filterArsipTable()">
+            </div>
+            <div class="horizontal-filter-item" style="max-width: 170px;">
+                <label>Tanggal Ujian</label>
+                <input type="date" id="filterTanggal" class="form-control form-control-sm" onchange="filterArsipTable()">
+            </div>
+            <div class="horizontal-filter-item" style="max-width: 180px;">
+                <label>Kelas</label>
+                <select id="filterKelas" class="form-select form-select-sm" onchange="filterArsipTable()">
+                    <option value="">Semua Kelas</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="card-title"><i class="bi bi-file-earmark-text"></i> Riwayat Berita Acara Terarsip</span>
+                <span id="badgeTotalArsip" class="badge" style="background:#e0e7ff; color:#4338ca; font-weight:700;">0 Berkas</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table" style="font-size: 0.875rem;">
+                    <thead>
+                        <tr>
+                            <th style="width: 35px;">No</th>
+                            <th>Tanggal</th>
+                            <th>Kelas</th>
+                            <th>Mata Pelajaran</th>
+                            <th>Ruang Ujian</th>
+                            <th style="text-align: center;">Peserta (H / TH / Tot)</th>
+                            <th style="text-align: center;">Dokumentasi Foto</th>
+                            <th>Pengawas 1</th>
+                            <th style="text-align: center; width: 120px;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableArsipBody">
+                        <tr><td colspan="9" style="text-align: center; padding: 2rem; color: var(--text-muted);"><i class="bi bi-arrow-repeat spin"></i> Memuat berkas...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<?!= include('Modals'); ?>
+<?!= include('AppJS'); ?>
+
+<script>
+var baList = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadBAData();
+});
+
+function loadBAData() {
+    google.script.run
+        .withSuccessHandler(function(data) {
+            window.AppStore.data = data;
+            baList = data.berita_acara || [];
+
+            var filterKelas = document.getElementById('filterKelas');
+            data.classes.forEach(function(c) {
+                var opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.nama_kelas;
+                filterKelas.appendChild(opt);
+            });
+
+            filterArsipTable();
+        })
+        .apiGetInitialData();
+}
+
+function filterArsipTable() {
+    var kw = document.getElementById('filterKeyword').value.trim().toLowerCase();
+    var tgl = document.getElementById('filterTanggal').value;
+    var cid = document.getElementById('filterKelas').value;
+
+    var filtered = baList.filter(function(b) {
+        if (kw) {
+            var matchKw = (b.mata_pelajaran && b.mata_pelajaran.toLowerCase().indexOf(kw) !== -1) ||
+                          (b.nama_pengawas_1 && b.nama_pengawas_1.toLowerCase().indexOf(kw) !== -1) ||
+                          (b.ruang && b.ruang.toLowerCase().indexOf(kw) !== -1);
+            if (!matchKw) return false;
+        }
+        if (tgl && b.tanggal_ujian !== tgl) return false;
+        if (cid && String(b.class_id) !== String(cid)) return false;
+        return true;
+    });
+
+    renderArsipTable(filtered);
+}
+
+function renderArsipTable(items) {
+    var tbody = document.getElementById('tableArsipBody');
+    document.getElementById('badgeTotalArsip').textContent = items.length + ' Berkas';
+
+    if (!items || items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 2rem; color: var(--text-muted);">Tidak ada berkas berita acara.</td></tr>';
+        return;
+    }
+
+    var html = '';
+    items.forEach(function(b, idx) {
+        var counts = (b.peserta_hadir || 0) + ' / ' + (b.peserta_tidak_hadir || 0) + ' / ' + (b.peserta_seharusnya || 0);
+
+        var photoCount = 0;
+        try {
+            var photos = typeof b.foto_dokumentasi === 'string' ? JSON.parse(b.foto_dokumentasi) : b.foto_dokumentasi;
+            if (Array.isArray(photos)) photoCount = photos.length;
+        } catch (e) {}
+        var photoBadge = photoCount > 0 ? '<span class="badge" style="background:#dcfce7; color:#15803d;"><i class="bi bi-camera"></i> ' + photoCount + ' Foto</span>' : '<span class="badge" style="background:#f1f5f9; color:#94a3b8;">Tidak ada</span>';
+
+        html += '<tr>' +
+            '<td>' + (idx + 1) + '</td>' +
+            '<td>' + (b.tanggal_ujian || '-') + '</td>' +
+            '<td><strong>' + (b.nama_kelas || '-') + '</strong></td>' +
+            '<td>' + (b.mata_pelajaran || '-') + '</td>' +
+            '<td>' + (b.ruang || '-') + '</td>' +
+            '<td style="text-align: center;"><span class="badge" style="background:#f1f5f9; color:#1e293b; font-weight:700;">' + counts + '</span></td>' +
+            '<td style="text-align: center;">' + photoBadge + '</td>' +
+            '<td>' + (b.nama_pengawas_1 || '-') + '</td>' +
+            '<td style="text-align: center; white-space: nowrap;">' +
+            '<a href="' + window.APP_URL + '?page=preview&type=berita-acara&id=' + b.id + '" target="_blank" class="btn btn-secondary btn-sm" title="Pratinjau A4 Tab Baru" style="padding: 2px 7px;"><i class="bi bi-eye"></i></a> ' +
+            '<button type="button" class="btn btn-danger-soft btn-sm" onclick="deleteBA(' + b.id + ')" title="Hapus Berkas" style="padding: 2px 7px;"><i class="bi bi-trash"></i></button>' +
+            '</td>' +
+            '</tr>';
+    });
+    tbody.innerHTML = html;
+}
+
+function deleteBA(id) {
+    showGlobalConfirmDialog(
+        'Konfirmasi Hapus Berkas',
+        'Apakah Anda yakin ingin menghapus Berita Acara ini?',
+        function() {
+            google.script.run
+                .withSuccessHandler(function() {
+                    showGlobalNotificationDialog('Berhasil', 'Berita Acara berhasil dihapus.', 'success');
+                    loadBAData();
+                })
+                .apiDeleteBeritaAcara(id);
+        },
+        'Hapus',
+        true
+    );
+}
+
+function confirmResetAllArsip() {
+    showConfirmResetModal(
+        function() {
+            google.script.run
+                .withSuccessHandler(function() {
+                    showGlobalNotificationDialog('Berhasil', 'Seluruh arsip Berita Acara berhasil dikosongkan.', 'success');
+                    loadBAData();
+                })
+                .apiDeleteAllBeritaAcara();
+        },
+        'Reset Hapus Semua Arsip Berita Acara',
+        'Tindakan ini akan mengosongkan seluruh riwayat Berita Acara dan lampiran foto. Apakah Anda yakin ingin melanjutkan?'
+    );
+}
+
+function exportArsipExcel() {
+    var filename = 'Rekap_Arsip_Berita_Acara_' + new Date().toISOString().split('T')[0] + '.xls';
+    var headers = ['No', 'Tanggal', 'Kelas', 'Mata Pelajaran', 'Ruang', 'Peserta Seharusnya', 'Hadir', 'Tidak Hadir', 'Blangko BA', 'Blangko DH', 'Catatan', 'Pengawas 1', 'NIP 1'];
+    var rows = [];
+    baList.forEach(function(b, idx) {
+        rows.push([
+            idx + 1, b.tanggal_ujian, b.nama_kelas, b.mata_pelajaran, b.ruang || '-',
+            b.peserta_seharusnya || 0, b.peserta_hadir || 0, b.peserta_tidak_hadir || 0,
+            b.blangko_berita_acara || 1, b.blangko_daftar_hadir || 1, b.catatan_pelaksanaan || '-',
+            b.nama_pengawas_1, b.nip_pengawas_1 || '-'
+        ]);
+    });
+    downloadExcelXLS(filename, headers, rows);
+}
+</script>
+</body>
+</html>

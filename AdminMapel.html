@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelola Data Mata Pelajaran - <?= (settings && settings.nama_sekolah) ? settings.nama_sekolah : 'SMK NEGERI FYJ Channel' ?></title>
+    <?!= include('StyleCSS'); ?>
+</head>
+<body>
+<?!= include('Header'); ?>
+
+<div class="admin-sidebar-layout">
+    <?!= include('Sidebar'); ?>
+    <main class="admin-main">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-heading); margin: 0;">Kelola Data Mata Pelajaran</h1>
+                <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Master kurikulum mapel yang terhubung dinamis ke formulir ujian</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button type="button" class="btn btn-primary btn-sm" onclick="openMapelModal()">
+                    <i class="bi bi-plus-circle"></i> Tambah Mapel
+                </button>
+                <a href="<?= appUrl ?>?page=import" class="btn btn-secondary btn-sm">
+                    <i class="bi bi-file-earmark-arrow-up"></i> Impor Excel
+                </a>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="exportMapelExcel()">
+                    <i class="bi bi-file-earmark-excel"></i> Ekspor Excel
+                </button>
+                <button type="button" class="btn btn-danger-soft btn-sm" onclick="confirmResetAllMapel()">
+                    <i class="bi bi-trash3"></i> Reset Hapus Semua
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter Card -->
+        <div class="horizontal-filter-card">
+            <div class="horizontal-filter-item">
+                <label>Pencarian Mapel</label>
+                <input type="text" id="searchMapel" class="form-control form-control-sm" placeholder="Nama mata pelajaran atau kode..." oninput="filterMapelTable()">
+            </div>
+            <div class="horizontal-filter-item" style="max-width: 220px;">
+                <label>Kelompok Kurikulum</label>
+                <select id="filterMapelKelompok" class="form-select form-select-sm" onchange="filterMapelTable()">
+                    <option value="">Semua Kelompok</option>
+                    <option value="Umum">Umum</option>
+                    <option value="Kejuruan">Kejuruan</option>
+                    <option value="Muatan Lokal">Muatan Lokal</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="card-title"><i class="bi bi-journal-bookmark"></i> Daftar Mata Pelajaran Resmi</span>
+                <span id="badgeTotalMapel" class="badge" style="background: #e0e7ff; color: #4338ca; font-weight: 700;">0 Mapel</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table" style="font-size: 0.875rem;">
+                    <thead>
+                        <tr>
+                            <th style="width: 35px;">No</th>
+                            <th>Kode Mapel</th>
+                            <th>Nama Mata Pelajaran</th>
+                            <th>Kelompok Kurikulum</th>
+                            <th style="text-align: center;">Status</th>
+                            <th style="text-align: center; width: 120px;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableMapelBody">
+                        <tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);"><i class="bi bi-arrow-repeat spin"></i> Memuat data mapel...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal Form Mapel -->
+<div id="modalFormMapel" class="custom-modal" style="display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6); z-index: 999999; align-items: center; justify-content: center;">
+    <div style="background: #ffffff; width: 90%; max-width: 480px; border-radius: 14px; padding: 1.5rem; box-shadow: 0 20px 45px rgba(0,0,0,0.25);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3 id="modalMapelTitle" style="font-size: 1.15rem; font-weight: 700; margin: 0;">Tambah Mata Pelajaran</h3>
+            <button type="button" onclick="closeMapelModal()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:#94a3b8;">&times;</button>
+        </div>
+        <form id="formMapelInput" onsubmit="handleSaveMapel(event)">
+            <input type="hidden" id="mapel_id" value="">
+            <div class="form-group">
+                <label class="form-label" for="mapel_kode">Kode Mapel</label>
+                <input type="text" id="mapel_kode" class="form-control" placeholder="Contoh: MP-001 (Opsional)">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="mapel_nama">Nama Mata Pelajaran <span class="required">*</span></label>
+                <input type="text" id="mapel_nama" class="form-control" placeholder="Contoh: Pemrograman Web" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="mapel_kelompok">Kelompok Kurikulum</label>
+                <select id="mapel_kelompok" class="form-select">
+                    <option value="Kejuruan" selected>Kejuruan</option>
+                    <option value="Umum">Umum</option>
+                    <option value="Muatan Lokal">Muatan Lokal</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" id="mapel_aktif" checked>
+                    <span>Mata Pelajaran Aktif</span>
+                </label>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeMapelModal()">Batal</button>
+                <button type="submit" id="btnSaveMapel" class="btn btn-primary">Simpan Mapel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<?!= include('Modals'); ?>
+<?!= include('AppJS'); ?>
+
+<script>
+var mapelList = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadMapelData();
+});
+
+function loadMapelData() {
+    google.script.run
+        .withSuccessHandler(function(data) {
+            window.AppStore.data = data;
+            mapelList = data.mapels || [];
+            renderMapelTable(mapelList);
+        })
+        .apiGetInitialData();
+}
+
+function renderMapelTable(mapels) {
+    var tbody = document.getElementById('tableMapelBody');
+    document.getElementById('badgeTotalMapel').textContent = mapels.length + ' Mapel';
+
+    if (!mapels || mapels.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">Belum ada data mata pelajaran.</td></tr>';
+        return;
+    }
+
+    var html = '';
+    mapels.forEach(function(m, idx) {
+        var stBadge = (String(m.aktif) === '1' || m.aktif === true) ? '<span class="badge" style="background:#dcfce7; color:#15803d;">Aktif</span>' : '<span class="badge" style="background:#fee2e2; color:#b91c1c;">Nonaktif</span>';
+        var kelBadge = '<span class="badge" style="background:#f1f5f9; color:#475569; font-weight:600;">' + (m.kelompok || 'Kejuruan') + '</span>';
+
+        html += '<tr>' +
+            '<td>' + (idx + 1) + '</td>' +
+            '<td><code>' + (m.kode_mapel || '-') + '</code></td>' +
+            '<td><strong>' + m.nama_mapel + '</strong></td>' +
+            '<td>' + kelBadge + '</td>' +
+            '<td style="text-align: center;">' + stBadge + '</td>' +
+            '<td style="text-align: center; white-space: nowrap;">' +
+            '<button type="button" class="btn btn-secondary btn-sm" onclick="editMapel(' + m.id + ')" title="Edit Mapel" style="padding: 2px 7px;"><i class="bi bi-pencil-square"></i></button> ' +
+            '<button type="button" class="btn btn-danger-soft btn-sm" onclick="deleteMapel(' + m.id + ', \'' + m.nama_mapel + '\')" title="Hapus Mapel" style="padding: 2px 7px;"><i class="bi bi-trash"></i></button>' +
+            '</td>' +
+            '</tr>';
+    });
+    tbody.innerHTML = html;
+}
+
+function filterMapelTable() {
+    var q = document.getElementById('searchMapel').value.trim().toLowerCase();
+    var kel = document.getElementById('filterMapelKelompok').value;
+
+    var filtered = mapelList.filter(function(m) {
+        if (kel && m.kelompok !== kel) return false;
+        if (q) {
+            var matchQ = (m.nama_mapel && m.nama_mapel.toLowerCase().indexOf(q) !== -1) ||
+                         (m.kode_mapel && String(m.kode_mapel).toLowerCase().indexOf(q) !== -1);
+            if (!matchQ) return false;
+        }
+        return true;
+    });
+
+    renderMapelTable(filtered);
+}
+
+function openMapelModal() {
+    document.getElementById('modalMapelTitle').textContent = 'Tambah Mata Pelajaran';
+    document.getElementById('mapel_id').value = '';
+    document.getElementById('mapel_kode').value = 'MP-' + String(mapelList.length + 1).padStart(3, '0');
+    document.getElementById('mapel_nama').value = '';
+    document.getElementById('mapel_kelompok').value = 'Kejuruan';
+    document.getElementById('mapel_aktif').checked = true;
+    document.getElementById('modalFormMapel').style.display = 'flex';
+}
+
+function editMapel(id) {
+    var m = mapelList.find(function(item) { return String(item.id) === String(id); });
+    if (!m) return;
+    document.getElementById('modalMapelTitle').textContent = 'Edit Data Mapel';
+    document.getElementById('mapel_id').value = m.id;
+    document.getElementById('mapel_kode').value = m.kode_mapel || '';
+    document.getElementById('mapel_nama').value = m.nama_mapel;
+    document.getElementById('mapel_kelompok').value = m.kelompok || 'Kejuruan';
+    document.getElementById('mapel_aktif').checked = (String(m.aktif) === '1' || m.aktif === true);
+    document.getElementById('modalFormMapel').style.display = 'flex';
+}
+
+function closeMapelModal() {
+    document.getElementById('modalFormMapel').style.display = 'none';
+}
+
+function handleSaveMapel(e) {
+    e.preventDefault();
+    var id = document.getElementById('mapel_id').value;
+    var nama = document.getElementById('mapel_nama').value.trim();
+    var btn = document.getElementById('btnSaveMapel');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Menyimpan...';
+
+    var payload = {
+        id: id || null,
+        kode_mapel: document.getElementById('mapel_kode').value.trim(),
+        nama_mapel: nama,
+        kelompok: document.getElementById('mapel_kelompok').value,
+        aktif: document.getElementById('mapel_aktif').checked ? 1 : 0
+    };
+
+    google.script.run
+        .withSuccessHandler(function() {
+            btn.disabled = false;
+            btn.innerHTML = 'Simpan Mapel';
+            closeMapelModal();
+            showGlobalNotificationDialog('Berhasil', 'Mata pelajaran ' + nama + ' berhasil disimpan.', 'success');
+            loadMapelData();
+        })
+        .withFailureHandler(function(err) {
+            btn.disabled = false;
+            btn.innerHTML = 'Simpan Mapel';
+            showGlobalNotificationDialog('Gagal', err.message, 'danger');
+        })
+        .apiSaveMapel(payload);
+}
+
+function deleteMapel(id, nama) {
+    showGlobalConfirmDialog(
+        'Konfirmasi Hapus Mapel',
+        'Apakah Anda yakin ingin menghapus mata pelajaran ' + nama + '?',
+        function() {
+            google.script.run
+                .withSuccessHandler(function() {
+                    showGlobalNotificationDialog('Berhasil', 'Mapel ' + nama + ' berhasil dihapus.', 'success');
+                    loadMapelData();
+                })
+                .apiDeleteMapel(id);
+        },
+        'Hapus',
+        true
+    );
+}
+
+function confirmResetAllMapel() {
+    showConfirmResetModal(
+        function() {
+            google.script.run
+                .withSuccessHandler(function() {
+                    showGlobalNotificationDialog('Berhasil', 'Seluruh data mata pelajaran telah direset.', 'success');
+                    loadMapelData();
+                })
+                .apiDeleteAllMapel();
+        },
+        'Reset Hapus Semua Mapel',
+        'Tindakan ini akan mengosongkan seluruh master mata pelajaran. Apakah Anda yakin ingin melanjutkan?'
+    );
+}
+
+function exportMapelExcel() {
+    var filename = 'Data_Mata_Pelajaran_' + new Date().toISOString().split('T')[0] + '.xls';
+    var headers = ['No', 'Kode Mapel', 'Nama Mata Pelajaran', 'Kelompok Kurikulum', 'Status'];
+    var rows = [];
+    mapelList.forEach(function(m, idx) {
+        var st = (String(m.aktif) === '1' || m.aktif === true) ? 'Aktif' : 'Nonaktif';
+        rows.push([idx + 1, m.kode_mapel || '-', m.nama_mapel, m.kelompok || 'Kejuruan', st]);
+    });
+    downloadExcelXLS(filename, headers, rows);
+}
+</script>
+</body>
+</html>

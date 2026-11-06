@@ -1,69 +1,106 @@
+<!-- Admin Sidebar Tree Navigation -->
 <aside class="admin-sidebar" id="adminSidebar">
-    <div>
-        <div class="sidebar-brand-wrapper">
-            <div class="sidebar-brand-icon"><i class="bi bi-shield-check"></i></div>
-            <div class="sidebar-brand-text">
-                <span class="sidebar-brand-title">PANEL SAS</span>
-                <span class="sidebar-brand-sub">ADMIN PORTAL</span>
+    <!-- Dashboard Standalone -->
+    <a href="<?= appUrl ?>?page=dashboard" class="admin-menu-item <?= (currentPage === 'dashboard') ? 'active' : '' ?>" style="margin-bottom: 0.5rem;">
+        <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
+    </a>
+
+    <!-- GRUP 1: DATA MASTER -->
+    <? var isMasterActive = ['kelas', 'siswa', 'guru', 'mapel', 'import'].indexOf(currentPage) !== -1; ?>
+    <div class="sidebar-nav-group <?= isMasterActive ? 'is-open' : '' ?>" id="groupMaster">
+        <button type="button" class="sidebar-group-header <?= isMasterActive ? 'has-active' : '' ?>" onclick="toggleSidebarGroup(this, event)">
+            <span class="group-header-left">
+                <i class="group-icon bi bi-buildings"></i>
+                <span class="group-title">Data Master</span>
+            </span>
+            <i class="group-arrow bi bi-caret-down-fill"></i>
+        </button>
+        <div class="sidebar-group-sub">
+            <div class="sidebar-tree-line"></div>
+            <a href="<?= appUrl ?>?page=kelas" class="sidebar-sub-item <?= (currentPage === 'kelas') ? 'active' : '' ?>">
+                <span class="sidebar-sub-bullet"></span>
+                <span class="sidebar-sub-text">Data Kelas</span>
+            </a>
+            <a href="<?= appUrl ?>?page=siswa" class="sidebar-sub-item <?= (currentPage === 'siswa') ? 'active' : '' ?>">
+                <span class="sidebar-sub-bullet"></span>
+                <span class="sidebar-sub-text">Kelola Data Siswa</span>
+            </a>
+            <a href="<?= appUrl ?>?page=guru" class="sidebar-sub-item <?= (currentPage === 'guru') ? 'active' : '' ?>">
+                <span class="sidebar-sub-bullet"></span>
+                <span class="sidebar-sub-text">Data Guru & Pengawas</span>
+            </a>
+            <a href="<?= appUrl ?>?page=mapel" class="sidebar-sub-item <?= (currentPage === 'mapel') ? 'active' : '' ?>">
+                <span class="sidebar-sub-bullet"></span>
+                <span class="sidebar-sub-text">Data Mapel</span>
+            </a>
+            <a href="<?= appUrl ?>?page=import" class="sidebar-sub-item <?= (currentPage === 'import') ? 'active' : '' ?>">
+                <span class="sidebar-sub-bullet"></span>
+                <span class="sidebar-sub-text">Impor Data Excel</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- GRUP 2: REKAP DAN LAPORAN -->
+    <? var isRekapActive = ['rekap-kehadiran', 'admin-absensi', 'admin-berita-acara', 'rekonsiliasi'].indexOf(currentPage) !== -1; ?>
+    <div class="sidebar-nav-group <?= isRekapActive ? 'is-open' : '' ?>" id="groupRekap">
+        <button type="button" class="sidebar-group-header <?= isRekapActive ? 'has-active' : '' ?>" onclick="toggleSidebarGroup(this, event)">
+            <span class="group-header-left">
+                <i class="group-icon bi bi-bar-chart-line"></i>
+                <span class="group-title">Rekap dan Laporan</span>
+            </span>
+            <i class="group-arrow bi bi-caret-down-fill"></i>
+        </button>
+        <div class="sidebar-group-sub">
+            <div class="sidebar-tree-line"></div>
+            <a href="<?= appUrl ?>?page=rekap-kehadiran" class="sidebar-sub-item <?= (currentPage === 'rekap-kehadiran') ? 'active' : '' ?>">
+                <span class="sidebar-sub-bullet"></span>
+                <span class="sidebar-sub-text">Rekap Kehadiran</span>
+            </a>
+            <a href="<?= appUrl ?>?page=admin-absensi" class="sidebar-sub-item <?= (currentPage === 'admin-absensi') ? 'active' : '' ?>">
+                <span class="sidebar-sub-bullet"></span>
+                <span class="sidebar-sub-text">Arsip Daftar Hadir</span>
+            </a>
+            <a href="<?= appUrl ?>?page=admin-berita-acara" class="sidebar-sub-item <?= (currentPage === 'admin-berita-acara') ? 'active' : '' ?>">
+                <span class="sidebar-sub-bullet"></span>
+                <span class="sidebar-sub-text">Arsip Berita Acara</span>
+            </a>
+            <a href="<?= appUrl ?>?page=rekonsiliasi" class="sidebar-sub-item <?= (currentPage === 'rekonsiliasi') ? 'active' : '' ?>">
+                <span class="sidebar-sub-bullet"></span>
+                <span class="sidebar-sub-text">Rekonsiliasi Dokumen</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- GRUP 3: PENGATURAN SISTEM (ADMIN & OPERATOR) -->
+    <div id="sidebarAdminSettingsGroup">
+        <? var isSettingsActive = ['template', 'pengaturan', 'users', 'profil'].indexOf(currentPage) !== -1; ?>
+        <div class="sidebar-nav-group <?= isSettingsActive ? 'is-open' : '' ?>" id="groupPengaturan">
+            <button type="button" class="sidebar-group-header <?= isSettingsActive ? 'has-active' : '' ?>" onclick="toggleSidebarGroup(this, event)">
+                <span class="group-header-left">
+                    <i class="group-icon bi bi-sliders"></i>
+                    <span class="group-title">Pengaturan</span>
+                </span>
+                <i class="group-arrow bi bi-caret-down-fill"></i>
+            </button>
+            <div class="sidebar-group-sub">
+                <div class="sidebar-tree-line"></div>
+                <a href="<?= appUrl ?>?page=template" class="sidebar-sub-item admin-only-item <?= (currentPage === 'template') ? 'active' : '' ?>">
+                    <span class="sidebar-sub-bullet"></span>
+                    <span class="sidebar-sub-text">Template Ujian</span>
+                </a>
+                <a href="<?= appUrl ?>?page=pengaturan" class="sidebar-sub-item admin-only-item <?= (currentPage === 'pengaturan') ? 'active' : '' ?>">
+                    <span class="sidebar-sub-bullet"></span>
+                    <span class="sidebar-sub-text">Pengaturan Kop & Drive</span>
+                </a>
+                <a href="<?= appUrl ?>?page=users" class="sidebar-sub-item admin-only-item <?= (currentPage === 'users') ? 'active' : '' ?>">
+                    <span class="sidebar-sub-bullet"></span>
+                    <span class="sidebar-sub-text">Manajemen User</span>
+                </a>
+                <a href="<?= appUrl ?>?page=profil" class="sidebar-sub-item <?= (currentPage === 'profil') ? 'active' : '' ?>">
+                    <span class="sidebar-sub-bullet"></span>
+                    <span class="sidebar-sub-text">Profil</span>
+                </a>
             </div>
         </div>
-
-        <ul class="admin-nav">
-            <li>
-                <a href="javascript:void(0)" onclick="navigateTo('dashboard')" class="admin-nav-item <?= currentPage === 'dashboard' ? 'active' : '' ?>">
-                    <i class="bi bi-grid-fill"></i> Dashboard
-                </a>
-            </li>
-        </ul>
-
-        <div class="admin-nav-category">DATA MASTER</div>
-        <ul class="admin-nav">
-            <li>
-                <a href="javascript:void(0)" onclick="navigateTo('guru')" class="admin-nav-item <?= currentPage === 'guru' ? 'active' : '' ?>">
-                    <i class="bi bi-person-workspace"></i> Data Guru & Pengawas
-                </a>
-            </li>
-            <li>
-                <a href="javascript:void(0)" onclick="navigateTo('siswa')" class="admin-nav-item <?= currentPage === 'siswa' ? 'active' : '' ?>">
-                    <i class="bi bi-people"></i> Data Siswa & Kelas
-                </a>
-            </li>
-        </ul>
-
-        <div class="admin-nav-category">PENCATATAN & DOKUMEN</div>
-        <ul class="admin-nav">
-            <li>
-                <a href="javascript:void(0)" onclick="navigateTo('template')" class="admin-nav-item <?= currentPage === 'template' ? 'active' : '' ?>">
-                    <i class="bi bi-file-earmark-text"></i> Template Ujian
-                </a>
-            </li>
-            <li>
-                <a href="javascript:void(0)" onclick="navigateTo('admin-arsip')" class="admin-nav-item <?= currentPage === 'admin-arsip' ? 'active' : '' ?>">
-                    <i class="bi bi-archive-fill"></i> Arsip Dokumen Ujian
-                </a>
-            </li>
-        </ul>
-
-        <div class="admin-nav-category">PENGATURAN SISTEM</div>
-        <ul class="admin-nav">
-            <li>
-                <a href="javascript:void(0)" onclick="navigateTo('pengaturan')" class="admin-nav-item <?= currentPage === 'pengaturan' ? 'active' : '' ?>">
-                    <i class="bi bi-sliders"></i> Pengaturan Sekolah & Kop
-                </a>
-            </li>
-            <li class="admin-only-menu">
-                <a href="javascript:void(0)" onclick="navigateTo('users')" class="admin-nav-item <?= currentPage === 'users' ? 'active' : '' ?>">
-                    <i class="bi bi-person-badge-fill"></i> Manajemen User
-                </a>
-            </li>
-            <li class="admin-only-menu">
-                <a href="javascript:void(0)" onclick="navigateTo('database')" class="admin-nav-item <?= currentPage === 'database' ? 'active' : '' ?>">
-                    <i class="bi bi-database"></i> Backup & Database
-                </a>
-            </li>
-        </ul>
-    </div>
-    <div style="font-size: 0.78rem; color: #64748B; padding: 12px 10px 0; border-top: 1px solid rgba(255,255,255,0.06); margin-top: 1.5rem;">
-        Sistem SAS v2.5<br><span class="brand-title"><?= schoolSettings.school_name || 'SMK NEGERI FYJ CHANNEL' ?></span>
     </div>
 </aside>

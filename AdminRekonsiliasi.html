@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit & Rekonsiliasi Dokumen - <?= (settings && settings.nama_sekolah) ? settings.nama_sekolah : 'SMK NEGERI FYJ Channel' ?></title>
+    <?!= include('StyleCSS'); ?>
+</head>
+<body>
+<?!= include('Header'); ?>
+
+<div class="admin-sidebar-layout">
+    <?!= include('Sidebar'); ?>
+    <main class="admin-main">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-heading); margin: 0;">Audit & Rekonsiliasi Dokumen Ujian</h1>
+                <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Pencocokan silang otomatis antara Daftar Hadir dan Berita Acara untuk memastikan kelengkapan sesi</p>
+            </div>
+            <div>
+                <button type="button" class="btn btn-danger-soft btn-sm" onclick="confirmResetAllDocs()">
+                    <i class="bi bi-trash3"></i> Hapus Seluruh Dokumen Ujian
+                </button>
+            </div>
+        </div>
+
+        <!-- Metrik Rekonsiliasi -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="card" style="padding: 1.25rem; text-align: center;">
+                <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">TOTAL SESI TERDETEKSI</div>
+                <div style="font-size: 1.75rem; font-weight: 800; color: var(--primary);" id="rekonTotal">0</div>
+            </div>
+            <div class="card" style="padding: 1.25rem; text-align: center;">
+                <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">SESI LENGKAP (DH & BA)</div>
+                <div style="font-size: 1.75rem; font-weight: 800; color: #10b981;" id="rekonLengkap">0</div>
+            </div>
+            <div class="card" style="padding: 1.25rem; text-align: center;">
+                <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">SESI BELUM LENGKAP</div>
+                <div style="font-size: 1.75rem; font-weight: 800; color: #ef4444;" id="rekonBelum">0</div>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="horizontal-filter-card">
+            <div class="horizontal-filter-item">
+                <label>Filter Status Dokumen</label>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-primary btn-sm btn-rekon-filter" id="filterBtnAll" onclick="setRekonFilter('all')">Semua Sesi</button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-rekon-filter" id="filterBtnLengkap" onclick="setRekonFilter('lengkap')">Lengkap</button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-rekon-filter" id="filterBtnBelum" onclick="setRekonFilter('belum')">Belum Lengkap</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabel Audit -->
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="card-title"><i class="bi bi-check2-square"></i> Tabel Hasil Pencocokan Silang</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table" style="font-size: 0.875rem;">
+                    <thead>
+                        <tr>
+                            <th style="width: 35px;">No</th>
+                            <th>Tanggal Ujian</th>
+                            <th>Kelas</th>
+                            <th>Mata Pelajaran</th>
+                            <th style="text-align: center;">Daftar Hadir (DH)</th>
+                            <th style="text-align: center;">Berita Acara (BA)</th>
+                            <th style="text-align: center;">Status Audit</th>
+                            <th style="text-align: center; width: 150px;">Aksi Rekonsiliasi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableRekonBody">
+                        <tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);"><i class="bi bi-arrow-repeat spin"></i> Menganalisis dokumen...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<?!= include('Modals'); ?>
+<?!= include('AppJS'); ?>
+
+<script>
+var reconciledSessions = [];
+var activeRekonFilter = 'all';
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadRekonData();
+});
+
+function loadRekonData() {
+    google.script.run
+        .withSuccessHandler(function(data) {
+            window.AppStore.data = data;
+            
+            var map = {};
+            (data.absensi || []).forEach(function(a) {
+                var key = a.tanggal_ujian + '||' + a.class_id + '||' + (a.mata_pelajaran || '').trim().toLowerCase();
+                if (!map[key]) {
+                    map[key] = {
+                        tanggal: a.tanggal_ujian,
+                        class_id: a.class_id,
+                        nama_kelas: a.nama_kelas,
+                        mata_pelajaran: a.mata_pelajaran,
+                        dh: a,
+                        ba: null
+                    };
+                } else {
+                    map[key].dh = a;
+                }
+            });
+
+            (data.berita_acara || []).forEach(function(b) {
+                var key = b.tanggal_ujian + '||' + b.class_id + '||' + (b.mata_pelajaran || '').trim().toLowerCase();
+                if (!map[key]) {
+                    map[key] = {
+                        tanggal: b.tanggal_ujian,
+                        class_id: b.class_id,
+                        nama_kelas: b.nama_kelas,
+                        mata_pelajaran: b.mata_pelajaran,
+                        dh: null,
+                        ba: b
+                    };
+                } else {
+                    map[key].ba = b;
+                }
+            });
+
+            reconciledSessions = Object.values(map).sort(function(x, y) {
+                return (y.tanggal || '').localeCompare(x.tanggal || '');
+            });
+
+            renderRekonTable();
+        })
+        .apiGetInitialData();
+}
+
+function setRekonFilter(st) {
+    activeRekonFilter = st;
+    document.querySelectorAll('.btn-rekon-filter').forEach(function(b) {
+        b.className = 'btn btn-secondary btn-sm btn-rekon-filter';
+    });
+    if (st === 'all') document.getElementById('filterBtnAll').className = 'btn btn-primary btn-sm btn-rekon-filter';
+    else if (st === 'lengkap') document.getElementById('filterBtnLengkap').className = 'btn btn-primary btn-sm btn-rekon-filter';
+    else document.getElementById('filterBtnBelum').className = 'btn btn-primary btn-sm btn-rekon-filter';
+
+    renderRekonTable();
+}
+
+function renderRekonTable() {
+    var items = reconciledSessions.filter(function(s) {
+        if (activeRekonFilter === 'lengkap') return (s.dh && s.ba);
+        if (activeRekonFilter === 'belum') return (!s.dh || !s.ba);
+        return true;
+    });
+
+    var total = reconciledSessions.length;
+    var lengkap = 0;
+    var belum = 0;
+    reconciledSessions.forEach(function(s) {
+        if (s.dh && s.ba) lengkap++;
+        else belum++;
+    });
+
+    document.getElementById('rekonTotal').textContent = total;
+    document.getElementById('rekonLengkap').textContent = lengkap;
+    document.getElementById('rekonBelum').textContent = belum;
+
+    var tbody = document.getElementById('tableRekonBody');
+    if (items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);">Tidak ada berkas sesi yang sesuai kriteria filter.</td></tr>';
+        return;
+    }
+
+    var html = '';
+    items.forEach(function(s, idx) {
+        var dhStatus = s.dh ? '<span class="badge" style="background:#dcfce7; color:#15803d;"><i class="bi bi-check-circle"></i> Ada</span>' : '<span class="badge" style="background:#fee2e2; color:#b91c1c;"><i class="bi bi-x-circle"></i> Tidak Ada</span>';
+        var baStatus = s.ba ? '<span class="badge" style="background:#dcfce7; color:#15803d;"><i class="bi bi-check-circle"></i> Ada</span>' : '<span class="badge" style="background:#fee2e2; color:#b91c1c;"><i class="bi bi-x-circle"></i> Tidak Ada</span>';
+
+        var auditBadge = (s.dh && s.ba) ? '<span class="badge" style="background:#dcfce7; color:#15803d; font-weight:700;">Lengkap</span>' : '<span class="badge" style="background:#fee2e2; color:#b91c1c; font-weight:700;">Belum Lengkap</span>';
+
+        var aksi = '';
+        if (s.dh) {
+            aksi += '<a href="' + window.APP_URL + '?page=preview&type=absensi&id=' + s.dh.id + '" target="_blank" class="btn btn-secondary btn-sm" title="Lihat DH" style="padding: 2px 7px; font-size: 0.75rem;"><i class="bi bi-clipboard-check"></i> DH</a> ';
+        }
+        if (s.ba) {
+            aksi += '<a href="' + window.APP_URL + '?page=preview&type=berita-acara&id=' + s.ba.id + '" target="_blank" class="btn btn-secondary btn-sm" title="Lihat BA" style="padding: 2px 7px; font-size: 0.75rem;"><i class="bi bi-file-earmark-text"></i> BA</a>';
+        }
+
+        html += '<tr>' +
+            '<td>' + (idx + 1) + '</td>' +
+            '<td>' + (s.tanggal || '-') + '</td>' +
+            '<td><strong>' + (s.nama_kelas || '-') + '</strong></td>' +
+            '<td>' + (s.mata_pelajaran || '-') + '</td>' +
+            '<td style="text-align: center;">' + dhStatus + '</td>' +
+            '<td style="text-align: center;">' + baStatus + '</td>' +
+            '<td style="text-align: center;">' + auditBadge + '</td>' +
+            '<td style="text-align: center; white-space: nowrap;">' + aksi + '</td>' +
+            '</tr>';
+    });
+    tbody.innerHTML = html;
+}
+
+function confirmResetAllDocs() {
+    showConfirmResetModal(
+        function() {
+            google.script.run
+                .withSuccessHandler(function() {
+                    showGlobalNotificationDialog('Berhasil', 'Seluruh dokumen ujian (Daftar Hadir & Berita Acara) telah dibersihkan.', 'success');
+                    loadRekonData();
+                })
+                .apiDeleteAllDocs();
+        },
+        'Hapus Seluruh Dokumen Ujian',
+        'Tindakan ini akan menghapus permanen seluruh Daftar Hadir dan Berita Acara dari database. Lanjutkan?'
+    );
+}
+</script>
+</body>
+</html>

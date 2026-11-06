@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelola Data Kelas - <?= (settings && settings.nama_sekolah) ? settings.nama_sekolah : 'SMK NEGERI FYJ Channel' ?></title>
+    <?!= include('StyleCSS'); ?>
+</head>
+<body>
+<?!= include('Header'); ?>
+
+<div class="admin-sidebar-layout">
+    <?!= include('Sidebar'); ?>
+    <main class="admin-main">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-heading); margin: 0;">Kelola Data Kelas</h1>
+                <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Daftar kelas rombongan belajar aktif peserta ujian</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button type="button" class="btn btn-primary btn-sm" onclick="openKelasModal()">
+                    <i class="bi bi-plus-circle"></i> Tambah Kelas
+                </button>
+                <button type="button" class="btn btn-danger-soft btn-sm" onclick="confirmResetAllKelas()">
+                    <i class="bi bi-trash3"></i> Reset Hapus Semua Kelas
+                </button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                <span class="card-title"><i class="bi bi-buildings"></i> Master Data Rombel Kelas</span>
+                <input type="text" id="searchKelas" class="form-control form-control-sm" placeholder="Cari nama kelas / jurusan..." style="max-width: 260px;" oninput="filterKelasTable()">
+            </div>
+            <div class="table-responsive">
+                <table class="table" style="font-size: 0.875rem;">
+                    <thead>
+                        <tr>
+                            <th style="width: 35px;">No</th>
+                            <th>Nama Kelas</th>
+                            <th>Tingkat</th>
+                            <th>Program / Konsentrasi Keahlian</th>
+                            <th style="text-align: center;">Jumlah Siswa</th>
+                            <th style="text-align: center;">Status</th>
+                            <th style="text-align: center; width: 120px;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableKelasBody">
+                        <tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);"><i class="bi bi-arrow-repeat spin"></i> Memuat data kelas...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal Form Kelas -->
+<div id="modalFormKelas" class="custom-modal" style="display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6); z-index: 999999; align-items: center; justify-content: center;">
+    <div style="background: #ffffff; width: 90%; max-width: 480px; border-radius: 14px; padding: 1.5rem; box-shadow: 0 20px 45px rgba(0,0,0,0.25);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3 id="modalKelasTitle" style="font-size: 1.15rem; font-weight: 700; margin: 0;">Tambah Kelas Baru</h3>
+            <button type="button" onclick="closeKelasModal()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:#94a3b8;">&times;</button>
+        </div>
+        <form id="formKelasInput" onsubmit="handleSaveKelas(event)">
+            <input type="hidden" id="kelas_id" value="">
+            <div class="form-group">
+                <label class="form-label" for="kelas_nama">Nama Kelas <span class="required">*</span></label>
+                <input type="text" id="kelas_nama" class="form-control" placeholder="Contoh: XII DKV" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="kelas_tingkat">Tingkat Kelas <span class="required">*</span></label>
+                <select id="kelas_tingkat" class="form-select" required>
+                    <option value="X">Kelas X</option>
+                    <option value="XI">Kelas XI</option>
+                    <option value="XII" selected>Kelas XII</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="kelas_jurusan">Program / Konsentrasi Keahlian</label>
+                <input type="text" id="kelas_jurusan" class="form-control" placeholder="Contoh: Desain Komunikasi Visual">
+            </div>
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" id="kelas_aktif" checked>
+                    <span>Kelas Aktif</span>
+                </label>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeKelasModal()">Batal</button>
+                <button type="submit" id="btnSaveKelas" class="btn btn-primary">Simpan Kelas</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<?!= include('Modals'); ?>
+<?!= include('AppJS'); ?>
+
+<script>
+var kelasList = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadKelasData();
+});
+
+function loadKelasData() {
+    google.script.run
+        .withSuccessHandler(function(data) {
+            window.AppStore.data = data;
+            kelasList = data.classes || [];
+            renderKelasTable(kelasList);
+        })
+        .apiGetInitialData();
+}
+
+function renderKelasTable(classes) {
+    var tbody = document.getElementById('tableKelasBody');
+    if (!classes || classes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">Belum ada data kelas. Klik tombol Tambah Kelas di atas.</td></tr>';
+        return;
+    }
+
+    var html = '';
+    var students = (window.AppStore.data && window.AppStore.data.students) || [];
+    classes.forEach(function(c, idx) {
+        var sCount = students.filter(function(s) { return String(s.class_id) === String(c.id); }).length;
+        var stBadge = (String(c.aktif) === '1' || c.aktif === true) ? '<span class="badge" style="background:#dcfce7; color:#15803d;">Aktif</span>' : '<span class="badge" style="background:#fee2e2; color:#b91c1c;">Nonaktif</span>';
+
+        html += '<tr>' +
+            '<td>' + (idx + 1) + '</td>' +
+            '<td><strong>' + c.nama_kelas + '</strong></td>' +
+            '<td>' + (c.tingkat || 'XII') + '</td>' +
+            '<td>' + (c.program_keahlian || '-') + '</td>' +
+            '<td style="text-align: center;"><span class="badge" style="background: #e0e7ff; color: #4338ca; font-weight: 700;">' + sCount + ' Siswa</span></td>' +
+            '<td style="text-align: center;">' + stBadge + '</td>' +
+            '<td style="text-align: center; white-space: nowrap;">' +
+            '<button type="button" class="btn btn-secondary btn-sm" onclick="editKelas(' + c.id + ')" title="Edit Kelas" style="padding: 2px 7px;"><i class="bi bi-pencil-square"></i></button> ' +
+            '<button type="button" class="btn btn-danger-soft btn-sm" onclick="deleteKelas(' + c.id + ', \'' + c.nama_kelas + '\')" title="Hapus Kelas" style="padding: 2px 7px;"><i class="bi bi-trash"></i></button>' +
+            '</td>' +
+            '</tr>';
+    });
+    tbody.innerHTML = html;
+}
+
+function filterKelasTable() {
+    var q = document.getElementById('searchKelas').value.trim().toLowerCase();
+    var filtered = kelasList.filter(function(c) {
+        return (c.nama_kelas && c.nama_kelas.toLowerCase().indexOf(q) !== -1) ||
+               (c.program_keahlian && c.program_keahlian.toLowerCase().indexOf(q) !== -1);
+    });
+    renderKelasTable(filtered);
+}
+
+function openKelasModal() {
+    document.getElementById('modalKelasTitle').textContent = 'Tambah Kelas Baru';
+    document.getElementById('kelas_id').value = '';
+    document.getElementById('kelas_nama').value = '';
+    document.getElementById('kelas_tingkat').value = 'XII';
+    document.getElementById('kelas_jurusan').value = '';
+    document.getElementById('kelas_aktif').checked = true;
+    document.getElementById('modalFormKelas').style.display = 'flex';
+}
+
+function editKelas(id) {
+    var c = kelasList.find(function(item) { return String(item.id) === String(id); });
+    if (!c) return;
+    document.getElementById('modalKelasTitle').textContent = 'Edit Data Kelas';
+    document.getElementById('kelas_id').value = c.id;
+    document.getElementById('kelas_nama').value = c.nama_kelas;
+    document.getElementById('kelas_tingkat').value = c.tingkat || 'XII';
+    document.getElementById('kelas_jurusan').value = c.program_keahlian || '';
+    document.getElementById('kelas_aktif').checked = (String(c.aktif) === '1' || c.aktif === true);
+    document.getElementById('modalFormKelas').style.display = 'flex';
+}
+
+function closeKelasModal() {
+    document.getElementById('modalFormKelas').style.display = 'none';
+}
+
+function handleSaveKelas(e) {
+    e.preventDefault();
+    var id = document.getElementById('kelas_id').value;
+    var nama = document.getElementById('kelas_nama').value.trim();
+    var tingkat = document.getElementById('kelas_tingkat').value;
+    var jurusan = document.getElementById('kelas_jurusan').value.trim();
+    var aktif = document.getElementById('kelas_aktif').checked ? 1 : 0;
+
+    var btn = document.getElementById('btnSaveKelas');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Menyimpan...';
+
+    var payload = {
+        id: id || null,
+        nama_kelas: nama,
+        tingkat: tingkat,
+        program_keahlian: jurusan,
+        aktif: aktif
+    };
+
+    google.script.run
+        .withSuccessHandler(function() {
+            btn.disabled = false;
+            btn.innerHTML = 'Simpan Kelas';
+            closeKelasModal();
+            showGlobalNotificationDialog('Berhasil', 'Data kelas ' + nama + ' berhasil disimpan.', 'success');
+            loadKelasData();
+        })
+        .withFailureHandler(function(err) {
+            btn.disabled = false;
+            btn.innerHTML = 'Simpan Kelas';
+            showGlobalNotificationDialog('Gagal', err.message, 'danger');
+        })
+        .apiSaveKelas(payload);
+}
+
+function deleteKelas(id, nama) {
+    showGlobalConfirmDialog(
+        'Konfirmasi Hapus Kelas',
+        'Apakah Anda yakin ingin menghapus kelas ' + nama + '?',
+        function() {
+            google.script.run
+                .withSuccessHandler(function() {
+                    showGlobalNotificationDialog('Berhasil', 'Kelas ' + nama + ' berhasil dihapus.', 'success');
+                    loadKelasData();
+                })
+                .apiDeleteKelas(id);
+        },
+        'Hapus',
+        true
+    );
+}
+
+function confirmResetAllKelas() {
+    showConfirmResetModal(
+        function() {
+            google.script.run
+                .withSuccessHandler(function() {
+                    showGlobalNotificationDialog('Berhasil', 'Seluruh data kelas telah direset.', 'success');
+                    loadKelasData();
+                })
+                .apiDeleteAllKelas();
+        },
+        'Reset Hapus Semua Kelas',
+        'Tindakan ini akan mengosongkan seluruh master kelas. Apakah Anda yakin ingin melanjutkan?'
+    );
+}
+</script>
+</body>
+</html>

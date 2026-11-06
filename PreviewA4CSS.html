@@ -213,123 +213,43 @@
 
 .signature-name {
     font-weight: bold;
-    text-decoration: none;
+    text-decoration: underline;
 }
 
 .signature-nip {
     font-size: 9pt;
 }
 
-/* =========================================================
-   PRINT MEDIA RULES (CETAK A4 RESMI)
-   ========================================================= */
+
+/* Enhanced Print Rules for GAS Browser Sandbox */
 @media print {
     body, html {
         background: #ffffff !important;
         margin: 0 !important;
         padding: 0 !important;
-        color: #000000 !important;
     }
-
-    .navbar, 
-    .panel-form, 
-    .mobile-tabs, 
-    .panel-preview-header, 
-    #pvPageSeparator,
-    .signature-tools,
-    footer,
-    #toastContainer,
-    .btn,
-    .home-hero,
-    .choices-container {
+    .navbar, .admin-navbar, .admin-sidebar, .panel-form, .mobile-tabs, .btn, .no-print {
         display: none !important;
     }
-
-    .container {
-        max-width: 100% !important;
+    .split-layout, .container, .admin-sidebar-layout, .admin-main {
         padding: 0 !important;
         margin: 0 !important;
-    }
-
-    .split-layout {
-        display: block !important;
-    }
-
-    .panel-preview {
-        display: block !important;
         width: 100% !important;
-        background: transparent !important;
-        padding: 0 !important;
-        margin: 0 !important;
+        display: block !important;
     }
-
     .a4-wrapper {
         padding: 0 !important;
         margin: 0 !important;
         gap: 0 !important;
-        zoom: 1 !important;
-        transform: none !important;
-        width: 100% !important;
         display: block !important;
     }
-
     .a4-page {
         box-shadow: none !important;
         border: none !important;
-        border-radius: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        width: 100% !important;
-        min-height: auto !important;
-        page-break-after: auto;
-        break-after: auto;
-        box-sizing: border-box !important;
-    }
-
-    #pvPageSeparator {
-        display: none !important;
-    }
-
-    #a4Page2 {
-        page-break-before: always !important;
-        break-before: page !important;
-        display: block !important;
-        margin-top: 5mm !important;
-    }
-
-    table.attendance-table {
-        width: 100% !important;
-        border-collapse: collapse !important;
-        page-break-inside: auto !important;
-        break-inside: auto !important;
-    }
-
-    table.attendance-table thead {
-        display: table-header-group !important;
-    }
-
-    table.attendance-table tr {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-    }
-
-    .rekap-box {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-        margin-top: 14px !important;
-    }
-
-    .signature-section {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-        margin-top: 20px !important;
-    }
-
-    @page {
-        size: A4 portrait;
-        margin: 12mm 15mm 12mm 15mm;
+        margin: 0 auto !important;
+        width: 210mm !important;
+        min-height: 297mm !important;
+        page-break-after: always !important;
     }
 }
-
-
 </style>
