@@ -21,6 +21,12 @@
                 <button type="button" class="btn btn-primary btn-sm" onclick="openKelasModal()">
                     <i class="bi bi-plus-circle"></i> Tambah Kelas
                 </button>
+                <a href="<?= appUrl ?>?page=import" target="_top" onclick="navigateTo('import', { tab: 'kelas' }); return false;" class="btn btn-secondary btn-sm">
+                    <i class="bi bi-file-earmark-arrow-up"></i> Impor Excel
+                </a>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="exportKelasExcel()">
+                    <i class="bi bi-file-earmark-excel"></i> Ekspor Excel
+                </button>
                 <button type="button" class="btn btn-danger-soft btn-sm" onclick="confirmResetAllKelas()">
                     <i class="bi bi-trash3"></i> Reset Hapus Semua Kelas
                 </button>
@@ -124,7 +130,12 @@ function renderKelasTable(classes) {
     var students = (window.AppStore.data && window.AppStore.data.students) || [];
     classes.forEach(function(c, idx) {
         var sCount = students.filter(function(s) { return String(s.class_id) === String(c.id); }).length;
-        var stBadge = (String(c.aktif) === '1' || c.aktif === true) ? '<span class="badge" style="background:#dcfce7; color:#15803d;">Aktif</span>' : '<span class="badge" style="background:#fee2e2; color:#b91c1c;">Nonaktif</span>';
+        var isActive = (String(c.aktif) === '1' || c.aktif === true || c.aktif == 1);
+        var stBadge = '<button type="button" class="status-toggle-btn" onclick="toggleUniversalMasterStatus(\'kelas\', ' + c.id + ', ' + (isActive ? 1 : 0) + ', this)" title="Klik untuk mengubah status Kelas Aktif / Nonaktif">' +
+            '<span class="status-pill-badge ' + (isActive ? 'is-active' : 'is-inactive') + '">' +
+            '<i class="bi ' + (isActive ? 'bi-check-circle-fill' : 'bi-x-circle-fill') + '"></i> ' +
+            '<span>' + (isActive ? 'Aktif' : 'Nonaktif') + '</span>' +
+            '</span></button>';
 
         html += '<tr>' +
             '<td>' + (idx + 1) + '</td>' +
@@ -140,6 +151,17 @@ function renderKelasTable(classes) {
             '</tr>';
     });
     tbody.innerHTML = html;
+}
+
+function exportKelasExcel() {
+    var headers = ['No', 'Nama Kelas', 'Tingkat', 'Program Keahlian', 'Jumlah Siswa', 'Status'];
+    var students = (window.AppStore.data && window.AppStore.data.students) || [];
+    var rows = kelasList.map(function(c, i) {
+        var sCount = students.filter(function(s) { return String(s.class_id) === String(c.id); }).length;
+        return [i + 1, c.nama_kelas, c.tingkat || 'XII', c.program_keahlian || '-', sCount, (c.aktif == 1 ? 'Aktif' : 'Nonaktif')];
+    });
+    var filename = 'Data_Kelas_' + new Date().toISOString().split('T')[0] + '.xlsx';
+    downloadExcelXLS(filename, headers, rows);
 }
 
 function filterKelasTable() {

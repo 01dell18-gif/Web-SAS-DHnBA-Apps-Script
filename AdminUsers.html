@@ -21,6 +21,9 @@
                 <button type="button" class="btn btn-primary btn-sm" onclick="openUserModal()">
                     <i class="bi bi-person-plus"></i> Tambah Pengguna
                 </button>
+                <a href="<?= appUrl ?>?page=import" target="_top" onclick="navigateTo('import', { tab: 'users' }); return false;" class="btn btn-secondary btn-sm">
+                    <i class="bi bi-file-earmark-arrow-up"></i> Impor Excel
+                </a>
                 <button type="button" class="btn btn-secondary btn-sm" onclick="exportUsersExcel()">
                     <i class="bi bi-file-earmark-excel"></i> Ekspor Excel
                 </button>
@@ -66,8 +69,17 @@
                 <input type="text" id="user_username" class="form-control" placeholder="Contoh: operator1" required>
             </div>
             <div class="form-group">
-                <label class="form-label" for="user_nama">Nama Lengkap <span class="required">*</span></label>
-                <input type="text" id="user_nama" class="form-control" placeholder="Contoh: Budi Santoso" required>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                    <label class="form-label" for="user_nama" style="margin-bottom: 0;">Nama Lengkap <span class="required">*</span></label>
+                    <span style="font-size: 0.775rem; color: var(--primary); font-weight: 600;">
+                        <i class="bi bi-person-badge"></i> Dari Data Guru / Manual
+                    </span>
+                </div>
+                <input type="text" id="user_nama" list="listGuruPickerUser" class="form-control" placeholder="Contoh: Budi Santoso (ketik manual atau pilih guru)" oninput="handleGuruSelectUser(this.value)" required>
+                <datalist id="listGuruPickerUser"></datalist>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+                    💡 Anda dapat mengetik manual atau memilih nama resmi dari daftar Guru & Pengawas yang terdaftar.
+                </div>
             </div>
             <div class="form-group">
                 <label class="form-label" for="user_role">Peran (Hak Akses)</label>
@@ -78,7 +90,12 @@
             </div>
             <div class="form-group">
                 <label class="form-label" for="user_password">Password</label>
-                <input type="text" id="user_password" class="form-control" placeholder="Masukkan password (kosongkan jika tidak diubah)">
+                <div class="password-toggle-wrapper">
+                    <input type="password" id="user_password" class="form-control" placeholder="Masukkan password (kosongkan jika tidak diubah)" autocomplete="new-password">
+                    <button type="button" class="btn-toggle-eye" onclick="togglePasswordVisibility('user_password', this)" title="Tampilkan / Sembunyikan Password">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
                 <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Batal</button>
@@ -104,8 +121,34 @@ function loadUsersData() {
             window.AppStore.data = data;
             usersList = data.users || [];
             renderUsersTable(usersList);
+            populateGuruPicker(data.teachers || []);
         })
         .apiGetInitialData();
+}
+
+function populateGuruPicker(teachers) {
+    var dl = document.getElementById('listGuruPickerUser');
+    if (!dl) return;
+    dl.innerHTML = '';
+    teachers.forEach(function(g) {
+        var opt = document.createElement('option');
+        opt.value = g.nama;
+        opt.label = (g.nip ? 'NIP: ' + g.nip + ' - ' : '') + (g.jabatan || 'Guru');
+        dl.appendChild(opt);
+    });
+}
+
+function handleGuruSelectUser(val) {
+    if (!val) return;
+    var unameInput = document.getElementById('user_username');
+    if (unameInput && !unameInput.value.trim()) {
+        // Suggest clean username from teacher name
+        var clean = val.toLowerCase().replace(/^(drs\.|dr\.|ir\.|h\.|hj\.)/g, '').replace(/,\s*[a-z\.\s]+$/i, '').trim();
+        clean = clean.replace(/[^a-z0-9]/g, '');
+        if (clean.length > 3) {
+            unameInput.value = clean.substring(0, 15);
+        }
+    }
 }
 
 function renderUsersTable(users) {
@@ -126,8 +169,8 @@ function renderUsersTable(users) {
             '<td><strong>' + (u.nama_lengkap || '-') + '</strong></td>' +
             '<td>' + roleBadge + '</td>' +
             '<td>' +
-            '<span id="pwText_' + u.id + '" style="font-family: monospace;">••••••••</span> ' +
-            '<button type="button" class="btn btn-secondary btn-sm" onclick="togglePasswordPeek(' + u.id + ', \'' + pwPlain + '\')" style="padding: 1px 6px; font-size: 0.75rem;"><i class="bi bi-eye"></i></button>' +
+            '<span id="pwText_' + u.id + '" style="font-family: monospace; font-size: 0.9rem;">••••••••</span> ' +
+            '<button type="button" class="btn btn-secondary btn-sm" onclick="togglePasswordPeek(' + u.id + ', \'' + pwPlain + '\', this)" style="padding: 1px 7px; font-size: 0.8rem;" title="Lihat/Sembunyikan Password"><i class="bi bi-eye"></i></button>' +
             '</td>' +
             '<td style="text-align: center; white-space: nowrap;">' +
             '<button type="button" class="btn btn-secondary btn-sm" onclick="editUser(' + u.id + ')" title="Edit User" style="padding: 2px 7px;"><i class="bi bi-pencil-square"></i></button> ' +
@@ -138,13 +181,16 @@ function renderUsersTable(users) {
     tbody.innerHTML = html;
 }
 
-function togglePasswordPeek(id, plain) {
+function togglePasswordPeek(id, plain, btn) {
     var el = document.getElementById('pwText_' + id);
     if (!el) return;
+    var icon = btn ? btn.querySelector('i') : null;
     if (el.textContent === '••••••••') {
         el.textContent = plain;
+        if (icon) icon.className = 'bi bi-eye-slash-fill';
     } else {
         el.textContent = '••••••••';
+        if (icon) icon.className = 'bi bi-eye';
     }
 }
 
@@ -231,7 +277,7 @@ function deleteUser(id, username) {
 }
 
 function exportUsersExcel() {
-    var filename = 'Data_Pengguna_SAS_' + new Date().toISOString().split('T')[0] + '.xls';
+    var filename = 'Data_Pengguna_SAS_' + new Date().toISOString().split('T')[0] + '.xlsx';
     var headers = ['No', 'Username', 'Nama Lengkap', 'Role', 'Password Plain'];
     var rows = [];
     usersList.forEach(function(u, idx) {

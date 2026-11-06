@@ -157,23 +157,67 @@ function renderDocument(type, id) {
         var signImg1 = recBA.ttd_pengawas_1 ? '<img src="' + recBA.ttd_pengawas_1 + '" style="max-height: 55px;">' : '';
         var signImg2 = recBA.ttd_pengawas_2 ? '<img src="' + recBA.ttd_pengawas_2 + '" style="max-height: 55px;">' : '';
 
-        var redaksi = '<p>Pada hari ini, tanggal <strong>' + (recBA.tanggal_ujian || '-') + '</strong>:</p>' +
-            '<ol style="margin-top: 6px; margin-bottom: 12px; padding-left: 20px;">' +
-            '<li style="margin-bottom: 8px;">Telah diselenggarakan <strong>' + recBA.nama_ujian + '</strong> Tahun Ajaran <strong>' + recBA.tahun_ajaran + '</strong> dari pukul <strong>' + recBA.jam_mulai + '</strong> sampai dengan pukul <strong>' + recBA.jam_selesai + '</strong> WITA.' +
-            '<ul style="margin-top: 4px; margin-bottom: 6px; margin-left: 18px; list-style-type: disc;">' +
-            '<li>Pada Sekolah: <strong>SMK NEGERI FYJ Channel</strong></li>' +
-            '<li>Kelas: <strong>' + recBA.nama_kelas + '</strong></li>' +
-            '<li>Mata Pelajaran: <strong>' + recBA.mata_pelajaran + '</strong></li>' +
-            '<li>Ruang: <strong>' + recBA.ruang + '</strong></li>' +
-            '<li>Jumlah Peserta Seharusnya: <strong>' + recBA.peserta_seharusnya + '</strong> orang</li>' +
-            '<li>Jumlah Peserta yang Tidak Hadir: <strong>' + recBA.peserta_tidak_hadir + '</strong> orang</li>' +
-            '<li>Jumlah Peserta yang Hadir: <strong>' + recBA.peserta_hadir + '</strong> orang</li>' +
-            '</ul>' +
-            '</li>' +
-            '<li style="margin-bottom: 8px;">Telah mengisi lembar blangko berita acara sebanyak <strong>' + (recBA.blangko_berita_acara || 1) + '</strong> eksemplar dan blangko daftar hadir sebanyak <strong>' + (recBA.blangko_daftar_hadir || 1) + '</strong> eksemplar, untuk Mata Pelajaran <strong>' + recBA.mata_pelajaran + '</strong> di ruang <strong>' + recBA.ruang + '</strong> dan kelas <strong>' + recBA.nama_kelas + '</strong> dengan disaksikan oleh para peserta.</li>' +
-            '<li style="margin-bottom: 8px;">Catatan selama pelaksanaan ujian:<br><em>' + (recBA.catatan_pelaksanaan || 'Nihil') + '</em></li>' +
-            '</ol>' +
-            '<p style="margin-top: 15px;">Demikian Berita Acara ini dibuat dengan sesungguhnya.</p>';
+        var activeTpl = (window.AppStore.data.templates || []).find(function(t) { return String(t.id) === String(recBA.template_id); }) || (window.AppStore.data.templates || [])[0];
+        var schoolName = settings.nama_sekolah || 'SMK NEGERI FYJ Channel';
+        var redaksi = '';
+        if (activeTpl && activeTpl.redaksi_isi) {
+            var tplVars = {
+                'hari': '-',
+                'tanggal': recBA.tanggal_ujian || '-',
+                'tanggal_teks': recBA.tanggal_ujian || '-',
+                'bulan': '-',
+                'tahun': recBA.tahun_ajaran ? recBA.tahun_ajaran.split('/')[0] : '2026',
+                'tahun_teks': '',
+                'nama_ujian': recBA.nama_ujian,
+                'tahun_ajaran': recBA.tahun_ajaran,
+                'sekolah': schoolName,
+                'kelas': recBA.nama_kelas,
+                'mata_pelajaran': recBA.mata_pelajaran,
+                'ruang': recBA.ruang,
+                'jam_mulai': recBA.jam_mulai,
+                'jam_selesai': recBA.jam_selesai,
+                'peserta_seharusnya': recBA.peserta_seharusnya,
+                'peserta_hadir': recBA.peserta_hadir,
+                'peserta_tidak_hadir': recBA.peserta_tidak_hadir,
+                'blangko_berita_acara': recBA.blangko_berita_acara || 1,
+                'blangko_daftar_hadir': recBA.blangko_daftar_hadir || 1,
+                'catatan_pelaksanaan': recBA.catatan_pelaksanaan || 'Nihil'
+            };
+            if (recBA.tanggal_ujian) {
+                var d = new Date(recBA.tanggal_ujian);
+                var days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                var months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                tplVars.hari = days[d.getDay()] || '-';
+                tplVars.tanggal = d.getDate();
+                tplVars.tanggal_teks = d.getDate();
+                tplVars.bulan = months[d.getMonth()] || '-';
+                tplVars.tahun = d.getFullYear();
+            }
+            var rendered = activeTpl.redaksi_isi;
+            for (var vk in tplVars) {
+                var rx = new RegExp('\\[' + vk + '\\]', 'gi');
+                rendered = rendered.replace(rx, tplVars[vk]);
+            }
+            redaksi = rendered;
+        } else {
+            redaksi = '<p>Pada hari ini, tanggal <strong>' + (recBA.tanggal_ujian || '-') + '</strong>:</p>' +
+                '<ol style="margin-top: 6px; margin-bottom: 12px; padding-left: 20px;">' +
+                '<li style="margin-bottom: 8px;">Telah diselenggarakan <strong>' + recBA.nama_ujian + '</strong> Tahun Ajaran <strong>' + recBA.tahun_ajaran + '</strong> dari pukul <strong>' + recBA.jam_mulai + '</strong> sampai dengan pukul <strong>' + recBA.jam_selesai + '</strong> WITA.' +
+                '<ul style="margin-top: 4px; margin-bottom: 6px; margin-left: 18px; list-style-type: disc;">' +
+                '<li>Pada Sekolah: <strong>' + schoolName + '</strong></li>' +
+                '<li>Kelas: <strong>' + recBA.nama_kelas + '</strong></li>' +
+                '<li>Mata Pelajaran: <strong>' + recBA.mata_pelajaran + '</strong></li>' +
+                '<li>Ruang: <strong>' + recBA.ruang + '</strong></li>' +
+                '<li>Jumlah Peserta Seharusnya: <strong>' + recBA.peserta_seharusnya + '</strong> orang</li>' +
+                '<li>Jumlah Peserta yang Tidak Hadir: <strong>' + recBA.peserta_tidak_hadir + '</strong> orang</li>' +
+                '<li>Jumlah Peserta yang Hadir: <strong>' + recBA.peserta_hadir + '</strong> orang</li>' +
+                '</ul>' +
+                '</li>' +
+                '<li style="margin-bottom: 8px;">Telah mengisi lembar blangko berita acara sebanyak <strong>' + (recBA.blangko_berita_acara || 1) + '</strong> eksemplar dan blangko daftar hadir sebanyak <strong>' + (recBA.blangko_daftar_hadir || 1) + '</strong> eksemplar, untuk Mata Pelajaran <strong>' + recBA.mata_pelajaran + '</strong> di ruang <strong>' + recBA.ruang + '</strong> dan kelas <strong>' + recBA.nama_kelas + '</strong> dengan disaksikan oleh para peserta.</li>' +
+                '<li style="margin-bottom: 8px;">Catatan selama pelaksanaan ujian:<br><em>' + (recBA.catatan_pelaksanaan || 'Nihil') + '</em></li>' +
+                '</ol>' +
+                '<p style="margin-top: 15px;">Demikian Berita Acara ini dibuat dengan sesungguhnya.</p>';
+        }
 
         var photosHtml = '';
         for (var p = 0; p < 4; p++) {

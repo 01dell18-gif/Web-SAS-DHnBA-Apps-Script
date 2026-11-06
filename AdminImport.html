@@ -17,17 +17,23 @@
             <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Unggah massal data Siswa, Guru, dan Mata Pelajaran dari berkas Spreadsheet</p>
         </div>
 
-        <!-- Tab Navigasi Impor 3-in-1 -->
+        <!-- Tab Navigasi Impor 5-in-1 -->
         <div class="card" style="margin-bottom: 1.5rem;">
-            <div style="display: flex; border-bottom: 1px solid var(--border); background: var(--slate-50); border-radius: var(--radius-md) var(--radius-md) 0 0;">
-                <button type="button" class="tab-btn-import active" id="tabBtnSiswa" onclick="switchImportTab('siswa')" style="padding: 1rem 1.5rem; font-weight: 700; border: none; background: transparent; cursor: pointer; border-bottom: 2px solid var(--primary); color: var(--primary);">
+            <div style="display: flex; border-bottom: 1px solid var(--border); background: var(--slate-50); border-radius: var(--radius-md) var(--radius-md) 0 0; overflow-x: auto;">
+                <button type="button" class="tab-btn-import active" id="tabBtnSiswa" onclick="switchImportTab('siswa')" style="padding: 1rem 1.25rem; font-weight: 700; border: none; background: transparent; cursor: pointer; border-bottom: 2px solid var(--primary); color: var(--primary); white-space: nowrap;">
                     <i class="bi bi-people"></i> Impor Siswa
                 </button>
-                <button type="button" class="tab-btn-import" id="tabBtnGuru" onclick="switchImportTab('guru')" style="padding: 1rem 1.5rem; font-weight: 700; border: none; background: transparent; cursor: pointer; color: var(--text-muted);">
+                <button type="button" class="tab-btn-import" id="tabBtnGuru" onclick="switchImportTab('guru')" style="padding: 1rem 1.25rem; font-weight: 700; border: none; background: transparent; cursor: pointer; color: var(--text-muted); white-space: nowrap;">
                     <i class="bi bi-person-video3"></i> Impor Guru & Pengawas
                 </button>
-                <button type="button" class="tab-btn-import" id="tabBtnMapel" onclick="switchImportTab('mapel')" style="padding: 1rem 1.5rem; font-weight: 700; border: none; background: transparent; cursor: pointer; color: var(--text-muted);">
+                <button type="button" class="tab-btn-import" id="tabBtnMapel" onclick="switchImportTab('mapel')" style="padding: 1rem 1.25rem; font-weight: 700; border: none; background: transparent; cursor: pointer; color: var(--text-muted); white-space: nowrap;">
                     <i class="bi bi-journal-bookmark"></i> Impor Mata Pelajaran
+                </button>
+                <button type="button" class="tab-btn-import" id="tabBtnKelas" onclick="switchImportTab('kelas')" style="padding: 1rem 1.25rem; font-weight: 700; border: none; background: transparent; cursor: pointer; color: var(--text-muted); white-space: nowrap;">
+                    <i class="bi bi-buildings"></i> Impor Rombel Kelas
+                </button>
+                <button type="button" class="tab-btn-import" id="tabBtnUsers" onclick="switchImportTab('users')" style="padding: 1rem 1.25rem; font-weight: 700; border: none; background: transparent; cursor: pointer; color: var(--text-muted); white-space: nowrap;">
+                    <i class="bi bi-shield-lock"></i> Impor Pengguna (RBAC)
                 </button>
             </div>
 
@@ -40,14 +46,14 @@
                             <p style="font-size: 0.825rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">Format kolom: <code>Nama Siswa</code>, <code>Kelas</code>, <code>NIS</code>, <code>NISN</code>, <code>Program Keahlian</code></p>
                         </div>
                         <button type="button" class="btn btn-secondary btn-sm" onclick="downloadTemplateSiswa()">
-                            <i class="bi bi-download"></i> Unduh Template Excel Siswa
+                            <i class="bi bi-download"></i> Unduh Template Excel Siswa (.xlsx)
                         </button>
                     </div>
 
                     <div style="border: 2px dashed #cbd5e1; border-radius: 10px; padding: 2rem; text-align: center; background: #f8fafc; margin-bottom: 1rem;">
                         <i class="bi bi-file-earmark-spreadsheet" style="font-size: 2.5rem; color: var(--primary);"></i>
-                        <p style="margin: 0.5rem 0 1rem 0; font-size: 0.875rem; color: var(--text-muted);">Pilih berkas Spreadsheet (.csv atau teks Excel)</p>
-                        <input type="file" id="fileInputSiswa" accept=".csv,.txt" onchange="parseImportFile(this, 'siswa')" style="display: none;">
+                        <p style="margin: 0.5rem 0 1rem 0; font-size: 0.875rem; color: var(--text-muted);">Pilih berkas Spreadsheet (.xlsx, .xls, .csv)</p>
+                        <input type="file" id="fileInputSiswa" accept=".xlsx,.xls,.csv" onchange="parseImportFile(this, 'siswa')" style="display: none;">
                         <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('fileInputSiswa').click()">
                             Pilih Berkas Komputer
                         </button>
@@ -62,14 +68,14 @@
                             <p style="font-size: 0.825rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">Format kolom: <code>Nama Lengkap</code>, <code>NIP</code>, <code>Jabatan</code></p>
                         </div>
                         <button type="button" class="btn btn-secondary btn-sm" onclick="downloadTemplateGuru()">
-                            <i class="bi bi-download"></i> Unduh Template Excel Guru
+                            <i class="bi bi-download"></i> Unduh Template Excel Guru (.xlsx)
                         </button>
                     </div>
 
                     <div style="border: 2px dashed #cbd5e1; border-radius: 10px; padding: 2rem; text-align: center; background: #f8fafc; margin-bottom: 1rem;">
                         <i class="bi bi-file-earmark-spreadsheet" style="font-size: 2.5rem; color: var(--primary);"></i>
-                        <p style="margin: 0.5rem 0 1rem 0; font-size: 0.875rem; color: var(--text-muted);">Pilih berkas Spreadsheet (.csv atau teks Excel)</p>
-                        <input type="file" id="fileInputGuru" accept=".csv,.txt" onchange="parseImportFile(this, 'guru')" style="display: none;">
+                        <p style="margin: 0.5rem 0 1rem 0; font-size: 0.875rem; color: var(--text-muted);">Pilih berkas Spreadsheet (.xlsx, .xls, .csv)</p>
+                        <input type="file" id="fileInputGuru" accept=".xlsx,.xls,.csv" onchange="parseImportFile(this, 'guru')" style="display: none;">
                         <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('fileInputGuru').click()">
                             Pilih Berkas Komputer
                         </button>
@@ -84,15 +90,59 @@
                             <p style="font-size: 0.825rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">Format kolom: <code>Kode Mapel</code>, <code>Nama Mapel</code>, <code>Kelompok</code></p>
                         </div>
                         <button type="button" class="btn btn-secondary btn-sm" onclick="downloadTemplateMapel()">
-                            <i class="bi bi-download"></i> Unduh Template Excel Mapel
+                            <i class="bi bi-download"></i> Unduh Template Excel Mapel (.xlsx)
                         </button>
                     </div>
 
                     <div style="border: 2px dashed #cbd5e1; border-radius: 10px; padding: 2rem; text-align: center; background: #f8fafc; margin-bottom: 1rem;">
                         <i class="bi bi-file-earmark-spreadsheet" style="font-size: 2.5rem; color: var(--primary);"></i>
-                        <p style="margin: 0.5rem 0 1rem 0; font-size: 0.875rem; color: var(--text-muted);">Pilih berkas Spreadsheet (.csv atau teks Excel)</p>
-                        <input type="file" id="fileInputMapel" accept=".csv,.txt" onchange="parseImportFile(this, 'mapel')" style="display: none;">
+                        <p style="margin: 0.5rem 0 1rem 0; font-size: 0.875rem; color: var(--text-muted);">Pilih berkas Spreadsheet (.xlsx, .xls, .csv)</p>
+                        <input type="file" id="fileInputMapel" accept=".xlsx,.xls,.csv" onchange="parseImportFile(this, 'mapel')" style="display: none;">
                         <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('fileInputMapel').click()">
+                            Pilih Berkas Komputer
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab Panel Kelas -->
+                <div id="panelImportKelas" class="import-panel" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <div>
+                            <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0;">Unggah Berkas Excel Rombel Kelas</h3>
+                            <p style="font-size: 0.825rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">Format kolom: <code>Nama Kelas</code>, <code>Tingkat</code>, <code>Program Keahlian</code></p>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="downloadTemplateKelas()">
+                            <i class="bi bi-download"></i> Unduh Template Excel Kelas (.xlsx)
+                        </button>
+                    </div>
+
+                    <div style="border: 2px dashed #cbd5e1; border-radius: 10px; padding: 2rem; text-align: center; background: #f8fafc; margin-bottom: 1rem;">
+                        <i class="bi bi-file-earmark-spreadsheet" style="font-size: 2.5rem; color: var(--primary);"></i>
+                        <p style="margin: 0.5rem 0 1rem 0; font-size: 0.875rem; color: var(--text-muted);">Pilih berkas Spreadsheet (.xlsx, .xls, .csv)</p>
+                        <input type="file" id="fileInputKelas" accept=".xlsx,.xls,.csv" onchange="parseImportFile(this, 'kelas')" style="display: none;">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('fileInputKelas').click()">
+                            Pilih Berkas Komputer
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab Panel Users -->
+                <div id="panelImportUsers" class="import-panel" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <div>
+                            <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0;">Unggah Berkas Excel Pengguna (RBAC)</h3>
+                            <p style="font-size: 0.825rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">Format kolom: <code>Username</code>, <code>Nama Lengkap</code>, <code>Role</code> (admin/operator), <code>Password</code></p>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="downloadTemplateUsers()">
+                            <i class="bi bi-download"></i> Unduh Template Excel Pengguna (.xlsx)
+                        </button>
+                    </div>
+
+                    <div style="border: 2px dashed #cbd5e1; border-radius: 10px; padding: 2rem; text-align: center; background: #f8fafc; margin-bottom: 1rem;">
+                        <i class="bi bi-file-earmark-spreadsheet" style="font-size: 2.5rem; color: var(--primary);"></i>
+                        <p style="margin: 0.5rem 0 1rem 0; font-size: 0.875rem; color: var(--text-muted);">Pilih berkas Spreadsheet (.xlsx, .xls, .csv)</p>
+                        <input type="file" id="fileInputUsers" accept=".xlsx,.xls,.csv" onchange="parseImportFile(this, 'users')" style="display: none;">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('fileInputUsers').click()">
                             Pilih Berkas Komputer
                         </button>
                     </div>
@@ -125,6 +175,12 @@
 var activeImportType = 'siswa';
 var parsedImportRows = [];
 
+document.addEventListener('DOMContentLoaded', function() {
+    var urlParams = new URLSearchParams(window.location.search);
+    var targetTab = urlParams.get('tab') || 'siswa';
+    switchImportTab(targetTab);
+});
+
 function switchImportTab(type) {
     activeImportType = type;
     document.querySelectorAll('.tab-btn-import').forEach(function(b) {
@@ -135,18 +191,23 @@ function switchImportTab(type) {
     document.getElementById('importPreviewArea').style.display = 'none';
     parsedImportRows = [];
 
-    if (type === 'siswa') {
-        document.getElementById('tabBtnSiswa').style.borderBottom = '2px solid var(--primary)';
-        document.getElementById('tabBtnSiswa').style.color = 'var(--primary)';
-        document.getElementById('panelImportSiswa').style.display = 'block';
-    } else if (type === 'guru') {
-        document.getElementById('tabBtnGuru').style.borderBottom = '2px solid var(--primary)';
-        document.getElementById('tabBtnGuru').style.color = 'var(--primary)';
-        document.getElementById('panelImportGuru').style.display = 'block';
-    } else {
-        document.getElementById('tabBtnMapel').style.borderBottom = '2px solid var(--primary)';
-        document.getElementById('tabBtnMapel').style.color = 'var(--primary)';
-        document.getElementById('panelImportMapel').style.display = 'block';
+    var tabMap = {
+        'siswa': { btn: 'tabBtnSiswa', panel: 'panelImportSiswa' },
+        'guru': { btn: 'tabBtnGuru', panel: 'panelImportGuru' },
+        'mapel': { btn: 'tabBtnMapel', panel: 'panelImportMapel' },
+        'kelas': { btn: 'tabBtnKelas', panel: 'panelImportKelas' },
+        'users': { btn: 'tabBtnUsers', panel: 'panelImportUsers' }
+    };
+
+    var current = tabMap[type] || tabMap['siswa'];
+    var btn = document.getElementById(current.btn);
+    var panel = document.getElementById(current.panel);
+    if (btn) {
+        btn.style.borderBottom = '2px solid var(--primary)';
+        btn.style.color = 'var(--primary)';
+    }
+    if (panel) {
+        panel.style.display = 'block';
     }
 }
 
@@ -156,7 +217,7 @@ function downloadTemplateSiswa() {
         ['Aldo Valentino', 'XII TSM', '13526', '0061234567', 'Teknik Sepeda Motor'],
         ['ARKANANTA MAULANA', 'XII TSM', '13527', '0061234568', 'Teknik Sepeda Motor']
     ];
-    downloadExcelXLS('template_impor_siswa.xls', headers, samples);
+    downloadExcelXLS('template_impor_siswa.xlsx', headers, samples);
 }
 
 function downloadTemplateGuru() {
@@ -165,7 +226,7 @@ function downloadTemplateGuru() {
         ['I Wayan Sukadana, S.Pd.', '19820514 200801 1 012', 'Guru / Pengawas'],
         ['Ni Made Rai Artini, S.Kom.', '19870921 201101 2 008', 'Guru / Pengawas']
     ];
-    downloadExcelXLS('template_impor_guru.xls', headers, samples);
+    downloadExcelXLS('template_impor_guru.xlsx', headers, samples);
 }
 
 function downloadTemplateMapel() {
@@ -174,7 +235,25 @@ function downloadTemplateMapel() {
         ['MP-001', 'Bahasa Indonesia', 'Umum'],
         ['MP-010', 'Desain Komunikasi Visual', 'Kejuruan']
     ];
-    downloadExcelXLS('template_impor_mapel.xls', headers, samples);
+    downloadExcelXLS('template_impor_mapel.xlsx', headers, samples);
+}
+
+function downloadTemplateKelas() {
+    var headers = ['Nama Kelas', 'Tingkat', 'Program Keahlian'];
+    var samples = [
+        ['XII DKV 1', 'XII', 'Desain Komunikasi Visual'],
+        ['XII TKJ 1', 'XII', 'Teknik Komputer dan Jaringan']
+    ];
+    downloadExcelXLS('template_impor_kelas.xlsx', headers, samples);
+}
+
+function downloadTemplateUsers() {
+    var headers = ['Username', 'Nama Lengkap', 'Peran', 'Password'];
+    var samples = [
+        ['operator_ujian', 'I Putu Eka Pratama', 'operator', '123456'],
+        ['admin_wakasek', 'Drs. I Ketut Suardana, M.Pd.', 'admin', 'admin123']
+    ];
+    downloadExcelXLS('template_impor_users.xlsx', headers, samples);
 }
 
 function parseImportFile(input, type) {
@@ -183,37 +262,55 @@ function parseImportFile(input, type) {
     var reader = new FileReader();
 
     reader.onload = function(e) {
-        var text = e.target.result;
-        var lines = text.split(/\r?\n/).filter(function(l) { return l.trim().length > 0; });
-        if (lines.length < 2) {
-            showGlobalNotificationDialog('Peringatan', 'Berkas tidak memiliki baris data yang cukup.', 'warning');
+        var data = new Uint8Array(e.target.result);
+        var rows = [];
+
+        // 1. Try native SheetJS parsing (reads .xlsx, .xls, .csv cleanly)
+        try {
+            if (typeof XLSX !== 'undefined') {
+                var wb = XLSX.read(data, { type: 'array' });
+                var sheet = wb.Sheets[wb.SheetNames[0]];
+                rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+            }
+        } catch(err) {
+            rows = [];
+        }
+
+        // 2. Fallback to text parsing if needed
+        if (!rows || rows.length < 2) {
+            try {
+                var dec = new TextDecoder('utf-8');
+                var text = dec.decode(data);
+                var lines = text.split(/\r?\n/).filter(function(l) { return l.trim().length > 0; });
+                if (lines.length >= 2) {
+                    var sep = (lines[0].indexOf('\t') !== -1) ? '\t' : ((lines[0].indexOf(';') !== -1) ? ';' : ',');
+                    rows = lines.map(function(l) { return l.split(sep).map(function(c) { return c.replace(/^["']|["']$/g, '').trim(); }); });
+                }
+            } catch(e2) {}
+        }
+
+        if (!rows || rows.length < 2) {
+            showGlobalNotificationDialog('Peringatan', 'Berkas tidak memiliki data baris yang cukup atau format tidak terbaca.', 'warning');
             return;
         }
 
-        // Detect delimiter: tab or comma or semicolon
-        var firstLine = lines[0];
-        var sep = ',';
-        if (firstLine.indexOf('\t') !== -1) sep = '\t';
-        else if (firstLine.indexOf(';') !== -1) sep = ';';
-
-        var rows = lines.map(function(l) {
-            return l.split(sep).map(function(c) { return c.replace(/^["']|["']$/g, '').trim(); });
-        });
-
-        var headers = rows[0];
+        var headers = rows[0].map(function(h) { return String(h).trim(); });
         var dataRows = rows.slice(1);
         parsedImportRows = [];
 
         var thead = document.getElementById('importTableHead');
         var tbody = document.getElementById('importTableBody');
 
-        thead.innerHTML = '<tr><th style="width:30px;">No</th>' + headers.map(function(h) { return '<th>' + h + '</th>'; }).join('') + '</tr>';
+        thead.innerHTML = '<tr><th style="width:35px;">No</th>' + headers.map(function(h) { return '<th>' + h + '</th>'; }).join('') + '</tr>';
         
         var bodyHtml = '';
-        dataRows.forEach(function(r, idx) {
-            if (r.length < 2 || !r[0]) return;
+        dataRows.forEach(function(r) {
+            // Skip completely empty rows
+            var hasVal = r.some(function(cell) { return String(cell).trim().length > 0; });
+            if (!hasVal) return;
             parsedImportRows.push(r);
-            bodyHtml += '<tr><td>' + (idx + 1) + '</td>' + r.map(function(col) { return '<td>' + col + '</td>'; }).join('') + '</tr>';
+            var idx = parsedImportRows.length;
+            bodyHtml += '<tr><td>' + idx + '</td>' + r.map(function(col) { return '<td>' + (col !== null && col !== undefined ? col : '') + '</td>'; }).join('') + '</tr>';
         });
         tbody.innerHTML = bodyHtml;
 
@@ -221,7 +318,7 @@ function parseImportFile(input, type) {
         document.getElementById('importPreviewArea').style.display = 'block';
     };
 
-    reader.readAsText(file);
+    reader.readAsArrayBuffer(file);
     input.value = '';
 }
 
@@ -229,14 +326,14 @@ function executeCurrentImport() {
     if (parsedImportRows.length === 0) return;
     var btn = document.getElementById('btnExecuteImport');
     btn.disabled = true;
-    btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Mengimpor...';
+    btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Mengimpor ke Database...';
 
     if (activeImportType === 'siswa') {
         var students = parsedImportRows.map(function(r) {
             var namaKelas = r[1] || 'XII DKV';
             var cid = 1;
             if (window.AppStore.data && window.AppStore.data.classes) {
-                var cls = window.AppStore.data.classes.find(function(c) { return c.nama_kelas.toLowerCase() === namaKelas.toLowerCase(); });
+                var cls = window.AppStore.data.classes.find(function(c) { return c.nama_kelas.toLowerCase() === String(namaKelas).toLowerCase(); });
                 if (cls) cid = cls.id;
             }
             return {
@@ -255,7 +352,12 @@ function executeCurrentImport() {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Proses Impor ke Database';
                 document.getElementById('importPreviewArea').style.display = 'none';
-                showGlobalNotificationDialog('Berhasil', 'Sukses mengimpor ' + res.count + ' siswa!', 'success');
+                showGlobalNotificationDialog('Berhasil', 'Sukses mengimpor ' + res.count + ' data siswa!', 'success');
+            })
+            .withFailureHandler(function(err) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Proses Impor ke Database';
+                showGlobalNotificationDialog('Gagal', err.message, 'danger');
             })
             .apiImportSiswa(students);
 
@@ -274,11 +376,16 @@ function executeCurrentImport() {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Proses Impor ke Database';
                 document.getElementById('importPreviewArea').style.display = 'none';
-                showGlobalNotificationDialog('Berhasil', 'Sukses mengimpor ' + res.count + ' guru!', 'success');
+                showGlobalNotificationDialog('Berhasil', 'Sukses mengimpor ' + res.count + ' guru & pengawas!', 'success');
+            })
+            .withFailureHandler(function(err) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Proses Impor ke Database';
+                showGlobalNotificationDialog('Gagal', err.message, 'danger');
             })
             .apiImportGuru(teachers);
 
-    } else {
+    } else if (activeImportType === 'mapel') {
         var mapels = parsedImportRows.map(function(r, idx) {
             return {
                 kode_mapel: r[0] || ('MP-' + String(idx + 1).padStart(3, '0')),
@@ -295,7 +402,61 @@ function executeCurrentImport() {
                 document.getElementById('importPreviewArea').style.display = 'none';
                 showGlobalNotificationDialog('Berhasil', 'Sukses mengimpor ' + res.count + ' mata pelajaran!', 'success');
             })
+            .withFailureHandler(function(err) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Proses Impor ke Database';
+                showGlobalNotificationDialog('Gagal', err.message, 'danger');
+            })
             .apiImportMapel(mapels);
+
+    } else if (activeImportType === 'kelas') {
+        var classes = parsedImportRows.map(function(r) {
+            return {
+                nama_kelas: r[0],
+                tingkat: r[1] || 'XII',
+                program_keahlian: r[2] || '-',
+                aktif: 1
+            };
+        });
+
+        google.script.run
+            .withSuccessHandler(function(res) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Proses Impor ke Database';
+                document.getElementById('importPreviewArea').style.display = 'none';
+                showGlobalNotificationDialog('Berhasil', 'Sukses mengimpor ' + res.count + ' rombel kelas!', 'success');
+            })
+            .withFailureHandler(function(err) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Proses Impor ke Database';
+                showGlobalNotificationDialog('Gagal', err.message, 'danger');
+            })
+            .apiImportKelas(classes);
+
+    } else if (activeImportType === 'users') {
+        var users = parsedImportRows.map(function(r) {
+            return {
+                username: r[0],
+                nama_lengkap: r[1] || r[0],
+                role: (r[2] && r[2].toLowerCase() === 'admin') ? 'admin' : 'operator',
+                password_plain: r[3] || '123456',
+                password: r[3] || '123456'
+            };
+        });
+
+        google.script.run
+            .withSuccessHandler(function(res) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Proses Impor ke Database';
+                document.getElementById('importPreviewArea').style.display = 'none';
+                showGlobalNotificationDialog('Berhasil', 'Sukses mengimpor ' + res.count + ' akun pengguna!', 'success');
+            })
+            .withFailureHandler(function(err) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Proses Impor ke Database';
+                showGlobalNotificationDialog('Gagal', err.message, 'danger');
+            })
+            .apiImportUsers(users);
     }
 }
 </script>

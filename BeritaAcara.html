@@ -546,6 +546,16 @@ function loadInitialMasterData() {
         .apiGetInitialData();
 }
 
+function applyExamTemplate(tplId) {
+    if (!window.AppStore.data || !window.AppStore.data.templates) return;
+    var tpl = window.AppStore.data.templates.find(function(t) { return String(t.id) === String(tplId); });
+    if (tpl) {
+        if (tpl.nama_ujian) document.getElementById('nama_ujian').value = tpl.nama_ujian;
+        if (tpl.tahun_ajaran) document.getElementById('tahun_ajaran').value = tpl.tahun_ajaran;
+        updateLivePreview();
+    }
+}
+
 function renderLiveKop(s) {
     s = s || (window.AppStore && window.AppStore.data && window.AppStore.data.settings) || {};
     var mode = s.kop_mode || 'image';
@@ -731,23 +741,67 @@ function updateLivePreview() {
         yearNum = d.getFullYear();
     }
 
-    var redaksi = '<p>Pada hari ini <strong>' + dayName + '</strong>, tanggal <strong>' + dateNum + '</strong> bulan <strong>' + monthName + '</strong> tahun <strong>' + yearNum + '</strong>:</p>' +
-        '<ol style="margin-top: 6px; margin-bottom: 12px; padding-left: 20px;">' +
-        '<li style="margin-bottom: 8px;">Telah diselenggarakan <strong>' + (namaUjian || 'Ujian') + '</strong> Tahun Ajaran <strong>' + tahun + '</strong> dari pukul <strong>' + jamMulai + '</strong> sampai dengan pukul <strong>' + jamSelesai + '</strong> WITA.' +
-        '<ul style="margin-top: 4px; margin-bottom: 6px; margin-left: 18px; list-style-type: disc;">' +
-        '<li>Pada Sekolah: <strong>SMK NEGERI FYJ Channel</strong></li>' +
-        '<li>Kelas: <strong>' + namaKelas + '</strong></li>' +
-        '<li>Mata Pelajaran: <strong>' + mapel + '</strong></li>' +
-        '<li>Ruang: <strong>' + ruang + '</strong></li>' +
-        '<li>Jumlah Peserta Seharusnya: <strong>' + seharusnya + '</strong> orang</li>' +
-        '<li>Jumlah Peserta yang Tidak Hadir: <strong>' + tidakHadir + '</strong> orang</li>' +
-        '<li>Jumlah Peserta yang Hadir: <strong>' + hadir + '</strong> orang</li>' +
-        '</ul>' +
-        '</li>' +
-        '<li style="margin-bottom: 8px;">Telah mengisi lembar blangko berita acara sebanyak <strong>' + blangkoBA + '</strong> eksemplar dan blangko daftar hadir sebanyak <strong>' + blangkoDH + '</strong> eksemplar, untuk Mata Pelajaran <strong>' + mapel + '</strong> di ruang <strong>' + ruang + '</strong> dan kelas <strong>' + namaKelas + '</strong> dengan disaksikan oleh para peserta.</li>' +
-        '<li style="margin-bottom: 8px;">Catatan selama pelaksanaan ujian (kendala teknis, kejadian khusus, atau keterangan lain):<br><em>' + catatan + '</em></li>' +
-        '</ol>' +
-        '<p style="margin-top: 15px;">Demikian Berita Acara ini dibuat dengan sesungguhnya.</p>';
+    var redaksi = '';
+    var activeTpl = null;
+    var tplId = document.getElementById('selectTemplate') ? document.getElementById('selectTemplate').value : '';
+    if (window.AppStore && window.AppStore.data && window.AppStore.data.templates) {
+        if (tplId) {
+            activeTpl = window.AppStore.data.templates.find(function(t) { return String(t.id) === String(tplId); });
+        } else if (window.AppStore.data.templates.length > 0) {
+            activeTpl = window.AppStore.data.templates[0];
+        }
+    }
+
+    var schoolName = (window.AppStore && window.AppStore.data && window.AppStore.data.settings && window.AppStore.data.settings.nama_sekolah) || 'SMK NEGERI FYJ Channel';
+
+    if (activeTpl && activeTpl.redaksi_isi) {
+        var tplVars = {
+            'hari': dayName,
+            'tanggal': dateNum,
+            'tanggal_teks': dateNum,
+            'bulan': monthName,
+            'tahun': yearNum,
+            'tahun_teks': yearNum,
+            'nama_ujian': namaUjian || 'Sumatif Akhir Semester',
+            'tahun_ajaran': tahun || '2026/2027',
+            'sekolah': schoolName,
+            'kelas': namaKelas,
+            'mata_pelajaran': mapel,
+            'ruang': ruang,
+            'jam_mulai': jamMulai,
+            'jam_selesai': jamSelesai,
+            'peserta_seharusnya': seharusnya,
+            'peserta_hadir': hadir,
+            'peserta_tidak_hadir': tidakHadir,
+            'blangko_berita_acara': blangkoBA,
+            'blangko_daftar_hadir': blangkoDH,
+            'catatan_pelaksanaan': catatan
+        };
+        var rendered = activeTpl.redaksi_isi;
+        for (var vk in tplVars) {
+            var rx = new RegExp('\\[' + vk + '\\]', 'gi');
+            rendered = rendered.replace(rx, tplVars[vk]);
+        }
+        redaksi = rendered;
+    } else {
+        redaksi = '<p>Pada hari ini <strong>' + dayName + '</strong>, tanggal <strong>' + dateNum + '</strong> bulan <strong>' + monthName + '</strong> tahun <strong>' + yearNum + '</strong>:</p>' +
+            '<ol style="margin-top: 6px; margin-bottom: 12px; padding-left: 20px;">' +
+            '<li style="margin-bottom: 8px;">Telah diselenggarakan <strong>' + (namaUjian || 'Ujian') + '</strong> Tahun Ajaran <strong>' + tahun + '</strong> dari pukul <strong>' + jamMulai + '</strong> sampai dengan pukul <strong>' + jamSelesai + '</strong> WITA.' +
+            '<ul style="margin-top: 4px; margin-bottom: 6px; margin-left: 18px; list-style-type: disc;">' +
+            '<li>Pada Sekolah: <strong>' + schoolName + '</strong></li>' +
+            '<li>Kelas: <strong>' + namaKelas + '</strong></li>' +
+            '<li>Mata Pelajaran: <strong>' + mapel + '</strong></li>' +
+            '<li>Ruang: <strong>' + ruang + '</strong></li>' +
+            '<li>Jumlah Peserta Seharusnya: <strong>' + seharusnya + '</strong> orang</li>' +
+            '<li>Jumlah Peserta yang Tidak Hadir: <strong>' + tidakHadir + '</strong> orang</li>' +
+            '<li>Jumlah Peserta yang Hadir: <strong>' + hadir + '</strong> orang</li>' +
+            '</ul>' +
+            '</li>' +
+            '<li style="margin-bottom: 8px;">Telah mengisi lembar blangko berita acara sebanyak <strong>' + blangkoBA + '</strong> eksemplar dan blangko daftar hadir sebanyak <strong>' + blangkoDH + '</strong> eksemplar, untuk Mata Pelajaran <strong>' + mapel + '</strong> di ruang <strong>' + ruang + '</strong> dan kelas <strong>' + namaKelas + '</strong> dengan disaksikan oleh para peserta.</li>' +
+            '<li style="margin-bottom: 8px;">Catatan selama pelaksanaan ujian (kendala teknis, kejadian khusus, atau keterangan lain):<br><em>' + catatan + '</em></li>' +
+            '</ol>' +
+            '<p style="margin-top: 15px;">Demikian Berita Acara ini dibuat dengan sesungguhnya.</p>';
+    }
 
     document.getElementById('prevRedaksiContent').innerHTML = redaksi;
 

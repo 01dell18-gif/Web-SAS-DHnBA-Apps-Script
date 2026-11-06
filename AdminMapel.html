@@ -146,7 +146,12 @@ function renderMapelTable(mapels) {
 
     var html = '';
     mapels.forEach(function(m, idx) {
-        var stBadge = (String(m.aktif) === '1' || m.aktif === true) ? '<span class="badge" style="background:#dcfce7; color:#15803d;">Aktif</span>' : '<span class="badge" style="background:#fee2e2; color:#b91c1c;">Nonaktif</span>';
+        var isActive = (String(m.aktif) === '1' || m.aktif === true || m.aktif == 1);
+        var stBadge = '<button type="button" class="status-toggle-btn" onclick="toggleUniversalMasterStatus(\'mapel\', ' + m.id + ', ' + (isActive ? 1 : 0) + ', this)" title="Klik untuk mengubah status Mapel Aktif / Nonaktif">' +
+            '<span class="status-pill-badge ' + (isActive ? 'is-active' : 'is-inactive') + '">' +
+            '<i class="bi ' + (isActive ? 'bi-check-circle-fill' : 'bi-x-circle-fill') + '"></i> ' +
+            '<span>' + (isActive ? 'Aktif' : 'Nonaktif') + '</span>' +
+            '</span></button>';
         var kelBadge = '<span class="badge" style="background:#f1f5f9; color:#475569; font-weight:600;">' + (m.kelompok || 'Kejuruan') + '</span>';
 
         html += '<tr>' +
@@ -272,7 +277,7 @@ function confirmResetAllMapel() {
 }
 
 function exportMapelExcel() {
-    var filename = 'Data_Mata_Pelajaran_' + new Date().toISOString().split('T')[0] + '.xls';
+    var filename = 'Data_Mata_Pelajaran_' + new Date().toISOString().split('T')[0] + '.xlsx';
     var headers = ['No', 'Kode Mapel', 'Nama Mata Pelajaran', 'Kelompok Kurikulum', 'Status'];
     var rows = [];
     mapelList.forEach(function(m, idx) {

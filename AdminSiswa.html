@@ -194,7 +194,12 @@ function renderSiswaTable(students) {
         var cls = classes.find(function(c) { return String(c.id) === String(s.class_id); });
         var namaKelas = cls ? cls.nama_kelas : (s.nama_kelas || '-');
         var jurusan = cls ? cls.program_keahlian : '-';
-        var stBadge = (String(s.aktif) === '1' || s.aktif === true) ? '<span class="badge" style="background:#dcfce7; color:#15803d;">Aktif</span>' : '<span class="badge" style="background:#fee2e2; color:#b91c1c;">Nonaktif</span>';
+        var isActive = (String(s.aktif) === '1' || s.aktif === true || s.aktif == 1);
+        var stBadge = '<button type="button" class="status-toggle-btn" onclick="toggleUniversalMasterStatus(\'siswa\', ' + s.id + ', ' + (isActive ? 1 : 0) + ', this)" title="Klik untuk mengubah status Siswa Aktif / Nonaktif">' +
+            '<span class="status-pill-badge ' + (isActive ? 'is-active' : 'is-inactive') + '">' +
+            '<i class="bi ' + (isActive ? 'bi-check-circle-fill' : 'bi-x-circle-fill') + '"></i> ' +
+            '<span>' + (isActive ? 'Aktif' : 'Nonaktif') + '</span>' +
+            '</span></button>';
 
         html += '<tr>' +
             '<td>' + (idx + 1) + '</td>' +
@@ -319,7 +324,7 @@ function exportSiswaExcel() {
         if (cls) classLabel = cls.nama_kelas.replace(/\s+/g, '_');
     }
 
-    var filename = 'Data_Siswa_' + classLabel + '_' + new Date().toISOString().split('T')[0] + '.xls';
+    var filename = 'Data_Siswa_' + classLabel + '_' + new Date().toISOString().split('T')[0] + '.xlsx';
     var headers = ['No', 'NIS', 'NISN', 'Nama Siswa', 'Kelas', 'Program Keahlian', 'Status'];
     var rows = [];
     var classes = (window.AppStore.data && window.AppStore.data.classes) || [];

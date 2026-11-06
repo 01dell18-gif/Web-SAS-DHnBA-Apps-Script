@@ -767,6 +767,68 @@ function apiSetActiveTahunAjaran(tahun) {
   return apiSavePengaturan({ tahun_ajaran_aktif: tahun, daftar_tahun_ajaran: list });
 }
 
+function apiImportKelas(classes) {
+  var count = 0;
+  for (var i = 0; i < classes.length; i++) {
+    insertRow(SHEET_NAMES.CLASSES, classes[i]);
+    count++;
+  }
+  logActivity('IMPORT_KELAS', 'Mengimpor ' + count + ' data kelas dari Excel');
+  return { success: true, count: count };
+}
+
+function apiImportUsers(users) {
+  var count = 0;
+  for (var i = 0; i < users.length; i++) {
+    var u = users[i];
+    if (u.password && !u.password_plain) u.password_plain = u.password;
+    if (u.password_plain && !u.password) u.password = u.password_plain;
+    insertRow(SHEET_NAMES.USERS, u);
+    count++;
+  }
+  logActivity('IMPORT_USERS', 'Mengimpor ' + count + ' akun pengguna dari Excel');
+  return { success: true, count: count };
+}
+
+/**
+ * Universal Quick Toggle Status (Aktif <-> Nonaktif)
+ */
+function apiToggleMasterStatus(tableType, id, newStatus) {
+  var sheetMap = {
+    'kelas': SHEET_NAMES.CLASSES,
+    'siswa': SHEET_NAMES.STUDENTS,
+    'guru': SHEET_NAMES.TEACHERS,
+    'mapel': SHEET_NAMES.MAPEL,
+    'users': SHEET_NAMES.USERS,
+    'template': SHEET_NAMES.TEMPLATES
+  };
+  var sheetName = sheetMap[tableType];
+  if (!sheetName) return { success: false, message: 'Tabel master tidak valid: ' + tableType };
+
+  var rows = readTable(sheetName);
+  var target = null;
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i].id) === String(id)) {
+      target = rows[i];
+      break;
+    }
+  }
+  if (!target) return { success: false, message: 'Data tidak ditemukan' };
+
+  var statusVal;
+  if (newStatus !== undefined && newStatus !== null) {
+    statusVal = (newStatus === 1 || newStatus === '1' || newStatus === true || newStatus === 'true') ? 1 : 0;
+  } else {
+    var cur = parseInt(target.aktif, 10);
+    statusVal = (cur === 1) ? 0 : 1;
+  }
+
+  updateRowById(sheetName, id, { aktif: statusVal });
+  invalidateCaches();
+  logActivity('TOGGLE_STATUS', 'Mengubah status ' + tableType + ' #' + id + ' menjadi ' + (statusVal === 1 ? 'Aktif' : 'Nonaktif'));
+  return { success: true, newStatus: statusVal };
+}
+
 function apiSaveTemplate(payload) {
   if (payload.id && parseInt(payload.id, 10) > 0) {
     updateRowById(SHEET_NAMES.TEMPLATES, payload.id, payload);
@@ -779,6 +841,11 @@ function apiSaveTemplate(payload) {
 }
 
 function apiSaveUser(payload) {
+  if (payload.password) {
+    payload.password_plain = payload.password;
+  } else if (payload.password_plain) {
+    payload.password = payload.password_plain;
+  }
   if (payload.id && parseInt(payload.id, 10) > 0) {
     updateRowById(SHEET_NAMES.USERS, payload.id, payload);
     logActivity('UPDATE_USER', 'Memperbarui pengguna ' + payload.username);

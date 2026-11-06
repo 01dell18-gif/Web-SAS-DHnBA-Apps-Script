@@ -194,7 +194,7 @@ function confirmResetAllArsip() {
 }
 
 function exportArsipExcel() {
-    var filename = 'Rekap_Arsip_Berita_Acara_' + new Date().toISOString().split('T')[0] + '.xls';
+    var filename = 'Rekap_Arsip_Berita_Acara_' + new Date().toISOString().split('T')[0] + '.xlsx';
     var headers = ['No', 'Tanggal', 'Kelas', 'Mata Pelajaran', 'Ruang', 'Peserta Seharusnya', 'Hadir', 'Tidak Hadir', 'Blangko BA', 'Blangko DH', 'Catatan', 'Pengawas 1', 'NIP 1'];
     var rows = [];
     baList.forEach(function(b, idx) {

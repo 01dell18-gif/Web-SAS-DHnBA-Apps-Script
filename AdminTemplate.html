@@ -14,74 +14,151 @@
     <main class="admin-main">
         <div style="margin-bottom: 1.5rem;">
             <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-heading); margin: 0;">Template Ujian & Redaksi Berita Acara</h1>
-            <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Pengaturan redaksi resmi Berita Acara dengan sistem chip placeholder dinamis</p>
+            <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Konfigurasi nama ujian, tahun ajaran, dan teks redaksi berita acara secara visual (WYSIWYG) dengan placeholder dinamis.</p>
         </div>
 
         <form id="formTemplateUjian" onsubmit="handleSaveTemplate(event)">
             <input type="hidden" id="template_id" value="1">
             <div class="card" style="margin-bottom: 1.5rem;">
                 <div class="card-header">
-                    <span class="card-title"><i class="bi bi-file-earmark-code"></i> Konfigurasi Template Aktif</span>
+                    <span class="card-title"><i class="bi bi-file-earmark-richtext"></i> Konfigurasi Template & Redaksi Berita Acara</span>
                 </div>
                 <div class="card-body">
                     <div class="grid-2">
                         <div class="form-group">
                             <label class="form-label" for="tpl_nama_ujian">Nama Ujian Resmi <span class="required">*</span></label>
-                            <input type="text" id="tpl_nama_ujian" class="form-control" value="Sumatif Akhir Semester (SAS) Ganjil" required>
+                            <input type="text" id="tpl_nama_ujian" class="form-control" value="Sumatif Akhir Semester (SAS) Ganjil" required oninput="updateLiveSimulation()">
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="tpl_tahun_ajaran">Tahun Ajaran <span class="required">*</span></label>
-                            <input type="text" id="tpl_tahun_ajaran" class="form-control" list="list_tahun_ajaran_tpl" value="2026/2027" required>
+                            <input type="text" id="tpl_tahun_ajaran" class="form-control" list="list_tahun_ajaran_tpl" value="2026/2027" required oninput="updateLiveSimulation()">
                             <datalist id="list_tahun_ajaran_tpl"></datalist>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label" for="tpl_judul_ba">Judul Dokumen Berita Acara</label>
-                        <textarea id="tpl_judul_ba" class="form-control" rows="2">BERITA ACARA 
+                        <textarea id="tpl_judul_ba" class="form-control" rows="2" oninput="updateLiveSimulation()">BERITA ACARA 
 PENYELENGGARAAN SUMATIF AKHIR SEMESTER (SAS) GANJIL
 TAHUN AJARAN [tahun_ajaran]</textarea>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+                            💡 Tekan <strong>Enter</strong> untuk membuat judul dalam beberapa baris (misal: baris 1 nama berita acara, baris 2 subjudul/tahun).
+                        </div>
                     </div>
 
-                    <!-- Palet Chip Placeholder -->
+                    <!-- REDAKSI BERITA ACARA UTUH (WYSIWYG / RICH TEXT EDITOR) -->
                     <div class="form-group">
-                        <label class="form-label">Palet Variabel / Chip Dinamis (Klik untuk Sisipkan ke Teks Redaksi)</label>
-                        <div style="display: flex; flex-wrap: wrap; gap: 0.35rem;">
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="insertTag('[hari]')" style="font-size: 0.75rem;">+ [hari]</button>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="insertTag('[tanggal]')" style="font-size: 0.75rem;">+ [tanggal]</button>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="insertTag('[bulan]')" style="font-size: 0.75rem;">+ [bulan]</button>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="insertTag('[tahun]')" style="font-size: 0.75rem;">+ [tahun]</button>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="insertTag('[nama_ujian]')" style="font-size: 0.75rem;">+ [nama_ujian]</button>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="insertTag('[tahun_ajaran]')" style="font-size: 0.75rem;">+ [tahun_ajaran]</button>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="insertTag('[sekolah]')" style="font-size: 0.75rem;">+ [sekolah]</button>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="insertTag('[kelas]')" style="font-size: 0.75rem;">+ [kelas]</button>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="insertTag('[mata_pelajaran]')" style="font-size: 0.75rem;">+ [mata_pelajaran]</button>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="insertTag('[ruang]')" style="font-size: 0.75rem;">+ [ruang]</button>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="insertTag('[jam_mulai]')" style="font-size: 0.75rem;">+ [jam_mulai]</button>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="insertTag('[jam_selesai]')" style="font-size: 0.75rem;">+ [jam_selesai]</button>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="insertTag('[peserta_seharusnya]')" style="font-size: 0.75rem;">+ [peserta_seharusnya]</button>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="insertTag('[peserta_hadir]')" style="font-size: 0.75rem;">+ [peserta_hadir]</button>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="insertTag('[peserta_tidak_hadir]')" style="font-size: 0.75rem;">+ [peserta_tidak_hadir]</button>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="insertTag('[catatan_pelaksanaan]')" style="font-size: 0.75rem;">+ [catatan_pelaksanaan]</button>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+                            <div>
+                                <label class="form-label" style="margin-bottom: 0; font-size: 0.95rem; font-weight: 700; color: var(--text-heading);">
+                                    📝 Redaksi Berita Acara (Editor Teks / WYSIWYG)
+                                </label>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                    Format teks secara bebas dan rapi. Tampilan di editor ini akan sama persis ketika diunduh sebagai PDF.
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 6px; align-items: center;">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="resetWysiwygToDefault()" style="font-size: 0.775rem;">
+                                    🔄 Standar Resmi
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-sm" id="btnToggleSource" onclick="toggleHtmlSourceMode()" style="font-size: 0.775rem;">
+                                    💻 Mode HTML
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- WYSIWYG Editor Container -->
+                        <div class="wysiwyg-box" id="wysiwygBox">
+                            <!-- Toolbar Format Lengkap -->
+                            <div class="wysiwyg-toolbar" id="wysiwygToolbar">
+                                <div class="wysiwyg-toolgroup">
+                                    <button type="button" class="wysiwyg-btn" data-command="bold" title="Tebal (Ctrl+B)"><b>B</b></button>
+                                    <button type="button" class="wysiwyg-btn" data-command="italic" title="Miring (Ctrl+I)"><i>I</i></button>
+                                    <button type="button" class="wysiwyg-btn" data-command="underline" title="Garis Bawah (Ctrl+U)"><u>U</u></button>
+                                    <button type="button" class="wysiwyg-btn" data-command="strikeThrough" title="Coret"><s>S</s></button>
+                                </div>
+                                <div class="wysiwyg-divider"></div>
+                                <div class="wysiwyg-toolgroup">
+                                    <button type="button" class="wysiwyg-btn" data-command="justifyLeft" title="Rata Kiri">⫷</button>
+                                    <button type="button" class="wysiwyg-btn" data-command="justifyCenter" title="Rata Tengah">☰</button>
+                                    <button type="button" class="wysiwyg-btn" data-command="justifyRight" title="Rata Kanan">⫸</button>
+                                    <button type="button" class="wysiwyg-btn" data-command="justifyFull" title="Rata Kiri-Kanan (Justify)">𝄘</button>
+                                </div>
+                                <div class="wysiwyg-divider"></div>
+                                <div class="wysiwyg-toolgroup">
+                                    <button type="button" class="wysiwyg-btn" data-command="insertOrderedList" title="Penomoran Angka (1, 2, 3)">1.</button>
+                                    <button type="button" class="wysiwyg-btn" data-command="insertUnorderedList" title="Daftar Bullet (•)">•</button>
+                                    <button type="button" class="wysiwyg-btn" data-command="indent" title="Geser ke Dalam (Indent)">⇥</button>
+                                    <button type="button" class="wysiwyg-btn" data-command="outdent" title="Geser ke Luar (Outdent)">⇤</button>
+                                </div>
+                                <div class="wysiwyg-divider"></div>
+                                <div class="wysiwyg-toolgroup">
+                                    <button type="button" class="wysiwyg-btn" data-command="removeFormat" title="Hapus Format Pemformatan">🧹</button>
+                                </div>
+                            </div>
+
+                            <!-- Contenteditable Paper Canvas -->
+                            <div id="wysiwygCanvas" class="wysiwyg-content tracked-input" contenteditable="true" spellcheck="false"></div>
+                            <textarea id="wysiwygSource" class="wysiwyg-source tracked-input" style="display: none; width: 100%; min-height: 320px; font-family: monospace; font-size: 0.85rem; padding: 14px; border: none; outline: none; box-sizing: border-box; background: #0f172a; color: #f8fafc; line-height: 1.5;"></textarea>
+                            <input type="hidden" name="redaksi_isi" id="tpl_redaksi_isi" value="">
+                        </div>
+                    </div>
+
+                    <!-- Palet Variabel / Chip Dinamis -->
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label class="form-label" style="font-size: 0.85rem; margin-bottom: 0.35rem;">
+                            <i class="bi bi-tag-fill text-primary"></i> Sisipkan Variabel Dinamis (Klik untuk Menempelkan pada Posisi Kursor):
+                        </label>
+                        <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                            <span class="badge-placeholder-click" onclick="insertPlaceholder('[hari]')">[hari]</span>
+                            <span class="badge-placeholder-click" onclick="insertPlaceholder('[tanggal]')">[tanggal]</span>
+                            <span class="badge-placeholder-click" onclick="insertPlaceholder('[tanggal_teks]')">[tanggal_teks]</span>
+                            <span class="badge-placeholder-click" onclick="insertPlaceholder('[bulan]')">[bulan]</span>
+                            <span class="badge-placeholder-click" onclick="insertPlaceholder('[tahun]')">[tahun]</span>
+                            <span class="badge-placeholder-click" onclick="insertPlaceholder('[tahun_teks]')">[tahun_teks]</span>
+                            <span class="badge-placeholder-click" onclick="insertPlaceholder('[nama_ujian]')">[nama_ujian]</span>
+                            <span class="badge-placeholder-click" onclick="insertPlaceholder('[tahun_ajaran]')">[tahun_ajaran]</span>
+                            <span class="badge-placeholder-click" onclick="insertPlaceholder('[jam_mulai]')">[jam_mulai]</span>
+                            <span class="badge-placeholder-click" onclick="insertPlaceholder('[jam_selesai]')">[jam_selesai]</span>
+                            <span class="badge-placeholder-click" onclick="insertPlaceholder('[sekolah]')">[sekolah]</span>
+                            <span class="badge-placeholder-click" onclick="insertPlaceholder('[kelas]')">[kelas]</span>
+                            <span class="badge-placeholder-click" onclick="insertPlaceholder('[mata_pelajaran]')">[mata_pelajaran]</span>
+                            <span class="badge-placeholder-click" onclick="insertPlaceholder('[ruang]')">[ruang]</span>
+                            <span class="badge-placeholder-click" onclick="insertPlaceholder('[peserta_seharusnya]')">[peserta_seharusnya]</span>
+                            <span class="badge-placeholder-click" onclick="insertPlaceholder('[peserta_tidak_hadir]')">[peserta_tidak_hadir]</span>
+                            <span class="badge-placeholder-click" onclick="insertPlaceholder('[peserta_hadir]')">[peserta_hadir]</span>
+                            <span class="badge-placeholder-click" onclick="insertPlaceholder('[blangko_berita_acara]')">[blangko_berita_acara]</span>
+                            <span class="badge-placeholder-click" onclick="insertPlaceholder('[blangko_daftar_hadir]')">[blangko_daftar_hadir]</span>
+                            <span class="badge-placeholder-click" onclick="insertPlaceholder('[catatan_pelaksanaan]')">[catatan_pelaksanaan]</span>
+                        </div>
+                    </div>
+
+                    <!-- Live Pratinjau Teks Berita Acara -->
+                    <div style="background: #ffffff; border: 1px solid var(--border); border-left: 4px solid #0284c7; padding: 1.25rem; border-radius: var(--radius-sm); margin: 1.5rem 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                            <span style="font-size: 0.875rem; font-weight: 700; color: #0369a1;">
+                                👁️ Live Simulasi Pratinjau Teks Berita Acara (Sama Persis dengan Hasil Unduhan PDF):
+                            </span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">(Placeholder disimulasikan otomatis)</span>
+                        </div>
+                        <div style="font-family: 'Times New Roman', Times, serif; font-size: 11pt; line-height: 1.45; color: #000; background: #fff; padding: 22px 28px; border-radius: 4px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.06); text-align: justify;">
+                            <div id="pvLiveJudul" style="text-align: center; font-weight: bold; margin-bottom: 14px; text-transform: uppercase; font-size: 12pt; line-height: 1.35; white-space: pre-line;">
+                                BERITA ACARA PENYELENGGARAAN UJIAN
+                            </div>
+                            <div id="pvLiveKonten"></div>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="tpl_redaksi_isi">Format Teks Redaksi Isi Berita Acara (HTML / Text)</label>
-                        <textarea id="tpl_redaksi_isi" class="form-control" rows="8" style="font-family: monospace; font-size: 0.85rem;" oninput="updateSimulasiPreview()"></textarea>
-                    </div>
-
-                    <!-- Pratinjau Simulasi -->
-                    <div style="background: var(--slate-50); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; margin-top: 1rem;">
-                        <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-heading); display: block; margin-bottom: 0.5rem;">
-                            <i class="bi bi-eye"></i> Simulasi Tampilan Redaksi di Kertas A4:
-                        </span>
-                        <div id="simulasiPreviewBox" style="font-family: 'Times New Roman', serif; font-size: 10.5pt; line-height: 1.5; color: #000000; background: #ffffff; padding: 1rem; border: 1px solid #cbd5e1; border-radius: 4px;"></div>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem;">
+                            <input type="checkbox" id="tpl_aktif" value="1" checked>
+                            <strong>Template Aktif</strong> (Muncul di dropdown pilihan pengawas di formulir Berita Acara)
+                        </label>
                     </div>
 
                     <div style="margin-top: 1.5rem;">
-                        <button type="submit" id="btnSaveTemplate" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i> Simpan Perubahan Template
+                        <button type="submit" id="btnSaveTemplate" class="btn btn-primary" style="padding: 0.75rem 1.5rem; font-size: 1rem;">
+                            <i class="bi bi-check-circle"></i> 💾 Simpan Perubahan Template
                         </button>
                     </div>
                 </div>
@@ -94,7 +171,69 @@ TAHUN AJARAN [tahun_ajaran]</textarea>
 <?!= include('AppJS'); ?>
 
 <script>
+// Template Redaksi Standar Resmi (Default Fallback)
+const DEFAULT_REDAKSI_HTML = `<p>Pada hari ini <strong>[hari]</strong>, tanggal <strong>[tanggal]</strong> (<strong><em>[tanggal_teks]</em></strong>) bulan <strong>[bulan]</strong> tahun <strong>[tahun]</strong> (<strong><em>[tahun_teks]</em></strong>):</p>
+<ol style="margin: 6px 0 12px 24px; padding: 0;">
+    <li style="margin-bottom: 8px;">Telah diselenggarakan <strong>[nama_ujian]</strong> Tahun Ajaran <strong>[tahun_ajaran]</strong> dari pukul <strong>[jam_mulai]</strong> sampai dengan pukul <strong>[jam_selesai]</strong> WITA.
+        <ul style="list-style-type: disc; margin: 4px 0 6px 20px; padding: 0;">
+            <li>Pada Sekolah: <strong>[sekolah]</strong></li>
+            <li>Kelas: <strong>[kelas]</strong></li>
+            <li>Mata Pelajaran: <strong>[mata_pelajaran]</strong></li>
+            <li>Ruang: <strong>[ruang]</strong></li>
+            <li>Jumlah Peserta Seharusnya: <strong>[peserta_seharusnya]</strong> orang</li>
+            <li>Jumlah Peserta yang Tidak Hadir: <strong>[peserta_tidak_hadir]</strong> orang</li>
+            <li>Jumlah Peserta yang Hadir: <strong>[peserta_hadir]</strong> orang</li>
+        </ul>
+    </li>
+    <li style="margin-bottom: 8px;">Telah dibagikan tautan soal ujian online untuk Mata Pelajaran <strong>[mata_pelajaran]</strong> di ruang <strong>[ruang]</strong> dengan disaksikan oleh para peserta, serta telah dibagikan lembar blangko berita acara sebanyak <strong>[blangko_berita_acara]</strong> eksemplar dan blangko daftar hadir sebanyak <strong>[blangko_daftar_hadir]</strong> eksemplar.</li>
+    <li style="margin-bottom: 8px;">Catatan selama pelaksanaan ujian (kendala teknis, kejadian khusus, atau keterangan lain):<br>
+        <em>[catatan_pelaksanaan]</em>
+    </li>
+</ol>
+<p style="margin-top: 15px;">Demikian Berita Acara ini dibuat dengan sesungguhnya.</p>`;
+
+let isSourceMode = false;
+let lastActiveField = null;
+
+const wysiwygCanvas = document.getElementById('wysiwygCanvas');
+const wysiwygSource = document.getElementById('wysiwygSource');
+const hiddenRedaksi = document.getElementById('tpl_redaksi_isi');
+const elJudul = document.getElementById('tpl_judul_ba');
+
 document.addEventListener('DOMContentLoaded', function() {
+    lastActiveField = wysiwygCanvas;
+
+    // Attach WYSIWYG Toolbar Events
+    document.querySelectorAll('.wysiwyg-btn[data-command]').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            var cmd = this.getAttribute('data-command');
+            if (isSourceMode) {
+                showGlobalNotificationDialog('Info', 'Nonaktifkan Mode HTML terlebih dahulu untuk menggunakan tombol pemformatan visual.', 'info');
+                return;
+            }
+            wysiwygCanvas.focus();
+            document.execCommand(cmd, false, null);
+            syncFromCanvas();
+        });
+    });
+
+    if (wysiwygCanvas) {
+        wysiwygCanvas.addEventListener('focus', function() { lastActiveField = wysiwygCanvas; });
+        wysiwygCanvas.addEventListener('input', syncFromCanvas);
+        wysiwygCanvas.addEventListener('keyup', syncFromCanvas);
+    }
+    if (wysiwygSource) {
+        wysiwygSource.addEventListener('focus', function() { lastActiveField = wysiwygSource; });
+        wysiwygSource.addEventListener('input', syncFromSource);
+        wysiwygSource.addEventListener('keyup', syncFromSource);
+    }
+    if (elJudul) {
+        elJudul.addEventListener('focus', function() { lastActiveField = elJudul; });
+        elJudul.addEventListener('input', updateLiveSimulation);
+    }
+
+    // Load initial data
     google.script.run
         .withSuccessHandler(function(data) {
             window.AppStore.data = data;
@@ -102,8 +241,13 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('template_id').value = tpl.id || 1;
             document.getElementById('tpl_nama_ujian').value = tpl.nama_ujian || 'Sumatif Akhir Semester (SAS) Ganjil';
             document.getElementById('tpl_tahun_ajaran').value = tpl.tahun_ajaran || (data.settings && data.settings.tahun_ajaran_aktif) || '2026/2027';
-            document.getElementById('tpl_judul_ba').value = tpl.judul_berita_acara || '';
-            document.getElementById('tpl_redaksi_isi').value = tpl.redaksi_isi || '';
+            document.getElementById('tpl_judul_ba').value = tpl.judul_berita_acara || 'BERITA ACARA \r\nPENYELENGGARAAN SUMATIF AKHIR SEMESTER (SAS) GANJIL\r\nTAHUN AJARAN [tahun_ajaran]';
+            document.getElementById('tpl_aktif').checked = (tpl.aktif === undefined || tpl.aktif === null || String(tpl.aktif) === '1' || tpl.aktif === true);
+
+            var initHtml = tpl.redaksi_isi || DEFAULT_REDAKSI_HTML;
+            wysiwygCanvas.innerHTML = initHtml;
+            hiddenRedaksi.value = initHtml;
+            if (wysiwygSource) wysiwygSource.value = initHtml;
 
             if (data.settings && data.settings.daftar_tahun_ajaran && Array.isArray(data.settings.daftar_tahun_ajaran)) {
                 var dl = document.getElementById('list_tahun_ajaran_tpl');
@@ -117,51 +261,165 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            updateSimulasiPreview();
+            syncFromCanvas();
         })
         .apiGetInitialData();
 });
 
-function insertTag(tag) {
-    var textarea = document.getElementById('tpl_redaksi_isi');
-    var start = textarea.selectionStart;
-    var end = textarea.selectionEnd;
-    var text = textarea.value;
-    textarea.value = text.substring(0, start) + tag + text.substring(end);
-    textarea.focus();
-    textarea.selectionStart = textarea.selectionEnd = start + tag.length;
-    updateSimulasiPreview();
+// Sync from contenteditable to hidden input and source
+function syncFromCanvas() {
+    if (!wysiwygCanvas) return;
+    var html = wysiwygCanvas.innerHTML;
+    if (hiddenRedaksi) hiddenRedaksi.value = html;
+    if (wysiwygSource && !isSourceMode) wysiwygSource.value = html;
+    updateLiveSimulation();
 }
 
-function updateSimulasiPreview() {
-    var raw = document.getElementById('tpl_redaksi_isi').value;
-    var sim = raw
-        .replace(/\[hari\]/g, 'Senin')
-        .replace(/\[tanggal\]/g, '14')
-        .replace(/\[tanggal_teks\]/g, 'empat belas')
-        .replace(/\[bulan\]/g, 'Oktober')
-        .replace(/\[tahun\]/g, '2026')
-        .replace(/\[tahun_teks\]/g, 'dua ribu dua puluh enam')
-        .replace(/\[nama_ujian\]/g, 'Sumatif Akhir Semester (SAS) Ganjil')
-        .replace(/\[tahun_ajaran\]/g, '2026/2027')
-        .replace(/\[sekolah\]/g, 'SMK NEGERI FYJ Channel')
-        .replace(/\[kelas\]/g, 'XII DKV')
-        .replace(/\[mata_pelajaran\]/g, 'Desain Komunikasi Visual')
-        .replace(/\[ruang\]/g, 'Lab 1')
-        .replace(/\[jam_mulai\]/g, '07:30')
-        .replace(/\[jam_selesai\]/g, '09:30')
-        .replace(/\[peserta_seharusnya\]/g, '32')
-        .replace(/\[peserta_hadir\]/g, '32')
-        .replace(/\[peserta_tidak_hadir\]/g, '0')
-        .replace(/\[blangko_berita_acara\]/g, '1')
-        .replace(/\[blangko_daftar_hadir\]/g, '1')
-        .replace(/\[catatan_pelaksanaan\]/g, 'Pelaksanaan ujian berjalan tertib dan lancar.');
+// Sync from HTML source textarea to canvas and hidden input
+function syncFromSource() {
+    if (!wysiwygSource) return;
+    var html = wysiwygSource.value;
+    if (hiddenRedaksi) hiddenRedaksi.value = html;
+    if (wysiwygCanvas) wysiwygCanvas.innerHTML = html;
+    updateLiveSimulation();
+}
 
-    document.getElementById('simulasiPreviewBox').innerHTML = sim;
+// Toggle HTML Source Mode
+function toggleHtmlSourceMode() {
+    var btn = document.getElementById('btnToggleSource');
+    if (!btn || !wysiwygCanvas || !wysiwygSource) return;
+
+    isSourceMode = !isSourceMode;
+    if (isSourceMode) {
+        wysiwygSource.value = wysiwygCanvas.innerHTML;
+        wysiwygCanvas.style.display = 'none';
+        wysiwygSource.style.display = 'block';
+        btn.innerHTML = '👁️ Mode Visual';
+        btn.classList.replace('btn-secondary', 'btn-primary');
+        lastActiveField = wysiwygSource;
+        wysiwygSource.focus();
+    } else {
+        wysiwygCanvas.innerHTML = wysiwygSource.value;
+        wysiwygSource.style.display = 'none';
+        wysiwygCanvas.style.display = 'block';
+        btn.innerHTML = '💻 Mode HTML';
+        btn.classList.replace('btn-primary', 'btn-secondary');
+        lastActiveField = wysiwygCanvas;
+        wysiwygCanvas.focus();
+        syncFromCanvas();
+    }
+}
+
+// Reset to Default Official Redaksi
+function resetWysiwygToDefault() {
+    showGlobalConfirmDialog(
+        'Reset Redaksi Standar',
+        'Apakah Anda yakin ingin mengembalikan susunan redaksi berita acara ke format standar resmi?',
+        function() {
+            if (wysiwygCanvas) wysiwygCanvas.innerHTML = DEFAULT_REDAKSI_HTML;
+            if (wysiwygSource) wysiwygSource.value = DEFAULT_REDAKSI_HTML;
+            syncFromCanvas();
+            showGlobalNotificationDialog('Berhasil', 'Redaksi telah dikembalikan ke format standar.', 'success');
+        },
+        'Reset Format',
+        true
+    );
+}
+
+// Insert placeholder chip into active cursor
+function insertPlaceholder(placeholder) {
+    if (lastActiveField === elJudul) {
+        insertTextAtCursor(elJudul, placeholder);
+        updateLiveSimulation();
+        return;
+    }
+
+    if (isSourceMode && wysiwygSource) {
+        insertTextAtCursor(wysiwygSource, placeholder);
+        syncFromSource();
+        return;
+    }
+
+    if (wysiwygCanvas) {
+        wysiwygCanvas.focus();
+        var sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+            var range = sel.getRangeAt(0);
+            range.deleteContents();
+            var textNode = document.createTextNode(placeholder);
+            range.insertNode(textNode);
+            range.setStartAfter(textNode);
+            range.setEndAfter(textNode);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        } else {
+            wysiwygCanvas.innerHTML += placeholder;
+        }
+        syncFromCanvas();
+    }
+}
+
+function insertTextAtCursor(inputEl, text) {
+    inputEl.focus();
+    var start = inputEl.selectionStart || 0;
+    var end = inputEl.selectionEnd || 0;
+    var val = inputEl.value;
+    inputEl.value = val.substring(0, start) + text + val.substring(end);
+    inputEl.selectionStart = inputEl.selectionEnd = start + text.length;
+}
+
+// Live simulation with realistic sample values
+function updateLiveSimulation() {
+    var rawJudul = elJudul ? elJudul.value : 'BERITA ACARA PENYELENGGARAAN UJIAN';
+    var rawKonten = hiddenRedaksi ? hiddenRedaksi.value : (wysiwygCanvas ? wysiwygCanvas.innerHTML : '');
+
+    var namaUjian = document.getElementById('tpl_nama_ujian').value.trim() || 'Sumatif Akhir Semester (SAS) Ganjil';
+    var tahunAjaran = document.getElementById('tpl_tahun_ajaran').value.trim() || '2026/2027';
+    var namaSekolah = (window.AppStore.data && window.AppStore.data.settings && window.AppStore.data.settings.nama_sekolah) || 'SMK NEGERI FYJ Channel';
+
+    var simVars = {
+        'hari': 'Senin',
+        'tanggal': '14',
+        'tanggal_teks': 'empat belas',
+        'bulan': 'Oktober',
+        'tahun': '2026',
+        'tahun_teks': 'dua ribu dua puluh enam',
+        'nama_ujian': namaUjian,
+        'tahun_ajaran': tahunAjaran,
+        'sekolah': namaSekolah,
+        'kelas': 'XII DKV',
+        'mata_pelajaran': 'Desain Komunikasi Visual',
+        'ruang': 'Lab DKV 1',
+        'jam_mulai': '07:30',
+        'jam_selesai': '09:30',
+        'peserta_seharusnya': '32',
+        'peserta_hadir': '32',
+        'peserta_tidak_hadir': '0',
+        'blangko_berita_acara': '1',
+        'blangko_daftar_hadir': '1',
+        'catatan_pelaksanaan': 'Pelaksanaan ujian berjalan aman, tertib, dan lancar.'
+    };
+
+    var simJudul = rawJudul;
+    for (var k in simVars) {
+        simJudul = simJudul.split('[' + k + ']').join(simVars[k]);
+    }
+    var pvJudul = document.getElementById('pvLiveJudul');
+    if (pvJudul) pvJudul.textContent = simJudul;
+
+    var simKonten = rawKonten;
+    for (var k2 in simVars) {
+        var re = new RegExp('\\[' + k2 + '\\]', 'gi');
+        simKonten = simKonten.replace(re, simVars[k2]);
+    }
+    var pvKonten = document.getElementById('pvLiveKonten');
+    if (pvKonten) pvKonten.innerHTML = simKonten;
 }
 
 function handleSaveTemplate(e) {
     e.preventDefault();
+    syncFromCanvas();
+
     var btn = document.getElementById('btnSaveTemplate');
     btn.disabled = true;
     btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Menyimpan...';
@@ -172,18 +430,18 @@ function handleSaveTemplate(e) {
         tahun_ajaran: document.getElementById('tpl_tahun_ajaran').value.trim(),
         judul_berita_acara: document.getElementById('tpl_judul_ba').value,
         redaksi_isi: document.getElementById('tpl_redaksi_isi').value,
-        aktif: 1
+        aktif: document.getElementById('tpl_aktif').checked ? 1 : 0
     };
 
     google.script.run
         .withSuccessHandler(function() {
             btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check-circle"></i> Simpan Perubahan Template';
-            showGlobalNotificationDialog('Berhasil', 'Template ujian dan redaksi berhasil disimpan.', 'success');
+            btn.innerHTML = '<i class="bi bi-check-circle"></i> 💾 Simpan Perubahan Template';
+            showGlobalNotificationDialog('Berhasil', 'Template ujian dan redaksi WYSIWYG berhasil disimpan.', 'success');
         })
         .withFailureHandler(function(err) {
             btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check-circle"></i> Simpan Perubahan Template';
+            btn.innerHTML = '<i class="bi bi-check-circle"></i> 💾 Simpan Perubahan Template';
             showGlobalNotificationDialog('Gagal', err.message, 'danger');
         })
         .apiSaveTemplate(payload);

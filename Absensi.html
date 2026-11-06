@@ -779,7 +779,7 @@ function exportAbsensiExcel() {
     var mapel = document.getElementById('mata_pelajaran').value.trim() || 'Mapel';
     var classSelect = document.getElementById('class_id');
     var namaKelas = classSelect.options[classSelect.selectedIndex].text;
-    var filename = 'Presensi_' + namaKelas.replace(/\s+/g, '_') + '_' + mapel.replace(/\s+/g, '_') + '.xls';
+    var filename = 'Presensi_' + namaKelas.replace(/\s+/g, '_') + '_' + mapel.replace(/\s+/g, '_') + '.xlsx';
 
     var headers = ['No', 'NIS', 'Nama Siswa', 'Status Kehadiran'];
     var rows = [];

@@ -185,7 +185,7 @@ function confirmResetAllArsip() {
 }
 
 function exportArsipExcel() {
-    var filename = 'Rekap_Arsip_Daftar_Hadir_' + new Date().toISOString().split('T')[0] + '.xls';
+    var filename = 'Rekap_Arsip_Daftar_Hadir_' + new Date().toISOString().split('T')[0] + '.xlsx';
     var headers = ['No', 'Tanggal', 'Kelas', 'Mata Pelajaran', 'Sesi', 'Ruang', 'Hadir', 'Dispensasi', 'Izin', 'Sakit', 'Tidak Hadir', 'Total Peserta', 'Pengawas 1', 'NIP 1'];
     var rows = [];
     arsipList.forEach(function(a, idx) {

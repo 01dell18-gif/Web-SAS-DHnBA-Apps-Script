@@ -365,7 +365,7 @@ function saveSubjectAttendance() {
 function exportMatrixExcel() {
     var cls = window.AppStore.data.classes.find(function(c) { return String(c.id) === String(currentMatrixClassId); });
     var namaKelas = cls ? cls.nama_kelas.replace(/\s+/g, '_') : 'Kelas';
-    var filename = 'Rekap_Kehadiran_Matriks_' + namaKelas + '_' + new Date().toISOString().split('T')[0] + '.xls';
+    var filename = 'Rekap_Kehadiran_Matriks_' + namaKelas + '_' + new Date().toISOString().split('T')[0] + '.xlsx';
 
     var headers = ['No', 'NIS', 'Nama Siswa'];
     classSubjectSessions.forEach(function(s) {
