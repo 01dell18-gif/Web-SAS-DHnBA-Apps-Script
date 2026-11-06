@@ -8,6 +8,74 @@
 window.APP_URL = '<?= appUrl ?>';
 window.CURRENT_PAGE = '<?= currentPage ?>';
 
+// Universal Navigation Helpers for Google Apps Script Web App
+function getAppUrl() {
+    try {
+        if (document.referrer && document.referrer.indexOf('script.google.com') !== -1) {
+            return document.referrer.split('?')[0].split('#')[0];
+        }
+    } catch (e) {}
+
+    try {
+        if (window.top && window.top.location && window.top.location.href && window.top.location.href.indexOf('script.google.com') !== -1) {
+            return window.top.location.href.split('?')[0].split('#')[0];
+        }
+    } catch (e) {}
+
+    try {
+        if (window.location && window.location.href && window.location.href.indexOf('script.google.com') !== -1) {
+            return window.location.href.split('?')[0].split('#')[0];
+        }
+    } catch (e) {}
+
+    if (typeof window.APP_URL === 'string' && window.APP_URL.indexOf('script.google.com') !== -1) {
+        return window.APP_URL.split('?')[0].split('#')[0];
+    }
+
+    return '';
+}
+window.getAppUrl = getAppUrl;
+
+function navigateTo(page, params) {
+    var baseUrl = getAppUrl();
+    var query = '?page=' + encodeURIComponent(page);
+    if (params && typeof params === 'object') {
+        for (var k in params) {
+            if (params.hasOwnProperty(k)) {
+                query += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+            }
+        }
+    }
+
+    var targetUrl = (baseUrl ? baseUrl : '') + query;
+
+    // WAJIB: Navigasi jendela teratas (_top) agar tidak terkena sandbox/X-Frame-Options/Drive 404
+    try {
+        if (window.top && window.top !== window) {
+            window.top.location.href = targetUrl;
+            return;
+        }
+    } catch (e) {}
+
+    try {
+        window.open(targetUrl, '_top');
+        return;
+    } catch (e) {}
+
+    window.location.href = targetUrl;
+}
+window.navigateTo = navigateTo;
+
+function openAdminPortal() {
+    var isAuth = localStorage.getItem('sas_admin_auth') === '1';
+    if (isAuth) {
+        navigateTo('dashboard');
+    } else {
+        navigateTo('login');
+    }
+}
+window.openAdminPortal = openAdminPortal;
+
 // Universal State Container
 window.AppStore = {
   data: null,
@@ -186,7 +254,7 @@ window.logoutAdmin = function() {
       localStorage.removeItem('sas_admin_auth');
       localStorage.removeItem('sas_admin_user');
       localStorage.removeItem('sas_admin_role');
-      window.location.href = window.APP_URL + '?page=login';
+      navigateTo('login');
     },
     'Keluar',
     true

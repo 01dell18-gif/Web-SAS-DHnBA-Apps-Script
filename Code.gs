@@ -73,16 +73,36 @@ function doGet(e) {
   }
 }
 
-function include(filename) {
-  return HtmlService.createHtmlOutputFromFile(filename).getContent();
+function include(filename, data) {
+  var t = HtmlService.createTemplateFromFile(filename);
+  t.currentPage = _activePage;
+  t.params = _activeParams;
+  t.appUrl = getAppUrl();
+  t.settings = getSettingsMap();
+  t.schoolSettings = t.settings;
+
+  if (data && typeof data === 'object') {
+    for (var k in data) {
+      if (data.hasOwnProperty(k)) {
+        t[k] = data[k];
+      }
+    }
+  }
+  return t.evaluate().getContent();
 }
 
 function getAppUrl() {
   try {
-    return ScriptApp.getService().getUrl() || '';
-  } catch (e) {
-    return '';
-  }
+    var url = ScriptApp.getService().getUrl();
+    if (url && url.length > 5) return url;
+  } catch (e) {}
+
+  try {
+    var propsUrl = PropertiesService.getScriptProperties().getProperty('WEB_APP_URL');
+    if (propsUrl && propsUrl.length > 5) return propsUrl;
+  } catch (e) {}
+
+  return '';
 }
 
 function renderTemplate(filename) {

@@ -13,14 +13,46 @@
     if (authPages.indexOf(p) !== -1) {
       var isAuth = localStorage.getItem('sas_admin_auth') === '1';
       var role = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+      
+      function getNavUrl(targetPage) {
+        var base = '';
+        try {
+          if (document.referrer && document.referrer.indexOf('script.google.com') !== -1) {
+            base = document.referrer.split('?')[0].split('#')[0];
+          }
+        } catch(e) {}
+        if (!base && typeof window.location !== 'undefined' && window.location.href && window.location.href.indexOf('script.google.com') !== -1) {
+          base = window.location.href.split('?')[0].split('#')[0];
+        }
+        var serverUrl = '<?= appUrl ?>';
+        if (!base && serverUrl && serverUrl.indexOf('script.google.com') !== -1) {
+          base = serverUrl.split('?')[0].split('#')[0];
+        }
+        return (base || '') + '?page=' + targetPage;
+      }
+
       if (!isAuth) {
         document.documentElement.style.display = 'none';
-        window.location.replace('<?= appUrl ?>?page=login');
+        var dest = getNavUrl('login');
+        try {
+          if (window.top && window.top !== window) {
+            window.top.location.replace(dest);
+            return;
+          }
+        } catch(e) {}
+        window.location.replace(dest);
         return;
       }
       if (role === 'operator' && (p === 'users' || p === 'pengaturan' || p === 'template')) {
         document.documentElement.style.display = 'none';
-        window.location.replace('<?= appUrl ?>?page=dashboard');
+        var dest2 = getNavUrl('dashboard');
+        try {
+          if (window.top && window.top !== window) {
+            window.top.location.replace(dest2);
+            return;
+          }
+        } catch(e) {}
+        window.location.replace(dest2);
         return;
       }
     }

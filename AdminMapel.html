@@ -21,7 +21,7 @@
                 <button type="button" class="btn btn-primary btn-sm" onclick="openMapelModal()">
                     <i class="bi bi-plus-circle"></i> Tambah Mapel
                 </button>
-                <a href="<?= appUrl ?>?page=import" class="btn btn-secondary btn-sm">
+                <a href="<?= appUrl ?>?page=import" target="_top" onclick="navigateTo('import'); return false;" class="btn btn-secondary btn-sm">
                     <i class="bi bi-file-earmark-arrow-up"></i> Impor Excel
                 </a>
                 <button type="button" class="btn btn-secondary btn-sm" onclick="exportMapelExcel()">

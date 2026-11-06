@@ -78,7 +78,7 @@
     </form>
 
     <div style="margin-top: 1.75rem; font-size: 0.825rem; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 1.25rem;">
-        <a href="<?= appUrl ?>?page=index" style="color: var(--primary); text-decoration: none; font-weight: 600;">
+        <a href="<?= appUrl ?>?page=index" target="_top" onclick="navigateTo('index'); return false;" style="color: var(--primary); text-decoration: none; font-weight: 600;">
             <i class="bi bi-arrow-left"></i> Kembali ke Beranda Publik
         </a>
     </div>
@@ -117,7 +117,7 @@ function handleLoginSubmit(e) {
                 localStorage.setItem('sas_admin_auth', '1');
                 localStorage.setItem('sas_admin_user', JSON.stringify(res.user));
                 localStorage.setItem('sas_admin_role', res.user.role || 'admin');
-                window.location.replace(window.APP_URL + '?page=dashboard');
+                navigateTo('dashboard');
             } else {
                 alertBox.textContent = (res && res.message) ? res.message : 'Username atau password salah.';
                 alertBox.style.display = 'block';

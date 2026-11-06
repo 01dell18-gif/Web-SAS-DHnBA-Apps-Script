@@ -1,7 +1,7 @@
 <!-- Admin Sidebar Tree Navigation -->
 <aside class="admin-sidebar" id="adminSidebar">
     <!-- Dashboard Standalone -->
-    <a href="<?= appUrl ?>?page=dashboard" class="admin-menu-item <?= (currentPage === 'dashboard') ? 'active' : '' ?>" style="margin-bottom: 0.5rem;">
+    <a href="<?= appUrl ?>?page=dashboard" target="_top" onclick="navigateTo('dashboard'); return false;" class="admin-menu-item <?= (currentPage === 'dashboard') ? 'active' : '' ?>" style="margin-bottom: 0.5rem;">
         <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
     </a>
 
@@ -17,23 +17,23 @@
         </button>
         <div class="sidebar-group-sub">
             <div class="sidebar-tree-line"></div>
-            <a href="<?= appUrl ?>?page=kelas" class="sidebar-sub-item <?= (currentPage === 'kelas') ? 'active' : '' ?>">
+            <a href="<?= appUrl ?>?page=kelas" target="_top" onclick="navigateTo('kelas'); return false;" class="sidebar-sub-item <?= (currentPage === 'kelas') ? 'active' : '' ?>">
                 <span class="sidebar-sub-bullet"></span>
                 <span class="sidebar-sub-text">Data Kelas</span>
             </a>
-            <a href="<?= appUrl ?>?page=siswa" class="sidebar-sub-item <?= (currentPage === 'siswa') ? 'active' : '' ?>">
+            <a href="<?= appUrl ?>?page=siswa" target="_top" onclick="navigateTo('siswa'); return false;" class="sidebar-sub-item <?= (currentPage === 'siswa') ? 'active' : '' ?>">
                 <span class="sidebar-sub-bullet"></span>
                 <span class="sidebar-sub-text">Kelola Data Siswa</span>
             </a>
-            <a href="<?= appUrl ?>?page=guru" class="sidebar-sub-item <?= (currentPage === 'guru') ? 'active' : '' ?>">
+            <a href="<?= appUrl ?>?page=guru" target="_top" onclick="navigateTo('guru'); return false;" class="sidebar-sub-item <?= (currentPage === 'guru') ? 'active' : '' ?>">
                 <span class="sidebar-sub-bullet"></span>
                 <span class="sidebar-sub-text">Data Guru & Pengawas</span>
             </a>
-            <a href="<?= appUrl ?>?page=mapel" class="sidebar-sub-item <?= (currentPage === 'mapel') ? 'active' : '' ?>">
+            <a href="<?= appUrl ?>?page=mapel" target="_top" onclick="navigateTo('mapel'); return false;" class="sidebar-sub-item <?= (currentPage === 'mapel') ? 'active' : '' ?>">
                 <span class="sidebar-sub-bullet"></span>
                 <span class="sidebar-sub-text">Data Mapel</span>
             </a>
-            <a href="<?= appUrl ?>?page=import" class="sidebar-sub-item <?= (currentPage === 'import') ? 'active' : '' ?>">
+            <a href="<?= appUrl ?>?page=import" target="_top" onclick="navigateTo('import'); return false;" class="sidebar-sub-item <?= (currentPage === 'import') ? 'active' : '' ?>">
                 <span class="sidebar-sub-bullet"></span>
                 <span class="sidebar-sub-text">Impor Data Excel</span>
             </a>
@@ -52,19 +52,19 @@
         </button>
         <div class="sidebar-group-sub">
             <div class="sidebar-tree-line"></div>
-            <a href="<?= appUrl ?>?page=rekap-kehadiran" class="sidebar-sub-item <?= (currentPage === 'rekap-kehadiran') ? 'active' : '' ?>">
+            <a href="<?= appUrl ?>?page=rekap-kehadiran" target="_top" onclick="navigateTo('rekap-kehadiran'); return false;" class="sidebar-sub-item <?= (currentPage === 'rekap-kehadiran') ? 'active' : '' ?>">
                 <span class="sidebar-sub-bullet"></span>
                 <span class="sidebar-sub-text">Rekap Kehadiran</span>
             </a>
-            <a href="<?= appUrl ?>?page=admin-absensi" class="sidebar-sub-item <?= (currentPage === 'admin-absensi') ? 'active' : '' ?>">
+            <a href="<?= appUrl ?>?page=admin-absensi" target="_top" onclick="navigateTo('admin-absensi'); return false;" class="sidebar-sub-item <?= (currentPage === 'admin-absensi') ? 'active' : '' ?>">
                 <span class="sidebar-sub-bullet"></span>
                 <span class="sidebar-sub-text">Arsip Daftar Hadir</span>
             </a>
-            <a href="<?= appUrl ?>?page=admin-berita-acara" class="sidebar-sub-item <?= (currentPage === 'admin-berita-acara') ? 'active' : '' ?>">
+            <a href="<?= appUrl ?>?page=admin-berita-acara" target="_top" onclick="navigateTo('admin-berita-acara'); return false;" class="sidebar-sub-item <?= (currentPage === 'admin-berita-acara') ? 'active' : '' ?>">
                 <span class="sidebar-sub-bullet"></span>
                 <span class="sidebar-sub-text">Arsip Berita Acara</span>
             </a>
-            <a href="<?= appUrl ?>?page=rekonsiliasi" class="sidebar-sub-item <?= (currentPage === 'rekonsiliasi') ? 'active' : '' ?>">
+            <a href="<?= appUrl ?>?page=rekonsiliasi" target="_top" onclick="navigateTo('rekonsiliasi'); return false;" class="sidebar-sub-item <?= (currentPage === 'rekonsiliasi') ? 'active' : '' ?>">
                 <span class="sidebar-sub-bullet"></span>
                 <span class="sidebar-sub-text">Rekonsiliasi Dokumen</span>
             </a>
@@ -84,19 +84,19 @@
             </button>
             <div class="sidebar-group-sub">
                 <div class="sidebar-tree-line"></div>
-                <a href="<?= appUrl ?>?page=template" class="sidebar-sub-item admin-only-item <?= (currentPage === 'template') ? 'active' : '' ?>">
+                <a href="<?= appUrl ?>?page=template" target="_top" onclick="navigateTo('template'); return false;" class="sidebar-sub-item admin-only-item <?= (currentPage === 'template') ? 'active' : '' ?>">
                     <span class="sidebar-sub-bullet"></span>
                     <span class="sidebar-sub-text">Template Ujian</span>
                 </a>
-                <a href="<?= appUrl ?>?page=pengaturan" class="sidebar-sub-item admin-only-item <?= (currentPage === 'pengaturan') ? 'active' : '' ?>">
+                <a href="<?= appUrl ?>?page=pengaturan" target="_top" onclick="navigateTo('pengaturan'); return false;" class="sidebar-sub-item admin-only-item <?= (currentPage === 'pengaturan') ? 'active' : '' ?>">
                     <span class="sidebar-sub-bullet"></span>
                     <span class="sidebar-sub-text">Pengaturan Kop & Drive</span>
                 </a>
-                <a href="<?= appUrl ?>?page=users" class="sidebar-sub-item admin-only-item <?= (currentPage === 'users') ? 'active' : '' ?>">
+                <a href="<?= appUrl ?>?page=users" target="_top" onclick="navigateTo('users'); return false;" class="sidebar-sub-item admin-only-item <?= (currentPage === 'users') ? 'active' : '' ?>">
                     <span class="sidebar-sub-bullet"></span>
                     <span class="sidebar-sub-text">Manajemen User</span>
                 </a>
-                <a href="<?= appUrl ?>?page=profil" class="sidebar-sub-item <?= (currentPage === 'profil') ? 'active' : '' ?>">
+                <a href="<?= appUrl ?>?page=profil" target="_top" onclick="navigateTo('profil'); return false;" class="sidebar-sub-item <?= (currentPage === 'profil') ? 'active' : '' ?>">
                     <span class="sidebar-sub-bullet"></span>
                     <span class="sidebar-sub-text">Profil</span>
                 </a>
