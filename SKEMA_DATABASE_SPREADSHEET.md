@@ -123,25 +123,40 @@ erDiagram
 
 ### 1. Sheet `Pengaturan`
 
-Menyimpan konfigurasi identitas sekolah, logo, kop surat, semester, dan tahun ajaran aktif.
+Menyimpan konfigurasi identitas sekolah, logo, kop surat, semester, master tahun ajaran, dan folder Google Drive Arsip.
 
 | Kolom | Tipe Data | Keterangan | Contoh Nilai |
 | :--- | :--- | :--- | :--- |
-| `key` | String (PK) | Kunci konfigurasi unik | `school_name` |
-| `value` | String / JSON | Nilai konfigurasi / string base64 / JSON array | `SMK NEGERI FYJ CHANNEL` |
+| `setting_key` / `key` | String (PK) | Kunci konfigurasi unik (fleksibel mendukung kedua format) | `nama_sekolah` / `school_name` |
+| `setting_value` / `value` | String / JSON | Nilai konfigurasi / URL thumbnail Google Drive / JSON array | `SMK NEGERI FYJ Channel` |
 
-**Daftar Kunci Bawaan:**
+**Daftar Kunci Bawaan (Diselaraskan Runtut Sesuai Menu Pengaturan):**
 
-- `school_name`: Nama resmi sekolah (`SMK NEGERI FYJ CHANNEL`).
-- `school_tagline`: Tagline sekolah (`Generator Administrasi Ujian`).
-- `school_logo`: String URL Thumbnail / Base64 logo resmi sekolah (`https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI`).
-- `kop_header`: String URL Thumbnail / Base64 gambar kop surat resmi sekolah (`https://drive.google.com/thumbnail?id=1Z80pVGJv9v-GFwjE1_kBi_G9uRlR2gN7`).
-- `academic_year`: Tahun ajaran aktif (`2026/2027`).
-- `default_semester`: Semester aktif (`Ganjil` / `Genap`).
-- `timezone`: Zona waktu (`WITA`, `WIB`, atau `WIT`).
-- `active_template_id`: ID template berita acara yang sedang aktif.
-- `drive_folder_url`: URL folder Google Drive resmi untuk penyimpanan SAS (`https://drive.google.com/drive/folders/19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR`).
-- `drive_folder_id`: ID unik folder Google Drive (`19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR`).
+1. **Seksi Kop Surat Resmi A4**:
+   - `kop_mode`: Mode kop dokumen (`image` untuk banner lengkap, atau `text` untuk mode teks & logo terpisah).
+   - `kop_header` / `kop_image_path`: URL Gambar Thumbnail Google Drive banner resmi kop surat A4 (`https://drive.google.com/thumbnail?id=...&sz=w1600`).
+   - `kop_baris_1` s/d `kop_baris_3`: Redaksi teks kop instansi pemerintah & sekolah.
+   - `kop_telepon`: Kontak telepon dan email sekolah.
+   - `kop_website`: Alamat website resmi sekolah.
+
+2. **Seksi Logo Sekolah**:
+   - `school_logo` / `logo_path`: URL Gambar Thumbnail Google Drive logo resmi sekolah (`https://drive.google.com/thumbnail?id=...&sz=w1600`).
+
+3. **Seksi Identitas Sekolah & Penyimpanan Google Drive**:
+   - `nama_sekolah` / `school_name`: Nama resmi sekolah (`SMK NEGERI FYJ Channel`).
+   - `alamat_sekolah`: Alamat lengkap sekolah.
+   - `google_drive_folder_url` / `drive_folder_url`: URL folder Google Drive resmi untuk penyimpanan Arsip SAS.
+   - `google_drive_folder_id` / `drive_folder_id`: ID unik folder Google Drive arsip.
+
+4. **Seksi Master Tahun Ajaran & Semester**:
+   - `tahun_ajaran_aktif` / `academic_year`: Tahun ajaran aktif (`2026/2027`).
+   - `semester_aktif` / `default_semester`: Semester aktif (`Ganjil` / `Genap`).
+   - `daftar_tahun_ajaran`: JSON string array daftar master tahun ajaran (contoh: `["2024/2025","2025/2026","2026/2027","2027/2028"]`).
+
+> [!NOTE]
+> **Metode Pembaruan Aset Logo & Kop**:
+> - **Cara 1 (Link URL)**: Pengguna dapat menempelkan URL gambar langsung atau tautan berbagi Google Drive. Sistem secara otomatis mengonversinya menjadi URL thumbnail publik resolusi tinggi (`sz=w1600`).
+> - **Cara 2 (Upload File ke Drive)**: File diunggah langsung ke Folder Google Drive Arsip melalui `DriveApp`, diset hak akses lihat publik via tautan, dan langsung menggantikan URL sebelumnya di sheet `Pengaturan`.
 
 ---
 

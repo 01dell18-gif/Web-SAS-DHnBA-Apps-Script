@@ -5,6 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pengaturan Sekolah, Logo & Kop - <?= (settings && settings.nama_sekolah) ? settings.nama_sekolah : 'SMK NEGERI FYJ Channel' ?></title>
     <?!= include('StyleCSS'); ?>
+    <style>
+        .setting-method-tab {
+            display: inline-flex;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 8px;
+            gap: 4px;
+            margin-bottom: 12px;
+            width: 100%;
+        }
+        .setting-method-btn {
+            flex: 1;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .setting-method-btn.active {
+            background: #ffffff;
+            color: var(--primary);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .sync-info-box {
+            background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);
+            border: 1px solid #bae6fd;
+            border-left: 4px solid #0284c7;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .upload-drive-box {
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 14px;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+        .upload-drive-box:hover {
+            border-color: var(--primary);
+        }
+    </style>
 </head>
 <body>
 <?!= include('Header'); ?>
@@ -12,18 +68,39 @@
 <div class="admin-sidebar-layout">
     <?!= include('Sidebar'); ?>
     <main class="admin-main">
-        <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+        <div style="margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
             <div>
                 <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-heading); margin: 0;">
                     <i class="bi bi-sliders2-vertical"></i> Pengaturan Sekolah, Logo, Kop & Tahun Ajaran
                 </h1>
                 <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">
-                    Konfigurasi gambar Banner Kop Surat A4, Logo Sekolah, Master Tahun Ajaran, dan Penyimpanan Arsip
+                    Konfigurasi Banner Kop Surat A4, Logo Sekolah, Master Tahun Ajaran, dan Sinkronisasi Google Spreadsheet
                 </p>
             </div>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="loadInitialSettings(true)">
-                <i class="bi bi-arrow-clockwise"></i> Segarkan Data
-            </button>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="openDatabaseSpreadsheet()">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Buka Sheet Pengaturan
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="loadInitialSettings(true)">
+                    <i class="bi bi-arrow-clockwise"></i> Segarkan Data
+                </button>
+            </div>
+        </div>
+
+        <!-- NOTIFIKASI SINKRONISASI DATABASE SPREADSHEET -->
+        <div class="sync-info-box">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <i class="bi bi-arrow-left-right" style="font-size: 1.5rem; color: #0284c7;"></i>
+                <div>
+                    <strong style="color: #0369a1; font-size: 0.9rem;">Tersinkronisasi Penuh dengan Sheet <code>Pengaturan</code> di Google Spreadsheet</strong>
+                    <div style="font-size: 0.78rem; color: #334155; margin-top: 2px;">
+                        Data di form ini ditarik langsung dari sheet <code>Pengaturan</code>. Saat disimpan atau mengunggah berkas, baris-baris pada spreadsheet akan otomatis diperbarui secara runtut sesuai urutan menu ini.
+                    </div>
+                </div>
+            </div>
+            <span class="badge" style="background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
+                <i class="bi bi-check2-circle"></i> Sinkronisasi 2-Arah Aktif
+            </span>
         </div>
 
         <form id="formPengaturanSekolah" onsubmit="handleSaveSettings(event)">
@@ -62,28 +139,65 @@
                                 <span class="badge" style="background: #ecfdf5; color: #047857; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px;">Banner A4</span>
                             </div>
                             <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">
-                                Banner horizontal resmi yang dicetak pada bagian paling atas Daftar Hadir dan Berita Acara.
+                                Banner horizontal resmi yang dicetak pada bagian paling atas Daftar Hadir dan Berita Acara A4.
                             </p>
 
+                            <!-- Tab Pilihan Cara Update Kop -->
+                            <div class="setting-method-tab">
+                                <button type="button" class="setting-method-btn active" id="tabKopMethodUrl" onclick="switchKopMethod('url')">
+                                    <i class="bi bi-link-45deg"></i> Cara 1: Tautan / Link URL
+                                </button>
+                                <button type="button" class="setting-method-btn" id="tabKopMethodDrive" onclick="switchKopMethod('drive')">
+                                    <i class="bi bi-cloud-arrow-up"></i> Cara 2: Upload ke Drive Arsip
+                                </button>
+                            </div>
+
+                            <!-- Pilihan Cara 1: Tautan URL -->
+                            <div id="boxKopMethodUrl" style="margin-bottom: 12px;">
+                                <label class="form-label" for="inputKopUrl" style="font-size: 0.8rem; font-weight: 600;">
+                                    Tautan URL Banner Kop:
+                                </label>
+                                <div style="display: flex; gap: 6px;">
+                                    <input type="text" id="inputKopUrl" class="form-control" style="font-size: 0.85rem;" placeholder="https://drive.google.com/... atau URL gambar..." oninput="handleKopUrlInput(this.value)">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="handleKopUrlInput(document.getElementById('inputKopUrl').value)" style="white-space: nowrap;">
+                                        Terapkan
+                                    </button>
+                                </div>
+                                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
+                                    Tautan Google Drive (<code>drive.google.com/file/d/...</code>) akan otomatis dikonversi ke gambar langsung.
+                                </div>
+                            </div>
+
+                            <!-- Pilihan Cara 2: Upload File ke Drive Arsip -->
+                            <div id="boxKopMethodDrive" class="upload-drive-box" style="margin-bottom: 12px; display: none;">
+                                <div style="font-size: 0.8rem; color: var(--slate-700); margin-bottom: 8px;">
+                                    <i class="bi bi-google"></i> Unggah berkas gambar banner. File akan otomatis tersimpan di <strong>Folder Google Drive Arsip</strong> dan menggantikan link kop di sheet <code>Pengaturan</code>.
+                                </div>
+                                <input type="file" id="fileKopDrive" accept="image/png,image/jpeg,image/webp" onchange="uploadAssetToDriveDirect('kop', this)" style="display: none;">
+                                <div style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    <button type="button" class="btn btn-primary btn-sm" id="btnUploadKop" onclick="document.getElementById('fileKopDrive').click()">
+                                        <i class="bi bi-cloud-arrow-up"></i> Pilih & Unggah ke Google Drive
+                                    </button>
+                                    <span id="statusUploadKop" style="font-size: 0.78rem;"></span>
+                                </div>
+                                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 6px;">
+                                    Format: PNG, JPG, WebP (Rasio horizontal memanjang, maks 8MB).
+                                </div>
+                            </div>
+
                             <!-- Pratinjau Banner Kop -->
-                            <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px dashed #cbd5e1; text-align: center; margin-bottom: 12px; min-height: 100px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                            <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px dashed #cbd5e1; text-align: center; margin-bottom: 10px; min-height: 100px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
                                 <img id="previewKopSetting" src="" alt="Pratinjau Banner Kop" style="max-width: 100%; max-height: 110px; object-fit: contain; display: none;">
                                 <span id="placeholderKopSetting" style="font-size: 0.85rem; color: var(--text-muted);">
-                                    <i class="bi bi-image" style="font-size: 1.5rem; display: block; margin-bottom: 4px;"></i> Belum ada banner kop yang diunggah
+                                    <i class="bi bi-image" style="font-size: 1.5rem; display: block; margin-bottom: 4px;"></i> Belum ada banner kop yang disetel
                                 </span>
                             </div>
 
-                            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                                <input type="file" id="fileKopSetting" accept="image/png,image/jpeg,image/webp" onchange="handleKopChange(this)" style="display: none;">
-                                <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('fileKopSetting').click()">
-                                    <i class="bi bi-upload"></i> Unggah Banner Kop
-                                </button>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <button type="button" class="btn btn-secondary btn-sm" onclick="resetKop()">
-                                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                                    <i class="bi bi-arrow-counterclockwise"></i> Reset Banner Kop
                                 </button>
-                            </div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">
-                                Disarankan format PNG transparan/JPG rasio horizontal memanjang (misal 1200 x 200–250 px, maks 4MB).
+                                <span id="linkDriveKopBox" style="font-size: 0.75rem;"></span>
                             </div>
                         </div>
 
@@ -99,25 +213,60 @@
                                 Logo resmi sekolah (tampil pada bilah atas/navbar, halaman publik/login, dan kop mode teks).
                             </p>
 
+                            <!-- Tab Pilihan Cara Update Logo -->
+                            <div class="setting-method-tab">
+                                <button type="button" class="setting-method-btn active" id="tabLogoMethodUrl" onclick="switchLogoMethod('url')">
+                                    <i class="bi bi-link-45deg"></i> Cara 1: Tautan / Link URL
+                                </button>
+                                <button type="button" class="setting-method-btn" id="tabLogoMethodDrive" onclick="switchLogoMethod('drive')">
+                                    <i class="bi bi-cloud-arrow-up"></i> Cara 2: Upload ke Drive Arsip
+                                </button>
+                            </div>
+
+                            <!-- Pilihan Cara 1: Tautan URL -->
+                            <div id="boxLogoMethodUrl" style="margin-bottom: 12px;">
+                                <label class="form-label" for="inputLogoUrl" style="font-size: 0.8rem; font-weight: 600;">
+                                    Tautan URL Logo Sekolah:
+                                </label>
+                                <div style="display: flex; gap: 6px;">
+                                    <input type="text" id="inputLogoUrl" class="form-control" style="font-size: 0.85rem;" placeholder="https://drive.google.com/... atau URL gambar..." oninput="handleLogoUrlInput(this.value)">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="handleLogoUrlInput(document.getElementById('inputLogoUrl').value)" style="white-space: nowrap;">
+                                        Terapkan
+                                    </button>
+                                </div>
+                                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
+                                    Mendukung tautan Google Drive, web thumbnail, atau gambar PNG/JPG online.
+                                </div>
+                            </div>
+
+                            <!-- Pilihan Cara 2: Upload File ke Drive Arsip -->
+                            <div id="boxLogoMethodDrive" class="upload-drive-box" style="margin-bottom: 12px; display: none;">
+                                <div style="font-size: 0.8rem; color: var(--slate-700); margin-bottom: 8px;">
+                                    <i class="bi bi-google"></i> Unggah berkas logo sekolah. File akan otomatis tersimpan di <strong>Folder Google Drive Arsip</strong> dan menggantikan link logo di sheet <code>Pengaturan</code>.
+                                </div>
+                                <input type="file" id="fileLogoDrive" accept="image/png,image/jpeg,image/webp" onchange="uploadAssetToDriveDirect('logo', this)" style="display: none;">
+                                <div style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    <button type="button" class="btn btn-primary btn-sm" id="btnUploadLogo" onclick="document.getElementById('fileLogoDrive').click()">
+                                        <i class="bi bi-cloud-arrow-up"></i> Pilih & Unggah ke Google Drive
+                                    </button>
+                                    <span id="statusUploadLogo" style="font-size: 0.78rem;"></span>
+                                </div>
+                                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 6px;">
+                                    Disarankan gambar rasio persegi 1:1 format PNG transparan atau JPG (maks 8MB).
+                                </div>
+                            </div>
+
                             <!-- Pratinjau Logo -->
-                            <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 12px;">
-                                <div style="width: 80px; height: 80px; border: 1px solid var(--border); border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #ffffff; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); flex-shrink: 0;">
+                            <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 10px; background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px dashed #cbd5e1;">
+                                <div style="width: 80px; height: 80px; border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #ffffff; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); flex-shrink: 0;">
                                     <img id="previewLogoSetting" src="" alt="Logo Sekolah" style="max-width: 100%; max-height: 100%; object-fit: contain; display: none;">
                                     <span id="placeholderLogoSetting" style="font-size: 1.5rem; color: #94a3b8;"><i class="bi bi-building"></i></span>
                                 </div>
                                 <div>
-                                    <input type="file" id="fileLogoSetting" accept="image/*" onchange="handleLogoChange(this)" style="display: none;">
-                                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('fileLogoSetting').click()">
-                                            <i class="bi bi-upload"></i> Ganti Logo
-                                        </button>
-                                        <button type="button" class="btn btn-secondary btn-sm" onclick="resetLogo()">
-                                            <i class="bi bi-arrow-counterclockwise"></i> Reset
-                                        </button>
-                                    </div>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px;">
-                                        Disarankan gambar rasio persegi 1:1 format PNG transparan atau JPG.
-                                    </div>
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="resetLogo()">
+                                        <i class="bi bi-arrow-counterclockwise"></i> Reset Logo
+                                    </button>
+                                    <div id="linkDriveLogoBox" style="font-size: 0.75rem; margin-top: 6px;"></div>
                                 </div>
                             </div>
                         </div>
@@ -164,7 +313,7 @@
                 <!-- Identitas Sekolah & Link Drive -->
                 <div class="card">
                     <div class="card-header">
-                        <span class="card-title"><i class="bi bi-building"></i> 2. Identitas Sekolah & Penyimpanan</span>
+                        <span class="card-title"><i class="bi bi-building"></i> 2. Identitas Sekolah & Penyimpanan Google Drive</span>
                     </div>
                     <div class="card-body">
                         <div class="form-group">
@@ -177,9 +326,19 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="set_drive_url">Tautan Folder Google Drive Arsip</label>
-                            <input type="url" id="set_drive_url" class="form-control" placeholder="https://drive.google.com/drive/folders/...">
-                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
-                                Tautan ini dibuka saat tombol "Buka Folder Drive Arsip" diklik oleh pengawas / admin.
+                            <div style="display: flex; gap: 6px;">
+                                <input type="url" id="set_drive_url" class="form-control" placeholder="https://drive.google.com/drive/folders/...">
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="openDriveFolderDirect()" title="Buka folder Drive ini" style="white-space: nowrap;">
+                                    <i class="bi bi-box-arrow-up-right"></i> Buka
+                                </button>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; flex-wrap: wrap; gap: 6px;">
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                    Folder ini menjadi wadah penyimpanan berkas kop, logo, dan arsip dokumen ujian.
+                                </div>
+                                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" onclick="ensureDriveFolderAuto()" style="font-size: 0.75rem;">
+                                    <i class="bi bi-folder-check"></i> Siapkan / Cek Folder Otomatis
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -258,11 +417,11 @@
                 </div>
                 <div class="card-body">
                     <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.25rem;">
-                        Aplikasi ini terhubung langsung ke Google Spreadsheet sebagai media penyimpanan basis data relasional. Seluruh perubahan pada form di atas akan disimpan langsung ke sheet <code>Pengaturan</code>.
+                        Aplikasi ini terhubung langsung ke Google Spreadsheet sebagai media penyimpanan basis data relasional. Seluruh perubahan pada form di atas akan disimpan langsung ke sheet <code>Pengaturan</code> secara runtut dan teratur.
                     </p>
                     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                         <button type="button" class="btn btn-success" id="btnOpenSpreadsheet" onclick="openDatabaseSpreadsheet()">
-                            <i class="bi bi-box-arrow-up-right"></i> Buka Google Sheets
+                            <i class="bi bi-box-arrow-up-right"></i> Buka Google Sheets (Sheet Pengaturan)
                         </button>
                         <button type="button" class="btn btn-danger" onclick="confirmResetDatabase()">
                             <i class="bi bi-exclamation-triangle"></i> Inisialisasi Ulang Database & Seed Data
@@ -274,7 +433,7 @@
             <!-- TOMBOL SIMPAN UTAMA -->
             <div style="background: #ffffff; padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div style="font-size: 0.85rem; color: var(--text-muted);">
-                    <i class="bi bi-info-circle"></i> Pastikan data sudah benar sebelum menekan tombol perbarui.
+                    <i class="bi bi-info-circle"></i> Pastikan tautan dan konfigurasi sudah benar sebelum menekan tombol perbarui.
                 </div>
                 <button type="submit" id="btnSaveSettings" class="btn btn-primary" style="padding: 0.65rem 1.85rem; font-weight: 700;">
                     <i class="bi bi-check-circle"></i> Perbarui Seluruh Pengaturan Sistem
@@ -297,6 +456,165 @@ document.addEventListener('DOMContentLoaded', function() {
     loadDatabaseInfo();
 });
 
+function formatDriveImageUrlClient(url) {
+    if (!url) return '';
+    url = url.trim();
+    if (url.indexOf('thumbnail?id=') !== -1 || url.indexOf('data:image/') === 0) return url;
+    var m1 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (m1 && m1[1]) return 'https://drive.google.com/thumbnail?id=' + m1[1] + '&sz=w1600';
+    var m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (m2 && m2[1] && (url.indexOf('drive.google.com') !== -1 || url.indexOf('docs.google.com') !== -1)) {
+        return 'https://drive.google.com/thumbnail?id=' + m2[1] + '&sz=w1600';
+    }
+    return url;
+}
+
+function switchKopMethod(method) {
+    var btnUrl = document.getElementById('tabKopMethodUrl');
+    var btnDrive = document.getElementById('tabKopMethodDrive');
+    var boxUrl = document.getElementById('boxKopMethodUrl');
+    var boxDrive = document.getElementById('boxKopMethodDrive');
+    if (method === 'drive') {
+        btnDrive.classList.add('active');
+        btnUrl.classList.remove('active');
+        boxDrive.style.display = 'block';
+        boxUrl.style.display = 'none';
+    } else {
+        btnUrl.classList.add('active');
+        btnDrive.classList.remove('active');
+        boxUrl.style.display = 'block';
+        boxDrive.style.display = 'none';
+    }
+}
+
+function switchLogoMethod(method) {
+    var btnUrl = document.getElementById('tabLogoMethodUrl');
+    var btnDrive = document.getElementById('tabLogoMethodDrive');
+    var boxUrl = document.getElementById('boxLogoMethodUrl');
+    var boxDrive = document.getElementById('boxLogoMethodDrive');
+    if (method === 'drive') {
+        btnDrive.classList.add('active');
+        btnUrl.classList.remove('active');
+        boxDrive.style.display = 'block';
+        boxUrl.style.display = 'none';
+    } else {
+        btnUrl.classList.add('active');
+        btnDrive.classList.remove('active');
+        boxUrl.style.display = 'block';
+        boxDrive.style.display = 'none';
+    }
+}
+
+function handleKopUrlInput(url) {
+    url = (url || '').trim();
+    var formatted = formatDriveImageUrlClient(url);
+    if (formatted !== url && formatted) {
+        document.getElementById('inputKopUrl').value = formatted;
+        url = formatted;
+    }
+    document.getElementById('setting_kop_base64').value = url;
+    var preview = document.getElementById('previewKopSetting');
+    var placeholder = document.getElementById('placeholderKopSetting');
+    if (url) {
+        preview.src = url;
+        preview.style.display = 'block';
+        placeholder.style.display = 'none';
+    } else {
+        preview.src = '';
+        preview.style.display = 'none';
+        placeholder.style.display = 'block';
+    }
+}
+
+function handleLogoUrlInput(url) {
+    url = (url || '').trim();
+    var formatted = formatDriveImageUrlClient(url);
+    if (formatted !== url && formatted) {
+        document.getElementById('inputLogoUrl').value = formatted;
+        url = formatted;
+    }
+    document.getElementById('setting_logo_base64').value = url;
+    var preview = document.getElementById('previewLogoSetting');
+    var placeholder = document.getElementById('placeholderLogoSetting');
+    if (url) {
+        preview.src = url;
+        preview.style.display = 'block';
+        placeholder.style.display = 'none';
+        var navLogo = document.getElementById('headerLogoImg');
+        if (navLogo) navLogo.src = url;
+    } else {
+        preview.src = '';
+        preview.style.display = 'none';
+        placeholder.style.display = 'block';
+    }
+}
+
+function uploadAssetToDriveDirect(type, inputElement) {
+    if (!inputElement.files || inputElement.files.length === 0) return;
+    var file = inputElement.files[0];
+    if (file.size > 8 * 1024 * 1024) {
+        showGlobalNotificationDialog('Peringatan', 'Ukuran file terlalu besar (maksimal 8MB).', 'warning');
+        inputElement.value = '';
+        return;
+    }
+
+    var statusEl = document.getElementById(type === 'logo' ? 'statusUploadLogo' : 'statusUploadKop');
+    var btnEl = document.getElementById(type === 'logo' ? 'btnUploadLogo' : 'btnUploadKop');
+    if (statusEl) statusEl.innerHTML = '<span class="text-primary"><i class="bi bi-arrow-repeat spin"></i> Mengunggah ke Google Drive...</span>';
+    if (btnEl) btnEl.disabled = true;
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var base64 = e.target.result;
+        google.script.run
+            .withSuccessHandler(function(res) {
+                if (btnEl) btnEl.disabled = false;
+                if (res && res.success) {
+                    if (statusEl) {
+                        statusEl.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> Tersimpan di Drive! <a href="' + res.driveViewUrl + '" target="_blank" class="ms-1 fw-bold text-decoration-none">Buka <i class="bi bi-box-arrow-up-right"></i></a></span>';
+                    }
+                    if (type === 'logo') {
+                        document.getElementById('inputLogoUrl').value = res.url;
+                        document.getElementById('setting_logo_base64').value = res.url;
+                        var previewLogo = document.getElementById('previewLogoSetting');
+                        previewLogo.src = res.url;
+                        previewLogo.style.display = 'block';
+                        document.getElementById('placeholderLogoSetting').style.display = 'none';
+                        var navLogo = document.getElementById('headerLogoImg');
+                        if (navLogo) navLogo.src = res.url;
+                        document.getElementById('linkDriveLogoBox').innerHTML = '<a href="' + res.driveViewUrl + '" target="_blank" class="text-primary fw-bold text-decoration-none"><i class="bi bi-google"></i> Buka File di Drive</a>';
+                    } else {
+                        document.getElementById('inputKopUrl').value = res.url;
+                        document.getElementById('setting_kop_base64').value = res.url;
+                        var previewKop = document.getElementById('previewKopSetting');
+                        previewKop.src = res.url;
+                        previewKop.style.display = 'block';
+                        document.getElementById('placeholderKopSetting').style.display = 'none';
+                        document.getElementById('linkDriveKopBox').innerHTML = '<a href="' + res.driveViewUrl + '" target="_blank" class="text-primary fw-bold text-decoration-none"><i class="bi bi-google"></i> Buka File di Drive</a>';
+                    }
+                    if (res.folderUrl && !document.getElementById('set_drive_url').value) {
+                        document.getElementById('set_drive_url').value = res.folderUrl;
+                    }
+                    if (window.showGlobalToast) {
+                        window.showGlobalToast('Berkas ' + (type === 'logo' ? 'Logo' : 'Banner Kop') + ' berhasil disimpan di Drive & sheet Pengaturan!', 'success');
+                    }
+                } else {
+                    if (statusEl) statusEl.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Gagal unggah</span>';
+                    showGlobalNotificationDialog('Gagal', res.message || 'Terjadi kesalahan.', 'danger');
+                }
+                inputElement.value = '';
+            })
+            .withFailureHandler(function(err) {
+                if (btnEl) btnEl.disabled = false;
+                if (statusEl) statusEl.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Gagal unggah</span>';
+                showGlobalNotificationDialog('Gagal Upload', err.message, 'danger');
+                inputElement.value = '';
+            })
+            .apiUploadAssetToDrive(type, base64, file.name, file.type);
+    };
+    reader.readAsDataURL(file);
+}
+
 function loadInitialSettings(showToast) {
     showLoading(true);
     google.script.run
@@ -305,10 +623,10 @@ function loadInitialSettings(showToast) {
             window.AppStore.data = data;
             var s = data.settings || {};
 
-            document.getElementById('set_nama_sekolah').value = s.nama_sekolah || '';
+            document.getElementById('set_nama_sekolah').value = s.nama_sekolah || s.school_name || '';
             document.getElementById('set_alamat_sekolah').value = s.alamat_sekolah || '';
-            document.getElementById('set_semester_aktif').value = s.semester_aktif || 'Ganjil';
-            document.getElementById('set_drive_url').value = s.google_drive_folder_url || '';
+            document.getElementById('set_semester_aktif').value = s.semester_aktif || s.default_semester || 'Ganjil';
+            document.getElementById('set_drive_url').value = s.google_drive_folder_url || s.drive_folder_url || '';
             document.getElementById('set_kop_1').value = s.kop_baris_1 || '';
             document.getElementById('set_kop_2').value = s.kop_baris_2 || '';
             document.getElementById('set_kop_3').value = s.kop_baris_3 || '';
@@ -326,48 +644,54 @@ function loadInitialSettings(showToast) {
 
             // Banner Kop (kop_header / kop_image_path)
             var kopImg = s.kop_header || s.kop_image_path || '';
+            kopImg = formatDriveImageUrlClient(kopImg);
+            document.getElementById('inputKopUrl').value = kopImg;
+            document.getElementById('setting_kop_base64').value = kopImg;
+
             var previewKop = document.getElementById('previewKopSetting');
             var placeholderKop = document.getElementById('placeholderKopSetting');
             if (kopImg) {
                 previewKop.src = kopImg;
                 previewKop.style.display = 'block';
                 placeholderKop.style.display = 'none';
-                document.getElementById('setting_kop_base64').value = kopImg;
             } else {
                 previewKop.src = '';
                 previewKop.style.display = 'none';
                 placeholderKop.style.display = 'block';
-                document.getElementById('setting_kop_base64').value = '';
             }
 
             // School Logo (school_logo / logo_path)
             var logoImg = s.school_logo || s.logo_path || '';
+            logoImg = formatDriveImageUrlClient(logoImg);
+            document.getElementById('inputLogoUrl').value = logoImg;
+            document.getElementById('setting_logo_base64').value = logoImg;
+
             var previewLogo = document.getElementById('previewLogoSetting');
             var placeholderLogo = document.getElementById('placeholderLogoSetting');
             if (logoImg) {
                 previewLogo.src = logoImg;
                 previewLogo.style.display = 'block';
                 placeholderLogo.style.display = 'none';
-                document.getElementById('setting_logo_base64').value = logoImg;
+                var navLogo = document.getElementById('headerLogoImg');
+                if (navLogo) navLogo.src = logoImg;
             } else {
                 previewLogo.src = '';
                 previewLogo.style.display = 'none';
                 placeholderLogo.style.display = 'block';
-                document.getElementById('setting_logo_base64').value = '';
             }
 
             // Tahun Ajaran
             if (Array.isArray(s.daftar_tahun_ajaran) && s.daftar_tahun_ajaran.length > 0) {
                 _daftarTahunAjaran = s.daftar_tahun_ajaran.slice();
             }
-            _tahunAktif = s.tahun_ajaran_aktif || '2026/2027';
+            _tahunAktif = s.tahun_ajaran_aktif || s.academic_year || '2026/2027';
             if (_daftarTahunAjaran.indexOf(_tahunAktif) === -1) {
                 _daftarTahunAjaran.push(_tahunAktif);
             }
             renderTahunAjaran();
 
             if (showToast) {
-                showGlobalNotificationDialog('Segarkan', 'Pengaturan berhasil dimuat ulang dari database!', 'info');
+                showGlobalNotificationDialog('Segarkan', 'Pengaturan berhasil dimuat ulang dari sheet Pengaturan Google Sheets!', 'info');
             }
         })
         .withFailureHandler(function(err) {
@@ -385,44 +709,13 @@ function toggleKopMode() {
     }
 }
 
-function handleKopChange(input) {
-    if (!input.files || input.files.length === 0) return;
-    var file = input.files[0];
-    if (file.size > 4 * 1024 * 1024) {
-        showGlobalNotificationDialog('Peringatan', 'Ukuran berkas banner kop terlalu besar (maksimal 4MB).', 'warning');
-        return;
-    }
-    compressPhoto(file, function(base64) {
-        var previewKop = document.getElementById('previewKopSetting');
-        previewKop.src = base64;
-        previewKop.style.display = 'block';
-        document.getElementById('placeholderKopSetting').style.display = 'none';
-        document.getElementById('setting_kop_base64').value = base64;
-    }, 1600);
-}
-
 function resetKop() {
     document.getElementById('previewKopSetting').src = '';
     document.getElementById('previewKopSetting').style.display = 'none';
     document.getElementById('placeholderKopSetting').style.display = 'block';
     document.getElementById('setting_kop_base64').value = '';
-    document.getElementById('fileKopSetting').value = '';
-}
-
-function handleLogoChange(input) {
-    if (!input.files || input.files.length === 0) return;
-    var file = input.files[0];
-    if (file.size > 4 * 1024 * 1024) {
-        showGlobalNotificationDialog('Peringatan', 'Ukuran berkas logo terlalu besar (maksimal 4MB).', 'warning');
-        return;
-    }
-    compressPhoto(file, function(base64) {
-        var previewLogo = document.getElementById('previewLogoSetting');
-        previewLogo.src = base64;
-        previewLogo.style.display = 'block';
-        document.getElementById('placeholderLogoSetting').style.display = 'none';
-        document.getElementById('setting_logo_base64').value = base64;
-    }, 800);
+    document.getElementById('inputKopUrl').value = '';
+    document.getElementById('linkDriveKopBox').innerHTML = '';
 }
 
 function resetLogo() {
@@ -430,13 +723,14 @@ function resetLogo() {
     document.getElementById('previewLogoSetting').style.display = 'none';
     document.getElementById('placeholderLogoSetting').style.display = 'block';
     document.getElementById('setting_logo_base64').value = '';
-    document.getElementById('fileLogoSetting').value = '';
+    document.getElementById('inputLogoUrl').value = '';
+    document.getElementById('linkDriveLogoBox').innerHTML = '';
 }
 
 function isiDefaultTeksKop() {
     document.getElementById('set_kop_1').value = 'PEMERINTAH PROVINSI FYJ';
     document.getElementById('set_kop_2').value = 'DINAS PENDIDIKAN KEPEMUDAAN DAN OLAHRAGA';
-    document.getElementById('set_kop_3').value = 'SMK NEGERI FYJ Channel';
+    document.getElementById('set_kop_3').value = document.getElementById('set_nama_sekolah').value || 'SMK NEGERI FYJ Channel';
     document.getElementById('set_kop_telepon').value = 'Telp. (0300) 2002 | Email: smkn@yahoo.com';
     document.getElementById('set_kop_website').value = 'Website: smkn.sch.id';
 }
@@ -581,18 +875,47 @@ function hapusTahunAjaran(th) {
     );
 }
 
+function openDriveFolderDirect() {
+    var url = document.getElementById('set_drive_url').value.trim();
+    if (url) {
+        window.open(url, '_blank');
+    } else {
+        ensureDriveFolderAuto();
+    }
+}
+
+function ensureDriveFolderAuto() {
+    showLoading(true);
+    google.script.run
+        .withSuccessHandler(function(res) {
+            showLoading(false);
+            if (res && res.success) {
+                document.getElementById('set_drive_url').value = res.url;
+                showGlobalNotificationDialog('Folder Siap', 'Folder Google Drive Arsip aktif: "' + res.name + '"', 'success');
+            } else {
+                showGlobalNotificationDialog('Gagal', res.message || 'Tidak dapat membuat folder Drive.', 'danger');
+            }
+        })
+        .withFailureHandler(function(err) {
+            showLoading(false);
+            showGlobalNotificationDialog('Gagal', err.message, 'danger');
+        })
+        .apiEnsureDriveFolder();
+}
+
 function handleSaveSettings(e) {
     e.preventDefault();
     var btn = document.getElementById('btnSaveSettings');
     btn.disabled = true;
-    btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Menyimpan Pengaturan...';
+    btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Menyimpan ke Spreadsheet...';
 
     var kopMode = document.getElementById('mode_image').checked ? 'image' : 'text';
-    var kopHeader = document.getElementById('setting_kop_base64').value;
-    var schoolLogo = document.getElementById('setting_logo_base64').value;
+    var kopHeader = document.getElementById('inputKopUrl').value.trim() || document.getElementById('setting_kop_base64').value;
+    var schoolLogo = document.getElementById('inputLogoUrl').value.trim() || document.getElementById('setting_logo_base64').value;
 
     var payload = {
         nama_sekolah: document.getElementById('set_nama_sekolah').value.trim(),
+        school_name: document.getElementById('set_nama_sekolah').value.trim(),
         alamat_sekolah: document.getElementById('set_alamat_sekolah').value.trim(),
         kop_mode: kopMode,
         kop_header: kopHeader,
@@ -601,8 +924,11 @@ function handleSaveSettings(e) {
         logo_path: schoolLogo,
         daftar_tahun_ajaran: _daftarTahunAjaran,
         tahun_ajaran_aktif: document.getElementById('set_tahun_aktif').value,
+        academic_year: document.getElementById('set_tahun_aktif').value,
         semester_aktif: document.getElementById('set_semester_aktif').value,
+        default_semester: document.getElementById('set_semester_aktif').value,
         google_drive_folder_url: document.getElementById('set_drive_url').value.trim(),
+        drive_folder_url: document.getElementById('set_drive_url').value.trim(),
         kop_baris_1: document.getElementById('set_kop_1').value.trim(),
         kop_baris_2: document.getElementById('set_kop_2').value.trim(),
         kop_baris_3: document.getElementById('set_kop_3').value.trim(),
@@ -614,7 +940,7 @@ function handleSaveSettings(e) {
         .withSuccessHandler(function(res) {
             btn.disabled = false;
             btn.innerHTML = '<i class="bi bi-check-circle"></i> Perbarui Seluruh Pengaturan Sistem';
-            showGlobalNotificationDialog('Berhasil', 'Pengaturan sekolah, logo, kop surat, dan tahun ajaran berhasil disimpan ke database!', 'success');
+            showGlobalNotificationDialog('Berhasil', 'Pengaturan sekolah, logo, kop surat, dan tahun ajaran berhasil disimpan ke sheet Pengaturan Google Spreadsheet!', 'success');
             if (schoolLogo) {
                 var navLogo = document.getElementById('headerLogoImg');
                 if (navLogo) navLogo.src = schoolLogo;
@@ -658,7 +984,7 @@ function openDatabaseSpreadsheet() {
 function confirmResetDatabase() {
     showGlobalConfirmDialog(
         'Inisialisasi Database?',
-        'Tindakan ini akan membuat seluruh 10 lembar sheet dan mengisi data awal (kelas, siswa, guru, mapel, template, akun default). Lanjutkan?',
+        'Tindakan ini akan membuat seluruh 10 lembar sheet dan mengisi data awal yang teratur (kelas, siswa, guru, mapel, template, akun default). Lanjutkan?',
         function() {
             showLoading(true);
             google.script.run
