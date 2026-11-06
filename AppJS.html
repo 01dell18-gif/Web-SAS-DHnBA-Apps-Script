@@ -10,29 +10,30 @@ window.CURRENT_PAGE = '<?= currentPage ?>';
 
 // Universal Navigation Helpers for Google Apps Script Web App
 function getAppUrl() {
-    try {
-        if (document.referrer && document.referrer.indexOf('script.google.com') !== -1) {
-            return document.referrer.split('?')[0].split('#')[0];
-        }
-    } catch (e) {}
+    var base = window.APP_URL || '';
+    if (base && base.indexOf('/macros/s/') !== -1) {
+        return base.split('?')[0].split('#')[0];
+    }
 
     try {
-        if (window.top && window.top.location && window.top.location.href && window.top.location.href.indexOf('script.google.com') !== -1) {
+        if (window.top && window.top.location && window.top.location.href && window.top.location.href.indexOf('/macros/s/') !== -1) {
             return window.top.location.href.split('?')[0].split('#')[0];
         }
     } catch (e) {}
 
     try {
-        if (window.location && window.location.href && window.location.href.indexOf('script.google.com') !== -1) {
+        if (document.referrer && document.referrer.indexOf('/macros/s/') !== -1) {
+            return document.referrer.split('?')[0].split('#')[0];
+        }
+    } catch (e) {}
+
+    try {
+        if (window.location && window.location.href && window.location.href.indexOf('/macros/s/') !== -1) {
             return window.location.href.split('?')[0].split('#')[0];
         }
     } catch (e) {}
 
-    if (typeof window.APP_URL === 'string' && window.APP_URL.indexOf('script.google.com') !== -1) {
-        return window.APP_URL.split('?')[0].split('#')[0];
-    }
-
-    return '';
+    return 'https://script.google.com/macros/s/AKfycbwsPpl26VbTP2HgegLO4TCSwI6DalsXPW0bMn3ATxc8/exec';
 }
 window.getAppUrl = getAppUrl;
 
@@ -378,12 +379,12 @@ window.downloadExcelXLS = function(filename, headers, rows) {
 };
 
 // Universal Photo Compressor
-window.compressPhoto = function(file, callback) {
+window.compressPhoto = function(file, callback, customMaxDim) {
   var reader = new FileReader();
   reader.onload = function(e) {
     var img = new Image();
     img.onload = function() {
-      var maxDim = 800;
+      var maxDim = customMaxDim || 800;
       var w = img.width;
       var h = img.height;
       if (w > maxDim || h > maxDim) {
@@ -400,7 +401,8 @@ window.compressPhoto = function(file, callback) {
       canvas.height = h;
       var ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, w, h);
-      var compressed = canvas.toDataURL('image/jpeg', 0.72);
+      var mimeType = (file && file.type === 'image/png') ? 'image/png' : 'image/jpeg';
+      var compressed = canvas.toDataURL(mimeType, 0.88);
       callback(compressed);
     };
     img.src = e.target.result;

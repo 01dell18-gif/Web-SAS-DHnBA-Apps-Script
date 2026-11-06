@@ -31,7 +31,8 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="tpl_tahun_ajaran">Tahun Ajaran <span class="required">*</span></label>
-                            <input type="text" id="tpl_tahun_ajaran" class="form-control" value="2026/2027" required>
+                            <input type="text" id="tpl_tahun_ajaran" class="form-control" list="list_tahun_ajaran_tpl" value="2026/2027" required>
+                            <datalist id="list_tahun_ajaran_tpl"></datalist>
                         </div>
                     </div>
 
@@ -100,9 +101,22 @@ document.addEventListener('DOMContentLoaded', function() {
             var tpl = (data.templates && data.templates[0]) || {};
             document.getElementById('template_id').value = tpl.id || 1;
             document.getElementById('tpl_nama_ujian').value = tpl.nama_ujian || 'Sumatif Akhir Semester (SAS) Ganjil';
-            document.getElementById('tpl_tahun_ajaran').value = tpl.tahun_ajaran || '2026/2027';
+            document.getElementById('tpl_tahun_ajaran').value = tpl.tahun_ajaran || (data.settings && data.settings.tahun_ajaran_aktif) || '2026/2027';
             document.getElementById('tpl_judul_ba').value = tpl.judul_berita_acara || '';
             document.getElementById('tpl_redaksi_isi').value = tpl.redaksi_isi || '';
+
+            if (data.settings && data.settings.daftar_tahun_ajaran && Array.isArray(data.settings.daftar_tahun_ajaran)) {
+                var dl = document.getElementById('list_tahun_ajaran_tpl');
+                if (dl) {
+                    dl.innerHTML = '';
+                    data.settings.daftar_tahun_ajaran.forEach(function(th) {
+                        var opt = document.createElement('option');
+                        opt.value = th;
+                        dl.appendChild(opt);
+                    });
+                }
+            }
+
             updateSimulasiPreview();
         })
         .apiGetInitialData();

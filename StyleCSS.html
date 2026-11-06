@@ -15,20 +15,25 @@
       var role = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
       
       function getNavUrl(targetPage) {
-        var base = '';
-        try {
-          if (document.referrer && document.referrer.indexOf('script.google.com') !== -1) {
-            base = document.referrer.split('?')[0].split('#')[0];
-          }
-        } catch(e) {}
-        if (!base && typeof window.location !== 'undefined' && window.location.href && window.location.href.indexOf('script.google.com') !== -1) {
-          base = window.location.href.split('?')[0].split('#')[0];
+        var base = '<?= appUrl ?>';
+        if (!base || base.indexOf('/macros/s/') === -1) {
+          try {
+            if (document.referrer && document.referrer.indexOf('/macros/s/') !== -1) {
+              base = document.referrer.split('?')[0].split('#')[0];
+            }
+          } catch(e) {}
         }
-        var serverUrl = '<?= appUrl ?>';
-        if (!base && serverUrl && serverUrl.indexOf('script.google.com') !== -1) {
-          base = serverUrl.split('?')[0].split('#')[0];
+        if (!base || base.indexOf('/macros/s/') === -1) {
+          try {
+            if (typeof window.location !== 'undefined' && window.location.href && window.location.href.indexOf('/macros/s/') !== -1) {
+              base = window.location.href.split('?')[0].split('#')[0];
+            }
+          } catch(e) {}
         }
-        return (base || '') + '?page=' + targetPage;
+        if (!base || base.indexOf('/macros/s/') === -1) {
+          base = 'https://script.google.com/macros/s/AKfycbwsPpl26VbTP2HgegLO4TCSwI6DalsXPW0bMn3ATxc8/exec';
+        }
+        return base.split('?')[0].split('#')[0] + '?page=' + encodeURIComponent(targetPage);
       }
 
       if (!isAuth) {

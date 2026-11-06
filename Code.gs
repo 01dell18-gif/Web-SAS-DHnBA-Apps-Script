@@ -94,15 +94,22 @@ function include(filename, data) {
 function getAppUrl() {
   try {
     var url = ScriptApp.getService().getUrl();
-    if (url && url.length > 5) return url;
+    if (url && url.indexOf('/macros/s/') !== -1) return url;
   } catch (e) {}
 
   try {
     var propsUrl = PropertiesService.getScriptProperties().getProperty('WEB_APP_URL');
-    if (propsUrl && propsUrl.length > 5) return propsUrl;
+    if (propsUrl && propsUrl.indexOf('/macros/s/') !== -1) return propsUrl;
   } catch (e) {}
 
-  return '';
+  try {
+    var settings = getSettingsMap();
+    if (settings && settings.web_app_url && settings.web_app_url.indexOf('/macros/s/') !== -1) {
+      return settings.web_app_url;
+    }
+  } catch (e) {}
+
+  return 'https://script.google.com/macros/s/AKfycbwsPpl26VbTP2HgegLO4TCSwI6DalsXPW0bMn3ATxc8/exec';
 }
 
 function renderTemplate(filename) {
@@ -309,14 +316,50 @@ function getSettingsMap() {
     if (!map.kop_website) map.kop_website = 'Website: smkn.sch.id';
     if (!map.tahun_ajaran_aktif) map.tahun_ajaran_aktif = '2026/2027';
     if (!map.semester_aktif) map.semester_aktif = 'Ganjil';
+    if (!map.kop_mode) map.kop_mode = 'image';
     if (!map.google_drive_folder_url) map.google_drive_folder_url = 'https://drive.google.com/drive/folders/1sHpxyW6DbHSp1D7KNN-_xTu8fG9rY35h?usp=sharing';
+
+    // Synchronize kop_header and kop_image_path synonyms
+    var kopImg = map.kop_header || map.kop_image_path || '';
+    map.kop_header = kopImg;
+    map.kop_image_path = kopImg;
+
+    // Synchronize school_logo and logo_path synonyms
+    var logoImg = map.school_logo || map.logo_path || '';
+    map.school_logo = logoImg;
+    map.logo_path = logoImg;
+
+    // Academic years parsing
+    var defaultYears = ['2024/2025', '2025/2026', '2026/2027', '2027/2028'];
+    if (map.daftar_tahun_ajaran) {
+      if (typeof map.daftar_tahun_ajaran === 'string') {
+        try {
+          map.daftar_tahun_ajaran = JSON.parse(map.daftar_tahun_ajaran);
+        } catch (e) {
+          map.daftar_tahun_ajaran = map.daftar_tahun_ajaran.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+        }
+      }
+    }
+    if (!Array.isArray(map.daftar_tahun_ajaran) || map.daftar_tahun_ajaran.length === 0) {
+      map.daftar_tahun_ajaran = defaultYears;
+    }
+    if (map.tahun_ajaran_aktif && map.daftar_tahun_ajaran.indexOf(map.tahun_ajaran_aktif) === -1) {
+      map.daftar_tahun_ajaran.push(map.tahun_ajaran_aktif);
+    }
+
     return map;
   } catch (e) {
     return {
       nama_sekolah: 'SMK NEGERI FYJ Channel',
       alamat_sekolah: 'Jl. Merpati No. 1',
       tahun_ajaran_aktif: '2026/2027',
-      semester_aktif: 'Ganjil'
+      semester_aktif: 'Ganjil',
+      daftar_tahun_ajaran: ['2024/2025', '2025/2026', '2026/2027', '2027/2028'],
+      kop_mode: 'image',
+      kop_header: '',
+      kop_image_path: '',
+      school_logo: '',
+      logo_path: ''
     };
   }
 }
@@ -656,17 +699,72 @@ function apiSavePengaturan(payload) {
     existingMap[String(rows[i].setting_key).trim()] = rows[i]._row;
   }
 
+  // Synchronize kop_header and kop_image_path synonyms
+  if (payload.kop_header !== undefined) {
+    payload.kop_image_path = payload.kop_header;
+  } else if (payload.kop_image_path !== undefined) {
+    payload.kop_header = payload.kop_image_path;
+  }
+
+  // Synchronize school_logo and logo_path synonyms
+  if (payload.school_logo !== undefined) {
+    payload.logo_path = payload.school_logo;
+  } else if (payload.logo_path !== undefined) {
+    payload.school_logo = payload.logo_path;
+  }
+
+  // If daftar_tahun_ajaran is array, stringify it
+  if (payload.daftar_tahun_ajaran && Array.isArray(payload.daftar_tahun_ajaran)) {
+    payload.daftar_tahun_ajaran = JSON.stringify(payload.daftar_tahun_ajaran);
+  }
+
   for (var key in payload) {
     var val = payload[key];
+    if (typeof val === 'object' && val !== null) {
+      val = JSON.stringify(val);
+    }
     if (existingMap[key]) {
       sheet.getRange(existingMap[key], 2).setValue(val);
     } else {
       sheet.appendRow([key, val]);
+      existingMap[key] = sheet.getLastRow();
     }
   }
   invalidateCaches();
-  logActivity('UPDATE_SETTINGS', 'Memperbarui pengaturan sekolah & kop surat');
-  return { success: true };
+  logActivity('UPDATE_SETTINGS', 'Memperbarui pengaturan sekolah, logo, kop & tahun ajaran');
+  return { success: true, settings: getSettingsMap() };
+}
+
+function apiAddTahunAjaran(tahun) {
+  if (!tahun || typeof tahun !== 'string') throw new Error('Format tahun ajaran tidak valid.');
+  tahun = tahun.trim();
+  var settings = getSettingsMap();
+  var list = settings.daftar_tahun_ajaran || [];
+  if (list.indexOf(tahun) === -1) {
+    list.push(tahun);
+    list.sort();
+  }
+  return apiSavePengaturan({ daftar_tahun_ajaran: list });
+}
+
+function apiDeleteTahunAjaran(tahun) {
+  if (!tahun) throw new Error('Tahun ajaran tidak valid.');
+  var settings = getSettingsMap();
+  if (settings.tahun_ajaran_aktif === tahun) {
+    throw new Error('Tahun ajaran ' + tahun + ' sedang aktif dan tidak dapat dihapus.');
+  }
+  var list = (settings.daftar_tahun_ajaran || []).filter(function(t) { return t !== tahun; });
+  return apiSavePengaturan({ daftar_tahun_ajaran: list });
+}
+
+function apiSetActiveTahunAjaran(tahun) {
+  if (!tahun) throw new Error('Tahun ajaran tidak valid.');
+  var settings = getSettingsMap();
+  var list = settings.daftar_tahun_ajaran || [];
+  if (list.indexOf(tahun) === -1) {
+    list.push(tahun);
+  }
+  return apiSavePengaturan({ tahun_ajaran_aktif: tahun, daftar_tahun_ajaran: list });
 }
 
 function apiSaveTemplate(payload) {
@@ -798,6 +896,9 @@ function setupSpreadsheetDatabase() {
   for (var i = 0; i < defaultSettings.length; i++) {
     sheetSettings.appendRow(defaultSettings[i]);
   }
+  sheetSettings.appendRow(['daftar_tahun_ajaran', '["2024/2025","2025/2026","2026/2027","2027/2028"]']);
+  sheetSettings.appendRow(['kop_header', defaultSettings[3][1]]);
+  sheetSettings.appendRow(['school_logo', defaultSettings[9][1]]);
 
   // 2. Sheet Kelas
   var sheetKelas = getSheet(SHEET_NAMES.CLASSES);

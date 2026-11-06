@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pengaturan Sekolah & Kop - <?= (settings && settings.nama_sekolah) ? settings.nama_sekolah : 'SMK NEGERI FYJ Channel' ?></title>
+    <title>Pengaturan Sekolah, Logo & Kop - <?= (settings && settings.nama_sekolah) ? settings.nama_sekolah : 'SMK NEGERI FYJ Channel' ?></title>
     <?!= include('StyleCSS'); ?>
 </head>
 <body>
@@ -12,20 +12,159 @@
 <div class="admin-sidebar-layout">
     <?!= include('Sidebar'); ?>
     <main class="admin-main">
-        <div style="margin-bottom: 1.5rem;">
-            <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-heading); margin: 0;">Pengaturan Sekolah, Logo & Kop Surat</h1>
-            <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Konfigurasi identitas lembaga resmi dan tautan penyimpanan Google Drive</p>
+        <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-heading); margin: 0;">
+                    <i class="bi bi-sliders2-vertical"></i> Pengaturan Sekolah, Logo, Kop & Tahun Ajaran
+                </h1>
+                <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">
+                    Konfigurasi gambar Banner Kop Surat A4, Logo Sekolah, Master Tahun Ajaran, dan Penyimpanan Arsip
+                </p>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="loadInitialSettings(true)">
+                <i class="bi bi-arrow-clockwise"></i> Segarkan Data
+            </button>
         </div>
 
         <form id="formPengaturanSekolah" onsubmit="handleSaveSettings(event)">
             <input type="hidden" id="setting_logo_base64" value="">
             <input type="hidden" id="setting_kop_base64" value="">
 
+            <!-- SECTION 1: KOP SURAT RESMI A4 & LOGO SEKOLAH -->
+            <div class="card" style="margin-bottom: 1.5rem; border-top: 4px solid var(--primary);">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                    <span class="card-title"><i class="bi bi-image"></i> 1. Kop Surat Dokumen Resmi A4 & Logo Sekolah</span>
+                    <span class="badge" style="background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Full Banner A4 & School Logo</span>
+                </div>
+                <div class="card-body">
+                    <!-- Pilihan Mode Kop -->
+                    <div style="margin-bottom: 1.25rem; padding: 12px 16px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;">
+                        <label class="form-label" style="font-weight: 700; margin-bottom: 6px;">Mode Kop Dokumen (Cetak A4 & Pratinjau):</label>
+                        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem;">
+                                <input type="radio" name="kop_mode" value="image" id="mode_image" checked onchange="toggleKopMode()">
+                                <span><strong>Mode Banner Lengkap</strong> (Rekomendasi Utama: Banner Resmi A4 berisi Logo Pemprov, Teks Dinas, & Lambang Sekolah)</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem;">
+                                <input type="radio" name="kop_mode" value="text" id="mode_text" onchange="toggleKopMode()">
+                                <span><strong>Mode Susunan Teks & Logo Terpisah</strong> (Logo di kiri + susunan teks instansi)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="grid-2" style="gap: 1.5rem;">
+                        <!-- SUB-CARD: KOP HEADER BANNER -->
+                        <div style="border: 1px solid var(--border); border-radius: 8px; padding: 16px; background: #ffffff;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <label class="form-label" style="font-weight: 700; margin: 0;">
+                                    <i class="bi bi-card-image"></i> Banner Kop Surat (<code>kop_header</code>)
+                                </label>
+                                <span class="badge" style="background: #ecfdf5; color: #047857; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px;">Banner A4</span>
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">
+                                Banner horizontal resmi yang dicetak pada bagian paling atas Daftar Hadir dan Berita Acara.
+                            </p>
+
+                            <!-- Pratinjau Banner Kop -->
+                            <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px dashed #cbd5e1; text-align: center; margin-bottom: 12px; min-height: 100px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                <img id="previewKopSetting" src="" alt="Pratinjau Banner Kop" style="max-width: 100%; max-height: 110px; object-fit: contain; display: none;">
+                                <span id="placeholderKopSetting" style="font-size: 0.85rem; color: var(--text-muted);">
+                                    <i class="bi bi-image" style="font-size: 1.5rem; display: block; margin-bottom: 4px;"></i> Belum ada banner kop yang diunggah
+                                </span>
+                            </div>
+
+                            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                                <input type="file" id="fileKopSetting" accept="image/png,image/jpeg,image/webp" onchange="handleKopChange(this)" style="display: none;">
+                                <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('fileKopSetting').click()">
+                                    <i class="bi bi-upload"></i> Unggah Banner Kop
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="resetKop()">
+                                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                                </button>
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">
+                                Disarankan format PNG transparan/JPG rasio horizontal memanjang (misal 1200 x 200–250 px, maks 4MB).
+                            </div>
+                        </div>
+
+                        <!-- SUB-CARD: LOGO SEKOLAH -->
+                        <div style="border: 1px solid var(--border); border-radius: 8px; padding: 16px; background: #ffffff;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <label class="form-label" style="font-weight: 700; margin: 0;">
+                                    <i class="bi bi-shield-check"></i> Logo Sekolah (<code>school_logo</code>)
+                                </label>
+                                <span class="badge" style="background: #eff6ff; color: #1d4ed8; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px;">Logo 1:1</span>
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">
+                                Logo resmi sekolah (tampil pada bilah atas/navbar, halaman publik/login, dan kop mode teks).
+                            </p>
+
+                            <!-- Pratinjau Logo -->
+                            <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 12px;">
+                                <div style="width: 80px; height: 80px; border: 1px solid var(--border); border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #ffffff; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); flex-shrink: 0;">
+                                    <img id="previewLogoSetting" src="" alt="Logo Sekolah" style="max-width: 100%; max-height: 100%; object-fit: contain; display: none;">
+                                    <span id="placeholderLogoSetting" style="font-size: 1.5rem; color: #94a3b8;"><i class="bi bi-building"></i></span>
+                                </div>
+                                <div>
+                                    <input type="file" id="fileLogoSetting" accept="image/*" onchange="handleLogoChange(this)" style="display: none;">
+                                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('fileLogoSetting').click()">
+                                            <i class="bi bi-upload"></i> Ganti Logo
+                                        </button>
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="resetLogo()">
+                                            <i class="bi bi-arrow-counterclockwise"></i> Reset
+                                        </button>
+                                    </div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px;">
+                                        Disarankan gambar rasio persegi 1:1 format PNG transparan atau JPG.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TEKS KOP CADANGAN (COLLAPSIBLE / OPTIONAL) -->
+                    <div id="sectionTextKop" style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px dashed var(--border);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 0.5rem;">
+                            <label class="form-label" style="font-weight: 700; margin: 0;">
+                                <i class="bi bi-fonts"></i> Susunan Redaksi Teks Kop (Digunakan pada Mode Teks)
+                            </label>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="isiDefaultTeksKop()">
+                                <i class="bi bi-arrow-clockwise"></i> Isi Teks Default
+                            </button>
+                        </div>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label" for="set_kop_1">Kop Baris 1 (Pemerintah)</label>
+                                <input type="text" id="set_kop_1" class="form-control" value="PEMERINTAH PROVINSI FYJ">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="set_kop_2">Kop Baris 2 (Dinas Pendidikan)</label>
+                                <input type="text" id="set_kop_2" class="form-control" value="DINAS PENDIDIKAN KEPEMUDAAN DAN OLAHRAGA">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="set_kop_3">Kop Baris 3 (Nama Sekolah)</label>
+                                <input type="text" id="set_kop_3" class="form-control" value="SMK NEGERI FYJ Channel">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="set_kop_telepon">Telepon / Email</label>
+                                <input type="text" id="set_kop_telepon" class="form-control" value="Telp. (0300) 2002 | Email: smkn@yahoo.com">
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label class="form-label" for="set_kop_website">Website</label>
+                                <input type="text" id="set_kop_website" class="form-control" value="Website: smkn.sch.id">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: IDENTITAS SEKOLAH & MANAJEMEN TAHUN AJARAN -->
             <div class="grid-2" style="margin-bottom: 1.5rem;">
-                <!-- Identitas Sekolah -->
+                <!-- Identitas Sekolah & Link Drive -->
                 <div class="card">
                     <div class="card-header">
-                        <span class="card-title"><i class="bi bi-building"></i> 1. Identitas Sekolah & Tahun Ajaran</span>
+                        <span class="card-title"><i class="bi bi-building"></i> 2. Identitas Sekolah & Penyimpanan</span>
                     </div>
                     <div class="card-body">
                         <div class="form-group">
@@ -36,84 +175,90 @@
                             <label class="form-label" for="set_alamat_sekolah">Alamat Lengkap</label>
                             <input type="text" id="set_alamat_sekolah" class="form-control" value="Jl. Merpati No. 1">
                         </div>
-                        <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="set_drive_url">Tautan Folder Google Drive Arsip</label>
+                            <input type="url" id="set_drive_url" class="form-control" placeholder="https://drive.google.com/drive/folders/...">
+                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+                                Tautan ini dibuka saat tombol "Buka Folder Drive Arsip" diklik oleh pengawas / admin.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manajemen Tahun Ajaran -->
+                <div class="card">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="card-title"><i class="bi bi-calendar-check"></i> 3. Master Tahun Ajaran & Semester</span>
+                        <span class="badge" id="badgeTotalTahunAjaran" style="background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">4 Terdaftar</span>
+                    </div>
+                    <div class="card-body">
+                        <!-- Pilihan Aktif Saat Ini -->
+                        <div class="grid-2" style="margin-bottom: 1rem;">
                             <div class="form-group">
-                                <label class="form-label" for="set_tahun_aktif">Tahun Ajaran Aktif</label>
-                                <input type="text" id="set_tahun_aktif" class="form-control" value="2026/2027">
+                                <label class="form-label" for="set_tahun_aktif">Tahun Ajaran Aktif <span class="required">*</span></label>
+                                <select id="set_tahun_aktif" class="form-select" onchange="syncActiveYearSelection()">
+                                    <!-- Populated dynamically -->
+                                </select>
                             </div>
                             <div class="form-group">
-                                <label class="form-label" for="set_semester_aktif">Semester Aktif</label>
+                                <label class="form-label" for="set_semester_aktif">Semester Aktif <span class="required">*</span></label>
                                 <select id="set_semester_aktif" class="form-select">
                                     <option value="Ganjil" selected>Ganjil</option>
                                     <option value="Genap">Genap</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label" for="set_drive_url">Tautan Folder Google Drive Arsip</label>
-                            <input type="url" id="set_drive_url" class="form-control" placeholder="https://drive.google.com/drive/folders/...">
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Logo & Kop Surat -->
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title"><i class="bi bi-image"></i> 2. Logo & Kop Surat Resmi A4</span>
-                    </div>
-                    <div class="card-body">
-                        <!-- Upload Logo -->
-                        <div class="form-group">
-                            <label class="form-label">Logo Sekolah</label>
-                            <div style="display: flex; gap: 1rem; align-items: center;">
-                                <div style="width: 60px; height: 60px; border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #ffffff; overflow: hidden;">
-                                    <img id="previewLogoSetting" src="" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-                                </div>
-                                <div>
-                                    <input type="file" id="fileLogoSetting" accept="image/*" onchange="handleLogoChange(this)" style="display: none;">
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('fileLogoSetting').click()">
-                                        Ganti Logo
-                                    </button>
-                                </div>
+                        <!-- Form Tambah Tahun Ajaran Baru -->
+                        <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 1rem;">
+                            <label class="form-label" style="font-weight: 700; font-size: 0.85rem; margin-bottom: 6px;">
+                                <i class="bi bi-plus-circle"></i> Tambah Tahun Ajaran Baru
+                            </label>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="inputTahunAjaranBaru" class="form-control" placeholder="Contoh: 2027/2028" style="font-size: 0.875rem;" onkeypress="if(event.key==='Enter'){event.preventDefault();tambahTahunAjaran();}">
+                                <button type="button" class="btn btn-primary" onclick="tambahTahunAjaran()" style="white-space: nowrap; font-size: 0.875rem;">
+                                    <i class="bi bi-plus-lg"></i> Tambah
+                                </button>
+                            </div>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
+                                Format standar: 4 digit tahun awal, garis miring, 4 digit tahun akhir (misal: <code>2027/2028</code>).
                             </div>
                         </div>
 
-                        <!-- Kop Surat Baris Text -->
-                        <div class="form-group">
-                            <label class="form-label" for="set_kop_1">Kop Baris 1 (Pemerintah)</label>
-                            <input type="text" id="set_kop_1" class="form-control" value="PEMERINTAH PROVINSI FYJ">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="set_kop_2">Kop Baris 2 (Dinas Pendidikan)</label>
-                            <input type="text" id="set_kop_2" class="form-control" value="DINAS PENDIDIKAN KEPEMUDAAN DAN OLAHRAGA">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="set_kop_3">Kop Baris 3 (Nama Sekolah)</label>
-                            <input type="text" id="set_kop_3" class="form-control" value="SMK NEGERI FYJ Channel">
-                        </div>
-                        <div class="grid-2">
-                            <div class="form-group">
-                                <label class="form-label" for="set_kop_telepon">Telepon / Email</label>
-                                <input type="text" id="set_kop_telepon" class="form-control" value="Telp. (0300) 2002 | Email: smkn@yahoo.com">
+                        <!-- Daftar Tabel Tahun Ajaran -->
+                        <div>
+                            <div style="font-size: 0.8rem; font-weight: 700; color: var(--slate-700); margin-bottom: 6px;">
+                                Daftar Tahun Ajaran Tersimpan:
                             </div>
-                            <div class="form-group">
-                                <label class="form-label" for="set_kop_website">Website</label>
-                                <input type="text" id="set_kop_website" class="form-control" value="Website: smkn.sch.id">
+                            <div style="max-height: 180px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px;">
+                                <table class="table" style="margin: 0; font-size: 0.85rem; width: 100%;">
+                                    <thead style="background: #f1f5f9; position: sticky; top: 0;">
+                                        <tr>
+                                            <th style="padding: 6px 10px; width: 35px; text-align: center;">No</th>
+                                            <th style="padding: 6px 10px;">Tahun Ajaran</th>
+                                            <th style="padding: 6px 10px; width: 85px; text-align: center;">Status</th>
+                                            <th style="padding: 6px 10px; width: 120px; text-align: center;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tableBodyTahunAjaran">
+                                        <!-- Rendered dynamically -->
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 3. Basis Data Google Spreadsheet -->
+            <!-- SECTION 3: BASIS DATA GOOGLE SPREADSHEET -->
             <div class="card" style="margin-bottom: 1.5rem;">
                 <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                    <span class="card-title"><i class="bi bi-file-earmark-spreadsheet"></i> 3. Database Relasional Google Spreadsheet</span>
+                    <span class="card-title"><i class="bi bi-file-earmark-spreadsheet"></i> 4. Database Relasional Google Spreadsheet</span>
                     <button type="button" class="btn btn-secondary btn-sm" onclick="loadDatabaseInfo()"><i class="bi bi-arrow-clockwise"></i> Segarkan Info</button>
                 </div>
                 <div class="card-body">
                     <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.25rem;">
-                        Aplikasi ini terhubung langsung ke Google Spreadsheet sebagai media penyimpanan basis data. Anda dapat membuka lembar kerja secara langsung atau menginisialisasi 10 sheet master bila data awal belum terbentuk.
+                        Aplikasi ini terhubung langsung ke Google Spreadsheet sebagai media penyimpanan basis data relasional. Seluruh perubahan pada form di atas akan disimpan langsung ke sheet <code>Pengaturan</code>.
                     </p>
                     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                         <button type="button" class="btn btn-success" id="btnOpenSpreadsheet" onclick="openDatabaseSpreadsheet()">
@@ -126,9 +271,13 @@
                 </div>
             </div>
 
-            <div>
-                <button type="submit" id="btnSaveSettings" class="btn btn-primary" style="padding: 0.65rem 1.75rem;">
-                    <i class="bi bi-check-circle"></i> Perbarui Pengaturan Sistem
+            <!-- TOMBOL SIMPAN UTAMA -->
+            <div style="background: #ffffff; padding: 16px 20px; border-radius: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="font-size: 0.85rem; color: var(--text-muted);">
+                    <i class="bi bi-info-circle"></i> Pastikan data sudah benar sebelum menekan tombol perbarui.
+                </div>
+                <button type="submit" id="btnSaveSettings" class="btn btn-primary" style="padding: 0.65rem 1.85rem; font-weight: 700;">
+                    <i class="bi bi-check-circle"></i> Perbarui Seluruh Pengaturan Sistem
                 </button>
             </div>
         </form>
@@ -139,14 +288,25 @@
 <?!= include('AppJS'); ?>
 
 <script>
+var _daftarTahunAjaran = ['2024/2025', '2025/2026', '2026/2027', '2027/2028'];
+var _tahunAktif = '2026/2027';
+var _dbUrl = '';
+
 document.addEventListener('DOMContentLoaded', function() {
+    loadInitialSettings();
+    loadDatabaseInfo();
+});
+
+function loadInitialSettings(showToast) {
+    showLoading(true);
     google.script.run
         .withSuccessHandler(function(data) {
+            showLoading(false);
             window.AppStore.data = data;
             var s = data.settings || {};
+
             document.getElementById('set_nama_sekolah').value = s.nama_sekolah || '';
             document.getElementById('set_alamat_sekolah').value = s.alamat_sekolah || '';
-            document.getElementById('set_tahun_aktif').value = s.tahun_ajaran_aktif || '2026/2027';
             document.getElementById('set_semester_aktif').value = s.semester_aktif || 'Ganjil';
             document.getElementById('set_drive_url').value = s.google_drive_folder_url || '';
             document.getElementById('set_kop_1').value = s.kop_baris_1 || '';
@@ -155,17 +315,319 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('set_kop_telepon').value = s.kop_telepon || '';
             document.getElementById('set_kop_website').value = s.kop_website || '';
 
-            if (s.logo_path) {
-                document.getElementById('previewLogoSetting').src = s.logo_path;
-                document.getElementById('setting_logo_base64').value = s.logo_path;
+            // Mode Kop
+            var mode = s.kop_mode || 'image';
+            if (mode === 'text') {
+                document.getElementById('mode_text').checked = true;
+            } else {
+                document.getElementById('mode_image').checked = true;
+            }
+            toggleKopMode();
+
+            // Banner Kop (kop_header / kop_image_path)
+            var kopImg = s.kop_header || s.kop_image_path || '';
+            var previewKop = document.getElementById('previewKopSetting');
+            var placeholderKop = document.getElementById('placeholderKopSetting');
+            if (kopImg) {
+                previewKop.src = kopImg;
+                previewKop.style.display = 'block';
+                placeholderKop.style.display = 'none';
+                document.getElementById('setting_kop_base64').value = kopImg;
+            } else {
+                previewKop.src = '';
+                previewKop.style.display = 'none';
+                placeholderKop.style.display = 'block';
+                document.getElementById('setting_kop_base64').value = '';
+            }
+
+            // School Logo (school_logo / logo_path)
+            var logoImg = s.school_logo || s.logo_path || '';
+            var previewLogo = document.getElementById('previewLogoSetting');
+            var placeholderLogo = document.getElementById('placeholderLogoSetting');
+            if (logoImg) {
+                previewLogo.src = logoImg;
+                previewLogo.style.display = 'block';
+                placeholderLogo.style.display = 'none';
+                document.getElementById('setting_logo_base64').value = logoImg;
+            } else {
+                previewLogo.src = '';
+                previewLogo.style.display = 'none';
+                placeholderLogo.style.display = 'block';
+                document.getElementById('setting_logo_base64').value = '';
+            }
+
+            // Tahun Ajaran
+            if (Array.isArray(s.daftar_tahun_ajaran) && s.daftar_tahun_ajaran.length > 0) {
+                _daftarTahunAjaran = s.daftar_tahun_ajaran.slice();
+            }
+            _tahunAktif = s.tahun_ajaran_aktif || '2026/2027';
+            if (_daftarTahunAjaran.indexOf(_tahunAktif) === -1) {
+                _daftarTahunAjaran.push(_tahunAktif);
+            }
+            renderTahunAjaran();
+
+            if (showToast) {
+                showGlobalNotificationDialog('Segarkan', 'Pengaturan berhasil dimuat ulang dari database!', 'info');
             }
         })
+        .withFailureHandler(function(err) {
+            showLoading(false);
+            showGlobalNotificationDialog('Gagal', err.message, 'danger');
+        })
         .apiGetInitialData();
+}
 
-    loadDatabaseInfo();
-});
+function toggleKopMode() {
+    var isImage = document.getElementById('mode_image').checked;
+    var sectionText = document.getElementById('sectionTextKop');
+    if (sectionText) {
+        sectionText.style.opacity = isImage ? '0.7' : '1';
+    }
+}
 
-var _dbUrl = '';
+function handleKopChange(input) {
+    if (!input.files || input.files.length === 0) return;
+    var file = input.files[0];
+    if (file.size > 4 * 1024 * 1024) {
+        showGlobalNotificationDialog('Peringatan', 'Ukuran berkas banner kop terlalu besar (maksimal 4MB).', 'warning');
+        return;
+    }
+    compressPhoto(file, function(base64) {
+        var previewKop = document.getElementById('previewKopSetting');
+        previewKop.src = base64;
+        previewKop.style.display = 'block';
+        document.getElementById('placeholderKopSetting').style.display = 'none';
+        document.getElementById('setting_kop_base64').value = base64;
+    }, 1600);
+}
+
+function resetKop() {
+    document.getElementById('previewKopSetting').src = '';
+    document.getElementById('previewKopSetting').style.display = 'none';
+    document.getElementById('placeholderKopSetting').style.display = 'block';
+    document.getElementById('setting_kop_base64').value = '';
+    document.getElementById('fileKopSetting').value = '';
+}
+
+function handleLogoChange(input) {
+    if (!input.files || input.files.length === 0) return;
+    var file = input.files[0];
+    if (file.size > 4 * 1024 * 1024) {
+        showGlobalNotificationDialog('Peringatan', 'Ukuran berkas logo terlalu besar (maksimal 4MB).', 'warning');
+        return;
+    }
+    compressPhoto(file, function(base64) {
+        var previewLogo = document.getElementById('previewLogoSetting');
+        previewLogo.src = base64;
+        previewLogo.style.display = 'block';
+        document.getElementById('placeholderLogoSetting').style.display = 'none';
+        document.getElementById('setting_logo_base64').value = base64;
+    }, 800);
+}
+
+function resetLogo() {
+    document.getElementById('previewLogoSetting').src = '';
+    document.getElementById('previewLogoSetting').style.display = 'none';
+    document.getElementById('placeholderLogoSetting').style.display = 'block';
+    document.getElementById('setting_logo_base64').value = '';
+    document.getElementById('fileLogoSetting').value = '';
+}
+
+function isiDefaultTeksKop() {
+    document.getElementById('set_kop_1').value = 'PEMERINTAH PROVINSI FYJ';
+    document.getElementById('set_kop_2').value = 'DINAS PENDIDIKAN KEPEMUDAAN DAN OLAHRAGA';
+    document.getElementById('set_kop_3').value = 'SMK NEGERI FYJ Channel';
+    document.getElementById('set_kop_telepon').value = 'Telp. (0300) 2002 | Email: smkn@yahoo.com';
+    document.getElementById('set_kop_website').value = 'Website: smkn.sch.id';
+}
+
+function renderTahunAjaran() {
+    var select = document.getElementById('set_tahun_aktif');
+    select.innerHTML = '';
+    _daftarTahunAjaran.forEach(function(th) {
+        var opt = document.createElement('option');
+        opt.value = th;
+        opt.textContent = th;
+        if (th === _tahunAktif) opt.selected = true;
+        select.appendChild(opt);
+    });
+
+    document.getElementById('badgeTotalTahunAjaran').textContent = _daftarTahunAjaran.length + ' Terdaftar';
+
+    var tbody = document.getElementById('tableBodyTahunAjaran');
+    tbody.innerHTML = '';
+
+    if (_daftarTahunAjaran.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 12px;">Belum ada tahun ajaran terdaftar.</td></tr>';
+        return;
+    }
+
+    _daftarTahunAjaran.forEach(function(th, idx) {
+        var isAktif = (th === _tahunAktif);
+        var tr = document.createElement('tr');
+        if (isAktif) tr.style.background = '#f0fdf4';
+
+        var tdNo = document.createElement('td');
+        tdNo.style.textAlign = 'center';
+        tdNo.style.padding = '6px 10px';
+        tdNo.textContent = idx + 1;
+
+        var tdTahun = document.createElement('td');
+        tdTahun.style.padding = '6px 10px';
+        tdTahun.style.fontWeight = isAktif ? '700' : '500';
+        tdTahun.textContent = th;
+
+        var tdStatus = document.createElement('td');
+        tdStatus.style.textAlign = 'center';
+        tdStatus.style.padding = '6px 10px';
+        if (isAktif) {
+            tdStatus.innerHTML = '<span class="badge" style="background: #dcfce7; color: #166534; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px;">Aktif</span>';
+        } else {
+            tdStatus.innerHTML = '<span class="badge" style="background: #f1f5f9; color: #64748b; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px;">Tidak</span>';
+        }
+
+        var tdAksi = document.createElement('td');
+        tdAksi.style.textAlign = 'center';
+        tdAksi.style.padding = '6px 10px';
+
+        if (isAktif) {
+            tdAksi.innerHTML = '<span style="font-size: 0.75rem; color: #166534;"><i class="bi bi-check2-circle"></i> Terpilih</span>';
+        } else {
+            var btnAktif = document.createElement('button');
+            btnAktif.type = 'button';
+            btnAktif.className = 'btn btn-outline-primary btn-sm';
+            btnAktif.style.padding = '2px 8px';
+            btnAktif.style.fontSize = '0.72rem';
+            btnAktif.style.marginRight = '4px';
+            btnAktif.innerHTML = '<i class="bi bi-star"></i> Aktifkan';
+            btnAktif.onclick = function() { jadikanTahunAktif(th); };
+
+            var btnHapus = document.createElement('button');
+            btnHapus.type = 'button';
+            btnHapus.className = 'btn btn-danger-soft btn-sm';
+            btnHapus.style.padding = '2px 6px';
+            btnHapus.style.fontSize = '0.72rem';
+            btnHapus.innerHTML = '<i class="bi bi-trash"></i>';
+            btnHapus.title = 'Hapus Tahun Ajaran';
+            btnHapus.onclick = function() { hapusTahunAjaran(th); };
+
+            tdAksi.appendChild(btnAktif);
+            tdAksi.appendChild(btnHapus);
+        }
+
+        tr.appendChild(tdNo);
+        tr.appendChild(tdTahun);
+        tr.appendChild(tdStatus);
+        tr.appendChild(tdAksi);
+        tbody.appendChild(tr);
+    });
+}
+
+function syncActiveYearSelection() {
+    _tahunAktif = document.getElementById('set_tahun_aktif').value;
+    renderTahunAjaran();
+}
+
+function tambahTahunAjaran() {
+    var input = document.getElementById('inputTahunAjaranBaru');
+    var val = input.value.trim();
+    if (!val) {
+        showGlobalNotificationDialog('Peringatan', 'Silakan ketik nama tahun ajaran (contoh: 2027/2028).', 'warning');
+        input.focus();
+        return;
+    }
+    if (!/^\d{4}\/\d{4}$/.test(val) && !/^\d{4}-\d{4}$/.test(val)) {
+        showGlobalConfirmDialog(
+            'Konfirmasi Format',
+            'Format "' + val + '" tidak sesuai format umum (YYYY/YYYY seperti 2027/2028). Tetap tambahkan?',
+            function() {
+                prosesTambahTahun(val);
+            }
+        );
+        return;
+    }
+    prosesTambahTahun(val);
+}
+
+function prosesTambahTahun(val) {
+    if (_daftarTahunAjaran.indexOf(val) !== -1) {
+        showGlobalNotificationDialog('Info', 'Tahun ajaran ' + val + ' sudah ada dalam daftar.', 'info');
+        return;
+    }
+    _daftarTahunAjaran.push(val);
+    _daftarTahunAjaran.sort();
+    document.getElementById('inputTahunAjaranBaru').value = '';
+    renderTahunAjaran();
+    showGlobalNotificationDialog('Berhasil', 'Tahun ajaran ' + val + ' berhasil ditambahkan ke daftar! Klik "Perbarui Seluruh Pengaturan" untuk menyimpan permanen.', 'success');
+}
+
+function jadikanTahunAktif(th) {
+    _tahunAktif = th;
+    renderTahunAjaran();
+}
+
+function hapusTahunAjaran(th) {
+    if (th === _tahunAktif) {
+        showGlobalNotificationDialog('Peringatan', 'Tahun ajaran ' + th + ' sedang aktif dan tidak dapat dihapus.', 'warning');
+        return;
+    }
+    showGlobalConfirmDialog(
+        'Hapus Tahun Ajaran?',
+        'Apakah Anda yakin ingin menghapus tahun ajaran ' + th + ' dari daftar?',
+        function() {
+            _daftarTahunAjaran = _daftarTahunAjaran.filter(function(item) { return item !== th; });
+            renderTahunAjaran();
+        }
+    );
+}
+
+function handleSaveSettings(e) {
+    e.preventDefault();
+    var btn = document.getElementById('btnSaveSettings');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Menyimpan Pengaturan...';
+
+    var kopMode = document.getElementById('mode_image').checked ? 'image' : 'text';
+    var kopHeader = document.getElementById('setting_kop_base64').value;
+    var schoolLogo = document.getElementById('setting_logo_base64').value;
+
+    var payload = {
+        nama_sekolah: document.getElementById('set_nama_sekolah').value.trim(),
+        alamat_sekolah: document.getElementById('set_alamat_sekolah').value.trim(),
+        kop_mode: kopMode,
+        kop_header: kopHeader,
+        kop_image_path: kopHeader,
+        school_logo: schoolLogo,
+        logo_path: schoolLogo,
+        daftar_tahun_ajaran: _daftarTahunAjaran,
+        tahun_ajaran_aktif: document.getElementById('set_tahun_aktif').value,
+        semester_aktif: document.getElementById('set_semester_aktif').value,
+        google_drive_folder_url: document.getElementById('set_drive_url').value.trim(),
+        kop_baris_1: document.getElementById('set_kop_1').value.trim(),
+        kop_baris_2: document.getElementById('set_kop_2').value.trim(),
+        kop_baris_3: document.getElementById('set_kop_3').value.trim(),
+        kop_telepon: document.getElementById('set_kop_telepon').value.trim(),
+        kop_website: document.getElementById('set_kop_website').value.trim()
+    };
+
+    google.script.run
+        .withSuccessHandler(function(res) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-circle"></i> Perbarui Seluruh Pengaturan Sistem';
+            showGlobalNotificationDialog('Berhasil', 'Pengaturan sekolah, logo, kop surat, dan tahun ajaran berhasil disimpan ke database!', 'success');
+            if (schoolLogo) {
+                var navLogo = document.getElementById('headerLogoImg');
+                if (navLogo) navLogo.src = schoolLogo;
+            }
+        })
+        .withFailureHandler(function(err) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-circle"></i> Perbarui Seluruh Pengaturan Sistem';
+            showGlobalNotificationDialog('Gagal', err.message, 'danger');
+        })
+        .apiSavePengaturan(payload);
+}
+
 function loadDatabaseInfo() {
     google.script.run
         .withSuccessHandler(function(res) {
@@ -205,6 +667,7 @@ function confirmResetDatabase() {
                     if (res && res.success) {
                         showGlobalNotificationDialog('Berhasil', 'Database berhasil diinisialisasi ulang!', 'success');
                         loadDatabaseInfo();
+                        loadInitialSettings();
                     } else {
                         showGlobalNotificationDialog('Gagal', res.message || 'Terjadi kesalahan.', 'danger');
                     }
@@ -216,50 +679,6 @@ function confirmResetDatabase() {
                 .apiSetupDatabase();
         }
     );
-}
-
-function handleLogoChange(input) {
-    if (!input.files || input.files.length === 0) return;
-    compressPhoto(input.files[0], function(base64) {
-        document.getElementById('previewLogoSetting').src = base64;
-        document.getElementById('setting_logo_base64').value = base64;
-    });
-}
-
-function handleSaveSettings(e) {
-    e.preventDefault();
-    var btn = document.getElementById('btnSaveSettings');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Menyimpan...';
-
-    var payload = {
-        nama_sekolah: document.getElementById('set_nama_sekolah').value.trim(),
-        alamat_sekolah: document.getElementById('set_alamat_sekolah').value.trim(),
-        tahun_ajaran_aktif: document.getElementById('set_tahun_aktif').value.trim(),
-        semester_aktif: document.getElementById('set_semester_aktif').value,
-        google_drive_folder_url: document.getElementById('set_drive_url').value.trim(),
-        kop_baris_1: document.getElementById('set_kop_1').value.trim(),
-        kop_baris_2: document.getElementById('set_kop_2').value.trim(),
-        kop_baris_3: document.getElementById('set_kop_3').value.trim(),
-        kop_telepon: document.getElementById('set_kop_telepon').value.trim(),
-        kop_website: document.getElementById('set_kop_website').value.trim()
-    };
-
-    var logo = document.getElementById('setting_logo_base64').value;
-    if (logo) payload.logo_path = logo;
-
-    google.script.run
-        .withSuccessHandler(function() {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check-circle"></i> Perbarui Pengaturan Sistem';
-            showGlobalNotificationDialog('Berhasil', 'Pengaturan identitas sekolah dan kop surat berhasil diperbarui!', 'success');
-        })
-        .withFailureHandler(function(err) {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check-circle"></i> Perbarui Pengaturan Sistem';
-            showGlobalNotificationDialog('Gagal', err.message, 'danger');
-        })
-        .apiSavePengaturan(payload);
 }
 </script>
 </body>

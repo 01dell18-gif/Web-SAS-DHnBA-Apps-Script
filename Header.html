@@ -3,7 +3,7 @@
     <div class="admin-navbar-left">
         <div class="admin-brand-box">
             <a href="<?= appUrl ?>?page=dashboard" target="_top" onclick="navigateTo('dashboard'); return false;" class="brand-link">
-                <img src="<?= (settings && settings.logo_path) ? settings.logo_path : 'https://cdn-icons-png.flaticon.com/512/2997/2997295.png' ?>" alt="Logo Sekolah" class="navbar-logo" id="headerLogoImg">
+                <img src="<?= (settings && (settings.school_logo || settings.logo_path)) ? (settings.school_logo || settings.logo_path) : 'https://cdn-icons-png.flaticon.com/512/2997/2997295.png' ?>" alt="Logo Sekolah" class="navbar-logo" id="headerLogoImg">
                 <div class="brand-text">
                     <span class="brand-title"><?= (settings && settings.nama_sekolah) ? settings.nama_sekolah : 'SMK NEGERI FYJ Channel' ?></span>
                     <span class="brand-subtitle">Admin Panel Administrasi</span>
