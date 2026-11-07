@@ -53,20 +53,13 @@
 <header class="navbar">
     <div class="navbar-brand">
         <a href="<?= appUrl ?>?page=index" target="_top" onclick="navigateTo('index'); return false;" class="brand-link">
-            <img src="<?= (settings && settings.logo_path) ? settings.logo_path : 'https://cdn-icons-png.flaticon.com/512/2997/2997295.png' ?>" alt="Logo Sekolah" class="navbar-logo">
+            <img src="<?= (settings && (settings.school_logo || settings.logo_path)) ? (settings.school_logo || settings.logo_path) : 'https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI&sz=w1600' ?>" alt="Logo Sekolah" class="navbar-logo">
             <div class="brand-text">
-                <span class="brand-title"><?= (settings && settings.nama_sekolah) ? settings.nama_sekolah : 'SMK NEGERI FYJ Channel' ?></span>
+                <span class="brand-title"><?= (settings && settings.nama_sekolah) ? settings.nama_sekolah : 'SMK NEGERI FYJ CHANNEL' ?></span>
                 <span class="brand-subtitle">Generator Berita Acara Ujian</span>
             </div>
         </a>
     </div>
-    <button type="button" class="mobile-nav-toggle btn-sidebar-toggle" onclick="toggleMobileNav(event)" aria-label="Toggle Menu">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-        </svg>
-    </button>
     <ul class="nav-links" id="navLinks">
         <li><a href="<?= appUrl ?>?page=index" target="_top" onclick="navigateTo('index'); return false;" class="nav-link"><i class="bi bi-house"></i> Beranda</a></li>
         <li><a href="<?= appUrl ?>?page=absensi" target="_top" onclick="navigateTo('absensi'); return false;" class="nav-link"><i class="bi bi-clipboard-check"></i> Daftar Hadir</a></li>

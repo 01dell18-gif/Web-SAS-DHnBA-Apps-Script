@@ -252,10 +252,13 @@ window.logoutAdmin = function() {
     'Konfirmasi Keluar (Logout)',
     'Apakah Anda yakin ingin keluar dari sesi panel admin?',
     function() {
-      localStorage.removeItem('sas_admin_auth');
-      localStorage.removeItem('sas_admin_user');
-      localStorage.removeItem('sas_admin_role');
-      navigateTo('login');
+      try {
+        localStorage.removeItem('sas_admin_auth');
+        localStorage.removeItem('sas_admin_user');
+        localStorage.removeItem('sas_admin_role');
+        sessionStorage.clear();
+      } catch (e) {}
+      navigateTo('index');
     },
     'Keluar',
     true

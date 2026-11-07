@@ -166,6 +166,7 @@ Menyimpan konfigurasi identitas sekolah, logo, kop surat, semester, master tahun
 
 > [!NOTE]
 > **Metode Pembaruan Aset Logo & Kop**:
+>
 > - **Cara 1 (Link URL)**: Pengguna dapat menempelkan URL gambar langsung atau tautan berbagi Google Drive. Sistem secara otomatis mengonversinya menjadi URL thumbnail publik resolusi tinggi (`sz=w1600`).
 > - **Cara 2 (Upload File ke Drive)**: File diunggah langsung ke Folder Google Drive Arsip melalui `DriveApp`, diset hak akses lihat publik via tautan, dan langsung menggantikan URL sebelumnya di sheet `Pengaturan`.
 
