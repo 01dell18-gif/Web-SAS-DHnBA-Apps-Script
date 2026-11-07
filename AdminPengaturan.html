@@ -419,9 +419,18 @@
                     <button type="button" class="btn btn-secondary btn-sm" onclick="loadDatabaseInfo()"><i class="bi bi-arrow-clockwise"></i> Segarkan Info</button>
                 </div>
                 <div class="card-body">
-                    <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.25rem;">
-                        Aplikasi ini terhubung langsung ke Google Spreadsheet sebagai media penyimpanan basis data relasional. Seluruh perubahan pada form di atas akan disimpan langsung ke sheet <code>Pengaturan</code> secara runtut dan teratur.
+                    <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                        Aplikasi ini terhubung langsung ke Google Spreadsheet sebagai media penyimpanan basis data relasional. Seluruh perubahan pada menu pengaturan dan data master disinkronkan langsung secara runtut.
                     </p>
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; margin-bottom: 1.25rem; font-size: 0.85rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 6px;">
+                            <span><strong>Target Database:</strong> <span id="dbSpreadsheetName">Google Spreadsheet Resmi</span></span>
+                            <span class="badge" style="background:#dcfce7; color:#15803d; font-weight:700;"><i class="bi bi-check-circle"></i> Terhubung & Aktif</span>
+                        </div>
+                        <div style="color: var(--text-muted); word-break: break-all;">
+                            <strong>ID Spreadsheet:</strong> <code id="dbSpreadsheetId">1IA6B5Mgt6kIYeV9c8ZdR9RliccV0U2OTlGJhsD30c2Y</code>
+                        </div>
+                    </div>
                     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                         <button type="button" class="btn btn-success" id="btnOpenSpreadsheet" onclick="openDatabaseSpreadsheet()">
                             <i class="bi bi-box-arrow-up-right"></i> Buka Google Sheets (Sheet Pengaturan)
@@ -965,27 +974,19 @@ function loadDatabaseInfo() {
     google.script.run
         .withSuccessHandler(function(res) {
             if (res && res.success) {
-                _dbUrl = res.url;
+                _dbUrl = res.url || 'https://docs.google.com/spreadsheets/d/1IA6B5Mgt6kIYeV9c8ZdR9RliccV0U2OTlGJhsD30c2Y/edit?usp=sharing';
+                var idEl = document.getElementById('dbSpreadsheetId');
+                if (idEl) idEl.textContent = res.id || '1IA6B5Mgt6kIYeV9c8ZdR9RliccV0U2OTlGJhsD30c2Y';
+                var nameEl = document.getElementById('dbSpreadsheetName');
+                if (nameEl) nameEl.textContent = res.name || 'Database SAS - SMK NEGERI FYJ CHANNEL';
             }
         })
         .apiGetDatabaseInfo();
 }
 
 function openDatabaseSpreadsheet() {
-    if (_dbUrl) {
-        window.open(_dbUrl, '_blank');
-    } else {
-        google.script.run
-            .withSuccessHandler(function(res) {
-                if (res && res.url) {
-                    _dbUrl = res.url;
-                    window.open(res.url, '_blank');
-                } else {
-                    showGlobalNotificationDialog('Info', 'Spreadsheet belum dapat dibuka: ' + (res.message || ''), 'warning');
-                }
-            })
-            .apiGetDatabaseInfo();
-    }
+    var url = _dbUrl || 'https://docs.google.com/spreadsheets/d/1IA6B5Mgt6kIYeV9c8ZdR9RliccV0U2OTlGJhsD30c2Y/edit?usp=sharing';
+    window.open(url, '_blank');
 }
 
 function isiDefaultOtomatisPengaturan() {

@@ -1,6 +1,11 @@
 # SKEMA BASIS DATA GOOGLE SPREADSHEET (DATABASE SAS)
 
-Dokumentasi rancangan relasional 9 Sheet/Tabel di Google Sheets untuk aplikasi **Generator Administrasi Ujian (Daftar Hadir & Berita Acara)** — **SMK NEGERI FYJ CHANNEL**.
+Dokumentasi rancangan relasional 10 Sheet/Tabel di Google Sheets untuk aplikasi **Generator Administrasi Ujian (Daftar Hadir & Berita Acara)** — **SMK NEGERI FYJ CHANNEL**.
+
+**Target Spreadsheet Database:**
+- **URL**: `https://docs.google.com/spreadsheets/d/1IA6B5Mgt6kIYeV9c8ZdR9RliccV0U2OTlGJhsD30c2Y/edit?usp=sharing`
+- **Spreadsheet ID**: `1IA6B5Mgt6kIYeV9c8ZdR9RliccV0U2OTlGJhsD30c2Y`
+- **Status Koneksi**: Terhubung Langsung & Live Bidirectional Sync
 
 ---
 
@@ -127,14 +132,14 @@ Menyimpan konfigurasi identitas sekolah, logo, kop surat, semester, master tahun
 
 | Kolom | Tipe Data | Keterangan | Contoh Nilai |
 | :--- | :--- | :--- | :--- |
-| `setting_key` / `key` | String (PK) | Kunci konfigurasi unik (fleksibel mendukung kedua format) | `nama_sekolah` / `school_name` |
-| `setting_value` / `value` | String / JSON | Nilai konfigurasi / URL thumbnail Google Drive / JSON array | `SMK NEGERI FYJ CHANNEL` |
+| `setting_key` | String (PK) | Kunci konfigurasi tunggal resmi | `nama_sekolah` |
+| `setting_value` | String / JSON | Nilai konfigurasi / URL thumbnail Google Drive / JSON array | `SMK NEGERI FYJ CHANNEL` |
 
-**Daftar Kunci Bawaan (Diselaraskan Runtut Sesuai Menu Pengaturan & Terseeder Otomatis):**
+**Daftar 18 Kunci Standar Tunggal (Diselaraskan Runtut Sesuai Menu Pengaturan & Terseeder Otomatis Tanpa Duplikasi):**
 
 1. **Seksi Kop Surat Resmi A4**:
    - `kop_mode`: Mode kop dokumen (`image` untuk banner lengkap, atau `text` untuk mode teks & logo terpisah).
-   - `kop_header` / `kop_image_path`: URL Gambar Thumbnail Google Drive banner resmi kop surat A4 (`https://drive.google.com/thumbnail?id=1QXtnYwIrCc-pihDUoidjkRW5UVWykOn-&sz=w1600`).
+   - `kop_header`: URL Gambar Thumbnail Google Drive banner resmi kop surat A4 (`https://drive.google.com/thumbnail?id=1QXtnYwIrCc-pihDUoidjkRW5UVWykOn-&sz=w1600`).
    - `kop_baris_1`: `PEMERINTAH PROVINSI FYJ`
    - `kop_baris_2`: `DINAS PENDIDIKAN KEPEMUDAAN DAN OLAHRAGA`
    - `kop_baris_3`: `SMK NEGERI FYJ CHANNEL`
@@ -142,17 +147,16 @@ Menyimpan konfigurasi identitas sekolah, logo, kop surat, semester, master tahun
    - `kop_website`: Alamat website resmi sekolah (`Website: smkn.sch.id`).
 
 2. **Seksi Logo Sekolah**:
-   - `school_logo` / `logo_path`: URL Gambar Thumbnail Google Drive logo resmi sekolah (`https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI&sz=w1600`).
+   - `school_logo`: URL Gambar Thumbnail Google Drive logo resmi sekolah (`https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI&sz=w1600`).
 
 3. **Seksi Identitas Sekolah & Penyimpanan Google Drive**:
-   - `nama_sekolah` / `school_name`: Nama resmi sekolah (`SMK NEGERI FYJ CHANNEL`).
+   - `nama_sekolah`: Nama resmi sekolah (`SMK NEGERI FYJ CHANNEL`).
    - `alamat_sekolah`: Alamat lengkap sekolah (`Jl. Merpati No. 1`).
-   - `google_drive_folder_url` / `drive_folder_url`: URL folder Google Drive resmi untuk penyimpanan Arsip SAS (`https://drive.google.com/drive/folders/19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR`).
-   - `google_drive_folder_id` / `drive_folder_id`: ID unik folder Google Drive arsip.
+   - `google_drive_folder_url`: URL folder Google Drive resmi untuk penyimpanan Arsip SAS (`https://drive.google.com/drive/folders/19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR`).
 
 4. **Seksi Master Tahun Ajaran & Semester**:
-   - `tahun_ajaran_aktif` / `academic_year`: Tahun ajaran aktif (`2026/2027`).
-   - `semester_aktif` / `default_semester`: Semester aktif (`Ganjil` / `Genap`).
+   - `tahun_ajaran_aktif`: Tahun ajaran aktif (`2026/2027`).
+   - `semester_aktif`: Semester aktif (`Ganjil` / `Genap`).
    - `daftar_tahun_ajaran`: JSON string array daftar master tahun ajaran (contoh: `["2024/2025","2025/2026","2026/2027","2027/2028"]`).
 
 5. **Seksi Pejabat Penandatangan Dokumen Resmi**:
