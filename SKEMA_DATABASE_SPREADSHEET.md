@@ -128,30 +128,41 @@ Menyimpan konfigurasi identitas sekolah, logo, kop surat, semester, master tahun
 | Kolom | Tipe Data | Keterangan | Contoh Nilai |
 | :--- | :--- | :--- | :--- |
 | `setting_key` / `key` | String (PK) | Kunci konfigurasi unik (fleksibel mendukung kedua format) | `nama_sekolah` / `school_name` |
-| `setting_value` / `value` | String / JSON | Nilai konfigurasi / URL thumbnail Google Drive / JSON array | `SMK NEGERI FYJ Channel` |
+| `setting_value` / `value` | String / JSON | Nilai konfigurasi / URL thumbnail Google Drive / JSON array | `SMK NEGERI FYJ CHANNEL` |
 
-**Daftar Kunci Bawaan (Diselaraskan Runtut Sesuai Menu Pengaturan):**
+**Daftar Kunci Bawaan (Diselaraskan Runtut Sesuai Menu Pengaturan & Terseeder Otomatis):**
 
 1. **Seksi Kop Surat Resmi A4**:
    - `kop_mode`: Mode kop dokumen (`image` untuk banner lengkap, atau `text` untuk mode teks & logo terpisah).
-   - `kop_header` / `kop_image_path`: URL Gambar Thumbnail Google Drive banner resmi kop surat A4 (`https://drive.google.com/thumbnail?id=...&sz=w1600`).
-   - `kop_baris_1` s/d `kop_baris_3`: Redaksi teks kop instansi pemerintah & sekolah.
-   - `kop_telepon`: Kontak telepon dan email sekolah.
-   - `kop_website`: Alamat website resmi sekolah.
+   - `kop_header` / `kop_image_path`: URL Gambar Thumbnail Google Drive banner resmi kop surat A4 (`https://drive.google.com/thumbnail?id=1QXtnYwIrCc-pihDUoidjkRW5UVWykOn-&sz=w1600`).
+   - `kop_baris_1`: `PEMERINTAH PROVINSI FYJ`
+   - `kop_baris_2`: `DINAS PENDIDIKAN KEPEMUDAAN DAN OLAHRAGA`
+   - `kop_baris_3`: `SMK NEGERI FYJ CHANNEL`
+   - `kop_telepon`: Kontak telepon dan email sekolah (`Telp. (0300) 2002 | Email: smkn@yahoo.com`).
+   - `kop_website`: Alamat website resmi sekolah (`Website: smkn.sch.id`).
 
 2. **Seksi Logo Sekolah**:
-   - `school_logo` / `logo_path`: URL Gambar Thumbnail Google Drive logo resmi sekolah (`https://drive.google.com/thumbnail?id=...&sz=w1600`).
+   - `school_logo` / `logo_path`: URL Gambar Thumbnail Google Drive logo resmi sekolah (`https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI&sz=w1600`).
 
 3. **Seksi Identitas Sekolah & Penyimpanan Google Drive**:
-   - `nama_sekolah` / `school_name`: Nama resmi sekolah (`SMK NEGERI FYJ Channel`).
-   - `alamat_sekolah`: Alamat lengkap sekolah.
-   - `google_drive_folder_url` / `drive_folder_url`: URL folder Google Drive resmi untuk penyimpanan Arsip SAS.
+   - `nama_sekolah` / `school_name`: Nama resmi sekolah (`SMK NEGERI FYJ CHANNEL`).
+   - `alamat_sekolah`: Alamat lengkap sekolah (`Jl. Merpati No. 1`).
+   - `google_drive_folder_url` / `drive_folder_url`: URL folder Google Drive resmi untuk penyimpanan Arsip SAS (`https://drive.google.com/drive/folders/19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR`).
    - `google_drive_folder_id` / `drive_folder_id`: ID unik folder Google Drive arsip.
 
 4. **Seksi Master Tahun Ajaran & Semester**:
    - `tahun_ajaran_aktif` / `academic_year`: Tahun ajaran aktif (`2026/2027`).
    - `semester_aktif` / `default_semester`: Semester aktif (`Ganjil` / `Genap`).
    - `daftar_tahun_ajaran`: JSON string array daftar master tahun ajaran (contoh: `["2024/2025","2025/2026","2026/2027","2027/2028"]`).
+
+5. **Seksi Pejabat Penandatangan Dokumen Resmi**:
+   - `kepala_sekolah`: Nama Kepala Sekolah (`Drs. I Ketut Suardana, M.Pd.`).
+   - `nip_kepala_sekolah`: NIP Kepala Sekolah (`19680315 199412 1 002`).
+   - `tempat_cetak`: Kota tempat penerbitan dokumen (`Denpasar`).
+   - `format_tanggal_cetak`: Pola format tanggal cetak (`d MMMM yyyy`).
+
+> [!TIP]
+> **Mekanisme Auto-Seeding**: Jika sheet `Pengaturan` kosong atau baru dibuat, sistem secara otomatis mengisi seluruh baris default di atas begitu Web App pertama kali diakses atau melalui tombol *"Terapkan Nilai Default Resmi"* di UI.
 
 > [!NOTE]
 > **Metode Pembaruan Aset Logo & Kop**:

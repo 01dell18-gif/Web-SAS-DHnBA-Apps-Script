@@ -78,6 +78,9 @@
                 </p>
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-primary btn-sm" onclick="isiDefaultOtomatisPengaturan()" style="background: #0284c7; border-color: #0284c7;" title="Tulis & Terapkan Data Resmi Default ke Sheet Pengaturan">
+                    <i class="bi bi-magic"></i> Terapkan Nilai Default Resmi
+                </button>
                 <button type="button" class="btn btn-outline-primary btn-sm" onclick="openDatabaseSpreadsheet()">
                     <i class="bi bi-file-earmark-spreadsheet"></i> Buka Sheet Pengaturan
                 </button>
@@ -293,7 +296,7 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label" for="set_kop_3">Kop Baris 3 (Nama Sekolah)</label>
-                                <input type="text" id="set_kop_3" class="form-control" value="SMK NEGERI FYJ Channel">
+                                <input type="text" id="set_kop_3" class="form-control" value="SMK NEGERI FYJ CHANNEL">
                             </div>
                             <div class="form-group">
                                 <label class="form-label" for="set_kop_telepon">Telepon / Email</label>
@@ -318,7 +321,7 @@
                     <div class="card-body">
                         <div class="form-group">
                             <label class="form-label" for="set_nama_sekolah">Nama Sekolah Resmi <span class="required">*</span></label>
-                            <input type="text" id="set_nama_sekolah" class="form-control" value="SMK NEGERI FYJ Channel" required>
+                            <input type="text" id="set_nama_sekolah" class="form-control" value="SMK NEGERI FYJ CHANNEL" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="set_alamat_sekolah">Alamat Lengkap</label>
@@ -327,7 +330,7 @@
                         <div class="form-group">
                             <label class="form-label" for="set_drive_url">Tautan Folder Google Drive Arsip</label>
                             <div style="display: flex; gap: 6px;">
-                                <input type="url" id="set_drive_url" class="form-control" placeholder="https://drive.google.com/drive/folders/...">
+                                <input type="url" id="set_drive_url" class="form-control" placeholder="https://drive.google.com/drive/folders/19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR">
                                 <button type="button" class="btn btn-outline-primary btn-sm" onclick="openDriveFolderDirect()" title="Buka folder Drive ini" style="white-space: nowrap;">
                                     <i class="bi bi-box-arrow-up-right"></i> Buka
                                 </button>
@@ -730,7 +733,7 @@ function resetLogo() {
 function isiDefaultTeksKop() {
     document.getElementById('set_kop_1').value = 'PEMERINTAH PROVINSI FYJ';
     document.getElementById('set_kop_2').value = 'DINAS PENDIDIKAN KEPEMUDAAN DAN OLAHRAGA';
-    document.getElementById('set_kop_3').value = document.getElementById('set_nama_sekolah').value || 'SMK NEGERI FYJ Channel';
+    document.getElementById('set_kop_3').value = document.getElementById('set_nama_sekolah').value || 'SMK NEGERI FYJ CHANNEL';
     document.getElementById('set_kop_telepon').value = 'Telp. (0300) 2002 | Email: smkn@yahoo.com';
     document.getElementById('set_kop_website').value = 'Website: smkn.sch.id';
 }
@@ -979,6 +982,31 @@ function openDatabaseSpreadsheet() {
             })
             .apiGetDatabaseInfo();
     }
+}
+
+function isiDefaultOtomatisPengaturan() {
+    showGlobalConfirmDialog(
+        'Terapkan Nilai Default Resmi?',
+        'Tindakan ini akan mengisi sheet Pengaturan di Google Spreadsheet dengan data resmi SMK NEGERI FYJ CHANNEL (Logo, Kop Surat Dokumen A4, Folder Google Drive Arsip, dan Periode Ujian). Lanjutkan?',
+        function() {
+            showLoading(true);
+            google.script.run
+                .withSuccessHandler(function(res) {
+                    showLoading(false);
+                    if (res && res.success) {
+                        showGlobalNotificationDialog('Berhasil', res.message || 'Sheet Pengaturan berhasil diisi nilai default resmi!', 'success');
+                        loadInitialSettings(false);
+                    } else {
+                        showGlobalNotificationDialog('Gagal', (res && res.message) || 'Gagal mengisi data default.', 'danger');
+                    }
+                })
+                .withFailureHandler(function(err) {
+                    showLoading(false);
+                    showGlobalNotificationDialog('Gagal', err.message, 'danger');
+                })
+                .apiResetDefaultPengaturan();
+        }
+    );
 }
 
 function confirmResetDatabase() {

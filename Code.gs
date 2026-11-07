@@ -316,9 +316,106 @@ function convertDriveUrlToThumbnail(url) {
   return url;
 }
 
+function getDefaultSettingsRows() {
+  return [
+    // 1. Kop Surat Dokumen Resmi A4
+    ['kop_mode', 'image'],
+    ['kop_header', 'https://drive.google.com/thumbnail?id=1QXtnYwIrCc-pihDUoidjkRW5UVWykOn-&sz=w1600'],
+    ['kop_image_path', 'https://drive.google.com/thumbnail?id=1QXtnYwIrCc-pihDUoidjkRW5UVWykOn-&sz=w1600'],
+    ['kop_baris_1', 'PEMERINTAH PROVINSI FYJ'],
+    ['kop_baris_2', 'DINAS PENDIDIKAN KEPEMUDAAN DAN OLAHRAGA'],
+    ['kop_baris_3', 'SMK NEGERI FYJ CHANNEL'],
+    ['kop_telepon', 'Telp. (0300) 2002 | Email: smkn@yahoo.com'],
+    ['kop_website', 'Website: smkn.sch.id'],
+
+    // 2. Logo Sekolah
+    ['school_logo', 'https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI&sz=w1600'],
+    ['logo_path', 'https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI&sz=w1600'],
+
+    // 3. Identitas Sekolah & Penyimpanan Google Drive
+    ['nama_sekolah', 'SMK NEGERI FYJ CHANNEL'],
+    ['school_name', 'SMK NEGERI FYJ CHANNEL'],
+    ['alamat_sekolah', 'Jl. Merpati No. 1'],
+    ['google_drive_folder_url', 'https://drive.google.com/drive/folders/19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR'],
+    ['drive_folder_url', 'https://drive.google.com/drive/folders/19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR'],
+
+    // 4. Master Tahun Ajaran & Semester
+    ['tahun_ajaran_aktif', '2026/2027'],
+    ['academic_year', '2026/2027'],
+    ['semester_aktif', 'Ganjil'],
+    ['default_semester', 'Ganjil'],
+    ['daftar_tahun_ajaran', JSON.stringify(['2024/2025', '2025/2026', '2026/2027', '2027/2028'])],
+
+    // 5. Pejabat Penandatangan Dokumen Resmi
+    ['kepala_sekolah', 'Drs. I Ketut Suardana, M.Pd.'],
+    ['nip_kepala_sekolah', '19680315 199412 1 002'],
+    ['tempat_cetak', 'Denpasar'],
+    ['format_tanggal_cetak', 'd MMMM yyyy']
+  ];
+}
+
+function seedDefaultSettings(optSheet) {
+  var sheet = optSheet || getSheet(SHEET_NAMES.SETTINGS);
+  sheet.clear();
+  sheet.appendRow(['setting_key', 'setting_value']);
+  sheet.getRange(1, 1, 1, 2).setFontWeight('bold');
+  try {
+    sheet.getRange(1, 1, 1, 2).setBackground('#f1f5f9');
+    sheet.setColumnWidth(1, 220);
+    sheet.setColumnWidth(2, 600);
+  } catch (e) {}
+
+  var rows = getDefaultSettingsRows();
+  if (rows && rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, 2).setValues(rows);
+  }
+  return rows;
+}
+
+function isiOtomatisPengaturan() {
+  var sheet = getSheet(SHEET_NAMES.SETTINGS);
+  seedDefaultSettings(sheet);
+  invalidateCaches();
+  return 'Berhasil mengisi data default Pengaturan ke Google Sheets!';
+}
+
+function apiResetDefaultPengaturan() {
+  try {
+    var sheet = getSheet(SHEET_NAMES.SETTINGS);
+    seedDefaultSettings(sheet);
+    invalidateCaches();
+    return {
+      success: true,
+      message: 'Sheet Pengaturan berhasil diisi dengan data default resmi SMK NEGERI FYJ CHANNEL!'
+    };
+  } catch (e) {
+    return { success: false, message: e.message };
+  }
+}
+
 function getSettingsMap() {
   try {
+    var sheet = getSheet(SHEET_NAMES.SETTINGS);
+    var lastRow = sheet.getLastRow();
+    var lastCol = sheet.getLastColumn();
+
+    // Auto-seed sheet Pengaturan jika kosong atau belum ada baris data
+    if (lastRow < 2 || lastCol < 2) {
+      seedDefaultSettings(sheet);
+      if (_requestTableCache[SHEET_NAMES.SETTINGS]) {
+        delete _requestTableCache[SHEET_NAMES.SETTINGS];
+      }
+    }
+
     var rows = readTable(SHEET_NAMES.SETTINGS);
+    if (!rows || rows.length === 0) {
+      seedDefaultSettings(sheet);
+      if (_requestTableCache[SHEET_NAMES.SETTINGS]) {
+        delete _requestTableCache[SHEET_NAMES.SETTINGS];
+      }
+      rows = readTable(SHEET_NAMES.SETTINGS);
+    }
+
     var map = {};
     for (var i = 0; i < rows.length; i++) {
       var r = rows[i];
@@ -334,7 +431,7 @@ function getSettingsMap() {
     // Map synonyms/aliases between English & Indonesian
     if (!map.nama_sekolah && map.school_name) map.nama_sekolah = map.school_name;
     if (!map.school_name && map.nama_sekolah) map.school_name = map.nama_sekolah;
-    if (!map.nama_sekolah) map.nama_sekolah = 'SMK NEGERI FYJ Channel';
+    if (!map.nama_sekolah) map.nama_sekolah = 'SMK NEGERI FYJ CHANNEL';
 
     if (!map.alamat_sekolah && map.school_address) map.alamat_sekolah = map.school_address;
     if (!map.alamat_sekolah) map.alamat_sekolah = 'Jl. Merpati No. 1';
@@ -357,16 +454,16 @@ function getSettingsMap() {
 
     if (!map.google_drive_folder_url && map.drive_folder_url) map.google_drive_folder_url = map.drive_folder_url;
     if (!map.drive_folder_url && map.google_drive_folder_url) map.drive_folder_url = map.google_drive_folder_url;
-    if (!map.google_drive_folder_url) map.google_drive_folder_url = 'https://drive.google.com/drive/folders/1sHpxyW6DbHSp1D7KNN-_xTu8fG9rY35h?usp=sharing';
+    if (!map.google_drive_folder_url) map.google_drive_folder_url = 'https://drive.google.com/drive/folders/19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR';
 
     // Synchronize kop_header and kop_image_path synonyms & format Drive URL
-    var kopImg = map.kop_header || map.kop_image_path || '';
+    var kopImg = map.kop_header || map.kop_image_path || 'https://drive.google.com/thumbnail?id=1QXtnYwIrCc-pihDUoidjkRW5UVWykOn-&sz=w1600';
     kopImg = convertDriveUrlToThumbnail(kopImg);
     map.kop_header = kopImg;
     map.kop_image_path = kopImg;
 
     // Synchronize school_logo and logo_path synonyms & format Drive URL
-    var logoImg = map.school_logo || map.logo_path || '';
+    var logoImg = map.school_logo || map.logo_path || 'https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI&sz=w1600';
     logoImg = convertDriveUrlToThumbnail(logoImg);
     map.school_logo = logoImg;
     map.logo_path = logoImg;
@@ -389,19 +486,35 @@ function getSettingsMap() {
       map.daftar_tahun_ajaran.push(map.tahun_ajaran_aktif);
     }
 
+    if (!map.kepala_sekolah) map.kepala_sekolah = 'Drs. I Ketut Suardana, M.Pd.';
+    if (!map.nip_kepala_sekolah) map.nip_kepala_sekolah = '19680315 199412 1 002';
+    if (!map.tempat_cetak) map.tempat_cetak = 'Denpasar';
+    if (!map.format_tanggal_cetak) map.format_tanggal_cetak = 'd MMMM yyyy';
+
     return map;
   } catch (e) {
     return {
-      nama_sekolah: 'SMK NEGERI FYJ Channel',
+      nama_sekolah: 'SMK NEGERI FYJ CHANNEL',
       alamat_sekolah: 'Jl. Merpati No. 1',
       tahun_ajaran_aktif: '2026/2027',
       semester_aktif: 'Ganjil',
       daftar_tahun_ajaran: ['2024/2025', '2025/2026', '2026/2027', '2027/2028'],
       kop_mode: 'image',
-      kop_header: '',
-      kop_image_path: '',
-      school_logo: '',
-      logo_path: ''
+      kop_header: 'https://drive.google.com/thumbnail?id=1QXtnYwIrCc-pihDUoidjkRW5UVWykOn-&sz=w1600',
+      kop_image_path: 'https://drive.google.com/thumbnail?id=1QXtnYwIrCc-pihDUoidjkRW5UVWykOn-&sz=w1600',
+      school_logo: 'https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI&sz=w1600',
+      logo_path: 'https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI&sz=w1600',
+      google_drive_folder_url: 'https://drive.google.com/drive/folders/19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR',
+      drive_folder_url: 'https://drive.google.com/drive/folders/19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR',
+      kop_baris_1: 'PEMERINTAH PROVINSI FYJ',
+      kop_baris_2: 'DINAS PENDIDIKAN KEPEMUDAAN DAN OLAHRAGA',
+      kop_baris_3: 'SMK NEGERI FYJ CHANNEL',
+      kop_telepon: 'Telp. (0300) 2002 | Email: smkn@yahoo.com',
+      kop_website: 'Website: smkn.sch.id',
+      kepala_sekolah: 'Drs. I Ketut Suardana, M.Pd.',
+      nip_kepala_sekolah: '19680315 199412 1 002',
+      tempat_cetak: 'Denpasar',
+      format_tanggal_cetak: 'd MMMM yyyy'
     };
   }
 }
@@ -1180,43 +1293,7 @@ function setupSpreadsheetDatabase() {
 
   // 1. Sheet Pengaturan (Diselaraskan runtut sesuai Menu Pengaturan)
   var sheetSettings = getSheet(SHEET_NAMES.SETTINGS);
-  sheetSettings.clear();
-  sheetSettings.appendRow(['setting_key', 'setting_value']);
-  sheetSettings.getRange(1, 1, 1, 2).setFontWeight('bold');
-
-  var defaultSettings = [
-    // 1. Kop Surat Dokumen Resmi A4
-    ['kop_mode', 'image'],
-    ['kop_header', 'https://drive.google.com/thumbnail?id=1Z80pVGJv9v-GFwjE1_kBi_G9uRlR2gN7&sz=w1600'],
-    ['kop_image_path', 'https://drive.google.com/thumbnail?id=1Z80pVGJv9v-GFwjE1_kBi_G9uRlR2gN7&sz=w1600'],
-    ['kop_baris_1', 'PEMERINTAH PROVINSI FYJ'],
-    ['kop_baris_2', 'DINAS PENDIDIKAN KEPEMUDAAN DAN OLAHRAGA'],
-    ['kop_baris_3', 'SMK NEGERI FYJ Channel'],
-    ['kop_telepon', 'Telp. (0300) 2002 | Email: smkn@yahoo.com'],
-    ['kop_website', 'Website: smkn.sch.id'],
-
-    // 2. Logo Sekolah
-    ['school_logo', 'https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI&sz=w1600'],
-    ['logo_path', 'https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI&sz=w1600'],
-
-    // 3. Identitas Sekolah & Penyimpanan Google Drive
-    ['nama_sekolah', 'SMK NEGERI FYJ Channel'],
-    ['school_name', 'SMK NEGERI FYJ Channel'],
-    ['alamat_sekolah', 'Jl. Merpati No. 1'],
-    ['google_drive_folder_url', 'https://drive.google.com/drive/folders/1sHpxyW6DbHSp1D7KNN-_xTu8fG9rY35h?usp=sharing'],
-    ['drive_folder_url', 'https://drive.google.com/drive/folders/1sHpxyW6DbHSp1D7KNN-_xTu8fG9rY35h?usp=sharing'],
-
-    // 4. Master Tahun Ajaran & Semester
-    ['tahun_ajaran_aktif', '2026/2027'],
-    ['academic_year', '2026/2027'],
-    ['semester_aktif', 'Ganjil'],
-    ['default_semester', 'Ganjil'],
-    ['daftar_tahun_ajaran', JSON.stringify(['2024/2025', '2025/2026', '2026/2027', '2027/2028'])]
-  ];
-
-  for (var s = 0; s < defaultSettings.length; s++) {
-    sheetSettings.appendRow(defaultSettings[s]);
-  }
+  seedDefaultSettings(sheetSettings);
 
   // 2. Sheet Kelas
   var sheetKelas = getSheet(SHEET_NAMES.CLASSES);
