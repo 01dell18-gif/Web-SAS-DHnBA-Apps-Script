@@ -158,12 +158,12 @@ document.addEventListener('DOMContentLoaded', function() {
         .withSuccessHandler(function(data) {
             window.AppStore.data = data;
             
-            var cK = (data.classes || []).length;
-            var cS = (data.students || []).length;
-            var cG = (data.teachers || []).length;
-            var cM = (data.mapels || []).length;
-            var cDH = (data.absensi || []).length;
-            var cBA = (data.berita_acara || []).length;
+            var cK = ((data && data.classes) || []).length;
+            var cS = ((data && data.students) || []).length;
+            var cG = ((data && data.teachers) || []).length;
+            var cM = ((data && data.mapels) || []).length;
+            var cDH = ((data && data.absensi) || []).length;
+            var cBA = ((data && data.berita_acara) || []).length;
 
             document.getElementById('dashCountKelas').textContent = cK;
             document.getElementById('dashCountSiswa').textContent = cS;
@@ -175,46 +175,57 @@ document.addEventListener('DOMContentLoaded', function() {
             // Audit Check
             if (cDH !== cBA) {
                 var alertEl = document.getElementById('dashReconciliationAlert');
-                document.getElementById('dashReconciliationText').textContent = 'Perhatian: Terdapat selisih dokumen (' + cDH + ' Daftar Hadir vs ' + cBA + ' Berita Acara). Lakukan rekonsiliasi untuk memeriksa kelengkapan sesi.';
-                alertEl.style.display = 'flex';
+                if (alertEl) {
+                    document.getElementById('dashReconciliationText').textContent = 'Perhatian: Terdapat selisih dokumen (' + cDH + ' Daftar Hadir vs ' + cBA + ' Berita Acara). Lakukan rekonsiliasi untuk memeriksa kelengkapan sesi.';
+                    alertEl.style.display = 'flex';
+                }
             }
 
             // Render Class Summary Table
             var tbody = document.getElementById('dashClassTableBody');
-            if (data.classes.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 1.5rem; color: var(--text-muted);">Belum ada kelas terdaftar.</td></tr>';
-            } else {
-                var html = '';
-                data.classes.forEach(function(cls, idx) {
-                    var sCount = data.students.filter(function(st) { return String(st.class_id) === String(cls.id); }).length;
-                    html += '<tr>' +
-                        '<td>' + (idx + 1) + '</td>' +
-                        '<td><strong>' + cls.nama_kelas + '</strong></td>' +
-                        '<td>' + (cls.tingkat || 'XII') + '</td>' +
-                        '<td>' + (cls.program_keahlian || '-') + '</td>' +
-                        '<td style="text-align: center;"><span class="badge" style="background: #e0e7ff; color: #4338ca; font-weight: 700; padding: 4px 8px; border-radius: 6px;">' + sCount + ' Siswa</span></td>' +
-                        '<td style="text-align: center;"><a href="javascript:void(0)" onclick="navigateTo(\'siswa\', { class_id: ' + cls.id + ' })" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;"><i class="bi bi-eye"></i> Siswa</a></td>' +
-                        '</tr>';
-                });
-                tbody.innerHTML = html;
+            if (tbody) {
+                var classes = (data && data.classes) || [];
+                if (classes.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 1.5rem; color: var(--text-muted);">Belum ada kelas terdaftar.</td></tr>';
+                } else {
+                    var html = '';
+                    var students = (data && data.students) || [];
+                    classes.forEach(function(cls, idx) {
+                        var sCount = students.filter(function(st) { return String(st.class_id) === String(cls.id); }).length;
+                        html += '<tr>' +
+                            '<td>' + (idx + 1) + '</td>' +
+                            '<td><strong>' + cls.nama_kelas + '</strong></td>' +
+                            '<td>' + (cls.tingkat || 'XII') + '</td>' +
+                            '<td>' + (cls.program_keahlian || '-') + '</td>' +
+                            '<td style="text-align: center;"><span class="badge" style="background: #e0e7ff; color: #4338ca; font-weight: 700; padding: 4px 8px; border-radius: 6px;">' + sCount + ' Siswa</span></td>' +
+                            '<td style="text-align: center;"><a href="javascript:void(0)" onclick="navigateTo(\'siswa\', { class_id: ' + cls.id + ' })" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;"><i class="bi bi-eye"></i> Siswa</a></td>' +
+                            '</tr>';
+                    });
+                    tbody.innerHTML = html;
+                }
             }
 
             // Render Activity Logs
             var lbody = document.getElementById('dashLogsTableBody');
-            var logs = (data.logs || []).slice(-10).reverse();
-            if (logs.length === 0) {
-                lbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 1rem; color: var(--text-muted);">Belum ada log aktivitas.</td></tr>';
-            } else {
-                var lHtml = '';
-                logs.forEach(function(l) {
-                    lHtml += '<tr>' +
-                        '<td>' + (l.waktu || '-') + '</td>' +
-                        '<td><span class="badge" style="background:#f1f5f9; color:#475569; font-weight:600;">' + (l.aktivitas || '-') + '</span></td>' +
-                        '<td>' + (l.keterangan || '-') + '</td>' +
-                        '</tr>';
-                });
-                lbody.innerHTML = lHtml;
+            if (lbody) {
+                var logs = ((data && data.logs) || []).slice(-10).reverse();
+                if (logs.length === 0) {
+                    lbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 1rem; color: var(--text-muted);">Belum ada log aktivitas.</td></tr>';
+                } else {
+                    var lHtml = '';
+                    logs.forEach(function(l) {
+                        lHtml += '<tr>' +
+                            '<td>' + (l.waktu || '-') + '</td>' +
+                            '<td><span class="badge" style="background:#f1f5f9; color:#475569; font-weight:600;">' + (l.aktivitas || '-') + '</span></td>' +
+                            '<td>' + (l.keterangan || '-') + '</td>' +
+                            '</tr>';
+                    });
+                    lbody.innerHTML = lHtml;
+                }
             }
+        })
+        .withFailureHandler(function(err) {
+            showGlobalToast('Gagal memuat ringkasan dashboard: ' + (err.message || err), 'danger');
         })
         .apiGetInitialData();
 });

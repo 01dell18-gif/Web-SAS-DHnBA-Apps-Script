@@ -115,11 +115,25 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function loadGuruData() {
+    var tbody = document.getElementById('tableGuruBody');
+    if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);"><div class="spinner-border spinner-border-sm" role="status"></div> Memuat data guru & pengawas...</td></tr>';
+    }
     google.script.run
         .withSuccessHandler(function(data) {
             window.AppStore.data = data;
-            guruList = data.teachers || [];
+            guruList = (data && data.teachers) || [];
             renderGuruTable(guruList);
+        })
+        .withFailureHandler(function(err) {
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">' +
+                    '<div style="color: #e11d48; font-weight: 700; margin-bottom: 0.5rem;"><i class="bi bi-exclamation-triangle-fill"></i> Gagal memuat data guru</div>' +
+                    '<div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">' + (err && err.message ? err.message : err) + '</div>' +
+                    '<button type="button" class="btn btn-primary btn-sm" onclick="loadGuruData()"><i class="bi bi-arrow-clockwise"></i> Coba Muat Ulang</button>' +
+                    '</td></tr>';
+            }
+            showGlobalToast('Gagal memuat data guru: ' + (err && err.message ? err.message : err), 'danger');
         })
         .apiGetInitialData();
 }

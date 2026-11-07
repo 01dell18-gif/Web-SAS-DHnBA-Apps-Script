@@ -220,12 +220,15 @@ function getFieldWithSynonyms(obj, headerName) {
   if (obj[h] !== undefined) return obj[h];
   var lower = h.toLowerCase();
 
-  if (lower === 'aktif' || lower === 'is_active' || lower === 'status') {
-    if (obj.aktif !== undefined) return obj.aktif;
-    if (obj.is_active !== undefined) return obj.is_active;
-    if (obj.status !== undefined) {
-      return (obj.status === 1 || String(obj.status).toLowerCase() === 'aktif' || obj.status === true) ? 1 : 0;
-    }
+  if (lower === 'aktif' || lower === 'is_active') {
+    if (obj.aktif !== undefined) return (obj.aktif === 1 || obj.aktif === '1' || obj.aktif === true || String(obj.aktif).toLowerCase() === 'aktif') ? 1 : 0;
+    if (obj.is_active !== undefined) return (obj.is_active === 1 || obj.is_active === '1' || obj.is_active === true || String(obj.is_active).toLowerCase() === 'aktif') ? 1 : 0;
+    if (obj.status !== undefined) return (obj.status === 1 || obj.status === '1' || obj.status === true || String(obj.status).toLowerCase() === 'aktif') ? 1 : 0;
+  }
+  if (lower === 'status') {
+    if (obj.status !== undefined) return obj.status;
+    if (obj.aktif !== undefined) return (obj.aktif === 1 || obj.aktif === '1' || obj.aktif === true || String(obj.aktif).toLowerCase() === 'aktif') ? 'Aktif' : 'Nonaktif';
+    if (obj.is_active !== undefined) return (obj.is_active === 1 || obj.is_active === '1' || obj.is_active === true || String(obj.is_active).toLowerCase() === 'aktif') ? 'Aktif' : 'Nonaktif';
   }
   if (lower === 'nama' || lower === 'nama_lengkap') {
     if (obj.nama_lengkap !== undefined) return obj.nama_lengkap;
@@ -273,13 +276,14 @@ function readTable(sheetName) {
       rowObj[key] = val;
     }
     if (!isEmpty) {
-      // Bidirectional Synonym Mapping across all tables
-      if (rowObj.is_active !== undefined && rowObj.aktif === undefined) rowObj.aktif = rowObj.is_active;
-      if (rowObj.aktif !== undefined && rowObj.is_active === undefined) rowObj.is_active = rowObj.aktif;
-      if (rowObj.status !== undefined && rowObj.aktif === undefined) {
-        rowObj.aktif = (rowObj.status === 1 || String(rowObj.status).toLowerCase() === 'aktif' || rowObj.status === true) ? 1 : 0;
-        rowObj.is_active = rowObj.aktif;
-      }
+      // Robust multi-synonym status normalization
+      var rawStatus = rowObj.aktif !== undefined ? rowObj.aktif : (rowObj.is_active !== undefined ? rowObj.is_active : rowObj.status);
+      var isAct = (rawStatus === 1 || rawStatus === '1' || rawStatus === true || String(rawStatus).toLowerCase() === 'aktif' || String(rawStatus).toLowerCase() === 'active');
+      rowObj.aktif = isAct ? 1 : 0;
+      rowObj.is_active = isAct ? 1 : 0;
+      rowObj.status = isAct ? 'Aktif' : 'Nonaktif';
+
+      // Name & Class synonyms
       if (rowObj.nama !== undefined && rowObj.nama_lengkap === undefined) rowObj.nama_lengkap = rowObj.nama;
       if (rowObj.nama_lengkap !== undefined && rowObj.nama === undefined) rowObj.nama = rowObj.nama_lengkap;
       if (rowObj.nama_kelas !== undefined && rowObj.kelas === undefined) rowObj.kelas = rowObj.nama_kelas;
@@ -304,6 +308,40 @@ function getNextId(sheetName) {
     if (!isNaN(id) && id > maxId) maxId = id;
   }
   return maxId + 1;
+}
+
+
+function insertRows(sheetName, objList) {
+  if (!objList || objList.length === 0) return 0;
+  var sheet = getSheet(sheetName);
+  var lastCol = sheet.getLastColumn();
+  if (lastCol < 1) return 0;
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  var nextId = getNextId(sheetName);
+  var now = Utilities.formatDate(new Date(), 'Asia/Makassar', 'yyyy-MM-dd HH:mm:ss');
+
+  var rowsData = [];
+  for (var i = 0; i < objList.length; i++) {
+    var obj = objList[i];
+    if (!obj.id) {
+      obj.id = nextId++;
+    }
+    if (!obj.created_at) obj.created_at = now;
+    obj.updated_at = now;
+
+    var row = [];
+    for (var j = 0; j < headers.length; j++) {
+      var h = String(headers[j]).trim();
+      var val = getFieldWithSynonyms(obj, h);
+      row.push(val !== undefined ? val : '');
+    }
+    rowsData.push(row);
+  }
+
+  var startRow = sheet.getLastRow() + 1;
+  sheet.getRange(startRow, 1, rowsData.length, headers.length).setValues(rowsData);
+  invalidateCaches();
+  return rowsData.length;
 }
 
 function insertRow(sheetName, obj) {
@@ -379,13 +417,29 @@ function seedDefaultClasses(optSheet) {
   var sheet = optSheet || getSheet(SHEET_NAMES.CLASSES);
   sheet.clear();
   var headers = ['id', 'nama_kelas', 'tingkat', 'program_keahlian', 'aktif', 'created_at', 'updated_at'];
-  sheet.appendRow(headers);
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
-  var classesData = [{"id":1,"nama_kelas":"XII TKJ","tingkat":"XII","program_keahlian":"Teknik Komputer dan Jaringan","is_active":1},{"id":2,"nama_kelas":"XII DKV","tingkat":"XII","program_keahlian":"Desain Komunikasi Visual","is_active":1},{"id":3,"nama_kelas":"XII LPKKK 1","tingkat":"XII","program_keahlian":"LPKKK","is_active":1},{"id":4,"nama_kelas":"XII LPKKK 2","tingkat":"XII","program_keahlian":"Layanan Penunjang Kefarmasian Klinis dan Komunitas","is_active":1},{"id":5,"nama_kelas":"XII BD 1","tingkat":"XII","program_keahlian":"BD","is_active":1},{"id":6,"nama_kelas":"XII BD 2","tingkat":"XII","program_keahlian":"Bisnis Digital","is_active":1},{"id":7,"nama_kelas":"XII MP 1","tingkat":"XII","program_keahlian":"Manajemen Perkantoran dan Layanan Bisnis","is_active":1},{"id":8,"nama_kelas":"XII MP 2","tingkat":"XII","program_keahlian":"Manajemen Perkantoran dan Layanan Bisnis","is_active":1},{"id":9,"nama_kelas":"XII LPB","tingkat":"XII","program_keahlian":"Layanan Perbankan","is_active":1},{"id":10,"nama_kelas":"XII AK","tingkat":"XII","program_keahlian":"Akuntansi dan Keuangan Lembaga","is_active":1},{"id":11,"nama_kelas":"XII TSM","tingkat":"XII","program_keahlian":"Teknik Sepeda Motor","is_active":1}];
+  var classesData = [
+    {"id":1,"nama_kelas":"XII TKJ","tingkat":"XII","program_keahlian":"Teknik Komputer dan Jaringan","is_active":1},
+    {"id":2,"nama_kelas":"XII DKV","tingkat":"XII","program_keahlian":"Desain Komunikasi Visual","is_active":1},
+    {"id":3,"nama_kelas":"XII LPKKK 1","tingkat":"XII","program_keahlian":"LPKKK","is_active":1},
+    {"id":4,"nama_kelas":"XII LPKKK 2","tingkat":"XII","program_keahlian":"Layanan Penunjang Kefarmasian Klinis dan Komunitas","is_active":1},
+    {"id":5,"nama_kelas":"XII BD 1","tingkat":"XII","program_keahlian":"BD","is_active":1},
+    {"id":6,"nama_kelas":"XII BD 2","tingkat":"XII","program_keahlian":"Bisnis Digital","is_active":1},
+    {"id":7,"nama_kelas":"XII MP 1","tingkat":"XII","program_keahlian":"Manajemen Perkantoran dan Layanan Bisnis","is_active":1},
+    {"id":8,"nama_kelas":"XII MP 2","tingkat":"XII","program_keahlian":"Manajemen Perkantoran dan Layanan Bisnis","is_active":1},
+    {"id":9,"nama_kelas":"XII LPB","tingkat":"XII","program_keahlian":"Layanan Perbankan","is_active":1},
+    {"id":10,"nama_kelas":"XII AK","tingkat":"XII","program_keahlian":"Akuntansi dan Keuangan Lembaga","is_active":1},
+    {"id":11,"nama_kelas":"XII TSM","tingkat":"XII","program_keahlian":"Teknik Sepeda Motor","is_active":1}
+  ];
   var now = Utilities.formatDate(new Date(), 'Asia/Makassar', 'yyyy-MM-dd HH:mm:ss');
+  var rows = [];
   for (var c = 0; c < classesData.length; c++) {
     var cls = classesData[c];
-    sheet.appendRow([cls.id, cls.nama_kelas, cls.tingkat || 'XII', cls.program_keahlian || '', 1, now, now]);
+    rows.push([cls.id, cls.nama_kelas, cls.tingkat || 'XII', cls.program_keahlian || '', 1, now, now]);
+  }
+  if (rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
   }
   invalidateCaches();
 }
@@ -394,13 +448,35 @@ function seedDefaultStudents(optSheet) {
   var sheet = optSheet || getSheet(SHEET_NAMES.STUDENTS);
   sheet.clear();
   var headers = ['id', 'class_id', 'nama_kelas', 'nis', 'nisn', 'nama', 'program_keahlian', 'aktif', 'created_at', 'updated_at'];
-  sheet.appendRow(headers);
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
-  var studentsData = [{"id":1,"class_id":1,"nis":"13561","nama":"Agustinus Poka Mete"},{"id":2,"class_id":1,"nis":"13562","nama":"Akbar Alfiansah"},{"id":3,"class_id":1,"nis":"13563","nama":"Dwi Retno Ayuningrum"},{"id":4,"class_id":1,"nis":"13565","nama":"I Gede Adtya Wedha Paramartha"},{"id":5,"class_id":1,"nis":"13566","nama":"I Gede Putra Sang Pajar"},{"id":6,"class_id":1,"nis":"13567","nama":"I Komang Giri Artawan"},{"id":7,"class_id":1,"nis":"13568","nama":"I Made Sugiarta"},{"id":8,"class_id":1,"nis":"13569","nama":"I Putu Adi Ari Endrawan"},{"id":9,"class_id":1,"nis":"13570","nama":"I Putu Agus Pratama Putra"},{"id":10,"class_id":1,"nis":"13571","nama":"I Putu Pasek Prawira Putra"},{"id":11,"class_id":1,"nis":"13572","nama":"I Wayan Kartika Adi Putra"},{"id":12,"class_id":1,"nis":"13573","nama":"Komang Jano Artha"},{"id":13,"class_id":1,"nis":"13574","nama":"M. Afgansyah Al-Maghfiroh"},{"id":14,"class_id":1,"nis":"13575","nama":"Made Pradnya Wahyu Radheya"},{"id":15,"class_id":1,"nis":"13576","nama":"Ni Ketut Sinta"},{"id":16,"class_id":1,"nis":"13577","nama":"Ni Komang Sila Triana Sari"},{"id":17,"class_id":1,"nis":"13578","nama":"Radit"},{"id":18,"class_id":1,"nis":"13579","nama":"Rizka Nurdiandari"},{"id":19,"class_id":1,"nis":"13580","nama":"Rizky Adib Irlan Syah"},{"id":20,"class_id":1,"nis":"13581","nama":"Rizqy Al Farraby"},{"id":21,"class_id":2,"nis":"13769","nama":"Anak Agung Gede Dika Pradipta"},{"id":22,"class_id":2,"nis":"13770","nama":"Gek Danaya Anindia"},{"id":23,"class_id":2,"nis":"13771","nama":"I Gede Ary Kesuma Suputra"},{"id":24,"class_id":2,"nis":"13772","nama":"I Gede Rian Primayoga"},{"id":25,"class_id":2,"nis":"13773","nama":"I Komang Raka Danaswara"},{"id":26,"class_id":2,"nis":"13774","nama":"I Made Dharma Mahardika"},{"id":27,"class_id":2,"nis":"13775","nama":"I Made Wahyu Adikusuma"},{"id":28,"class_id":2,"nis":"13776","nama":"I Putu Gede Eka Yogantara Pratmaja"},{"id":29,"class_id":2,"nis":"13777","nama":"I Putu Rendy Galang Permana"},{"id":30,"class_id":2,"nis":"13778","nama":"I Wayan Wira Pradnyana"},{"id":31,"class_id":2,"nis":"13779","nama":"Kadek Gita Anindita Kemulan"},{"id":32,"class_id":2,"nis":"13780","nama":"Komang Aditya"},{"id":33,"class_id":2,"nis":"13781","nama":"Ni Kadek Ayu Melani Ratna Dewi"},{"id":34,"class_id":2,"nis":"13782","nama":"Ni Kadek Ita Sutriani"},{"id":35,"class_id":2,"nis":"13783","nama":"Ni Kadek Ranita Dewi"},{"id":36,"class_id":2,"nis":"13784","nama":"Ni Luh Putu Sekar Darma Yanti"},{"id":37,"class_id":2,"nis":"13785","nama":"Ni Made Ayu Dwi Apriliani"},{"id":38,"class_id":2,"nis":"13786","nama":"Ni Putu Dian Cahyani"},{"id":39,"class_id":2,"nis":"13787","nama":"Ni Putu Ghina Anastasia Putri"},{"id":40,"class_id":2,"nis":"13788","nama":"Ni Putu Rismayani Darma Swari"},{"id":41,"class_id":2,"nis":"13789","nama":"Queena Bilqist Mulyadi Putri"},{"id":42,"class_id":2,"nis":"13790","nama":"Raditya Nugraha"},{"id":43,"class_id":2,"nis":"13791","nama":"Wayan Satya Dharma"},{"id":44,"class_id":3,"nis":"13582","nama":"Agus Billy Fedrico","kelas":"XII LPKKK 1","nama_kelas":"XII LPKKK 1"},{"id":45,"class_id":3,"nis":"13583","nama":"Agus Eka Widya Pradnyana","kelas":"XII LPKKK 1","nama_kelas":"XII LPKKK 1"},{"id":46,"class_id":3,"nis":"13584","nama":"Dewa Ayu Sri Widyastuti","kelas":"XII LPKKK 1","nama_kelas":"XII LPKKK 1"},{"id":47,"class_id":3,"nis":"13585","nama":"I Dewa Ayu Dwi Cahya Indrayani","kelas":"XII LPKKK 1","nama_kelas":"XII LPKKK 1"},{"id":48,"class_id":3,"nis":"13586","nama":"I Komang Edi Setiawan.","kelas":"XII LPKKK 1","nama_kelas":"XII LPKKK 1"},{"id":49,"class_id":3,"nis":"13587","nama":"Ida Ayu Putu Diah Kamiswari","kelas":"XII LPKKK 1","nama_kelas":"XII LPKKK 1"},{"id":50,"class_id":3,"nis":"13588","nama":"Luh Ade Galuh Pratiwi","kelas":"XII LPKKK 1","nama_kelas":"XII LPKKK 1"},{"id":51,"class_id":3,"nis":"13589","nama":"Munifa Inayatur Rohma","kelas":"XII LPKKK 1","nama_kelas":"XII LPKKK 1"},{"id":52,"class_id":3,"nis":"13590","nama":"Ni Kadek Ayu Arsani","kelas":"XII LPKKK 1","nama_kelas":"XII LPKKK 1"},{"id":53,"class_id":3,"nis":"13591","nama":"Ni Kadek Diah Dwi Adnyani","kelas":"XII LPKKK 1","nama_kelas":"XII LPKKK 1"},{"id":54,"class_id":3,"nis":"13592","nama":"Ni Kadek Dian Candra Pratiwi","kelas":"XII LPKKK 1","nama_kelas":"XII LPKKK 1"},{"id":55,"class_id":3,"nis":"13593","nama":"Ni Kadek Evinayanti","kelas":"XII LPKKK 1","nama_kelas":"XII LPKKK 1"},{"id":56,"class_id":3,"nis":"13595","nama":"Ni Komang Ayu Santika","kelas":"XII LPKKK 1","nama_kelas":"XII LPKKK 1"},{"id":57,"class_id":3,"nis":"13596","nama":"Ni Komang Widya Krista Yanti","kelas":"XII LPKKK 1","nama_kelas":"XII LPKKK 1"},{"id":58,"class_id":3,"nis":"13597","nama":"Ni Made Juniari","kelas":"XII LPKKK 1","nama_kelas":"XII LPKKK 1"},{"id":59,"class_id":3,"nis":"13598","nama":"Ni Made Shita Wulandari","kelas":"XII LPKKK 1","nama_kelas":"XII LPKKK 1"},{"id":60,"class_id":3,"nis":"13599","nama":"Ni Putu Intan Merliani Putri","kelas":"XII LPKKK 1","nama_kelas":"XII LPKKK 1"},{"id":61,"class_id":3,"nis":"13600","nama":"Ni Putu Novi Armatiana","kelas":"XII LPKKK 1","nama_kelas":"XII LPKKK 1"},{"id":62,"class_id":3,"nis":"13601","nama":"Ni Wayan Ani Arthayasih","kelas":"XII LPKKK 1","nama_kelas":"XII LPKKK 1"},{"id":63,"class_id":3,"nis":"13602","nama":"Ni Wayan Nanda Pradnya Suari","kelas":"XII LPKKK 1","nama_kelas":"XII LPKKK 1"},{"id":64,"class_id":3,"nis":"13603","nama":"Yoneda Yebleb","kelas":"XII LPKKK 1","nama_kelas":"XII LPKKK 1"},{"id":65,"class_id":4,"nis":"13604","nama":"Aisyah Dwi Agusthina"},{"id":66,"class_id":4,"nis":"13605","nama":"Elyska Kirana Putri"},{"id":67,"class_id":4,"nis":"14102","nama":"Gusti Ayu Putu Alita Bintang Lestari"},{"id":68,"class_id":4,"nis":"13606","nama":"I Gusti Ayu Indah Pertiwi"},{"id":69,"class_id":4,"nis":"13608","nama":"Mauli Diana Rahayu Putri"},{"id":70,"class_id":4,"nis":"13609","nama":"Ni Kadek Bintang Nopiani"},{"id":71,"class_id":4,"nis":"13611","nama":"Ni Kadek Winda Wulandewi"},{"id":72,"class_id":4,"nis":"13612","nama":"Ni Komang Anggraeni"},{"id":73,"class_id":4,"nis":"13613","nama":"Ni Komang Leges Aria Sentani"},{"id":74,"class_id":4,"nis":"13614","nama":"Ni Komang Sri Diah Lastari"},{"id":75,"class_id":4,"nis":"13615","nama":"Ni Komang Tri Maetarani"},{"id":76,"class_id":4,"nis":"13616","nama":"Ni Komang Trisna Dewi"},{"id":77,"class_id":4,"nis":"13617","nama":"Ni Luh Komang Divya Santhi"},{"id":78,"class_id":4,"nis":"13618","nama":"Ni Putu Galih Pratiwi Setiawan"},{"id":79,"class_id":4,"nis":"13619","nama":"Ni Putu Indah Muliarni"},{"id":80,"class_id":4,"nis":"13620","nama":"Ni Putu Martini Lestari"},{"id":81,"class_id":4,"nis":"13621","nama":"Ni Putu Widya Wulandari"},{"id":82,"class_id":4,"nis":"13622","nama":"Ni Wayan Novi Lestari"},{"id":83,"class_id":4,"nis":"13624","nama":"Rizqiana Ayudianingsih"},{"id":84,"class_id":5,"nis":"13625","nama":"Dewa Ayu Made Dwi Artika Darmayanti","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":85,"class_id":5,"nis":"13626","nama":"I Gede Adi Putra","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":86,"class_id":5,"nis":"13627","nama":"I Gusti Ayu Wika Ariestari","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":87,"class_id":5,"nis":"13628","nama":"I Gusti Ngurah Wijana","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":88,"class_id":5,"nis":"13629","nama":"I Kadek Yogi Iswara","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":89,"class_id":5,"nis":"13630","nama":"I Nyoman Candra Paranarta","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":90,"class_id":5,"nis":"13631","nama":"Kadek Suki Oktami","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":91,"class_id":5,"nis":"13632","nama":"Luh Desiyani","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":92,"class_id":5,"nis":"13633","nama":"Ni Kadek Ayu Dwipayani","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":93,"class_id":5,"nis":"13634","nama":"Ni Kadek Sanjiani","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":94,"class_id":5,"nis":"13635","nama":"Ni Kadek Widiantari","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":95,"class_id":5,"nis":"13636","nama":"Ni Komang Ayu Intan Pratiwi","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":96,"class_id":5,"nis":"13637","nama":"Ni Komang Henny Herdi Yani","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":97,"class_id":5,"nis":"13638","nama":"Ni Komang Purnama Sari","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":98,"class_id":5,"nis":"13639","nama":"Ni Komang Sri Damayanti","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":99,"class_id":5,"nis":"13640","nama":"Ni Komang Trisna Yuni Astari","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":100,"class_id":5,"nis":"13641","nama":"Ni Luh Putu Frema Sugi Maharani","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":101,"class_id":5,"nis":"13642","nama":"Ni Made Sari Astini","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":102,"class_id":5,"nis":"13643","nama":"Ni Made Sukma Yanti","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":103,"class_id":5,"nis":"13644","nama":"Ni Nyoman Manik Dalem Maharani","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":104,"class_id":5,"nis":"13645","nama":"Ni Putu Eka Candra Dewi","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":105,"class_id":5,"nis":"13646","nama":"Ni Putu Sari Astuti","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":106,"class_id":5,"nis":"13647","nama":"Ni Putu Sariasih","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":107,"class_id":5,"nis":"13648","nama":"Ni Putu Selpi","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":108,"class_id":5,"nis":"13649","nama":"Ni Putu Sinta Purnama Yanti","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":109,"class_id":5,"nis":"13650","nama":"Putu Agus Mahendra","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":110,"class_id":5,"nis":"13651","nama":"Putu Aryadinata","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":111,"class_id":5,"nis":"13652","nama":"Putu Purnamawati","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":112,"class_id":5,"nis":"13653","nama":"Rizki Ananta Ramadhani","kelas":"XII BD 1","nama_kelas":"XII BD 1"},{"id":113,"class_id":6,"nis":"13654","nama":"Anisa Safila"},{"id":114,"class_id":6,"nis":"13655","nama":"Dewa Ayu Raras Variati"},{"id":115,"class_id":6,"nis":"13794","nama":"Galang Damai Dinata"},{"id":116,"class_id":6,"nis":"13656","nama":"I Gede Sutawan"},{"id":117,"class_id":6,"nis":"13657","nama":"I Kadek Desta Prawira"},{"id":118,"class_id":6,"nis":"13658","nama":"I Kadek Purnawirawan"},{"id":119,"class_id":6,"nis":"13659","nama":"I Ketut Alit Rupawan"},{"id":120,"class_id":6,"nis":"13660","nama":"I Komang Sucitra"},{"id":121,"class_id":6,"nis":"13661","nama":"I Made Windya Arsana"},{"id":122,"class_id":6,"nis":"13662","nama":"I Putu Aditya Suputra"},{"id":123,"class_id":6,"nis":"13663","nama":"Kadek Agus Apriana Bajesti Putra"},{"id":124,"class_id":6,"nis":"13664","nama":"Luh Made Purnama Dewi"},{"id":125,"class_id":6,"nis":"13665","nama":"Ni Kadek Meta Febriantari"},{"id":126,"class_id":6,"nis":"13666","nama":"Ni Kadek Putri Jayanti"},{"id":127,"class_id":6,"nis":"13667","nama":"Ni Komang Ayu Septianingsih"},{"id":128,"class_id":6,"nis":"13668","nama":"Ni Luh Nova Sinta Riari"},{"id":129,"class_id":6,"nis":"13669","nama":"Ni Nengah Febriani"},{"id":130,"class_id":6,"nis":"13670","nama":"Ni Pande Wayan Yonika Damayani"},{"id":131,"class_id":6,"nis":"13671","nama":"Ni Putu Lia Trisnayanti"},{"id":132,"class_id":6,"nis":"13672","nama":"Putu Vera Agustin"},{"id":133,"class_id":7,"nis":"13673","nama":"Anak Agung Dewi Suryaningrat"},{"id":134,"class_id":7,"nis":"13674","nama":"Desak Nyoman Widya Sari"},{"id":135,"class_id":7,"nis":"13675","nama":"I Dewa Ayu Bulan Sriasih"},{"id":136,"class_id":7,"nis":"13676","nama":"I Gede Ary Sudiantara"},{"id":137,"class_id":7,"nis":"13677","nama":"I Gede Nesa Wira Arsana"},{"id":138,"class_id":7,"nis":"13678","nama":"I Gusti Ayu Diana Kristiani"},{"id":139,"class_id":7,"nis":"13679","nama":"I Gusti Ngurah Agus Januarta"},{"id":140,"class_id":7,"nis":"13680","nama":"Komang Ayu Seri Musthikarani"},{"id":141,"class_id":7,"nis":"13681","nama":"Made Nitarianti"},{"id":142,"class_id":7,"nis":"13682","nama":"Meisya Fazrina"},{"id":143,"class_id":7,"nis":"13683","nama":"Ni Kadek Aprilia Lestari"},{"id":144,"class_id":7,"nis":"13684","nama":"Ni Kadek Ayu Lestari"},{"id":145,"class_id":7,"nis":"13685","nama":"Ni Kadek Darma Yanti"},{"id":146,"class_id":7,"nis":"13686","nama":"Ni Kadek Ika Pradevi"},{"id":147,"class_id":7,"nis":"13687","nama":"Ni Kadek Risna Kumala Dewi"},{"id":148,"class_id":7,"nis":"13688","nama":"Ni Kadek Sintia Wati"},{"id":149,"class_id":7,"nis":"13689","nama":"Ni Ketut Melia Purnama Sari"},{"id":150,"class_id":7,"nis":"13690","nama":"Ni Komang Ayu Widiantari"},{"id":151,"class_id":7,"nis":"13691","nama":"Ni Komang Diah Anandita Permata"},{"id":152,"class_id":7,"nis":"13692","nama":"Ni Komang Rini Cahyani"},{"id":153,"class_id":7,"nis":"13693","nama":"Ni Luh Ayu Purnama Dewi"},{"id":154,"class_id":7,"nis":"13694","nama":"Ni Luh Lisna Diantari"},{"id":155,"class_id":7,"nis":"13695","nama":"Ni Luh Sri Nadi"},{"id":156,"class_id":7,"nis":"13696","nama":"Ni Nengah Septia Dewi"},{"id":157,"class_id":7,"nis":"13697","nama":"Ni Putu Eka Pramita Sari"},{"id":158,"class_id":7,"nis":"13698","nama":"Pande Ni Putu Adisty Kusuma Jati"},{"id":159,"class_id":7,"nis":"13699","nama":"Tiara Yuliyanti"},{"id":160,"class_id":8,"nis":"13700","nama":"Anak Agung Istri Amira Vebriani"},{"id":161,"class_id":8,"nis":"13701","nama":"I Dewa Ayu Juniantari"},{"id":162,"class_id":8,"nis":"13702","nama":"I Gede Tri Jaya Winnata"},{"id":163,"class_id":8,"nis":"13703","nama":"Ida Bagus Yuda Pratama"},{"id":164,"class_id":8,"nis":"13704","nama":"Irsyad Adiba Hafas Zidansyah"},{"id":165,"class_id":8,"nis":"13705","nama":"Ni Kadek Ayu Aprilia Dewi"},{"id":166,"class_id":8,"nis":"13706","nama":"Ni Kadek Ayu Larasati"},{"id":167,"class_id":8,"nis":"13707","nama":"Ni Kadek Puspa Aryanti"},{"id":168,"class_id":8,"nis":"13708","nama":"Ni Kadek Sriyanti"},{"id":169,"class_id":8,"nis":"13709","nama":"Ni Komang Adelia Putri"},{"id":170,"class_id":8,"nis":"13710","nama":"Ni Komang Indah Jesika Dewi"},{"id":171,"class_id":8,"nis":"13711","nama":"Ni Komang Listia Dewi"},{"id":172,"class_id":8,"nis":"13712","nama":"Ni Komang Padmawati"},{"id":173,"class_id":8,"nis":"13713","nama":"Ni Komang Sutri Prantini"},{"id":174,"class_id":8,"nis":"13714","nama":"Ni Komang Triana Pusparani"},{"id":175,"class_id":8,"nis":"13715","nama":"Ni Luh Vika Widyawati"},{"id":176,"class_id":8,"nis":"13716","nama":"Ni Made Suci Manik Astari"},{"id":177,"class_id":8,"nis":"13717","nama":"Ni Putu Ayu Bintang"},{"id":178,"class_id":8,"nis":"13718","nama":"Ni Putu Diah Arthasari"},{"id":179,"class_id":8,"nis":"13719","nama":"Ni Putu Eka Semara Putri"},{"id":180,"class_id":8,"nis":"13720","nama":"Ni Putu Eka Widiantari"},{"id":181,"class_id":8,"nis":"13721","nama":"Ni Putu Mei Wulandari"},{"id":182,"class_id":8,"nis":"13722","nama":"Ni Putu Puspawati"},{"id":183,"class_id":8,"nis":"13723","nama":"Ni Putu Tia Dewi"},{"id":184,"class_id":8,"nis":"13724","nama":"Pande Putu Galuh Risanti Indira Yunika"},{"id":185,"class_id":8,"nis":"13725","nama":"Putu Juli Ayu Antari"},{"id":186,"class_id":8,"nis":"13726","nama":"Sang Made Arta Mahendra"},{"id":187,"class_id":9,"nis":"13727","nama":"Afrilia"},{"id":188,"class_id":9,"nis":"13728","nama":"Anak Agung Istri Prima Pebrianti"},{"id":189,"class_id":9,"nis":"13729","nama":"Gede Risky Adi Permana"},{"id":190,"class_id":9,"nis":"13730","nama":"I Gusti Ayu Putu Candra Widiantari"},{"id":191,"class_id":9,"nis":"13731","nama":"I Gusti Made Diah Purnama Sari"},{"id":192,"class_id":9,"nis":"13732","nama":"Ida Ayu Indah Gangga Swari"},{"id":193,"class_id":9,"nis":"13733","nama":"Ida Ayu Nyoman Reditya Oktaviani"},{"id":194,"class_id":9,"nis":"13734","nama":"Ida Ayu Sinta Dewi"},{"id":195,"class_id":9,"nis":"13736","nama":"Nabila Tusak Diah"},{"id":196,"class_id":9,"nis":"13737","nama":"Ni Kadek Intan Satrya Wati"},{"id":197,"class_id":9,"nis":"13738","nama":"Ni Made Ari Diana Sari"},{"id":198,"class_id":9,"nis":"13739","nama":"Rina Agustina"},{"id":199,"class_id":10,"nis":"13741","nama":"I Desak Ketut Patniki Astuti"},{"id":200,"class_id":10,"nis":"13742","nama":"I Dewa Ayu Awidiya Sari"},{"id":201,"class_id":10,"nis":"13743","nama":"I Dewa Ayu Meira Dianra Sari"},{"id":202,"class_id":10,"nis":"13744","nama":"I Putu Juniarta"},{"id":203,"class_id":10,"nis":"13745","nama":"I Wayan Agus Septiadi"},{"id":204,"class_id":10,"nis":"13746","nama":"Ketut Ananta Wardana"},{"id":205,"class_id":10,"nis":"13747","nama":"Ni Kadek Anggun Putri Pramesti"},{"id":206,"class_id":10,"nis":"13748","nama":"Ni Kadek Ratih Sancikadewi"},{"id":207,"class_id":10,"nis":"13749","nama":"Ni Kadek Santiasih"},{"id":208,"class_id":10,"nis":"13750","nama":"Ni Kadek Sinta Widyantini"},{"id":209,"class_id":10,"nis":"13751","nama":"Ni Kadek Suadnyani Megeng"},{"id":210,"class_id":10,"nis":"13752","nama":"Ni Ketut Catur Rahayu"},{"id":211,"class_id":10,"nis":"13753","nama":"Ni Komang Bintang Triasih"},{"id":212,"class_id":10,"nis":"13754","nama":"Ni Luh Nyoman Tri Githa Pramesti"},{"id":213,"class_id":10,"nis":"13755","nama":"Ni Luh Putu Candra Cahyani"},{"id":214,"class_id":10,"nis":"13756","nama":"Ni Putu Anggik Deswandari"},{"id":215,"class_id":10,"nis":"13757","nama":"Ni Putu Ayu Krisna Candra Dewi"},{"id":216,"class_id":10,"nis":"13758","nama":"Ni Putu Dewik"},{"id":217,"class_id":10,"nis":"13759","nama":"Ni Putu Diah Darmayanti"},{"id":218,"class_id":10,"nis":"13760","nama":"Ni Putu Dian Ambarwati"},{"id":219,"class_id":10,"nis":"13761","nama":"Ni Putu Dian Maharani"},{"id":220,"class_id":10,"nis":"13762","nama":"Ni Putu Echa Setyawati"},{"id":221,"class_id":10,"nis":"13763","nama":"Ni Putu Eka Pandewi"},{"id":222,"class_id":10,"nis":"13764","nama":"Ni Putu Stefany Devita Putri"},{"id":223,"class_id":10,"nis":"13765","nama":"Ni Putu Wita Sinta Pradnyani"},{"id":224,"class_id":10,"nis":"13766","nama":"Ni Wayan Chandra Rusita Devi"},{"id":225,"class_id":10,"nis":"13767","nama":"Pande Made Shasmita Aurellia Putri"},{"id":226,"class_id":10,"nis":"13768","nama":"Yenny Febri Yanthy Ningsih"},{"id":227,"class_id":11,"nis":"13526","nama":"Aldo Valentino"},{"id":228,"class_id":11,"nis":"13527","nama":"ARKANANTA MAULANA PUTRA APRILIANSYAH"},{"id":229,"class_id":11,"nis":"13528","nama":"I Gede Ari Widnyana"},{"id":230,"class_id":11,"nis":"13529","nama":"I Gede Candra Wiguna"},{"id":231,"class_id":11,"nis":"13530","nama":"I Gede Resa Pradnya Andika"},{"id":232,"class_id":11,"nis":"13531","nama":"I GUSTI NGURAH SATHYA DANANJAYA"},{"id":233,"class_id":11,"nis":"13532","nama":"I Kadek Angga Aditya Putra"},{"id":234,"class_id":11,"nis":"13533","nama":"I Kadek Dodik Ramayoga"},{"id":235,"class_id":11,"nis":"13534","nama":"I Kadek Dwi Adi Darma Yudhi"},{"id":236,"class_id":11,"nis":"13535","nama":"I Kadek Ipan Junata"},{"id":237,"class_id":11,"nis":"13536","nama":"I KADEK KUSUMA CAHYADI"},{"id":238,"class_id":11,"nis":"13537","nama":"I Ketut Catur Yoga Saputra"},{"id":239,"class_id":11,"nis":"13540","nama":"I Komang Bayu Septi Permana"},{"id":240,"class_id":11,"nis":"13541","nama":"I Komang Pebri Andika Saputra"},{"id":241,"class_id":11,"nis":"13542","nama":"I Made Agus Bayu Widi"},{"id":242,"class_id":11,"nis":"13543","nama":"I Made Div Aditya Pramana"},{"id":243,"class_id":11,"nis":"13544","nama":"I Ngurah Komang Ari Artana"},{"id":244,"class_id":11,"nis":"13545","nama":"I Putu Bayu Saputra"},{"id":245,"class_id":11,"nis":"13547","nama":"I Putu Pande Sedaya Tana"},{"id":246,"class_id":11,"nis":"13548","nama":"I Wayan Surya Nanta"},{"id":247,"class_id":11,"nis":"13550","nama":"JULIANTARA PUTRA"},{"id":248,"class_id":11,"nis":"13551","nama":"Kadek Angga Trisnawan"},{"id":249,"class_id":11,"nis":"13552","nama":"Ketut Mahardika"},{"id":250,"class_id":11,"nis":"13538","nama":"Ketut Rianta"},{"id":251,"class_id":11,"nis":"13553","nama":"Lorensius Kaka Lalo"},{"id":252,"class_id":11,"nis":"13554","nama":"Made Adi Mahardika"},{"id":253,"class_id":11,"nis":"13555","nama":"MUHAMMAD AZIZUL HAKIM"},{"id":254,"class_id":11,"nis":"13556","nama":"Nyoman Yudhi Triananda Wibawa"},{"id":255,"class_id":11,"nis":"13558","nama":"REDNO FEDRIANZAH"},{"id":256,"class_id":11,"nis":"13795","nama":"ROBERTO CHRISTIANO"},{"id":257,"class_id":11,"nis":"13559","nama":"WIRANTO SANJAYA"},{"id":258,"class_id":11,"nis":"13560","nama":"YUSUF ARDIANSYAH"}];
+
+  var classMap = {
+    1: 'XII TKJ', 2: 'XII DKV', 3: 'XII LPKKK 1', 4: 'XII LPKKK 2',
+    5: 'XII BD 1', 6: 'XII BD 2', 7: 'XII MP 1', 8: 'XII MP 2',
+    9: 'XII LPB', 10: 'XII AK', 11: 'XII TSM'
+  };
+  var jurMap = {
+    1: 'Teknik Komputer dan Jaringan', 2: 'Desain Komunikasi Visual',
+    3: 'LPKKK', 4: 'Layanan Penunjang Kefarmasian Klinis dan Komunitas',
+    5: 'BD', 6: 'Bisnis Digital',
+    7: 'Manajemen Perkantoran dan Layanan Bisnis', 8: 'Manajemen Perkantoran dan Layanan Bisnis',
+    9: 'Layanan Perbankan', 10: 'Akuntansi dan Keuangan Lembaga',
+    11: 'Teknik Sepeda Motor'
+  };
+
+  var studentsData = [{"id":1,"class_id":1,"nis":"13561","nama":"Agustinus Poka Mete"},{"id":2,"class_id":1,"nis":"13562","nama":"Akbar Alfiansah"},{"id":3,"class_id":1,"nis":"13563","nama":"Dwi Retno Ayuningrum"},{"id":4,"class_id":1,"nis":"13565","nama":"I Gede Adtya Wedha Paramartha"},{"id":5,"class_id":1,"nis":"13566","nama":"I Gede Putra Sang Pajar"},{"id":6,"class_id":1,"nis":"13567","nama":"I Komang Giri Artawan"},{"id":7,"class_id":1,"nis":"13568","nama":"I Made Sugiarta"},{"id":8,"class_id":1,"nis":"13569","nama":"I Putu Adi Ari Endrawan"},{"id":9,"class_id":1,"nis":"13570","nama":"I Putu Agus Pratama Putra"},{"id":10,"class_id":1,"nis":"13571","nama":"I Putu Pasek Prawira Putra"},{"id":11,"class_id":1,"nis":"13572","nama":"I Wayan Kartika Adi Putra"},{"id":12,"class_id":1,"nis":"13573","nama":"Komang Jano Artha"},{"id":13,"class_id":1,"nis":"13574","nama":"M. Afgansyah Al-Maghfiroh"},{"id":14,"class_id":1,"nis":"13575","nama":"Made Pradnya Wahyu Radheya"},{"id":15,"class_id":1,"nis":"13576","nama":"Ni Ketut Sinta"},{"id":16,"class_id":1,"nis":"13577","nama":"Ni Komang Sila Triana Sari"},{"id":17,"class_id":1,"nis":"13578","nama":"Radit"},{"id":18,"class_id":1,"nis":"13579","nama":"Rizka Nurdiandari"},{"id":19,"class_id":1,"nis":"13580","nama":"Rizky Adib Irlan Syah"},{"id":20,"class_id":1,"nis":"13581","nama":"Rizqy Al Farraby"},{"id":21,"class_id":2,"nis":"13769","nama":"Anak Agung Gede Dika Pradipta"},{"id":22,"class_id":2,"nis":"13770","nama":"Gek Danaya Anindia"},{"id":23,"class_id":2,"nis":"13771","nama":"I Gede Ary Kesuma Suputra"},{"id":24,"class_id":2,"nis":"13772","nama":"I Gede Rian Primayoga"},{"id":25,"class_id":2,"nis":"13773","nama":"I Komang Raka Danaswara"},{"id":26,"class_id":2,"nis":"13774","nama":"I Made Dharma Mahardika"},{"id":27,"class_id":2,"nis":"13775","nama":"I Made Wahyu Adikusuma"},{"id":28,"class_id":2,"nis":"13776","nama":"I Putu Gede Eka Yogantara Pratmaja"},{"id":29,"class_id":2,"nis":"13777","nama":"I Putu Rendy Galang Permana"},{"id":30,"class_id":2,"nis":"13778","nama":"I Wayan Wira Pradnyana"},{"id":31,"class_id":2,"nis":"13779","nama":"Kadek Gita Anindita Kemulan"},{"id":32,"class_id":2,"nis":"13780","nama":"Komang Aditya"},{"id":33,"class_id":2,"nis":"13781","nama":"Ni Kadek Ayu Melani Ratna Dewi"},{"id":34,"class_id":2,"nis":"13782","nama":"Ni Kadek Ita Sutriani"},{"id":35,"class_id":2,"nis":"13783","nama":"Ni Kadek Ranita Dewi"},{"id":36,"class_id":2,"nis":"13784","nama":"Ni Luh Putu Sekar Darma Yanti"},{"id":37,"class_id":2,"nis":"13785","nama":"Ni Made Ayu Dwi Apriliani"},{"id":38,"class_id":2,"nis":"13786","nama":"Ni Putu Dian Cahyani"},{"id":39,"class_id":2,"nis":"13787","nama":"Ni Putu Ghina Anastasia Putri"},{"id":40,"class_id":2,"nis":"13788","nama":"Ni Putu Rismayani Darma Swari"},{"id":41,"class_id":2,"nis":"13789","nama":"Queena Bilqist Mulyadi Putri"},{"id":42,"class_id":2,"nis":"13790","nama":"Raditya Nugraha"},{"id":43,"class_id":2,"nis":"13791","nama":"Wayan Satya Dharma"},{"id":44,"class_id":3,"nis":"13582","nama":"Agus Billy Fedrico"},{"id":45,"class_id":3,"nis":"13583","nama":"Agus Eka Widya Pradnyana"},{"id":46,"class_id":3,"nis":"13584","nama":"Dewa Ayu Sri Widyastuti"},{"id":47,"class_id":3,"nis":"13585","nama":"I Dewa Ayu Dwi Cahya Indrayani"},{"id":48,"class_id":3,"nis":"13586","nama":"I Komang Edi Setiawan."},{"id":49,"class_id":3,"nis":"13587","nama":"Ida Ayu Putu Diah Kamiswari"},{"id":50,"class_id":3,"nis":"13588","nama":"Luh Ade Galuh Pratiwi"},{"id":51,"class_id":3,"nis":"13589","nama":"Munifa Inayatur Rohma"},{"id":52,"class_id":3,"nis":"13590","nama":"Ni Kadek Ayu Arsani"},{"id":53,"class_id":3,"nis":"13591","nama":"Ni Kadek Diah Dwi Adnyani"},{"id":54,"class_id":3,"nis":"13592","nama":"Ni Kadek Dian Candra Pratiwi"},{"id":55,"class_id":3,"nis":"13593","nama":"Ni Kadek Evinayanti"},{"id":56,"class_id":3,"nis":"13595","nama":"Ni Komang Ayu Santika"},{"id":57,"class_id":3,"nis":"13596","nama":"Ni Komang Widya Krista Yanti"},{"id":58,"class_id":3,"nis":"13597","nama":"Ni Made Juniari"},{"id":59,"class_id":3,"nis":"13598","nama":"Ni Made Shita Wulandari"},{"id":60,"class_id":3,"nis":"13599","nama":"Ni Putu Intan Merliani Putri"},{"id":61,"class_id":3,"nis":"13600","nama":"Ni Putu Novi Armatiana"},{"id":62,"class_id":3,"nis":"13601","nama":"Ni Wayan Ani Arthayasih"},{"id":63,"class_id":3,"nis":"13602","nama":"Ni Wayan Nanda Pradnya Suari"},{"id":64,"class_id":3,"nis":"13603","nama":"Yoneda Yebleb"},{"id":65,"class_id":4,"nis":"13604","nama":"Aisyah Dwi Agusthina"},{"id":66,"class_id":4,"nis":"13605","nama":"Elyska Kirana Putri"},{"id":67,"class_id":4,"nis":"14102","nama":"Gusti Ayu Putu Alita Bintang Lestari"},{"id":68,"class_id":4,"nis":"13606","nama":"I Gusti Ayu Indah Pertiwi"},{"id":69,"class_id":4,"nis":"13608","nama":"Mauli Diana Rahayu Putri"},{"id":70,"class_id":4,"nis":"13609","nama":"Ni Kadek Bintang Nopiani"},{"id":71,"class_id":4,"nis":"13611","nama":"Ni Kadek Winda Wulandewi"},{"id":72,"class_id":4,"nis":"13612","nama":"Ni Komang Anggraeni"},{"id":73,"class_id":4,"nis":"13613","nama":"Ni Komang Leges Aria Sentani"},{"id":74,"class_id":4,"nis":"13614","nama":"Ni Komang Sri Diah Lastari"},{"id":75,"class_id":4,"nis":"13615","nama":"Ni Komang Tri Maetarani"},{"id":76,"class_id":4,"nis":"13616","nama":"Ni Komang Trisna Dewi"},{"id":77,"class_id":4,"nis":"13617","nama":"Ni Luh Komang Divya Santhi"},{"id":78,"class_id":4,"nis":"13618","nama":"Ni Putu Galih Pratiwi Setiawan"},{"id":79,"class_id":4,"nis":"13619","nama":"Ni Putu Indah Muliarni"},{"id":80,"class_id":4,"nis":"13620","nama":"Ni Putu Martini Lestari"},{"id":81,"class_id":4,"nis":"13621","nama":"Ni Putu Widya Wulandari"},{"id":82,"class_id":4,"nis":"13622","nama":"Ni Wayan Novi Lestari"},{"id":83,"class_id":4,"nis":"13624","nama":"Rizqiana Ayudianingsih"},{"id":84,"class_id":5,"nis":"13625","nama":"Dewa Ayu Made Dwi Artika Darmayanti"},{"id":85,"class_id":5,"nis":"13626","nama":"I Gede Adi Putra"},{"id":86,"class_id":5,"nis":"13627","nama":"I Gusti Ayu Wika Ariestari"},{"id":87,"class_id":5,"nis":"13628","nama":"I Gusti Ngurah Wijana"},{"id":88,"class_id":5,"nis":"13629","nama":"I Kadek Yogi Iswara"},{"id":89,"class_id":5,"nis":"13630","nama":"I Nyoman Candra Paranarta"},{"id":90,"class_id":5,"nis":"13631","nama":"Kadek Suki Oktami"},{"id":91,"class_id":5,"nis":"13632","nama":"Luh Desiyani"},{"id":92,"class_id":5,"nis":"13633","nama":"Ni Kadek Ayu Dwipayani"},{"id":93,"class_id":5,"nis":"13634","nama":"Ni Kadek Sanjiani"},{"id":94,"class_id":5,"nis":"13635","nama":"Ni Kadek Widiantari"},{"id":95,"class_id":5,"nis":"13636","nama":"Ni Komang Ayu Intan Pratiwi"},{"id":96,"class_id":5,"nis":"13637","nama":"Ni Komang Henny Herdi Yani"},{"id":97,"class_id":5,"nis":"13638","nama":"Ni Komang Purnama Sari"},{"id":98,"class_id":5,"nis":"13639","nama":"Ni Komang Sri Damayanti"},{"id":99,"class_id":5,"nis":"13640","nama":"Ni Komang Trisna Yuni Astari"},{"id":100,"class_id":5,"nis":"13641","nama":"Ni Luh Putu Frema Sugi Maharani"},{"id":101,"class_id":5,"nis":"13642","nama":"Ni Made Sari Astini"},{"id":102,"class_id":5,"nis":"13643","nama":"Ni Made Sukma Yanti"},{"id":103,"class_id":5,"nis":"13644","nama":"Ni Nyoman Manik Dalem Maharani"},{"id":104,"class_id":5,"nis":"13645","nama":"Ni Putu Eka Candra Dewi"},{"id":105,"class_id":5,"nis":"13646","nama":"Ni Putu Sari Astuti"},{"id":106,"class_id":5,"nis":"13647","nama":"Ni Putu Sariasih"},{"id":107,"class_id":5,"nis":"13648","nama":"Ni Putu Selpi"},{"id":108,"class_id":5,"nis":"13649","nama":"Ni Putu Sinta Purnama Yanti"},{"id":109,"class_id":5,"nis":"13650","nama":"Putu Agus Mahendra"},{"id":110,"class_id":5,"nis":"13651","nama":"Putu Aryadinata"},{"id":111,"class_id":5,"nis":"13652","nama":"Putu Purnamawati"},{"id":112,"class_id":5,"nis":"13653","nama":"Rizki Ananta Ramadhani"},{"id":113,"class_id":6,"nis":"13654","nama":"Anisa Safila"},{"id":114,"class_id":6,"nis":"13655","nama":"Dewa Ayu Raras Variati"},{"id":115,"class_id":6,"nis":"13794","nama":"Galang Damai Dinata"},{"id":116,"class_id":6,"nis":"13656","nama":"I Gede Sutawan"},{"id":117,"class_id":6,"nis":"13657","nama":"I Kadek Desta Prawira"},{"id":118,"class_id":6,"nis":"13658","nama":"I Kadek Purnawirawan"},{"id":119,"class_id":6,"nis":"13659","nama":"I Ketut Alit Rupawan"},{"id":120,"class_id":6,"nis":"13660","nama":"I Komang Sucitra"},{"id":121,"class_id":6,"nis":"13661","nama":"I Made Windya Arsana"},{"id":122,"class_id":6,"nis":"13662","nama":"I Putu Aditya Suputra"},{"id":123,"class_id":6,"nis":"13663","nama":"Kadek Agus Apriana Bajesti Putra"},{"id":124,"class_id":6,"nis":"13664","nama":"Luh Made Purnama Dewi"},{"id":125,"class_id":6,"nis":"13665","nama":"Ni Kadek Meta Febriantari"},{"id":126,"class_id":6,"nis":"13666","nama":"Ni Kadek Putri Jayanti"},{"id":127,"class_id":6,"nis":"13667","nama":"Ni Komang Ayu Septianingsih"},{"id":128,"class_id":6,"nis":"13668","nama":"Ni Luh Nova Sinta Riari"},{"id":129,"class_id":6,"nis":"13669","nama":"Ni Nengah Febriani"},{"id":130,"class_id":6,"nis":"13670","nama":"Ni Pande Wayan Yonika Damayani"},{"id":131,"class_id":6,"nis":"13671","nama":"Ni Putu Lia Trisnayanti"},{"id":132,"class_id":6,"nis":"13672","nama":"Putu Vera Agustin"},{"id":133,"class_id":7,"nis":"13673","nama":"Anak Agung Dewi Suryaningrat"},{"id":134,"class_id":7,"nis":"13674","nama":"Desak Nyoman Widya Sari"},{"id":135,"class_id":7,"nis":"13675","nama":"I Dewa Ayu Bulan Sriasih"},{"id":136,"class_id":7,"nis":"13676","nama":"I Gede Ary Sudiantara"},{"id":137,"class_id":7,"nis":"13677","nama":"I Gede Nesa Wira Arsana"},{"id":138,"class_id":7,"nis":"13678","nama":"I Gusti Ayu Diana Kristiani"},{"id":139,"class_id":7,"nis":"13679","nama":"I Gusti Ngurah Agus Januarta"},{"id":140,"class_id":7,"nis":"13680","nama":"Komang Ayu Seri Musthikarani"},{"id":141,"class_id":7,"nis":"13681","nama":"Made Nitarianti"},{"id":142,"class_id":7,"nis":"13682","nama":"Meisya Fazrina"},{"id":143,"class_id":7,"nis":"13683","nama":"Ni Kadek Aprilia Lestari"},{"id":144,"class_id":7,"nis":"13684","nama":"Ni Kadek Ayu Lestari"},{"id":145,"class_id":7,"nis":"13685","nama":"Ni Kadek Darma Yanti"},{"id":146,"class_id":7,"nis":"13686","nama":"Ni Kadek Ika Pradevi"},{"id":147,"class_id":7,"nis":"13687","nama":"Ni Kadek Risna Kumala Dewi"},{"id":148,"class_id":7,"nis":"13688","nama":"Ni Kadek Sintia Wati"},{"id":149,"class_id":7,"nis":"13689","nama":"Ni Ketut Melia Purnama Sari"},{"id":150,"class_id":7,"nis":"13690","nama":"Ni Komang Ayu Widiantari"},{"id":151,"class_id":7,"nis":"13691","nama":"Ni Komang Diah Anandita Permata"},{"id":152,"class_id":7,"nis":"13692","nama":"Ni Komang Rini Cahyani"},{"id":153,"class_id":7,"nis":"13693","nama":"Ni Luh Ayu Purnama Dewi"},{"id":154,"class_id":7,"nis":"13694","nama":"Ni Luh Lisna Diantari"},{"id":155,"class_id":7,"nis":"13695","nama":"Ni Luh Sri Nadi"},{"id":156,"class_id":7,"nis":"13696","nama":"Ni Nengah Septia Dewi"},{"id":157,"class_id":7,"nis":"13697","nama":"Ni Putu Eka Pramita Sari"},{"id":158,"class_id":7,"nis":"13698","nama":"Pande Ni Putu Adisty Kusuma Jati"},{"id":159,"class_id":7,"nis":"13699","nama":"Tiara Yuliyanti"},{"id":160,"class_id":8,"nis":"13700","nama":"Anak Agung Istri Amira Vebriani"},{"id":161,"class_id":8,"nis":"13701","nama":"I Dewa Ayu Juniantari"},{"id":162,"class_id":8,"nis":"13702","nama":"I Gede Tri Jaya Winnata"},{"id":163,"class_id":8,"nis":"13703","nama":"Ida Bagus Yuda Pratama"},{"id":164,"class_id":8,"nis":"13704","nama":"Irsyad Adiba Hafas Zidansyah"},{"id":165,"class_id":8,"nis":"13705","nama":"Ni Kadek Ayu Aprilia Dewi"},{"id":166,"class_id":8,"nis":"13706","nama":"Ni Kadek Ayu Larasati"},{"id":167,"class_id":8,"nis":"13707","nama":"Ni Kadek Puspa Aryanti"},{"id":168,"class_id":8,"nis":"13708","nama":"Ni Kadek Sriyanti"},{"id":169,"class_id":8,"nis":"13709","nama":"Ni Komang Adelia Putri"},{"id":170,"class_id":8,"nis":"13710","nama":"Ni Komang Indah Jesika Dewi"},{"id":171,"class_id":8,"nis":"13711","nama":"Ni Komang Listia Dewi"},{"id":172,"class_id":8,"nis":"13712","nama":"Ni Komang Padmawati"},{"id":173,"class_id":8,"nis":"13713","nama":"Ni Komang Sutri Prantini"},{"id":174,"class_id":8,"nis":"13714","nama":"Ni Komang Triana Pusparani"},{"id":175,"class_id":8,"nis":"13715","nama":"Ni Luh Vika Widyawati"},{"id":176,"class_id":8,"nis":"13716","nama":"Ni Made Suci Manik Astari"},{"id":177,"class_id":8,"nis":"13717","nama":"Ni Putu Ayu Bintang"},{"id":178,"class_id":8,"nis":"13718","nama":"Ni Putu Diah Arthasari"},{"id":179,"class_id":8,"nis":"13719","nama":"Ni Putu Eka Semara Putri"},{"id":180,"class_id":8,"nis":"13720","nama":"Ni Putu Eka Widiantari"},{"id":181,"class_id":8,"nis":"13721","nama":"Ni Putu Mei Wulandari"},{"id":182,"class_id":8,"nis":"13722","nama":"Ni Putu Puspawati"},{"id":183,"class_id":8,"nis":"13723","nama":"Ni Putu Tia Dewi"},{"id":184,"class_id":8,"nis":"13724","nama":"Pande Putu Galuh Risanti Indira Yunika"},{"id":185,"class_id":8,"nis":"13725","nama":"Putu Juli Ayu Antari"},{"id":186,"class_id":8,"nis":"13726","nama":"Sang Made Arta Mahendra"},{"id":187,"class_id":9,"nis":"13727","nama":"Afrilia"},{"id":188,"class_id":9,"nis":"13728","nama":"Anak Agung Istri Prima Pebrianti"},{"id":189,"class_id":9,"nis":"13729","nama":"Gede Risky Adi Permana"},{"id":190,"class_id":9,"nis":"13730","nama":"I Gusti Ayu Putu Candra Widiantari"},{"id":191,"class_id":9,"nis":"13731","nama":"I Gusti Made Diah Purnama Sari"},{"id":192,"class_id":9,"nis":"13732","nama":"Ida Ayu Indah Gangga Swari"},{"id":193,"class_id":9,"nis":"13733","nama":"Ida Ayu Nyoman Reditya Oktaviani"},{"id":194,"class_id":9,"nis":"13734","nama":"Ida Ayu Sinta Dewi"},{"id":195,"class_id":9,"nis":"13736","nama":"Nabila Tusak Diah"},{"id":196,"class_id":9,"nis":"13737","nama":"Ni Kadek Intan Satrya Wati"},{"id":197,"class_id":9,"nis":"13738","nama":"Ni Made Ari Diana Sari"},{"id":198,"class_id":9,"nis":"13739","nama":"Rina Agustina"},{"id":199,"class_id":10,"nis":"13741","nama":"I Desak Ketut Patniki Astuti"},{"id":200,"class_id":10,"nis":"13742","nama":"I Dewa Ayu Awidiya Sari"},{"id":201,"class_id":10,"nis":"13743","nama":"I Dewa Ayu Meira Dianra Sari"},{"id":202,"class_id":10,"nis":"13744","nama":"I Putu Juniarta"},{"id":203,"class_id":10,"nis":"13745","nama":"I Wayan Agus Septiadi"},{"id":204,"class_id":10,"nis":"13746","nama":"Ketut Ananta Wardana"},{"id":205,"class_id":10,"nis":"13747","nama":"Ni Kadek Anggun Putri Pramesti"},{"id":206,"class_id":10,"nis":"13748","nama":"Ni Kadek Ratih Sancikadewi"},{"id":207,"class_id":10,"nis":"13749","nama":"Ni Kadek Santiasih"},{"id":208,"class_id":10,"nis":"13750","nama":"Ni Kadek Sinta Widyantini"},{"id":209,"class_id":10,"nis":"13751","nama":"Ni Kadek Suadnyani Megeng"},{"id":210,"class_id":10,"nis":"13752","nama":"Ni Ketut Catur Rahayu"},{"id":211,"class_id":10,"nis":"13753","nama":"Ni Komang Bintang Triasih"},{"id":212,"class_id":10,"nis":"13754","nama":"Ni Luh Nyoman Tri Githa Pramesti"},{"id":213,"class_id":10,"nis":"13755","nama":"Ni Luh Putu Candra Cahyani"},{"id":214,"class_id":10,"nis":"13756","nama":"Ni Putu Anggik Deswandari"},{"id":215,"class_id":10,"nis":"13757","nama":"Ni Putu Ayu Krisna Candra Dewi"},{"id":216,"class_id":10,"nis":"13758","nama":"Ni Putu Dewik"},{"id":217,"class_id":10,"nis":"13759","nama":"Ni Putu Diah Darmayanti"},{"id":218,"class_id":10,"nis":"13760","nama":"Ni Putu Dian Ambarwati"},{"id":219,"class_id":10,"nis":"13761","nama":"Ni Putu Dian Maharani"},{"id":220,"class_id":10,"nis":"13762","nama":"Ni Putu Echa Setyawati"},{"id":221,"class_id":10,"nis":"13763","nama":"Ni Putu Eka Pandewi"},{"id":222,"class_id":10,"nis":"13764","nama":"Ni Putu Stefany Devita Putri"},{"id":223,"class_id":10,"nis":"13765","nama":"Ni Putu Wita Sinta Pradnyani"},{"id":224,"class_id":10,"nis":"13766","nama":"Ni Wayan Chandra Rusita Devi"},{"id":225,"class_id":10,"nis":"13767","nama":"Pande Made Shasmita Aurellia Putri"},{"id":226,"class_id":10,"nis":"13768","nama":"Yenny Febri Yanthy Ningsih"},{"id":227,"class_id":11,"nis":"13526","nama":"Aldo Valentino"},{"id":228,"class_id":11,"nis":"13527","nama":"ARKANANTA MAULANA PUTRA APRILIANSYAH"},{"id":229,"class_id":11,"nis":"13528","nama":"I Gede Ari Widnyana"},{"id":230,"class_id":11,"nis":"13529","nama":"I Gede Candra Wiguna"},{"id":231,"class_id":11,"nis":"13530","nama":"I Gede Resa Pradnya Andika"},{"id":232,"class_id":11,"nis":"13531","nama":"I GUSTI NGURAH SATHYA DANANJAYA"},{"id":233,"class_id":11,"nis":"13532","nama":"I Kadek Angga Aditya Putra"},{"id":234,"class_id":11,"nis":"13533","nama":"I Kadek Dodik Ramayoga"},{"id":235,"class_id":11,"nis":"13534","nama":"I Kadek Dwi Adi Darma Yudhi"},{"id":236,"class_id":11,"nis":"13535","nama":"I Kadek Ipan Junata"},{"id":237,"class_id":11,"nis":"13536","nama":"I KADEK KUSUMA CAHYADI"},{"id":238,"class_id":11,"nis":"13537","nama":"I Ketut Catur Yoga Saputra"},{"id":239,"class_id":11,"nis":"13540","nama":"I Komang Bayu Septi Permana"},{"id":240,"class_id":11,"nis":"13541","nama":"I Komang Pebri Andika Saputra"},{"id":241,"class_id":11,"nis":"13542","nama":"I Made Agus Bayu Widi"},{"id":242,"class_id":11,"nis":"13543","nama":"I Made Div Aditya Pramana"},{"id":243,"class_id":11,"nis":"13544","nama":"I Ngurah Komang Ari Artana"},{"id":244,"class_id":11,"nis":"13545","nama":"I Putu Bayu Saputra"},{"id":245,"class_id":11,"nis":"13547","nama":"I Putu Pande Sedaya Tana"},{"id":246,"class_id":11,"nis":"13548","nama":"I Wayan Surya Nanta"},{"id":247,"class_id":11,"nis":"13550","nama":"JULIANTARA PUTRA"},{"id":248,"class_id":11,"nis":"13551","nama":"Kadek Angga Trisnawan"},{"id":249,"class_id":11,"nis":"13552","nama":"Ketut Mahardika"},{"id":250,"class_id":11,"nis":"13538","nama":"Ketut Rianta"},{"id":251,"class_id":11,"nis":"13553","nama":"Lorensius Kaka Lalo"},{"id":252,"class_id":11,"nis":"13554","nama":"Made Adi Mahardika"},{"id":253,"class_id":11,"nis":"13555","nama":"MUHAMMAD AZIZUL HAKIM"},{"id":254,"class_id":11,"nis":"13556","nama":"Nyoman Yudhi Triananda Wibawa"},{"id":255,"class_id":11,"nis":"13558","nama":"REDNO FEDRIANZAH"},{"id":256,"class_id":11,"nis":"13795","nama":"ROBERTO CHRISTIANO"},{"id":257,"class_id":11,"nis":"13559","nama":"WIRANTO SANJAYA"},{"id":258,"class_id":11,"nis":"13560","nama":"YUSUF ARDIANSYAH"}];
+
   var now = Utilities.formatDate(new Date(), 'Asia/Makassar', 'yyyy-MM-dd HH:mm:ss');
+  var rows = [];
   for (var s = 0; s < studentsData.length; s++) {
     var st = studentsData[s];
-    sheet.appendRow([st.id, st.class_id, st.nama_kelas || '', st.nis || '', st.nisn || '', st.nama || '', st.program_keahlian || '', 1, now, now]);
+    var cName = st.nama_kelas || classMap[st.class_id] || '';
+    var jur = st.program_keahlian || jurMap[st.class_id] || '';
+    rows.push([st.id, st.class_id, cName, st.nis || '', st.nisn || '', st.nama || '', jur, 1, now, now]);
+  }
+  if (rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
   }
   invalidateCaches();
 }
@@ -409,13 +485,28 @@ function seedDefaultTeachers(optSheet) {
   var sheet = optSheet || getSheet(SHEET_NAMES.TEACHERS);
   sheet.clear();
   var headers = ['id', 'nama', 'nip', 'jabatan', 'aktif', 'created_at', 'updated_at'];
-  sheet.appendRow(headers);
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
-  var teachersData = [{"id":1,"nama":"I Wayan Sukadana, S.Pd.","nip":"19820514 200801 1 012","mapel":"Teknik Jaringan Komputer","jabatan":"Guru Madya / Pengawas"},{"id":2,"nama":"Ni Made Rai Artini, S.Kom.","nip":"19870921 201101 2 008","mapel":"Desain Komunikasi Visual","jabatan":"Guru Muda / Pengawas"},{"id":3,"nama":"Drs. I Ketut Suardana, M.Pd.","nip":"19680315 199412 1 002","mapel":"Bahasa Indonesia","jabatan":"Guru Pembina / Pengawas"},{"id":4,"nama":"Ni Luh Putu Dewi Lestari, S.Pd.","nip":"19841120 200902 2 005","mapel":"Matematika","jabatan":"Guru Madya / Pengawas"},{"id":5,"nama":"I Made Agus Wira Pratama, S.T.","nip":"19890610 201503 1 004","mapel":"Teknik Sepeda Motor","jabatan":"Guru Muda / Pengawas"},{"id":6,"nama":"Ni Kadek Sri Wahyuni, S.Farm., Apt.","nip":"19910425 201903 2 011","mapel":"Layanan Penunjang Kefarmasian","jabatan":"Guru Pertama / Pengawas"},{"id":7,"nama":"I Gusti Ngurah Agung Putra, S.E.","nip":"19780814 200604 1 009","mapel":"Akuntansi dan Keuangan","jabatan":"Guru Madya / Pengawas"},{"id":8,"nama":"Ni Putu Eka Yuliani, S.Pd.","nip":"19860112 201001 2 018","mapel":"Manajemen Perkantoran","jabatan":"Guru Muda / Pengawas"},{"id":9,"nama":"I Komang Yudi Antara, S.Kom.","nip":"19920818 202012 1 007","mapel":"Bisnis Digital","jabatan":"Guru Pertama / Pengawas"},{"id":10,"nama":"Ida Bagus Made Ananda, S.Pd.","nip":"19800722 200501 1 006","mapel":"Bahasa Inggris","jabatan":"Guru Madya / Pengawas"}];
+  var teachersData = [
+    {"id":1,"nama":"I Wayan Sukadana, S.Pd.","nip":"19820514 200801 1 012","mapel":"Teknik Jaringan Komputer","jabatan":"Guru Madya / Pengawas"},
+    {"id":2,"nama":"Ni Made Rai Artini, S.Kom.","nip":"19870921 201101 2 008","mapel":"Desain Komunikasi Visual","jabatan":"Guru Muda / Pengawas"},
+    {"id":3,"nama":"Drs. I Ketut Suardana, M.Pd.","nip":"19680315 199412 1 002","mapel":"Bahasa Indonesia","jabatan":"Guru Pembina / Pengawas"},
+    {"id":4,"nama":"Ni Luh Putu Dewi Lestari, S.Pd.","nip":"19841120 200902 2 005","mapel":"Matematika","jabatan":"Guru Madya / Pengawas"},
+    {"id":5,"nama":"I Made Agus Wira Pratama, S.T.","nip":"19890610 201503 1 004","mapel":"Teknik Sepeda Motor","jabatan":"Guru Muda / Pengawas"},
+    {"id":6,"nama":"Ni Kadek Sri Wahyuni, S.Farm., Apt.","nip":"19910425 201903 2 011","mapel":"Layanan Penunjang Kefarmasian","jabatan":"Guru Pertama / Pengawas"},
+    {"id":7,"nama":"I Gusti Ngurah Agung Putra, S.E.","nip":"19780814 200604 1 009","mapel":"Akuntansi dan Keuangan","jabatan":"Guru Madya / Pengawas"},
+    {"id":8,"nama":"Ni Putu Eka Yuliani, S.Pd.","nip":"19860112 201001 2 018","mapel":"Manajemen Perkantoran","jabatan":"Guru Muda / Pengawas"},
+    {"id":9,"nama":"I Komang Yudi Antara, S.Kom.","nip":"19920818 202012 1 007","mapel":"Bisnis Digital","jabatan":"Guru Pertama / Pengawas"},
+    {"id":10,"nama":"Ida Bagus Made Ananda, S.Pd.","nip":"19800722 200501 1 006","mapel":"Bahasa Inggris","jabatan":"Guru Madya / Pengawas"}
+  ];
   var now = Utilities.formatDate(new Date(), 'Asia/Makassar', 'yyyy-MM-dd HH:mm:ss');
+  var rows = [];
   for (var t = 0; t < teachersData.length; t++) {
     var tch = teachersData[t];
-    sheet.appendRow([tch.id, tch.nama, tch.nip || '-', tch.jabatan || 'Guru / Pengawas', 1, now, now]);
+    rows.push([tch.id, tch.nama, tch.nip || '-', tch.jabatan || 'Guru / Pengawas', 1, now, now]);
+  }
+  if (rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
   }
   invalidateCaches();
 }
@@ -424,13 +515,36 @@ function seedDefaultMapel(optSheet) {
   var sheet = optSheet || getSheet(SHEET_NAMES.MAPEL);
   sheet.clear();
   var headers = ['id', 'kode_mapel', 'nama_mapel', 'kelompok', 'aktif', 'created_at', 'updated_at'];
-  sheet.appendRow(headers);
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
-  var mapelsData = [{"id":1,"kode_mapel":"MP-001","nama_mapel":"Desain Komunikasi Visual","kelompok":"Kejuruan","aktif":1},{"id":2,"kode_mapel":"MP-002","nama_mapel":"Teknik Komputer dan Jaringan","kelompok":"Kejuruan","aktif":1},{"id":3,"kode_mapel":"MP-003","nama_mapel":"Teknik Sepeda Motor","kelompok":"Kejuruan","aktif":1},{"id":4,"kode_mapel":"MP-004","nama_mapel":"Layanan Penunjang Kefarmasian Klinis dan Komunitas","kelompok":"Kejuruan","aktif":1},{"id":5,"kode_mapel":"MP-005","nama_mapel":"Bisnis Digital","kelompok":"Kejuruan","aktif":1},{"id":6,"kode_mapel":"MP-006","nama_mapel":"Manajemen Perkantoran","kelompok":"Kejuruan","aktif":1},{"id":7,"kode_mapel":"MP-007","nama_mapel":"Akuntansi dan Keuangan Lembaga","kelompok":"Kejuruan","aktif":1},{"id":8,"kode_mapel":"MP-008","nama_mapel":"Matematika","kelompok":"Umum","aktif":1},{"id":9,"kode_mapel":"MP-009","nama_mapel":"Bahasa Indonesia","kelompok":"Umum","aktif":1},{"id":10,"kode_mapel":"MP-010","nama_mapel":"Bahasa Inggris","kelompok":"Umum","aktif":1},{"id":11,"kode_mapel":"MP-011","nama_mapel":"Pendidikan Agama Hindu dan Budi Pekerti","kelompok":"Umum","aktif":1},{"id":12,"kode_mapel":"MP-012","nama_mapel":"Pendidikan Pancasila","kelompok":"Umum","aktif":1},{"id":13,"kode_mapel":"MP-013","nama_mapel":"Sejarah","kelompok":"Umum","aktif":1},{"id":14,"kode_mapel":"MP-014","nama_mapel":"Informatika","kelompok":"Umum","aktif":1},{"id":15,"kode_mapel":"MP-015","nama_mapel":"Projek IPAS","kelompok":"Umum","aktif":1},{"id":16,"kode_mapel":"MP-016","nama_mapel":"Mapel Pilihan","kelompok":"Kejuruan","aktif":1},{"id":17,"kode_mapel":"MP-017","nama_mapel":"Seni Budaya","kelompok":"Muatan Lokal","aktif":1},{"id":18,"kode_mapel":"MP-018","nama_mapel":"Kreativitas, Inovasi dan Kewirausahaan","kelompok":"Kejuruan","aktif":1}];
+  var mapelsData = [
+    {"id":1,"kode_mapel":"MP-001","nama_mapel":"Desain Komunikasi Visual","kelompok":"Kejuruan","aktif":1},
+    {"id":2,"kode_mapel":"MP-002","nama_mapel":"Teknik Komputer dan Jaringan","kelompok":"Kejuruan","aktif":1},
+    {"id":3,"kode_mapel":"MP-003","nama_mapel":"Teknik Sepeda Motor","kelompok":"Kejuruan","aktif":1},
+    {"id":4,"kode_mapel":"MP-004","nama_mapel":"Layanan Penunjang Kefarmasian Klinis dan Komunitas","kelompok":"Kejuruan","aktif":1},
+    {"id":5,"kode_mapel":"MP-005","nama_mapel":"Bisnis Digital","kelompok":"Kejuruan","aktif":1},
+    {"id":6,"kode_mapel":"MP-006","nama_mapel":"Manajemen Perkantoran","kelompok":"Kejuruan","aktif":1},
+    {"id":7,"kode_mapel":"MP-007","nama_mapel":"Akuntansi dan Keuangan Lembaga","kelompok":"Kejuruan","aktif":1},
+    {"id":8,"kode_mapel":"MP-008","nama_mapel":"Matematika","kelompok":"Umum","aktif":1},
+    {"id":9,"kode_mapel":"MP-009","nama_mapel":"Bahasa Indonesia","kelompok":"Umum","aktif":1},
+    {"id":10,"kode_mapel":"MP-010","nama_mapel":"Bahasa Inggris","kelompok":"Umum","aktif":1},
+    {"id":11,"kode_mapel":"MP-011","nama_mapel":"Pendidikan Agama Hindu dan Budi Pekerti","kelompok":"Umum","aktif":1},
+    {"id":12,"kode_mapel":"MP-012","nama_mapel":"Pendidikan Pancasila","kelompok":"Umum","aktif":1},
+    {"id":13,"kode_mapel":"MP-013","nama_mapel":"Sejarah","kelompok":"Umum","aktif":1},
+    {"id":14,"kode_mapel":"MP-014","nama_mapel":"Informatika","kelompok":"Umum","aktif":1},
+    {"id":15,"kode_mapel":"MP-015","nama_mapel":"Projek IPAS","kelompok":"Umum","aktif":1},
+    {"id":16,"kode_mapel":"MP-016","nama_mapel":"Mapel Pilihan","kelompok":"Kejuruan","aktif":1},
+    {"id":17,"kode_mapel":"MP-017","nama_mapel":"Seni Budaya","kelompok":"Muatan Lokal","aktif":1},
+    {"id":18,"kode_mapel":"MP-018","nama_mapel":"Kreativitas, Inovasi dan Kewirausahaan","kelompok":"Kejuruan","aktif":1}
+  ];
   var now = Utilities.formatDate(new Date(), 'Asia/Makassar', 'yyyy-MM-dd HH:mm:ss');
+  var rows = [];
   for (var m = 0; m < mapelsData.length; m++) {
     var mp = mapelsData[m];
-    sheet.appendRow([mp.id, mp.kode_mapel, mp.nama_mapel, mp.kelompok, 1, now, now]);
+    rows.push([mp.id, mp.kode_mapel, mp.nama_mapel, mp.kelompok || 'Kejuruan', 1, now, now]);
+  }
+  if (rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
   }
   invalidateCaches();
 }
@@ -439,7 +553,7 @@ function seedDefaultTemplate(optSheet) {
   var sheet = optSheet || getSheet(SHEET_NAMES.TEMPLATES);
   sheet.clear();
   var headers = ['id', 'nama_ujian', 'tahun_ajaran', 'judul_berita_acara', 'redaksi_isi', 'redaksi_pembuka', 'redaksi_poin_1', 'redaksi_poin_2', 'label_catatan', 'aktif', 'created_at', 'updated_at'];
-  sheet.appendRow(headers);
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
   var defaultTpl = {
     id: 1,
@@ -454,7 +568,8 @@ function seedDefaultTemplate(optSheet) {
     aktif: 1
   };
   var now = Utilities.formatDate(new Date(), 'Asia/Makassar', 'yyyy-MM-dd HH:mm:ss');
-  sheet.appendRow([defaultTpl.id, defaultTpl.nama_ujian, defaultTpl.tahun_ajaran, defaultTpl.judul_berita_acara, defaultTpl.redaksi_isi, defaultTpl.redaksi_pembuka, defaultTpl.redaksi_poin_1, defaultTpl.redaksi_poin_2, defaultTpl.label_catatan, 1, now, now]);
+  var row = [defaultTpl.id, defaultTpl.nama_ujian, defaultTpl.tahun_ajaran, defaultTpl.judul_berita_acara, defaultTpl.redaksi_isi, defaultTpl.redaksi_pembuka, defaultTpl.redaksi_poin_1, defaultTpl.redaksi_poin_2, defaultTpl.label_catatan, 1, now, now];
+  sheet.getRange(2, 1, 1, headers.length).setValues([row]);
   invalidateCaches();
 }
 
@@ -462,18 +577,21 @@ function seedDefaultUsers(optSheet) {
   var sheet = optSheet || getSheet(SHEET_NAMES.USERS);
   sheet.clear();
   var headers = ['id', 'username', 'password', 'password_plain', 'nama_lengkap', 'role', 'foto', 'created_at', 'updated_at'];
-  sheet.appendRow(headers);
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
   var now = Utilities.formatDate(new Date(), 'Asia/Makassar', 'yyyy-MM-dd HH:mm:ss');
-  sheet.appendRow([1, 'admin', 'admin123', 'admin123', 'Administrator SAS SMK', 'admin', '', now, now]);
-  sheet.appendRow([2, 'operator', 'operator123', 'operator123', 'Operator SAS SMK', 'operator', '', now, now]);
+  var rows = [
+    [1, 'admin', 'admin123', 'admin123', 'Administrator SAS SMK', 'admin', '', now, now],
+    [2, 'operator', 'operator123', 'operator123', 'Operator SAS SMK', 'operator', '', now, now]
+  ];
+  sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
   invalidateCaches();
 }
 
 function ensureSheetHasInitialData(sheetName, sheet) {
   try {
     var lastRow = sheet.getLastRow();
-    if (lastRow >= 2) return; // Already has data
+    if (lastRow >= 2) return; // Sudah memiliki data
 
     if (sheetName === SHEET_NAMES.SETTINGS) {
       seedDefaultSettings(sheet);
@@ -492,22 +610,24 @@ function ensureSheetHasInitialData(sheetName, sheet) {
     } else if (sheetName === SHEET_NAMES.ABSENSI) {
       var absHeaders = ['id', 'nama_ujian', 'tahun_ajaran', 'semester', 'class_id', 'nama_kelas', 'tingkat', 'mata_pelajaran', 'sesi', 'ruang', 'tanggal_ujian', 'jam_mulai', 'jam_selesai', 'peserta_hadir', 'peserta_dispensasi', 'peserta_izin', 'peserta_sakit', 'peserta_tidak_hadir', 'total_peserta', 'nama_pengawas_1', 'nip_pengawas_1', 'nama_pengawas_2', 'nip_pengawas_2', 'signature_mode', 'ttd_pengawas_1', 'ttd_pengawas_2', 'data_siswa', 'created_at', 'updated_at'];
       sheet.clear();
-      sheet.appendRow(absHeaders);
+      sheet.getRange(1, 1, 1, absHeaders.length).setValues([absHeaders]);
       sheet.getRange(1, 1, 1, absHeaders.length).setFontWeight('bold');
     } else if (sheetName === SHEET_NAMES.BERITA_ACARA) {
       var baHeaders = ['id', 'template_id', 'nama_ujian', 'tahun_ajaran', 'semester', 'class_id', 'nama_kelas', 'tingkat', 'mata_pelajaran', 'tanggal_ujian', 'jam_mulai', 'jam_selesai', 'ruang', 'peserta_seharusnya', 'peserta_hadir', 'peserta_tidak_hadir', 'blangko_berita_acara', 'blangko_daftar_hadir', 'catatan_pelaksanaan', 'nama_pengawas_1', 'nip_pengawas_1', 'nama_pengawas_2', 'nip_pengawas_2', 'signature_mode', 'ttd_pengawas_1', 'ttd_pengawas_2', 'foto_dokumentasi', 'created_at', 'updated_at'];
       sheet.clear();
-      sheet.appendRow(baHeaders);
+      sheet.getRange(1, 1, 1, baHeaders.length).setValues([baHeaders]);
       sheet.getRange(1, 1, 1, baHeaders.length).setFontWeight('bold');
     } else if (sheetName === SHEET_NAMES.LOGS) {
       var logHeaders = ['id', 'waktu', 'aktivitas', 'keterangan', 'ip_address'];
       sheet.clear();
-      sheet.appendRow(logHeaders);
+      sheet.getRange(1, 1, 1, logHeaders.length).setValues([logHeaders]);
       sheet.getRange(1, 1, 1, logHeaders.length).setFontWeight('bold');
       var now = Utilities.formatDate(new Date(), 'Asia/Makassar', 'yyyy-MM-dd HH:mm:ss');
-      sheet.appendRow([1, now, 'SYSTEM_INIT', 'Inisialisasi basis data SAS berhasil', 'System']);
+      sheet.getRange(2, 1, 1, logHeaders.length).setValues([[1, now, 'SYSTEM_INIT', 'Inisialisasi basis data SAS berhasil', 'System']]);
     }
-  } catch(e) {}
+  } catch(e) {
+    Logger.log('Error ensureSheetHasInitialData: ' + e);
+  }
 }
 
 
@@ -804,52 +924,71 @@ function getSettingsMap() {
  * Single-Trip RPC: Load Entire Initial Master Data (<1s)
  */
 function apiGetInitialData() {
-  // Direct live data retrieval from target database spreadsheet
-
-  var settings = getSettingsMap();
-  var classes = readTable(SHEET_NAMES.CLASSES);
-  var students = readTable(SHEET_NAMES.STUDENTS);
-  var teachers = readTable(SHEET_NAMES.TEACHERS);
-  var mapels = readTable(SHEET_NAMES.MAPEL);
-  var templates = readTable(SHEET_NAMES.TEMPLATES);
-  var users = readTable(SHEET_NAMES.USERS);
-  var absensi = readTable(SHEET_NAMES.ABSENSI);
-  var beritaAcara = readTable(SHEET_NAMES.BERITA_ACARA);
-  var logs = readTable(SHEET_NAMES.LOGS);
-
-  // Filter sensitive passwords before sending to client
-  var sanitizedUsers = users.map(function(u) {
-    return {
-      id: u.id,
-      username: u.username,
-      nama_lengkap: u.nama_lengkap,
-      role: u.role,
-      password_plain: u.password_plain || '',
-      foto: u.foto || null
-    };
-  });
-
-  var result = {
-    settings: settings,
-    classes: classes,
-    students: students,
-    teachers: teachers,
-    mapels: mapels,
-    templates: templates,
-    users: sanitizedUsers,
-    absensi: absensi,
-    berita_acara: beritaAcara,
-    logs: logs.slice(-20)
-  };
-
   try {
-    var str = JSON.stringify(result);
-    if (str.length < 90000) {
-      cache.put('sas_initial_data', str, 1800);
-    }
-  } catch (err) {}
+    var settings = getSettingsMap();
+    var classes = [];
+    var students = [];
+    var teachers = [];
+    var mapels = [];
+    var templates = [];
+    var users = [];
+    var absensi = [];
+    var beritaAcara = [];
+    var logs = [];
 
-  return result;
+    try { classes = readTable(SHEET_NAMES.CLASSES); } catch (e) { Logger.log('Error reading classes: ' + e); }
+    try { students = readTable(SHEET_NAMES.STUDENTS); } catch (e) { Logger.log('Error reading students: ' + e); }
+    try { teachers = readTable(SHEET_NAMES.TEACHERS); } catch (e) { Logger.log('Error reading teachers: ' + e); }
+    try { mapels = readTable(SHEET_NAMES.MAPEL); } catch (e) { Logger.log('Error reading mapels: ' + e); }
+    try { templates = readTable(SHEET_NAMES.TEMPLATES); } catch (e) { Logger.log('Error reading templates: ' + e); }
+    try { users = readTable(SHEET_NAMES.USERS); } catch (e) { Logger.log('Error reading users: ' + e); }
+    try { absensi = readTable(SHEET_NAMES.ABSENSI); } catch (e) { Logger.log('Error reading absensi: ' + e); }
+    try { beritaAcara = readTable(SHEET_NAMES.BERITA_ACARA); } catch (e) { Logger.log('Error reading beritaAcara: ' + e); }
+    try { logs = readTable(SHEET_NAMES.LOGS); } catch (e) { Logger.log('Error reading logs: ' + e); }
+
+    var sanitizedUsers = (users || []).map(function(u) {
+      return {
+        id: u.id,
+        username: u.username,
+        nama_lengkap: u.nama_lengkap,
+        role: u.role,
+        password_plain: u.password_plain || u.password || '',
+        foto: u.foto || null
+      };
+    });
+
+    var result = {
+      success: true,
+      settings: settings,
+      classes: classes,
+      students: students,
+      teachers: teachers,
+      mapels: mapels,
+      templates: templates,
+      users: sanitizedUsers,
+      absensi: absensi,
+      berita_acara: beritaAcara,
+      logs: logs.slice(-20)
+    };
+
+    return result;
+  } catch (err) {
+    Logger.log('Critical error in apiGetInitialData: ' + err.message);
+    return {
+      success: false,
+      error: err.message,
+      settings: getSettingsMap(),
+      classes: [],
+      students: [],
+      teachers: [],
+      mapels: [],
+      templates: [],
+      users: [],
+      absensi: [],
+      berita_acara: [],
+      logs: []
+    };
+  }
 }
 
 /**
@@ -1043,11 +1182,7 @@ function apiDeleteAllSiswa() {
 }
 
 function apiImportSiswa(students) {
-  var count = 0;
-  for (var i = 0; i < students.length; i++) {
-    insertRow(SHEET_NAMES.STUDENTS, students[i]);
-    count++;
-  }
+  var count = insertRows(SHEET_NAMES.STUDENTS, students);
   logActivity('IMPORT_SISWA', 'Mengimpor ' + count + ' data siswa dari Excel');
   return { success: true, count: count };
 }
@@ -1076,11 +1211,7 @@ function apiDeleteAllGuru() {
 }
 
 function apiImportGuru(teachers) {
-  var count = 0;
-  for (var i = 0; i < teachers.length; i++) {
-    insertRow(SHEET_NAMES.TEACHERS, teachers[i]);
-    count++;
-  }
+  var count = insertRows(SHEET_NAMES.TEACHERS, teachers);
   logActivity('IMPORT_GURU', 'Mengimpor ' + count + ' data guru dari Excel');
   return { success: true, count: count };
 }
@@ -1109,11 +1240,7 @@ function apiDeleteAllMapel() {
 }
 
 function apiImportMapel(mapels) {
-  var count = 0;
-  for (var i = 0; i < mapels.length; i++) {
-    insertRow(SHEET_NAMES.MAPEL, mapels[i]);
-    count++;
-  }
+  var count = insertRows(SHEET_NAMES.MAPEL, mapels);
   logActivity('IMPORT_MAPEL', 'Mengimpor ' + count + ' data mapel dari Excel');
   return { success: true, count: count };
 }
@@ -1231,26 +1358,31 @@ function apiToggleAllMasterStatus(tableType, newStatus) {
   if (lastRow < 2) return { success: true, count: 0, status: newStatus };
 
   var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
-  var colIdx = -1;
+  var colIndices = [];
   for (var j = 0; j < headers.length; j++) {
     var h = String(headers[j]).trim().toLowerCase();
     if (h === 'aktif' || h === 'is_active' || h === 'status') {
-      colIdx = j + 1;
-      break;
+      colIndices.push({ col: j + 1, header: h });
     }
   }
-  if (colIdx === -1) return { success: false, message: 'Kolom status aktif tidak ditemukan pada tabel ' + tableType };
+  if (colIndices.length === 0) return { success: false, message: 'Kolom status aktif tidak ditemukan pada tabel ' + tableType };
 
   var numRows = lastRow - 1;
-  var targetVal = (newStatus === 1 || newStatus === '1') ? 1 : 0;
-  var statusValues = [];
-  for (var r = 0; r < numRows; r++) {
-    statusValues.push([targetVal]);
-  }
-  sheet.getRange(2, colIdx, numRows, 1).setValues(statusValues);
+  var targetValNum = (newStatus === 1 || newStatus === '1') ? 1 : 0;
+  var targetValText = targetValNum === 1 ? 'Aktif' : 'Nonaktif';
+
+  colIndices.forEach(function(colInfo) {
+    var val = (colInfo.header === 'status') ? targetValText : targetValNum;
+    var statusValues = [];
+    for (var r = 0; r < numRows; r++) {
+      statusValues.push([val]);
+    }
+    sheet.getRange(2, colInfo.col, numRows, 1).setValues(statusValues);
+  });
+
   invalidateCaches();
-  logActivity('BULK_STATUS_' + String(tableType).toUpperCase(), 'Mengubah status semua data ' + tableType + ' (' + numRows + ' data) menjadi ' + (targetVal === 1 ? 'Aktif' : 'Nonaktif'));
-  return { success: true, count: numRows, status: targetVal };
+  logActivity('BULK_STATUS_' + String(tableType).toUpperCase(), 'Mengubah status semua data ' + tableType + ' (' + numRows + ' data) menjadi ' + (targetValNum === 1 ? 'Aktif' : 'Nonaktif'));
+  return { success: true, count: numRows, status: targetValNum };
 }
 
 /**
@@ -1428,24 +1560,18 @@ function apiSetActiveTahunAjaran(tahun) {
 }
 
 function apiImportKelas(classes) {
-  var count = 0;
-  for (var i = 0; i < classes.length; i++) {
-    insertRow(SHEET_NAMES.CLASSES, classes[i]);
-    count++;
-  }
+  var count = insertRows(SHEET_NAMES.CLASSES, classes);
   logActivity('IMPORT_KELAS', 'Mengimpor ' + count + ' data kelas dari Excel');
   return { success: true, count: count };
 }
 
 function apiImportUsers(users) {
-  var count = 0;
-  for (var i = 0; i < users.length; i++) {
+  for (var i = 0; i < (users || []).length; i++) {
     var u = users[i];
     if (u.password && !u.password_plain) u.password_plain = u.password;
     if (u.password_plain && !u.password) u.password = u.password_plain;
-    insertRow(SHEET_NAMES.USERS, u);
-    count++;
   }
+  var count = insertRows(SHEET_NAMES.USERS, users);
   logActivity('IMPORT_USERS', 'Mengimpor ' + count + ' akun pengguna dari Excel');
   return { success: true, count: count };
 }
@@ -1483,7 +1609,12 @@ function apiToggleMasterStatus(tableType, id, newStatus) {
     statusVal = (cur === 1) ? 0 : 1;
   }
 
-  updateRowById(sheetName, id, { aktif: statusVal });
+  updateRowById(sheetName, id, {
+    aktif: statusVal,
+    is_active: statusVal,
+    status: (statusVal === 1 ? 'Aktif' : 'Nonaktif')
+  });
+
   invalidateCaches();
   logActivity('TOGGLE_STATUS', 'Mengubah status ' + tableType + ' #' + id + ' menjadi ' + (statusVal === 1 ? 'Aktif' : 'Nonaktif'));
   return { success: true, newStatus: statusVal };
@@ -1613,4 +1744,25 @@ function setupSpreadsheetDatabase() {
 
   invalidateCaches();
   Logger.log('Inisialisasi Database Berhasil Selesai pada: ' + ss.getUrl());
+}
+
+
+function apiForceReseedAllMasterData() {
+  try {
+    seedDefaultSettings();
+    seedDefaultClasses();
+    seedDefaultStudents();
+    seedDefaultTeachers();
+    seedDefaultMapel();
+    seedDefaultTemplate();
+    seedDefaultUsers();
+    invalidateCaches();
+    logActivity('RESEED_DATABASE', 'Inisialisasi ulang seluruh data master ke spreadsheet database');
+    return {
+      success: true,
+      message: 'Berhasil menginisialisasi dan menyinkronkan seluruh basis data master (Kelas, Siswa, Guru, Mapel, Template, Users, Pengaturan) ke Google Sheets!'
+    };
+  } catch (err) {
+    return { success: false, message: 'Gagal inisialisasi master: ' + err.message };
+  }
 }

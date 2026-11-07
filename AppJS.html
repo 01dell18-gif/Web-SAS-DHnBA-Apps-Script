@@ -408,7 +408,9 @@ window.togglePasswordVisibility = function(inputId, btnEl) {
 
 // Universal Quick Toggle Status (Aktif <-> Nonaktif)
 window.toggleUniversalMasterStatus = function(tableType, id, currentStatus, btnEl, optCallback) {
-  var newStatus = (currentStatus == 1 || currentStatus === '1') ? 0 : 1;
+  var isCurrentlyActive = (currentStatus == 1 || currentStatus === '1' || currentStatus === true || String(currentStatus).toLowerCase() === 'aktif');
+  var newStatus = isCurrentlyActive ? 0 : 1;
+  var oldStatus = isCurrentlyActive ? 1 : 0;
   
   // Optimistic UI update
   if (btnEl) {
@@ -423,14 +425,29 @@ window.toggleUniversalMasterStatus = function(tableType, id, currentStatus, btnE
     btnEl.setAttribute('onclick', "toggleUniversalMasterStatus('" + tableType + "', " + id + ", " + newStatus + ", this" + (optCallback ? ", " + optCallback.name : "") + ")");
   }
 
+  // Helper to update list item
+  function updateInList(list) {
+    if (!list || !Array.isArray(list)) return;
+    var it = list.find(function(x) { return String(x.id) === String(id); });
+    if (it) {
+      it.aktif = newStatus;
+      it.is_active = newStatus;
+      it.status = newStatus === 1 ? 'Aktif' : 'Nonaktif';
+    }
+  }
+
   // Update in local cache if available
   if (window.AppStore && window.AppStore.data) {
     var listKey = tableType === 'kelas' ? 'classes' : (tableType === 'siswa' ? 'students' : (tableType === 'guru' ? 'teachers' : (tableType === 'mapel' ? 'mapels' : (tableType === 'users' ? 'users' : 'templates'))));
-    if (window.AppStore.data[listKey]) {
-      var item = window.AppStore.data[listKey].find(function(x) { return String(x.id) === String(id); });
-      if (item) item.aktif = newStatus;
-    }
+    updateInList(window.AppStore.data[listKey]);
   }
+
+  // Update page-level lists if defined
+  if (typeof kelasList !== 'undefined') updateInList(kelasList);
+  if (typeof siswaList !== 'undefined') updateInList(siswaList);
+  if (typeof guruList !== 'undefined') updateInList(guruList);
+  if (typeof mapelList !== 'undefined') updateInList(mapelList);
+  if (typeof usersList !== 'undefined') updateInList(usersList);
 
   google.script.run
     .withSuccessHandler(function(res) {
@@ -438,10 +455,34 @@ window.toggleUniversalMasterStatus = function(tableType, id, currentStatus, btnE
         showGlobalToast('Status ' + tableType + ' berhasil diubah menjadi ' + (newStatus === 1 ? 'Aktif' : 'Nonaktif') + '.', 'success');
         if (typeof optCallback === 'function') optCallback(newStatus);
       } else {
-        showGlobalToast(res && res.message ? res.message : 'Gagal memperbarui status', 'danger');
+        // Rollback optimistic update
+        if (btnEl) {
+          var pill = btnEl.querySelector('.status-pill-badge') || btnEl;
+          if (oldStatus === 1) {
+            pill.className = 'status-pill-badge is-active';
+            pill.innerHTML = '<i class="bi bi-check-circle-fill"></i> <span>Aktif</span>';
+          } else {
+            pill.className = 'status-pill-badge is-inactive';
+            pill.innerHTML = '<i class="bi bi-x-circle-fill"></i> <span>Nonaktif</span>';
+          }
+          btnEl.setAttribute('onclick', "toggleUniversalMasterStatus('" + tableType + "', " + id + ", " + oldStatus + ", this" + (optCallback ? ", " + optCallback.name : "") + ")");
+        }
+        showGlobalToast((res && res.message) ? res.message : 'Gagal memperbarui status', 'danger');
       }
     })
     .withFailureHandler(function(err) {
+      // Rollback optimistic update
+      if (btnEl) {
+        var pill = btnEl.querySelector('.status-pill-badge') || btnEl;
+        if (oldStatus === 1) {
+          pill.className = 'status-pill-badge is-active';
+          pill.innerHTML = '<i class="bi bi-check-circle-fill"></i> <span>Aktif</span>';
+        } else {
+          pill.className = 'status-pill-badge is-inactive';
+          pill.innerHTML = '<i class="bi bi-x-circle-fill"></i> <span>Nonaktif</span>';
+        }
+        btnEl.setAttribute('onclick', "toggleUniversalMasterStatus('" + tableType + "', " + id + ", " + oldStatus + ", this" + (optCallback ? ", " + optCallback.name : "") + ")");
+      }
       showGlobalToast('Terjadi kesalahan: ' + (err.message || err), 'danger');
     })
     .apiToggleMasterStatus(tableType, id, newStatus);
