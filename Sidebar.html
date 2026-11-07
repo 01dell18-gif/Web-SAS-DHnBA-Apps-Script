@@ -6,7 +6,7 @@
     </a>
 
     <!-- GRUP 1: DATA MASTER -->
-    <? var isMasterActive = ['kelas', 'siswa', 'guru', 'mapel', 'import'].indexOf(currentPage) !== -1; ?>
+    <? var isMasterActive = (typeof currentPage !== 'undefined' && ['kelas', 'siswa', 'guru', 'mapel', 'import'].indexOf(currentPage) !== -1); ?>
     <div class="sidebar-nav-group <?= isMasterActive ? 'is-open' : '' ?>" id="groupMaster">
         <button type="button" class="sidebar-group-header <?= isMasterActive ? 'has-active' : '' ?>" onclick="toggleSidebarGroup(this, event)">
             <span class="group-header-left">
@@ -41,7 +41,7 @@
     </div>
 
     <!-- GRUP 2: REKAP DAN LAPORAN -->
-    <? var isRekapActive = ['rekap-kehadiran', 'admin-absensi', 'admin-berita-acara', 'rekonsiliasi'].indexOf(currentPage) !== -1; ?>
+    <? var isRekapActive = (typeof currentPage !== 'undefined' && ['rekap-kehadiran', 'admin-absensi', 'admin-berita-acara', 'rekonsiliasi'].indexOf(currentPage) !== -1); ?>
     <div class="sidebar-nav-group <?= isRekapActive ? 'is-open' : '' ?>" id="groupRekap">
         <button type="button" class="sidebar-group-header <?= isRekapActive ? 'has-active' : '' ?>" onclick="toggleSidebarGroup(this, event)">
             <span class="group-header-left">
@@ -73,7 +73,7 @@
 
     <!-- GRUP 3: PENGATURAN SISTEM (ADMIN & OPERATOR) -->
     <div id="sidebarAdminSettingsGroup">
-        <? var isSettingsActive = ['template', 'pengaturan', 'users', 'profil'].indexOf(currentPage) !== -1; ?>
+        <? var isSettingsActive = (typeof currentPage !== 'undefined' && ['template', 'pengaturan', 'users', 'profil'].indexOf(currentPage) !== -1); ?>
         <div class="sidebar-nav-group <?= isSettingsActive ? 'is-open' : '' ?>" id="groupPengaturan">
             <button type="button" class="sidebar-group-header <?= isSettingsActive ? 'has-active' : '' ?>" onclick="toggleSidebarGroup(this, event)">
                 <span class="group-header-left">

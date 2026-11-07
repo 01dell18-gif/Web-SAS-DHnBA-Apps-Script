@@ -209,7 +209,11 @@ function renderSiswaTable(students) {
     document.getElementById('badgeTotalSiswa').textContent = students.length + ' Siswa';
 
     if (!students || students.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);">Tidak ada data siswa yang cocok.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">' +
+            '<div style="font-size: 1.05rem; font-weight: 700; color: #334155; margin-bottom: 0.5rem;"><i class="bi bi-people" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; color: #94a3b8;"></i>Belum ada data siswa di database</div>' +
+            '<p style="font-size: 0.85rem; margin-bottom: 1rem;">Data siswa di spreadsheet masih kosong. Anda dapat menginisialisasi 258 siswa peserta ujian resmi secara otomatis.</p>' +
+            '<button type="button" class="btn btn-primary btn-sm" onclick="reseedAllMasterTables(loadSiswaData)"><i class="bi bi-magic"></i> Inisialisasi Data Master Default (11 Kelas, 258 Siswa)</button>' +
+            '</td></tr>';
         return;
     }
 

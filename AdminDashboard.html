@@ -186,7 +186,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (tbody) {
                 var classes = (data && data.classes) || [];
                 if (classes.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 1.5rem; color: var(--text-muted);">Belum ada kelas terdaftar.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem 1rem; color: var(--text-muted);">' +
+                        '<div style="font-weight: 700; color: #334155; margin-bottom: 0.5rem;"><i class="bi bi-database-exclamation" style="font-size: 1.75rem; color: #f59e0b; display: block; margin-bottom: 0.25rem;"></i>Basis data master di Google Sheets masih kosong</div>' +
+                        '<p style="font-size: 0.85rem; margin-bottom: 1rem;">Klik tombol di bawah untuk menulis dan menyinkronkan seluruh data resmi (Kelas, Siswa, Guru, Mapel, Template) ke spreadsheet.</p>' +
+                        '<button type="button" class="btn btn-primary btn-sm" onclick="reseedAllMasterTables(loadDashboardStats)"><i class="bi bi-magic"></i> Inisialisasi Seluruh Data Master Otomatis</button>' +
+                        '</td></tr>';
                 } else {
                     var html = '';
                     var students = (data && data.students) || [];

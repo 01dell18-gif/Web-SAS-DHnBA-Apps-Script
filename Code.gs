@@ -26,11 +26,39 @@ var SHEET_NAMES = {
 /**
  * Router Multi-Page Utama Web App
  */
+
+function ensureAllMasterSheetsSeeded() {
+  try {
+    var cls = readTable(SHEET_NAMES.CLASSES);
+    if (!cls || cls.length === 0) seedDefaultClasses();
+
+    var st = readTable(SHEET_NAMES.STUDENTS);
+    if (!st || st.length < 50) seedDefaultStudents();
+
+    var tch = readTable(SHEET_NAMES.TEACHERS);
+    if (!tch || tch.length === 0) seedDefaultTeachers();
+
+    var mp = readTable(SHEET_NAMES.MAPEL);
+    if (!mp || mp.length === 0) seedDefaultMapel();
+
+    var tpl = readTable(SHEET_NAMES.TEMPLATES);
+    if (!tpl || tpl.length === 0) seedDefaultTemplate();
+
+    var usr = readTable(SHEET_NAMES.USERS);
+    if (!usr || usr.length === 0) seedDefaultUsers();
+  } catch (err) {
+    Logger.log('ensureAllMasterSheetsSeeded error: ' + err.message);
+  }
+}
+
 function doGet(e) {
   try {
     var page = (e && e.parameter && e.parameter.page) || 'index';
     _activePage = page;
     _activeParams = e && e.parameter ? e.parameter : {};
+
+    // Auto-ensure all master tables exist and have data
+    ensureAllMasterSheetsSeeded();
 
     var routeMap = {
       '': 'Index',
@@ -936,12 +964,61 @@ function apiGetInitialData() {
     var beritaAcara = [];
     var logs = [];
 
-    try { classes = readTable(SHEET_NAMES.CLASSES); } catch (e) { Logger.log('Error reading classes: ' + e); }
-    try { students = readTable(SHEET_NAMES.STUDENTS); } catch (e) { Logger.log('Error reading students: ' + e); }
-    try { teachers = readTable(SHEET_NAMES.TEACHERS); } catch (e) { Logger.log('Error reading teachers: ' + e); }
-    try { mapels = readTable(SHEET_NAMES.MAPEL); } catch (e) { Logger.log('Error reading mapels: ' + e); }
-    try { templates = readTable(SHEET_NAMES.TEMPLATES); } catch (e) { Logger.log('Error reading templates: ' + e); }
-    try { users = readTable(SHEET_NAMES.USERS); } catch (e) { Logger.log('Error reading users: ' + e); }
+    // 1. Classes
+    try {
+      classes = readTable(SHEET_NAMES.CLASSES);
+      if (!classes || classes.length === 0) {
+        seedDefaultClasses();
+        classes = readTable(SHEET_NAMES.CLASSES);
+      }
+    } catch (e) { Logger.log('Error reading classes: ' + e); }
+
+    // 2. Students (258 participants)
+    try {
+      students = readTable(SHEET_NAMES.STUDENTS);
+      if (!students || students.length < 50) {
+        seedDefaultStudents();
+        students = readTable(SHEET_NAMES.STUDENTS);
+      }
+    } catch (e) { Logger.log('Error reading students: ' + e); }
+
+    // 3. Teachers & Proctors
+    try {
+      teachers = readTable(SHEET_NAMES.TEACHERS);
+      if (!teachers || teachers.length === 0) {
+        seedDefaultTeachers();
+        teachers = readTable(SHEET_NAMES.TEACHERS);
+      }
+    } catch (e) { Logger.log('Error reading teachers: ' + e); }
+
+    // 4. Subjects (Mapel)
+    try {
+      mapels = readTable(SHEET_NAMES.MAPEL);
+      if (!mapels || mapels.length === 0) {
+        seedDefaultMapel();
+        mapels = readTable(SHEET_NAMES.MAPEL);
+      }
+    } catch (e) { Logger.log('Error reading mapels: ' + e); }
+
+    // 5. Exam Templates
+    try {
+      templates = readTable(SHEET_NAMES.TEMPLATES);
+      if (!templates || templates.length === 0) {
+        seedDefaultTemplate();
+        templates = readTable(SHEET_NAMES.TEMPLATES);
+      }
+    } catch (e) { Logger.log('Error reading templates: ' + e); }
+
+    // 6. Users (Admin & Operator)
+    try {
+      users = readTable(SHEET_NAMES.USERS);
+      if (!users || users.length === 0) {
+        seedDefaultUsers();
+        users = readTable(SHEET_NAMES.USERS);
+      }
+    } catch (e) { Logger.log('Error reading users: ' + e); }
+
+    // 7. Absensi, Berita Acara, Logs
     try { absensi = readTable(SHEET_NAMES.ABSENSI); } catch (e) { Logger.log('Error reading absensi: ' + e); }
     try { beritaAcara = readTable(SHEET_NAMES.BERITA_ACARA); } catch (e) { Logger.log('Error reading beritaAcara: ' + e); }
     try { logs = readTable(SHEET_NAMES.LOGS); } catch (e) { Logger.log('Error reading logs: ' + e); }

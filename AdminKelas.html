@@ -146,7 +146,11 @@ function loadKelasData() {
 function renderKelasTable(classes) {
     var tbody = document.getElementById('tableKelasBody');
     if (!classes || classes.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">Belum ada data kelas. Klik tombol Tambah Kelas di atas.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">' +
+            '<div style="font-size: 1.05rem; font-weight: 700; color: #334155; margin-bottom: 0.5rem;"><i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; color: #94a3b8;"></i>Belum ada data rombel kelas di database</div>' +
+            '<p style="font-size: 0.85rem; margin-bottom: 1rem;">Data kelas di spreadsheet masih kosong. Anda dapat menginisialisasi 11 rombel kelas resmi secara otomatis.</p>' +
+            '<button type="button" class="btn btn-primary btn-sm" onclick="reseedAllMasterTables(loadKelasData)"><i class="bi bi-magic"></i> Inisialisasi Data Master Default (11 Kelas, 258 Siswa)</button>' +
+            '</td></tr>';
         return;
     }
 

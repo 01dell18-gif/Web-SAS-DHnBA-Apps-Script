@@ -397,7 +397,8 @@ function loadInitialMasterData() {
 
             var classSelect = document.getElementById('class_id');
             classSelect.innerHTML = '<option value="">-- Pilih Kelas Aktif --</option>';
-            data.classes.forEach(function(c) {
+            var classes = (data && data.classes) || [];
+            classes.forEach(function(c) {
                 var opt = document.createElement('option');
                 opt.value = c.id;
                 opt.textContent = c.nama_kelas;
@@ -406,7 +407,8 @@ function loadInitialMasterData() {
 
             var dlMapel = document.getElementById('datalist_mapel');
             dlMapel.innerHTML = '';
-            data.mapels.forEach(function(m) {
+            var mapels = (data && data.mapels) || [];
+            mapels.forEach(function(m) {
                 var opt = document.createElement('option');
                 opt.value = m.nama_mapel;
                 opt.textContent = (m.kode_mapel ? '[' + m.kode_mapel + '] ' : '') + m.nama_mapel;
@@ -415,7 +417,8 @@ function loadInitialMasterData() {
 
             var dlGuru = document.getElementById('datalist_guru');
             dlGuru.innerHTML = '';
-            data.teachers.forEach(function(g) {
+            var teachers = (data && data.teachers) || [];
+            teachers.forEach(function(g) {
                 var opt = document.createElement('option');
                 opt.value = g.nama;
                 opt.setAttribute('data-nip', g.nip || '');
@@ -423,14 +426,15 @@ function loadInitialMasterData() {
             });
 
             var selectTpl = document.getElementById('selectTemplate');
-            data.templates.forEach(function(t) {
+            var templates = (data && data.templates) || [];
+            templates.forEach(function(t) {
                 var opt = document.createElement('option');
                 opt.value = t.id;
                 opt.textContent = t.nama_ujian + ' (' + t.tahun_ajaran + ')';
                 selectTpl.appendChild(opt);
             });
 
-            if (data.settings) {
+            if (data && data.settings) {
                 var s = data.settings;
                 if (s.tahun_ajaran_aktif && !document.getElementById('edit_id').value) {
                     document.getElementById('tahun_ajaran').value = s.tahun_ajaran_aktif;
@@ -450,6 +454,9 @@ function loadInitialMasterData() {
             }
 
             updateLivePreview();
+        })
+        .withFailureHandler(function(err) {
+            showGlobalToast('Gagal memuat data master: ' + (err.message || err), 'danger');
         })
         .apiGetInitialData();
 }

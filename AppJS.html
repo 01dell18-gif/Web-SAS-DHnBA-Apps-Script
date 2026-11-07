@@ -611,4 +611,29 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   } catch (err) {}
 });
+
+// Universal Reseed Master Tables
+window.reseedAllMasterTables = function(optCallback) {
+  if (!confirm('Apakah Anda ingin menginisialisasi dan menyinkronkan seluruh data master resmi (11 Kelas, 258 Siswa, 10 Guru, 18 Mapel, Template Ujian, Users, Pengaturan) ke spreadsheet?')) {
+    return;
+  }
+  showGlobalToast('Sedang menulis seluruh basis data master ke Google Sheets...', 'info');
+  google.script.run
+    .withSuccessHandler(function(res) {
+      if (res && res.success) {
+        showGlobalNotificationDialog('Berhasil Sinkronisasi Master', res.message || 'Seluruh data master berhasil ditulis ke Google Sheets!', 'success');
+        if (typeof optCallback === 'function') {
+          optCallback();
+        } else {
+          location.reload();
+        }
+      } else {
+        showGlobalNotificationDialog('Info', (res && res.message) || 'Inisialisasi selesai.', 'info');
+      }
+    })
+    .withFailureHandler(function(err) {
+      showGlobalNotificationDialog('Gagal Inisialisasi', (err && err.message) || err, 'danger');
+    })
+    .apiForceReseedAllMasterData();
+};
 </script>
