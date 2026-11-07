@@ -447,6 +447,46 @@ window.toggleUniversalMasterStatus = function(tableType, id, currentStatus, btnE
     .apiToggleMasterStatus(tableType, id, newStatus);
 };
 
+// Bulk Toggle Master Status (Semua Aktif / Semua Nonaktif)
+window.toggleAllMasterStatus = function(tableType, targetStatus, reloadCallback) {
+  var actionText = (targetStatus === 1 || targetStatus === '1') ? 'MENGAKTIFKAN' : 'MENONAKTIFKAN';
+  var statusLabel = (targetStatus === 1 || targetStatus === '1') ? 'Aktif' : 'Nonaktif';
+  var titleMap = {
+    'kelas': 'Semua Data Kelas',
+    'siswa': 'Semua Data Siswa',
+    'guru': 'Semua Data Guru & Pengawas',
+    'mapel': 'Semua Data Mata Pelajaran',
+    'users': 'Semua Data Pengguna'
+  };
+  var labelTarget = titleMap[tableType] || ('Semua Data ' + tableType);
+
+  if (!confirm('Apakah Anda yakin ingin ' + actionText + ' ' + labelTarget + ' sekaligus?')) {
+    return;
+  }
+
+  showGlobalToast('Sedang memproses perubahan status...', 'info');
+
+  google.script.run
+    .withSuccessHandler(function(res) {
+      if (res && res.success) {
+        showGlobalToast('Berhasil mengubah ' + res.count + ' data ' + tableType + ' menjadi ' + statusLabel + '!', 'success');
+        if (typeof reloadCallback === 'function') {
+          reloadCallback();
+        } else if (typeof window.loadInitialData === 'function') {
+          window.loadInitialData(true);
+        } else {
+          location.reload();
+        }
+      } else {
+        showGlobalToast(res && res.message ? res.message : 'Gagal mengubah status massal', 'danger');
+      }
+    })
+    .withFailureHandler(function(err) {
+      showGlobalToast('Terjadi kesalahan: ' + (err.message || err), 'danger');
+    })
+    .apiToggleAllMasterStatus(tableType, targetStatus);
+};
+
 // Helper Toast Notification
 window.showGlobalToast = function(message, type) {
   var toast = document.createElement('div');

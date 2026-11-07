@@ -321,7 +321,6 @@ function getDefaultSettingsRows() {
     // 1. Kop Surat Dokumen Resmi A4
     ['kop_mode', 'image'],
     ['kop_header', 'https://drive.google.com/thumbnail?id=1QXtnYwIrCc-pihDUoidjkRW5UVWykOn-&sz=w1600'],
-    ['kop_image_path', 'https://drive.google.com/thumbnail?id=1QXtnYwIrCc-pihDUoidjkRW5UVWykOn-&sz=w1600'],
     ['kop_baris_1', 'PEMERINTAH PROVINSI FYJ'],
     ['kop_baris_2', 'DINAS PENDIDIKAN KEPEMUDAAN DAN OLAHRAGA'],
     ['kop_baris_3', 'SMK NEGERI FYJ CHANNEL'],
@@ -330,20 +329,15 @@ function getDefaultSettingsRows() {
 
     // 2. Logo Sekolah
     ['school_logo', 'https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI&sz=w1600'],
-    ['logo_path', 'https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI&sz=w1600'],
 
     // 3. Identitas Sekolah & Penyimpanan Google Drive
     ['nama_sekolah', 'SMK NEGERI FYJ CHANNEL'],
-    ['school_name', 'SMK NEGERI FYJ CHANNEL'],
     ['alamat_sekolah', 'Jl. Merpati No. 1'],
     ['google_drive_folder_url', 'https://drive.google.com/drive/folders/19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR'],
-    ['drive_folder_url', 'https://drive.google.com/drive/folders/19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR'],
 
     // 4. Master Tahun Ajaran & Semester
     ['tahun_ajaran_aktif', '2026/2027'],
-    ['academic_year', '2026/2027'],
     ['semester_aktif', 'Ganjil'],
-    ['default_semester', 'Ganjil'],
     ['daftar_tahun_ajaran', JSON.stringify(['2024/2025', '2025/2026', '2026/2027', '2027/2028'])],
 
     // 5. Pejabat Penandatangan Dokumen Resmi
@@ -352,6 +346,55 @@ function getDefaultSettingsRows() {
     ['tempat_cetak', 'Denpasar'],
     ['format_tanggal_cetak', 'd MMMM yyyy']
   ];
+}
+
+function bersihkanDuplikatPengaturan() {
+  try {
+    var sheet = getSheet(SHEET_NAMES.SETTINGS);
+    var rows = readTable(SHEET_NAMES.SETTINGS);
+    var map = {};
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var k = String(r.setting_key || r.key || r.kunci || '').trim();
+      if (!k) continue;
+      var v = (r.setting_value !== undefined) ? r.setting_value : ((r.value !== undefined) ? r.value : r.nilai);
+      if (v === undefined || v === null) v = '';
+      map[k] = v;
+    }
+
+    var canonicalRows = [
+      ['kop_mode', map.kop_mode || 'image'],
+      ['kop_header', convertDriveUrlToThumbnail(map.kop_header || map.kop_image_path || 'https://drive.google.com/thumbnail?id=1QXtnYwIrCc-pihDUoidjkRW5UVWykOn-&sz=w1600')],
+      ['kop_baris_1', map.kop_baris_1 || 'PEMERINTAH PROVINSI FYJ'],
+      ['kop_baris_2', map.kop_baris_2 || 'DINAS PENDIDIKAN KEPEMUDAAN DAN OLAHRAGA'],
+      ['kop_baris_3', map.kop_baris_3 || 'SMK NEGERI FYJ CHANNEL'],
+      ['kop_telepon', map.kop_telepon || 'Telp. (0300) 2002 | Email: smkn@yahoo.com'],
+      ['kop_website', map.kop_website || 'Website: smkn.sch.id'],
+      ['school_logo', convertDriveUrlToThumbnail(map.school_logo || map.logo_path || 'https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI&sz=w1600')],
+      ['nama_sekolah', map.nama_sekolah || map.school_name || 'SMK NEGERI FYJ CHANNEL'],
+      ['alamat_sekolah', map.alamat_sekolah || 'Jl. Merpati No. 1'],
+      ['google_drive_folder_url', map.google_drive_folder_url || map.drive_folder_url || 'https://drive.google.com/drive/folders/19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR'],
+      ['tahun_ajaran_aktif', map.tahun_ajaran_aktif || map.academic_year || '2026/2027'],
+      ['semester_aktif', map.semester_aktif || map.default_semester || 'Ganjil'],
+      ['daftar_tahun_ajaran', typeof map.daftar_tahun_ajaran === 'string' ? map.daftar_tahun_ajaran : JSON.stringify(map.daftar_tahun_ajaran || ['2024/2025', '2025/2026', '2026/2027', '2027/2028'])],
+      ['kepala_sekolah', map.kepala_sekolah || 'Drs. I Ketut Suardana, M.Pd.'],
+      ['nip_kepala_sekolah', map.nip_kepala_sekolah || '19680315 199412 1 002'],
+      ['tempat_cetak', map.tempat_cetak || 'Denpasar'],
+      ['format_tanggal_cetak', map.format_tanggal_cetak || 'd MMMM yyyy']
+    ];
+
+    sheet.clear();
+    sheet.appendRow(['setting_key', 'setting_value']);
+    sheet.getRange(1, 1, 1, 2).setFontWeight('bold');
+    sheet.getRange(1, 1, 1, 2).setBackground('#f1f5f9');
+    sheet.getRange(2, 1, canonicalRows.length, 2).setValues(canonicalRows);
+    sheet.setColumnWidth(1, 220);
+    sheet.setColumnWidth(2, 600);
+    invalidateCaches();
+    return { success: true, count: canonicalRows.length };
+  } catch (e) {
+    return { success: false, message: e.message };
+  }
 }
 
 function seedDefaultSettings(optSheet) {
@@ -373,24 +416,31 @@ function seedDefaultSettings(optSheet) {
 }
 
 function isiOtomatisPengaturan() {
-  var sheet = getSheet(SHEET_NAMES.SETTINGS);
-  seedDefaultSettings(sheet);
+  var res = bersihkanDuplikatPengaturan();
   invalidateCaches();
-  return 'Berhasil mengisi data default Pengaturan ke Google Sheets!';
+  return 'Berhasil merapikan dan mengisi data Pengaturan ke Google Sheets! Jumlah: ' + (res.count || 18);
 }
 
 function apiResetDefaultPengaturan() {
   try {
-    var sheet = getSheet(SHEET_NAMES.SETTINGS);
-    seedDefaultSettings(sheet);
+    var res = bersihkanDuplikatPengaturan();
     invalidateCaches();
     return {
       success: true,
-      message: 'Sheet Pengaturan berhasil diisi dengan data default resmi SMK NEGERI FYJ CHANNEL!'
+      message: 'Sheet Pengaturan berhasil dirapikan dan diisi dengan data resmi SMK NEGERI FYJ CHANNEL (tanpa duplikat)!'
     };
   } catch (e) {
     return { success: false, message: e.message };
   }
+}
+
+function apiGetFreshSettings() {
+  invalidateCaches();
+  var settings = getSettingsMap();
+  return {
+    success: true,
+    settings: settings
+  };
 }
 
 function getSettingsMap() {
@@ -426,6 +476,22 @@ function getSettingsMap() {
               ((r.nilai !== undefined) ? r.nilai : r.Nilai));
       if (v === undefined || v === null) v = '';
       map[k] = v;
+    }
+
+    // Otomatis rapikan jika ada baris duplikat alias di sheet
+    if (map.kop_image_path !== undefined || map.logo_path !== undefined || map.school_name !== undefined || map.drive_folder_url !== undefined || map.academic_year !== undefined || map.default_semester !== undefined) {
+      bersihkanDuplikatPengaturan();
+      delete _requestTableCache[SHEET_NAMES.SETTINGS];
+      rows = readTable(SHEET_NAMES.SETTINGS);
+      map = {};
+      for (var d = 0; d < rows.length; d++) {
+        var dr = rows[d];
+        var dk = String(dr.setting_key || dr.key || dr.kunci || '').trim();
+        if (!dk) continue;
+        var dv = (dr.setting_value !== undefined) ? dr.setting_value : ((dr.value !== undefined) ? dr.value : dr.nilai);
+        if (dv === undefined || dv === null) dv = '';
+        map[dk] = dv;
+      }
     }
 
     // Map synonyms/aliases between English & Indonesian
@@ -876,63 +942,43 @@ function apiSavePengaturan(payload) {
   }
 
   // Auto-convert Google Drive URLs to direct thumbnail URLs
-  if (payload.kop_header) payload.kop_header = convertDriveUrlToThumbnail(payload.kop_header);
-  if (payload.kop_image_path) payload.kop_image_path = convertDriveUrlToThumbnail(payload.kop_image_path);
-  if (payload.school_logo) payload.school_logo = convertDriveUrlToThumbnail(payload.school_logo);
-  if (payload.logo_path) payload.logo_path = convertDriveUrlToThumbnail(payload.logo_path);
+  var kopUrl = payload.kop_header || payload.kop_image_path || '';
+  if (kopUrl) kopUrl = convertDriveUrlToThumbnail(kopUrl);
 
-  // Synchronize kop_header and kop_image_path synonyms
-  if (payload.kop_header !== undefined) {
-    payload.kop_image_path = payload.kop_header;
-  } else if (payload.kop_image_path !== undefined) {
-    payload.kop_header = payload.kop_image_path;
-  }
+  var logoUrl = payload.school_logo || payload.logo_path || '';
+  if (logoUrl) logoUrl = convertDriveUrlToThumbnail(logoUrl);
 
-  // Synchronize school_logo and logo_path synonyms
-  if (payload.school_logo !== undefined) {
-    payload.logo_path = payload.school_logo;
-  } else if (payload.logo_path !== undefined) {
-    payload.school_logo = payload.logo_path;
-  }
+  var schoolName = payload.nama_sekolah || payload.school_name || 'SMK NEGERI FYJ CHANNEL';
+  var driveFolderUrl = payload.google_drive_folder_url || payload.drive_folder_url || '';
+  var tahunAktif = payload.tahun_ajaran_aktif || payload.academic_year || '2026/2027';
+  var semAktif = payload.semester_aktif || payload.default_semester || 'Ganjil';
+  var listTh = payload.daftar_tahun_ajaran;
+  if (listTh && Array.isArray(listTh)) listTh = JSON.stringify(listTh);
 
-  // Synchronize school_name and nama_sekolah
-  if (payload.nama_sekolah !== undefined) {
-    payload.school_name = payload.nama_sekolah;
-  } else if (payload.school_name !== undefined) {
-    payload.nama_sekolah = payload.school_name;
-  }
+  // Canonical keys only - NO DUPLICATES in spreadsheet!
+  var cleanPayload = {
+    'kop_mode': payload.kop_mode || 'image',
+    'kop_header': kopUrl,
+    'kop_baris_1': payload.kop_baris_1 || 'PEMERINTAH PROVINSI FYJ',
+    'kop_baris_2': payload.kop_baris_2 || 'DINAS PENDIDIKAN KEPEMUDAAN DAN OLAHRAGA',
+    'kop_baris_3': payload.kop_baris_3 || schoolName,
+    'kop_telepon': payload.kop_telepon || '',
+    'kop_website': payload.kop_website || '',
+    'school_logo': logoUrl,
+    'nama_sekolah': schoolName,
+    'alamat_sekolah': payload.alamat_sekolah || '',
+    'google_drive_folder_url': driveFolderUrl,
+    'tahun_ajaran_aktif': tahunAktif,
+    'semester_aktif': semAktif,
+    'daftar_tahun_ajaran': listTh || JSON.stringify(['2024/2025', '2025/2026', '2026/2027', '2027/2028']),
+    'kepala_sekolah': payload.kepala_sekolah || 'Drs. I Ketut Suardana, M.Pd.',
+    'nip_kepala_sekolah': payload.nip_kepala_sekolah || '19680315 199412 1 002',
+    'tempat_cetak': payload.tempat_cetak || 'Denpasar',
+    'format_tanggal_cetak': payload.format_tanggal_cetak || 'd MMMM yyyy'
+  };
 
-  // Synchronize academic_year and tahun_ajaran_aktif
-  if (payload.tahun_ajaran_aktif !== undefined) {
-    payload.academic_year = payload.tahun_ajaran_aktif;
-  } else if (payload.academic_year !== undefined) {
-    payload.tahun_ajaran_aktif = payload.academic_year;
-  }
-
-  // Synchronize default_semester and semester_aktif
-  if (payload.semester_aktif !== undefined) {
-    payload.default_semester = payload.semester_aktif;
-  } else if (payload.default_semester !== undefined) {
-    payload.semester_aktif = payload.default_semester;
-  }
-
-  // Synchronize drive_folder_url and google_drive_folder_url
-  if (payload.google_drive_folder_url !== undefined) {
-    payload.drive_folder_url = payload.google_drive_folder_url;
-  } else if (payload.drive_folder_url !== undefined) {
-    payload.google_drive_folder_url = payload.drive_folder_url;
-  }
-
-  // If daftar_tahun_ajaran is array, stringify it
-  if (payload.daftar_tahun_ajaran && Array.isArray(payload.daftar_tahun_ajaran)) {
-    payload.daftar_tahun_ajaran = JSON.stringify(payload.daftar_tahun_ajaran);
-  }
-
-  for (var key in payload) {
-    var val = payload[key];
-    if (typeof val === 'object' && val !== null) {
-      val = JSON.stringify(val);
-    }
+  for (var key in cleanPayload) {
+    var val = cleanPayload[key];
     if (existingMap[key]) {
       sheet.getRange(existingMap[key], 2).setValue(val);
     } else {
@@ -940,9 +986,62 @@ function apiSavePengaturan(payload) {
       existingMap[key] = sheet.getLastRow();
     }
   }
+
+  // Remove any redundant alias rows that might still exist
+  var redundantAliases = ['kop_image_path', 'logo_path', 'school_name', 'drive_folder_url', 'academic_year', 'default_semester'];
+  var currentRows = readTable(SHEET_NAMES.SETTINGS);
+  for (var i = currentRows.length - 1; i >= 0; i--) {
+    var rowKey = String(currentRows[i][keyColName] || currentRows[i].setting_key || '').trim();
+    if (redundantAliases.indexOf(rowKey) !== -1) {
+      sheet.deleteRow(currentRows[i]._row);
+    }
+  }
+
   invalidateCaches();
-  logActivity('UPDATE_SETTINGS', 'Memperbarui pengaturan sekolah, logo, kop & tahun ajaran');
+  logActivity('UPDATE_SETTINGS', 'Memperbarui pengaturan sekolah resmi (format tunggal tanpa duplikasi)');
   return { success: true, settings: getSettingsMap() };
+}
+
+/**
+ * Bulk Toggle Master Status (Kelas, Siswa, Guru, Mapel)
+ */
+function apiToggleAllMasterStatus(tableType, newStatus) {
+  var sheetNameMap = {
+    'kelas': SHEET_NAMES.CLASSES,
+    'siswa': SHEET_NAMES.STUDENTS,
+    'guru': SHEET_NAMES.TEACHERS,
+    'mapel': SHEET_NAMES.MAPEL,
+    'users': SHEET_NAMES.USERS
+  };
+  var sheetName = sheetNameMap[tableType];
+  if (!sheetName) return { success: false, message: 'Tabel tidak dikenali: ' + tableType };
+
+  var sheet = getSheet(sheetName);
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
+  if (lastRow < 2) return { success: true, count: 0, status: newStatus };
+
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  var colIdx = -1;
+  for (var j = 0; j < headers.length; j++) {
+    var h = String(headers[j]).trim().toLowerCase();
+    if (h === 'aktif' || h === 'is_active' || h === 'status') {
+      colIdx = j + 1;
+      break;
+    }
+  }
+  if (colIdx === -1) return { success: false, message: 'Kolom status aktif tidak ditemukan pada tabel ' + tableType };
+
+  var numRows = lastRow - 1;
+  var targetVal = (newStatus === 1 || newStatus === '1') ? 1 : 0;
+  var statusValues = [];
+  for (var r = 0; r < numRows; r++) {
+    statusValues.push([targetVal]);
+  }
+  sheet.getRange(2, colIdx, numRows, 1).setValues(statusValues);
+  invalidateCaches();
+  logActivity('BULK_STATUS_' + String(tableType).toUpperCase(), 'Mengubah status semua data ' + tableType + ' (' + numRows + ' data) menjadi ' + (targetVal === 1 ? 'Aktif' : 'Nonaktif'));
+  return { success: true, count: numRows, status: targetVal };
 }
 
 /**

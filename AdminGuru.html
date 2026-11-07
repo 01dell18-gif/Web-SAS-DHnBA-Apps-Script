@@ -36,7 +36,17 @@
         <div class="card">
             <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
                 <span class="card-title"><i class="bi bi-person-video3"></i> Daftar Pendidik & Pengawas</span>
-                <input type="text" id="searchGuru" class="form-control form-control-sm" placeholder="Cari nama guru atau NIP..." style="max-width: 260px;" oninput="filterGuruTable()">
+                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                    <div class="btn-group" role="group" aria-label="Status Bulk Toggle" style="display: inline-flex;">
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="toggleAllMasterStatus('guru', 1, loadGuruData)" title="Aktifkan seluruh data guru & pengawas">
+                            <i class="bi bi-check-all"></i> Aktifkan Semua
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="toggleAllMasterStatus('guru', 0, loadGuruData)" title="Nonaktifkan seluruh data guru & pengawas">
+                            <i class="bi bi-x-circle"></i> Nonaktifkan Semua
+                        </button>
+                    </div>
+                    <input type="text" id="searchGuru" class="form-control form-control-sm" placeholder="Cari nama guru atau NIP..." style="max-width: 220px;" oninput="filterGuruTable()">
+                </div>
             </div>
             <div class="table-responsive">
                 <table class="table" style="font-size: 0.875rem;">
@@ -46,7 +56,7 @@
                             <th>Nama Lengkap Guru / Pengawas</th>
                             <th>NIP</th>
                             <th>Jabatan / Tugas</th>
-                            <th style="text-align: center;">Status</th>
+                            <th style="text-align: center; white-space: nowrap;">Status</th>
                             <th style="text-align: center; width: 120px;">Aksi</th>
                         </tr>
                     </thead>

@@ -51,9 +51,19 @@
         </div>
 
         <div class="card">
-            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
                 <span class="card-title"><i class="bi bi-journal-bookmark"></i> Daftar Mata Pelajaran Resmi</span>
-                <span id="badgeTotalMapel" class="badge" style="background: #e0e7ff; color: #4338ca; font-weight: 700;">0 Mapel</span>
+                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                    <div class="btn-group" role="group" aria-label="Status Bulk Toggle" style="display: inline-flex;">
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="toggleAllMasterStatus('mapel', 1, loadMapelData)" title="Aktifkan seluruh data mapel">
+                            <i class="bi bi-check-all"></i> Aktifkan Semua
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="toggleAllMasterStatus('mapel', 0, loadMapelData)" title="Nonaktifkan seluruh data mapel">
+                            <i class="bi bi-x-circle"></i> Nonaktifkan Semua
+                        </button>
+                    </div>
+                    <span id="badgeTotalMapel" class="badge" style="background: #e0e7ff; color: #4338ca; font-weight: 700;">0 Mapel</span>
+                </div>
             </div>
             <div class="table-responsive">
                 <table class="table" style="font-size: 0.875rem;">
@@ -63,7 +73,7 @@
                             <th>Kode Mapel</th>
                             <th>Nama Mata Pelajaran</th>
                             <th>Kelompok Kurikulum</th>
-                            <th style="text-align: center;">Status</th>
+                            <th style="text-align: center; white-space: nowrap;">Status</th>
                             <th style="text-align: center; width: 120px;">Aksi</th>
                         </tr>
                     </thead>
