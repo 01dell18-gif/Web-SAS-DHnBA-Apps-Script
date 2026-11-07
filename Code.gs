@@ -31,23 +31,43 @@ function ensureAllMasterSheetsSeeded() {
   try {
     var cls = readTable(SHEET_NAMES.CLASSES);
     if (!cls || cls.length === 0) seedDefaultClasses();
+  } catch (e1) {
+    Logger.log('ensureAllMasterSheetsSeeded classes error: ' + e1.message);
+  }
 
+  try {
     var st = readTable(SHEET_NAMES.STUDENTS);
     if (!st || st.length < 50) seedDefaultStudents();
+  } catch (e2) {
+    Logger.log('ensureAllMasterSheetsSeeded students error: ' + e2.message);
+  }
 
+  try {
     var tch = readTable(SHEET_NAMES.TEACHERS);
     if (!tch || tch.length === 0) seedDefaultTeachers();
+  } catch (e3) {
+    Logger.log('ensureAllMasterSheetsSeeded teachers error: ' + e3.message);
+  }
 
+  try {
     var mp = readTable(SHEET_NAMES.MAPEL);
     if (!mp || mp.length === 0) seedDefaultMapel();
+  } catch (e4) {
+    Logger.log('ensureAllMasterSheetsSeeded mapel error: ' + e4.message);
+  }
 
+  try {
     var tpl = readTable(SHEET_NAMES.TEMPLATES);
     if (!tpl || tpl.length === 0) seedDefaultTemplate();
+  } catch (e5) {
+    Logger.log('ensureAllMasterSheetsSeeded templates error: ' + e5.message);
+  }
 
+  try {
     var usr = readTable(SHEET_NAMES.USERS);
     if (!usr || usr.length === 0) seedDefaultUsers();
-  } catch (err) {
-    Logger.log('ensureAllMasterSheetsSeeded error: ' + err.message);
+  } catch (e6) {
+    Logger.log('ensureAllMasterSheetsSeeded users error: ' + e6.message);
   }
 }
 
@@ -228,8 +248,31 @@ function getSheet(sheetName) {
   return sheet;
 }
 
+function ensureSheetDimensions(sheet, requiredRows, requiredCols) {
+  if (!sheet) return;
+  try {
+    var maxRows = sheet.getMaxRows();
+    if (maxRows < requiredRows) {
+      sheet.insertRowsAfter(maxRows, requiredRows - maxRows);
+    }
+  } catch (e) {
+    Logger.log('ensureSheetDimensions rows error: ' + e);
+  }
+  try {
+    var maxCols = sheet.getMaxColumns();
+    if (maxCols < requiredCols) {
+      sheet.insertColumnsAfter(maxCols, requiredCols - maxCols);
+    }
+  } catch (e) {
+    Logger.log('ensureSheetDimensions cols error: ' + e);
+  }
+}
+
 function invalidateCaches() {
   _requestTableCache = {};
+  try {
+    SpreadsheetApp.flush();
+  } catch (e) {}
   try {
     CacheService.getScriptCache().removeAll([
       'sas_initial_data', 'sas_settings', 'sas_classes', 'sas_teachers', 'sas_mapel', 'sas_templates'
@@ -298,10 +341,12 @@ function readTable(sheetName) {
     var rowObj = { _row: i + 1 };
     var isEmpty = true;
     for (var j = 0; j < headers.length; j++) {
-      var key = String(headers[j]).trim();
+      var rawKey = String(headers[j]).trim();
+      var lowerKey = rawKey.toLowerCase();
       var val = values[i][j];
       if (val !== '' && val !== null && val !== undefined) isEmpty = false;
-      rowObj[key] = val;
+      rowObj[rawKey] = val;
+      rowObj[lowerKey] = val;
     }
     if (!isEmpty) {
       // Robust multi-synonym status normalization
@@ -312,6 +357,8 @@ function readTable(sheetName) {
       rowObj.status = isAct ? 'Aktif' : 'Nonaktif';
 
       // Name & Class synonyms
+      if (rowObj.nama_siswa !== undefined && rowObj.nama === undefined) rowObj.nama = rowObj.nama_siswa;
+      if (rowObj.nama !== undefined && rowObj.nama_siswa === undefined) rowObj.nama_siswa = rowObj.nama;
       if (rowObj.nama !== undefined && rowObj.nama_lengkap === undefined) rowObj.nama_lengkap = rowObj.nama;
       if (rowObj.nama_lengkap !== undefined && rowObj.nama === undefined) rowObj.nama = rowObj.nama_lengkap;
       if (rowObj.nama_kelas !== undefined && rowObj.kelas === undefined) rowObj.kelas = rowObj.nama_kelas;
@@ -367,6 +414,7 @@ function insertRows(sheetName, objList) {
   }
 
   var startRow = sheet.getLastRow() + 1;
+  ensureSheetDimensions(sheet, startRow + rowsData.length + 5, headers.length + 2);
   sheet.getRange(startRow, 1, rowsData.length, headers.length).setValues(rowsData);
   invalidateCaches();
   return rowsData.length;
@@ -445,6 +493,7 @@ function seedDefaultClasses(optSheet) {
   var sheet = optSheet || getSheet(SHEET_NAMES.CLASSES);
   sheet.clear();
   var headers = ['id', 'nama_kelas', 'tingkat', 'program_keahlian', 'aktif', 'created_at', 'updated_at'];
+  ensureSheetDimensions(sheet, 25, headers.length + 2);
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
   var classesData = [
@@ -467,6 +516,7 @@ function seedDefaultClasses(optSheet) {
     rows.push([cls.id, cls.nama_kelas, cls.tingkat || 'XII', cls.program_keahlian || '', 1, now, now]);
   }
   if (rows.length > 0) {
+    ensureSheetDimensions(sheet, rows.length + 5, headers.length + 2);
     sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
   }
   invalidateCaches();
@@ -476,6 +526,7 @@ function seedDefaultStudents(optSheet) {
   var sheet = optSheet || getSheet(SHEET_NAMES.STUDENTS);
   sheet.clear();
   var headers = ['id', 'class_id', 'nama_kelas', 'nis', 'nisn', 'nama', 'program_keahlian', 'aktif', 'created_at', 'updated_at'];
+  ensureSheetDimensions(sheet, 280, headers.length + 2);
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
 
@@ -504,6 +555,7 @@ function seedDefaultStudents(optSheet) {
     rows.push([st.id, st.class_id, cName, st.nis || '', st.nisn || '', st.nama || '', jur, 1, now, now]);
   }
   if (rows.length > 0) {
+    ensureSheetDimensions(sheet, rows.length + 5, headers.length + 2);
     sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
   }
   invalidateCaches();
@@ -513,6 +565,7 @@ function seedDefaultTeachers(optSheet) {
   var sheet = optSheet || getSheet(SHEET_NAMES.TEACHERS);
   sheet.clear();
   var headers = ['id', 'nama', 'nip', 'jabatan', 'aktif', 'created_at', 'updated_at'];
+  ensureSheetDimensions(sheet, 25, headers.length + 2);
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
   var teachersData = [
@@ -534,6 +587,7 @@ function seedDefaultTeachers(optSheet) {
     rows.push([tch.id, tch.nama, tch.nip || '-', tch.jabatan || 'Guru / Pengawas', 1, now, now]);
   }
   if (rows.length > 0) {
+    ensureSheetDimensions(sheet, rows.length + 5, headers.length + 2);
     sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
   }
   invalidateCaches();
@@ -543,6 +597,7 @@ function seedDefaultMapel(optSheet) {
   var sheet = optSheet || getSheet(SHEET_NAMES.MAPEL);
   sheet.clear();
   var headers = ['id', 'kode_mapel', 'nama_mapel', 'kelompok', 'aktif', 'created_at', 'updated_at'];
+  ensureSheetDimensions(sheet, 35, headers.length + 2);
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
   var mapelsData = [
@@ -572,6 +627,7 @@ function seedDefaultMapel(optSheet) {
     rows.push([mp.id, mp.kode_mapel, mp.nama_mapel, mp.kelompok || 'Kejuruan', 1, now, now]);
   }
   if (rows.length > 0) {
+    ensureSheetDimensions(sheet, rows.length + 5, headers.length + 2);
     sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
   }
   invalidateCaches();
@@ -581,6 +637,7 @@ function seedDefaultTemplate(optSheet) {
   var sheet = optSheet || getSheet(SHEET_NAMES.TEMPLATES);
   sheet.clear();
   var headers = ['id', 'nama_ujian', 'tahun_ajaran', 'judul_berita_acara', 'redaksi_isi', 'redaksi_pembuka', 'redaksi_poin_1', 'redaksi_poin_2', 'label_catatan', 'aktif', 'created_at', 'updated_at'];
+  ensureSheetDimensions(sheet, 10, headers.length + 2);
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
   var defaultTpl = {
@@ -597,6 +654,7 @@ function seedDefaultTemplate(optSheet) {
   };
   var now = Utilities.formatDate(new Date(), 'Asia/Makassar', 'yyyy-MM-dd HH:mm:ss');
   var row = [defaultTpl.id, defaultTpl.nama_ujian, defaultTpl.tahun_ajaran, defaultTpl.judul_berita_acara, defaultTpl.redaksi_isi, defaultTpl.redaksi_pembuka, defaultTpl.redaksi_poin_1, defaultTpl.redaksi_poin_2, defaultTpl.label_catatan, 1, now, now];
+  ensureSheetDimensions(sheet, 5, headers.length + 2);
   sheet.getRange(2, 1, 1, headers.length).setValues([row]);
   invalidateCaches();
 }
@@ -605,6 +663,7 @@ function seedDefaultUsers(optSheet) {
   var sheet = optSheet || getSheet(SHEET_NAMES.USERS);
   sheet.clear();
   var headers = ['id', 'username', 'password', 'password_plain', 'nama_lengkap', 'role', 'foto', 'created_at', 'updated_at'];
+  ensureSheetDimensions(sheet, 10, headers.length + 2);
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
   var now = Utilities.formatDate(new Date(), 'Asia/Makassar', 'yyyy-MM-dd HH:mm:ss');
@@ -612,6 +671,7 @@ function seedDefaultUsers(optSheet) {
     [1, 'admin', 'admin123', 'admin123', 'Administrator SAS SMK', 'admin', '', now, now],
     [2, 'operator', 'operator123', 'operator123', 'Operator SAS SMK', 'operator', '', now, now]
   ];
+  ensureSheetDimensions(sheet, rows.length + 5, headers.length + 2);
   sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
   invalidateCaches();
 }
@@ -619,7 +679,10 @@ function seedDefaultUsers(optSheet) {
 function ensureSheetHasInitialData(sheetName, sheet) {
   try {
     var lastRow = sheet.getLastRow();
-    if (lastRow >= 2) return; // Sudah memiliki data
+    if (lastRow >= 2) {
+      var val = sheet.getRange(2, 1).getValue();
+      if (val !== '' && val !== null && val !== undefined) return; // Sudah memiliki data valid
+    }
 
     if (sheetName === SHEET_NAMES.SETTINGS) {
       seedDefaultSettings(sheet);
@@ -748,6 +811,7 @@ function bersihkanDuplikatPengaturan() {
 
     sheet.clear();
     sheet.appendRow(['setting_key', 'setting_value']);
+    ensureSheetDimensions(sheet, canonicalRows.length + 5, 5);
     sheet.getRange(1, 1, 1, 2).setFontWeight('bold');
     sheet.getRange(1, 1, 1, 2).setBackground('#f1f5f9');
     sheet.getRange(2, 1, canonicalRows.length, 2).setValues(canonicalRows);
@@ -764,17 +828,18 @@ function seedDefaultSettings(optSheet) {
   var sheet = optSheet || getSheet(SHEET_NAMES.SETTINGS);
   sheet.clear();
   sheet.appendRow(['setting_key', 'setting_value']);
+  var rows = getDefaultSettingsRows();
+  if (rows && rows.length > 0) {
+    ensureSheetDimensions(sheet, rows.length + 5, 5);
+    sheet.getRange(2, 1, rows.length, 2).setValues(rows);
+  }
   sheet.getRange(1, 1, 1, 2).setFontWeight('bold');
   try {
     sheet.getRange(1, 1, 1, 2).setBackground('#f1f5f9');
     sheet.setColumnWidth(1, 220);
     sheet.setColumnWidth(2, 600);
   } catch (e) {}
-
-  var rows = getDefaultSettingsRows();
-  if (rows && rows.length > 0) {
-    sheet.getRange(2, 1, rows.length, 2).setValues(rows);
-  }
+  invalidateCaches();
   return rows;
 }
 
@@ -953,6 +1018,8 @@ function getSettingsMap() {
  */
 function apiGetInitialData() {
   try {
+    ensureAllMasterSheetsSeeded();
+
     var settings = getSettingsMap();
     var classes = [];
     var students = [];
@@ -969,6 +1036,7 @@ function apiGetInitialData() {
       classes = readTable(SHEET_NAMES.CLASSES);
       if (!classes || classes.length === 0) {
         seedDefaultClasses();
+        delete _requestTableCache[SHEET_NAMES.CLASSES];
         classes = readTable(SHEET_NAMES.CLASSES);
       }
     } catch (e) { Logger.log('Error reading classes: ' + e); }
@@ -978,6 +1046,7 @@ function apiGetInitialData() {
       students = readTable(SHEET_NAMES.STUDENTS);
       if (!students || students.length < 50) {
         seedDefaultStudents();
+        delete _requestTableCache[SHEET_NAMES.STUDENTS];
         students = readTable(SHEET_NAMES.STUDENTS);
       }
     } catch (e) { Logger.log('Error reading students: ' + e); }
@@ -987,6 +1056,7 @@ function apiGetInitialData() {
       teachers = readTable(SHEET_NAMES.TEACHERS);
       if (!teachers || teachers.length === 0) {
         seedDefaultTeachers();
+        delete _requestTableCache[SHEET_NAMES.TEACHERS];
         teachers = readTable(SHEET_NAMES.TEACHERS);
       }
     } catch (e) { Logger.log('Error reading teachers: ' + e); }
@@ -996,6 +1066,7 @@ function apiGetInitialData() {
       mapels = readTable(SHEET_NAMES.MAPEL);
       if (!mapels || mapels.length === 0) {
         seedDefaultMapel();
+        delete _requestTableCache[SHEET_NAMES.MAPEL];
         mapels = readTable(SHEET_NAMES.MAPEL);
       }
     } catch (e) { Logger.log('Error reading mapels: ' + e); }
@@ -1005,6 +1076,7 @@ function apiGetInitialData() {
       templates = readTable(SHEET_NAMES.TEMPLATES);
       if (!templates || templates.length === 0) {
         seedDefaultTemplate();
+        delete _requestTableCache[SHEET_NAMES.TEMPLATES];
         templates = readTable(SHEET_NAMES.TEMPLATES);
       }
     } catch (e) { Logger.log('Error reading templates: ' + e); }
@@ -1014,6 +1086,7 @@ function apiGetInitialData() {
       users = readTable(SHEET_NAMES.USERS);
       if (!users || users.length === 0) {
         seedDefaultUsers();
+        delete _requestTableCache[SHEET_NAMES.USERS];
         users = readTable(SHEET_NAMES.USERS);
       }
     } catch (e) { Logger.log('Error reading users: ' + e); }
@@ -1027,7 +1100,7 @@ function apiGetInitialData() {
       return {
         id: u.id,
         username: u.username,
-        nama_lengkap: u.nama_lengkap,
+        nama_lengkap: u.nama_lengkap || u.nama || '',
         role: u.role,
         password_plain: u.password_plain || u.password || '',
         foto: u.foto || null
@@ -1342,6 +1415,7 @@ function apiSavePengaturan(payload) {
     }
   } else {
     sheet.clear();
+    ensureSheetDimensions(sheet, 25, 5);
     sheet.appendRow(['setting_key', 'setting_value']);
     sheet.getRange(1, 1, 1, 2).setFontWeight('bold');
   }

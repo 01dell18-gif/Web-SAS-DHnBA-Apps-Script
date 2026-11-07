@@ -11,7 +11,7 @@
 <header class="navbar">
     <div class="navbar-brand">
         <a href="<?= appUrl ?>?page=index" target="_top" onclick="navigateTo('index'); return false;" class="brand-link">
-            <img src="<?= (settings && (settings.school_logo || settings.logo_path)) ? (settings.school_logo || settings.logo_path) : 'https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI&sz=w1600' ?>" alt="Logo Sekolah" class="navbar-logo">
+            <img referrerpolicy="no-referrer" src="<?= (settings && (settings.school_logo || settings.logo_path)) ? (settings.school_logo || settings.logo_path) : 'https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI&sz=w1600' ?>" alt="Logo Sekolah" class="navbar-logo">
             <div class="brand-text">
                 <span class="brand-title"><?= (settings && settings.nama_sekolah) ? settings.nama_sekolah : 'SMK NEGERI FYJ CHANNEL' ?></span>
                 <span class="brand-subtitle">Pelihat Dokumen Pengawas</span>

@@ -193,7 +193,7 @@
 
                             <!-- Pratinjau Banner Kop -->
                             <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px dashed #cbd5e1; text-align: center; margin-bottom: 10px; min-height: 100px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                                <img id="previewKopSetting" src="<?= (settings && (settings.kop_header || settings.kop_image_path)) ? (settings.kop_header || settings.kop_image_path) : '' ?>" alt="Pratinjau Banner Kop" style="max-width: 100%; max-height: 110px; object-fit: contain; display: <?= (settings && (settings.kop_header || settings.kop_image_path)) ? 'block' : 'none' ?>;">
+                                <img id="previewKopSetting" referrerpolicy="no-referrer" src="<?= (settings && (settings.kop_header || settings.kop_image_path)) ? (settings.kop_header || settings.kop_image_path) : '' ?>" alt="Pratinjau Banner Kop" style="max-width: 100%; max-height: 110px; object-fit: contain; display: <?= (settings && (settings.kop_header || settings.kop_image_path)) ? 'block' : 'none' ?>;">
                                 <span id="placeholderKopSetting" style="font-size: 0.85rem; color: var(--text-muted); display: <?= (settings && (settings.kop_header || settings.kop_image_path)) ? 'none' : 'block' ?>;">
                                     <i class="bi bi-image" style="font-size: 1.5rem; display: block; margin-bottom: 4px;"></i> Belum ada banner kop yang disetel
                                 </span>
@@ -265,7 +265,7 @@
                             <!-- Pratinjau Logo -->
                             <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 10px; background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px dashed #cbd5e1;">
                                 <div style="width: 80px; height: 80px; border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #ffffff; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); flex-shrink: 0;">
-                                    <img id="previewLogoSetting" src="<?= (settings && (settings.school_logo || settings.logo_path)) ? (settings.school_logo || settings.logo_path) : '' ?>" alt="Logo Sekolah" style="max-width: 100%; max-height: 100%; object-fit: contain; display: <?= (settings && (settings.school_logo || settings.logo_path)) ? 'block' : 'none' ?>;">
+                                    <img id="previewLogoSetting" referrerpolicy="no-referrer" src="<?= (settings && (settings.school_logo || settings.logo_path)) ? (settings.school_logo || settings.logo_path) : '' ?>" alt="Logo Sekolah" style="max-width: 100%; max-height: 100%; object-fit: contain; display: <?= (settings && (settings.school_logo || settings.logo_path)) ? 'block' : 'none' ?>;">
                                     <span id="placeholderLogoSetting" style="font-size: 1.5rem; color: #94a3b8; display: <?= (settings && (settings.school_logo || settings.logo_path)) ? 'none' : 'block' ?>;"><i class="bi bi-building"></i></span>
                                 </div>
                                 <div>
@@ -415,10 +415,40 @@
                 </div>
             </div>
 
-            <!-- SECTION 3: BASIS DATA GOOGLE SPREADSHEET -->
+            <!-- SECTION 4: PENANDATANGAN DOKUMEN & FORMAT CETAK -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span class="card-title"><i class="bi bi-pen"></i> 4. Penandatangan Dokumen Resmi & Format Cetak</span>
+                    <span class="badge" style="background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Format Cetak A4</span>
+                </div>
+                <div class="card-body">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="set_kepala_sekolah">Nama Kepala Sekolah <span class="required">*</span></label>
+                            <input type="text" id="set_kepala_sekolah" class="form-control" value="<?= (settings && settings.kepala_sekolah) ? settings.kepala_sekolah : 'Drs. I Ketut Suardana, M.Pd.' ?>" placeholder="Contoh: Drs. I Ketut Suardana, M.Pd.">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="set_nip_kepala_sekolah">NIP Kepala Sekolah</label>
+                            <input type="text" id="set_nip_kepala_sekolah" class="form-control" value="<?= (settings && settings.nip_kepala_sekolah) ? settings.nip_kepala_sekolah : '19680315 199412 1 002' ?>" placeholder="Contoh: 19680315 199412 1 002">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="set_tempat_cetak">Kota / Tempat Cetak Dokumen</label>
+                            <input type="text" id="set_tempat_cetak" class="form-control" value="<?= (settings && settings.tempat_cetak) ? settings.tempat_cetak : 'Denpasar' ?>" placeholder="Contoh: Denpasar">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="set_format_tanggal_cetak">Format Tanggal Cetak Dokumen</label>
+                            <input type="text" id="set_format_tanggal_cetak" class="form-control" value="<?= (settings && settings.format_tanggal_cetak) ? settings.format_tanggal_cetak : 'd MMMM yyyy' ?>" placeholder="Contoh: d MMMM yyyy">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 5: BASIS DATA GOOGLE SPREADSHEET -->
             <div class="card" style="margin-bottom: 1.5rem;">
                 <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                    <span class="card-title"><i class="bi bi-file-earmark-spreadsheet"></i> 4. Database Relasional Google Spreadsheet</span>
+                    <span class="card-title"><i class="bi bi-file-earmark-spreadsheet"></i> 5. Database Relasional Google Spreadsheet</span>
                     <button type="button" class="btn btn-secondary btn-sm" onclick="loadDatabaseInfo()"><i class="bi bi-arrow-clockwise"></i> Segarkan Info</button>
                 </div>
                 <div class="card-body">
@@ -653,6 +683,20 @@ function loadInitialSettings(showToast) {
             document.getElementById('set_kop_3').value = s.kop_baris_3 || '';
             document.getElementById('set_kop_telepon').value = s.kop_telepon || '';
             document.getElementById('set_kop_website').value = s.kop_website || '';
+
+            // Penandatangan & Format Cetak
+            if (document.getElementById('set_kepala_sekolah')) {
+                document.getElementById('set_kepala_sekolah').value = s.kepala_sekolah || 'Drs. I Ketut Suardana, M.Pd.';
+            }
+            if (document.getElementById('set_nip_kepala_sekolah')) {
+                document.getElementById('set_nip_kepala_sekolah').value = s.nip_kepala_sekolah || '19680315 199412 1 002';
+            }
+            if (document.getElementById('set_tempat_cetak')) {
+                document.getElementById('set_tempat_cetak').value = s.tempat_cetak || 'Denpasar';
+            }
+            if (document.getElementById('set_format_tanggal_cetak')) {
+                document.getElementById('set_format_tanggal_cetak').value = s.format_tanggal_cetak || 'd MMMM yyyy';
+            }
 
             // Mode Kop
             var mode = s.kop_mode || 'image';
@@ -952,7 +996,11 @@ function handleSaveSettings(e) {
         kop_baris_2: document.getElementById('set_kop_2').value.trim(),
         kop_baris_3: document.getElementById('set_kop_3').value.trim(),
         kop_telepon: document.getElementById('set_kop_telepon').value.trim(),
-        kop_website: document.getElementById('set_kop_website').value.trim()
+        kop_website: document.getElementById('set_kop_website').value.trim(),
+        kepala_sekolah: document.getElementById('set_kepala_sekolah') ? document.getElementById('set_kepala_sekolah').value.trim() : '',
+        nip_kepala_sekolah: document.getElementById('set_nip_kepala_sekolah') ? document.getElementById('set_nip_kepala_sekolah').value.trim() : '',
+        tempat_cetak: document.getElementById('set_tempat_cetak') ? document.getElementById('set_tempat_cetak').value.trim() : '',
+        format_tanggal_cetak: document.getElementById('set_format_tanggal_cetak') ? document.getElementById('set_format_tanggal_cetak').value.trim() : ''
     };
 
     google.script.run

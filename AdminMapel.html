@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadMapelData();
 });
 
-function loadMapelData() {
+function loadMapelData(isRetry) {
     var tbody = document.getElementById('tableMapelBody');
     if (tbody) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);"><div class="spinner-border spinner-border-sm" role="status"></div> Memuat data mapel...</td></tr>';
@@ -144,6 +144,20 @@ function loadMapelData() {
         .withSuccessHandler(function(data) {
             window.AppStore.data = data;
             mapelList = (data && data.mapels) || [];
+            if ((!mapelList || mapelList.length === 0) && !isRetry) {
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);"><div class="spinner-border spinner-border-sm" role="status"></div> Menginisialisasi data master mapel...</td></tr>';
+                }
+                google.script.run
+                    .withSuccessHandler(function() {
+                        loadMapelData(true);
+                    })
+                    .withFailureHandler(function() {
+                        renderMapelTable(mapelList);
+                    })
+                    .apiForceReseedAllMasterData();
+                return;
+            }
             renderMapelTable(mapelList);
         })
         .withFailureHandler(function(err) {

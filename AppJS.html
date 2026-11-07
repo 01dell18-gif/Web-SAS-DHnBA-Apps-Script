@@ -63,6 +63,16 @@ function navigateTo(page, params) {
         return;
     } catch (e) {}
 
+    try {
+        var a = document.createElement('a');
+        a.href = targetUrl;
+        a.target = '_top';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        return;
+    } catch (e) {}
+
     window.location.href = targetUrl;
 }
 window.navigateTo = navigateTo;

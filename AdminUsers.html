@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadUsersData();
 });
 
-function loadUsersData() {
+function loadUsersData(isRetry) {
     var tbody = document.getElementById('tableUsersBody');
     if (tbody) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);"><div class="spinner-border spinner-border-sm" role="status"></div> Memuat data user...</td></tr>';
@@ -124,6 +124,21 @@ function loadUsersData() {
         .withSuccessHandler(function(data) {
             window.AppStore.data = data;
             usersList = (data && data.users) || [];
+            if ((!usersList || usersList.length === 0) && !isRetry) {
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);"><div class="spinner-border spinner-border-sm" role="status"></div> Menginisialisasi akun pengguna resmi...</td></tr>';
+                }
+                google.script.run
+                    .withSuccessHandler(function() {
+                        loadUsersData(true);
+                    })
+                    .withFailureHandler(function() {
+                        renderUsersTable(usersList);
+                        populateGuruPicker((data && data.teachers) || []);
+                    })
+                    .apiForceReseedAllMasterData();
+                return;
+            }
             renderUsersTable(usersList);
             populateGuruPicker((data && data.teachers) || []);
         })
@@ -218,7 +233,11 @@ function openUserModal() {
     document.getElementById('user_username').value = '';
     document.getElementById('user_nama').value = '';
     document.getElementById('user_role').value = 'operator';
-    document.getElementById('user_password').value = '123456';
+    var pwInp = document.getElementById('user_password');
+    if (pwInp) {
+        pwInp.type = 'password';
+        pwInp.value = '123456';
+    }
     document.getElementById('modalFormUser').style.display = 'flex';
 }
 
@@ -230,7 +249,11 @@ function editUser(id) {
     document.getElementById('user_username').value = u.username;
     document.getElementById('user_nama').value = u.nama_lengkap || '';
     document.getElementById('user_role').value = u.role || 'operator';
-    document.getElementById('user_password').value = u.password_plain || '';
+    var pwInp = document.getElementById('user_password');
+    if (pwInp) {
+        pwInp.type = 'password';
+        pwInp.value = u.password_plain || '';
+    }
     document.getElementById('modalFormUser').style.display = 'flex';
 }
 

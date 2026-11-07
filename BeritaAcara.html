@@ -53,7 +53,7 @@
 <header class="navbar">
     <div class="navbar-brand">
         <a href="<?= appUrl ?>?page=index" target="_top" onclick="navigateTo('index'); return false;" class="brand-link">
-            <img src="<?= (settings && (settings.school_logo || settings.logo_path)) ? (settings.school_logo || settings.logo_path) : 'https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI&sz=w1600' ?>" alt="Logo Sekolah" class="navbar-logo">
+            <img referrerpolicy="no-referrer" src="<?= (settings && (settings.school_logo || settings.logo_path)) ? (settings.school_logo || settings.logo_path) : 'https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI&sz=w1600' ?>" alt="Logo Sekolah" class="navbar-logo">
             <div class="brand-text">
                 <span class="brand-title"><?= (settings && settings.nama_sekolah) ? settings.nama_sekolah : 'SMK NEGERI FYJ CHANNEL' ?></span>
                 <span class="brand-subtitle">Generator Berita Acara Ujian</span>
@@ -298,10 +298,10 @@
                     <!-- KOP SURAT HALAMAN 1 -->
                     <div id="previewKopSurat1" class="<?= (settings && settings.kop_mode === 'image' && (settings.kop_header || settings.kop_image_path)) ? 'kop-surat-banner' : 'kop-surat' ?>">
                     <? if (settings && settings.kop_mode === 'image' && (settings.kop_header || settings.kop_image_path)) { ?>
-                        <img src="<?= (settings.kop_header || settings.kop_image_path) ?>" alt="Kop Surat" style="width: 100%; max-height: 110px; object-fit: contain; display: block; margin: 0 auto;">
+                        <img referrerpolicy="no-referrer" src="<?= (settings.kop_header || settings.kop_image_path) ?>" alt="Kop Surat" style="width: 100%; max-height: 110px; object-fit: contain; display: block; margin: 0 auto;">
                     <? } else { ?>
                         <div class="kop-logo">
-                            <img src="<?= (settings && (settings.school_logo || settings.logo_path)) ? (settings.school_logo || settings.logo_path) : '' ?>" alt="Logo">
+                            <img referrerpolicy="no-referrer" src="<?= (settings && (settings.school_logo || settings.logo_path)) ? (settings.school_logo || settings.logo_path) : '' ?>" alt="Logo">
                         </div>
                         <div class="kop-text">
                             <div class="kop-line-1"><?= (settings && settings.kop_baris_1) ? settings.kop_baris_1 : 'PEMERINTAH PROVINSI FYJ' ?></div>
@@ -357,10 +357,10 @@
                     <!-- KOP SURAT HALAMAN 2 -->
                     <div id="previewKopSurat2" class="<?= (settings && settings.kop_mode === 'image' && (settings.kop_header || settings.kop_image_path)) ? 'kop-surat-banner' : 'kop-surat' ?>">
                     <? if (settings && settings.kop_mode === 'image' && (settings.kop_header || settings.kop_image_path)) { ?>
-                        <img src="<?= (settings.kop_header || settings.kop_image_path) ?>" alt="Kop Surat" style="width: 100%; max-height: 110px; object-fit: contain; display: block; margin: 0 auto;">
+                        <img referrerpolicy="no-referrer" src="<?= (settings.kop_header || settings.kop_image_path) ?>" alt="Kop Surat" style="width: 100%; max-height: 110px; object-fit: contain; display: block; margin: 0 auto;">
                     <? } else { ?>
                         <div class="kop-logo">
-                            <img src="<?= (settings && (settings.school_logo || settings.logo_path)) ? (settings.school_logo || settings.logo_path) : '' ?>" alt="Logo">
+                            <img referrerpolicy="no-referrer" src="<?= (settings && (settings.school_logo || settings.logo_path)) ? (settings.school_logo || settings.logo_path) : '' ?>" alt="Logo">
                         </div>
                         <div class="kop-text">
                             <div class="kop-line-1"><?= (settings && settings.kop_baris_1) ? settings.kop_baris_1 : 'PEMERINTAH PROVINSI FYJ' ?></div>

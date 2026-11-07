@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadGuruData();
 });
 
-function loadGuruData() {
+function loadGuruData(isRetry) {
     var tbody = document.getElementById('tableGuruBody');
     if (tbody) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);"><div class="spinner-border spinner-border-sm" role="status"></div> Memuat data guru & pengawas...</td></tr>';
@@ -123,6 +123,20 @@ function loadGuruData() {
         .withSuccessHandler(function(data) {
             window.AppStore.data = data;
             guruList = (data && data.teachers) || [];
+            if ((!guruList || guruList.length === 0) && !isRetry) {
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);"><div class="spinner-border spinner-border-sm" role="status"></div> Menginisialisasi data master dewan guru...</td></tr>';
+                }
+                google.script.run
+                    .withSuccessHandler(function() {
+                        loadGuruData(true);
+                    })
+                    .withFailureHandler(function() {
+                        renderGuruTable(guruList);
+                    })
+                    .apiForceReseedAllMasterData();
+                return;
+            }
             renderGuruTable(guruList);
         })
         .withFailureHandler(function(err) {

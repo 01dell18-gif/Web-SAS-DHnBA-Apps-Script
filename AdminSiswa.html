@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadSiswaData();
 });
 
-function loadSiswaData() {
+function loadSiswaData(isRetry) {
     var tbody = document.getElementById('tableSiswaBody');
     if (tbody) {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);"><div class="spinner-border spinner-border-sm" role="status"></div> Memuat data siswa...</td></tr>';
@@ -145,6 +145,22 @@ function loadSiswaData() {
         .withSuccessHandler(function(data) {
             window.AppStore.data = data;
             siswaList = (data && data.students) || [];
+
+            // Auto-heal: jika masih 0 dan belum pernah coba reseed otomatis
+            if ((!siswaList || siswaList.length === 0) && !isRetry) {
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);"><div class="spinner-border spinner-border-sm" role="status"></div> Menginisialisasi 258 data siswa resmi...</td></tr>';
+                }
+                google.script.run
+                    .withSuccessHandler(function() {
+                        loadSiswaData(true);
+                    })
+                    .withFailureHandler(function() {
+                        filterSiswaTable();
+                    })
+                    .apiForceReseedAllMasterData();
+                return;
+            }
 
             // Populate Class Selects
             var fSelect = document.getElementById('filterSiswaKelas');
