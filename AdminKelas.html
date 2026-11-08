@@ -121,8 +121,9 @@ function initKelasPage() {
         window.AppStore.data = initialServerData;
         kelasList = initialServerData.classes;
         renderKelasTable(kelasList);
+    } else {
+        loadKelasData();
     }
-    loadKelasData();
 }
 
 if (document.readyState === 'loading') {

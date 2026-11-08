@@ -137,8 +137,9 @@ function initMapelPage() {
         window.AppStore.data = initialServerData;
         mapelList = initialServerData.mapels;
         renderMapelTable(mapelList);
+    } else {
+        loadMapelData();
     }
-    loadMapelData();
 }
 
 if (document.readyState === 'loading') {

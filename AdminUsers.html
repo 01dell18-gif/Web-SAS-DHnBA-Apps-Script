@@ -118,8 +118,9 @@ function initUsersPage() {
         usersList = initialServerData.users;
         renderUsersTable(usersList);
         populateGuruPicker(initialServerData.teachers || []);
+    } else {
+        loadUsersData();
     }
-    loadUsersData();
 }
 
 if (document.readyState === 'loading') {

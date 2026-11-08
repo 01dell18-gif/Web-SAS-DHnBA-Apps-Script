@@ -421,9 +421,13 @@ window.toggleUniversalMasterStatus = function(tableType, id, currentStatus, btnE
   var isCurrentlyActive = (currentStatus == 1 || currentStatus === '1' || currentStatus === true || String(currentStatus).toLowerCase() === 'aktif');
   var newStatus = isCurrentlyActive ? 0 : 1;
   var oldStatus = isCurrentlyActive ? 1 : 0;
+  var cbParam = (optCallback && typeof optCallback === 'function' && optCallback.name) ? (", " + optCallback.name) : "";
   
-  // Optimistic UI update
+  // Optimistic UI update & lock button to prevent double-click / race conditions
   if (btnEl) {
+    btnEl.disabled = true;
+    btnEl.style.pointerEvents = 'none';
+    btnEl.style.opacity = '0.65';
     var pill = btnEl.querySelector('.status-pill-badge') || btnEl;
     if (newStatus === 1) {
       pill.className = 'status-pill-badge is-active';
@@ -432,10 +436,9 @@ window.toggleUniversalMasterStatus = function(tableType, id, currentStatus, btnE
       pill.className = 'status-pill-badge is-inactive';
       pill.innerHTML = '<i class="bi bi-x-circle-fill"></i> <span>Nonaktif</span>';
     }
-    btnEl.setAttribute('onclick', "toggleUniversalMasterStatus('" + tableType + "', " + id + ", " + newStatus + ", this" + (optCallback ? ", " + optCallback.name : "") + ")");
   }
 
-  // Helper to update list item
+  // Helper to update list item in memory
   function updateInList(list) {
     if (!list || !Array.isArray(list)) return;
     var it = list.find(function(x) { return String(x.id) === String(id); });
@@ -461,7 +464,15 @@ window.toggleUniversalMasterStatus = function(tableType, id, currentStatus, btnE
 
   google.script.run
     .withSuccessHandler(function(res) {
+      if (btnEl) {
+        btnEl.disabled = false;
+        btnEl.style.pointerEvents = 'auto';
+        btnEl.style.opacity = '1';
+      }
       if (res && res.success) {
+        if (btnEl) {
+          btnEl.setAttribute('onclick', "toggleUniversalMasterStatus('" + tableType + "', " + id + ", " + newStatus + ", this" + cbParam + ")");
+        }
         showGlobalToast('Status ' + tableType + ' berhasil diubah menjadi ' + (newStatus === 1 ? 'Aktif' : 'Nonaktif') + '.', 'success');
         if (typeof optCallback === 'function') optCallback(newStatus);
       } else {
@@ -475,7 +486,7 @@ window.toggleUniversalMasterStatus = function(tableType, id, currentStatus, btnE
             pill.className = 'status-pill-badge is-inactive';
             pill.innerHTML = '<i class="bi bi-x-circle-fill"></i> <span>Nonaktif</span>';
           }
-          btnEl.setAttribute('onclick', "toggleUniversalMasterStatus('" + tableType + "', " + id + ", " + oldStatus + ", this" + (optCallback ? ", " + optCallback.name : "") + ")");
+          btnEl.setAttribute('onclick', "toggleUniversalMasterStatus('" + tableType + "', " + id + ", " + oldStatus + ", this" + cbParam + ")");
         }
         showGlobalToast((res && res.message) ? res.message : 'Gagal memperbarui status', 'danger');
       }
@@ -483,6 +494,9 @@ window.toggleUniversalMasterStatus = function(tableType, id, currentStatus, btnE
     .withFailureHandler(function(err) {
       // Rollback optimistic update
       if (btnEl) {
+        btnEl.disabled = false;
+        btnEl.style.pointerEvents = 'auto';
+        btnEl.style.opacity = '1';
         var pill = btnEl.querySelector('.status-pill-badge') || btnEl;
         if (oldStatus === 1) {
           pill.className = 'status-pill-badge is-active';
@@ -491,7 +505,7 @@ window.toggleUniversalMasterStatus = function(tableType, id, currentStatus, btnE
           pill.className = 'status-pill-badge is-inactive';
           pill.innerHTML = '<i class="bi bi-x-circle-fill"></i> <span>Nonaktif</span>';
         }
-        btnEl.setAttribute('onclick', "toggleUniversalMasterStatus('" + tableType + "', " + id + ", " + oldStatus + ", this" + (optCallback ? ", " + optCallback.name : "") + ")");
+        btnEl.setAttribute('onclick', "toggleUniversalMasterStatus('" + tableType + "', " + id + ", " + oldStatus + ", this" + cbParam + ")");
       }
       showGlobalToast('Terjadi kesalahan: ' + (err.message || err), 'danger');
     })

@@ -495,6 +495,7 @@ function updateRowById(sheetName, id, updates) {
       sheet.getRange(rowIdx, j + 1).setValue(val);
     }
   }
+  SpreadsheetApp.flush();
   invalidateCaches();
   return true;
 }
@@ -1532,47 +1533,57 @@ function apiSavePengaturan(payload) {
  * Bulk Toggle Master Status (Kelas, Siswa, Guru, Mapel)
  */
 function apiToggleAllMasterStatus(tableType, newStatus) {
-  var sheetNameMap = {
-    'kelas': SHEET_NAMES.CLASSES,
-    'siswa': SHEET_NAMES.STUDENTS,
-    'guru': SHEET_NAMES.TEACHERS,
-    'mapel': SHEET_NAMES.MAPEL,
-    'users': SHEET_NAMES.USERS
-  };
-  var sheetName = sheetNameMap[tableType];
-  if (!sheetName) return { success: false, message: 'Tabel tidak dikenali: ' + tableType };
+  try {
+    var sheetNameMap = {
+      'kelas': SHEET_NAMES.CLASSES,
+      'siswa': SHEET_NAMES.STUDENTS,
+      'guru': SHEET_NAMES.TEACHERS,
+      'mapel': SHEET_NAMES.MAPEL,
+      'users': SHEET_NAMES.USERS
+    };
+    var sheetName = sheetNameMap[tableType];
+    if (!sheetName) return { success: false, message: 'Tabel tidak dikenali: ' + tableType };
 
-  var sheet = getSheet(sheetName);
-  var lastRow = sheet.getLastRow();
-  var lastCol = sheet.getLastColumn();
-  if (lastRow < 2) return { success: true, count: 0, status: newStatus };
+    var sheet = getSheet(sheetName);
+    var lastRow = sheet.getLastRow();
+    var lastCol = sheet.getLastColumn();
+    if (lastRow < 2) return { success: true, count: 0, status: newStatus };
 
-  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
-  var colIndices = [];
-  for (var j = 0; j < headers.length; j++) {
-    var h = String(headers[j]).trim().toLowerCase();
-    if (h === 'aktif' || h === 'is_active' || h === 'status') {
-      colIndices.push({ col: j + 1, header: h });
+    var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    var colIndices = [];
+    for (var j = 0; j < headers.length; j++) {
+      var h = String(headers[j]).trim().toLowerCase();
+      if (h === 'aktif' || h === 'is_active' || h === 'status') {
+        colIndices.push({ col: j + 1, header: h });
+      }
     }
+    // Fallback for Mapel if column 5 is aktif
+    if (sheetName === SHEET_NAMES.MAPEL && colIndices.length === 0 && lastCol >= 5) {
+      colIndices.push({ col: 5, header: 'aktif' });
+    }
+    if (colIndices.length === 0) return { success: false, message: 'Kolom status aktif tidak ditemukan pada tabel ' + tableType };
+
+    var numRows = lastRow - 1;
+    var targetValNum = (newStatus === 1 || newStatus === '1') ? 1 : 0;
+    var targetValText = targetValNum === 1 ? 'Aktif' : 'Nonaktif';
+
+    colIndices.forEach(function(colInfo) {
+      var val = (colInfo.header === 'status') ? targetValText : targetValNum;
+      var statusValues = [];
+      for (var r = 0; r < numRows; r++) {
+        statusValues.push([val]);
+      }
+      sheet.getRange(2, colInfo.col, numRows, 1).setValues(statusValues);
+    });
+
+    SpreadsheetApp.flush();
+    invalidateCaches();
+    logActivity('BULK_STATUS_' + String(tableType).toUpperCase(), 'Mengubah status semua data ' + tableType + ' (' + numRows + ' data) menjadi ' + (targetValNum === 1 ? 'Aktif' : 'Nonaktif'));
+    return { success: true, count: numRows, status: targetValNum };
+  } catch (err) {
+    Logger.log('apiToggleAllMasterStatus error: ' + err);
+    return { success: false, message: 'Gagal memperbarui status massal: ' + (err.message || err) };
   }
-  if (colIndices.length === 0) return { success: false, message: 'Kolom status aktif tidak ditemukan pada tabel ' + tableType };
-
-  var numRows = lastRow - 1;
-  var targetValNum = (newStatus === 1 || newStatus === '1') ? 1 : 0;
-  var targetValText = targetValNum === 1 ? 'Aktif' : 'Nonaktif';
-
-  colIndices.forEach(function(colInfo) {
-    var val = (colInfo.header === 'status') ? targetValText : targetValNum;
-    var statusValues = [];
-    for (var r = 0; r < numRows; r++) {
-      statusValues.push([val]);
-    }
-    sheet.getRange(2, colInfo.col, numRows, 1).setValues(statusValues);
-  });
-
-  invalidateCaches();
-  logActivity('BULK_STATUS_' + String(tableType).toUpperCase(), 'Mengubah status semua data ' + tableType + ' (' + numRows + ' data) menjadi ' + (targetValNum === 1 ? 'Aktif' : 'Nonaktif'));
-  return { success: true, count: numRows, status: targetValNum };
 }
 
 /**
@@ -1770,44 +1781,63 @@ function apiImportUsers(users) {
  * Universal Quick Toggle Status (Aktif <-> Nonaktif)
  */
 function apiToggleMasterStatus(tableType, id, newStatus) {
-  var sheetMap = {
-    'kelas': SHEET_NAMES.CLASSES,
-    'siswa': SHEET_NAMES.STUDENTS,
-    'guru': SHEET_NAMES.TEACHERS,
-    'mapel': SHEET_NAMES.MAPEL,
-    'users': SHEET_NAMES.USERS,
-    'template': SHEET_NAMES.TEMPLATES
-  };
-  var sheetName = sheetMap[tableType];
-  if (!sheetName) return { success: false, message: 'Tabel master tidak valid: ' + tableType };
+  try {
+    var sheetMap = {
+      'kelas': SHEET_NAMES.CLASSES,
+      'siswa': SHEET_NAMES.STUDENTS,
+      'guru': SHEET_NAMES.TEACHERS,
+      'mapel': SHEET_NAMES.MAPEL,
+      'users': SHEET_NAMES.USERS,
+      'template': SHEET_NAMES.TEMPLATES
+    };
+    var sheetName = sheetMap[tableType];
+    if (!sheetName) return { success: false, message: 'Tabel master tidak valid: ' + tableType };
 
-  var rows = readTable(sheetName);
-  var target = null;
-  for (var i = 0; i < rows.length; i++) {
-    if (String(rows[i].id) === String(id)) {
-      target = rows[i];
-      break;
+    invalidateCaches();
+    var rows = readTable(sheetName);
+    var target = null;
+    for (var i = 0; i < rows.length; i++) {
+      if (String(rows[i].id) === String(id)) {
+        target = rows[i];
+        break;
+      }
     }
+    if (!target) return { success: false, message: 'Data ID #' + id + ' tidak ditemukan di sheet ' + sheetName };
+
+    var statusVal;
+    if (newStatus !== undefined && newStatus !== null) {
+      statusVal = (newStatus === 1 || newStatus === '1' || newStatus === true || newStatus === 'true') ? 1 : 0;
+    } else {
+      var cur = parseInt(target.aktif, 10);
+      statusVal = (cur === 1) ? 0 : 1;
+    }
+
+    var ok = updateRowById(sheetName, id, {
+      aktif: statusVal,
+      is_active: statusVal,
+      status: (statusVal === 1 ? 'Aktif' : 'Nonaktif')
+    });
+
+    if (!ok) {
+      return { success: false, message: 'Gagal memperbarui baris #' + id + ' di sheet ' + sheetName };
+    }
+
+    // Direct write guard for Mapel
+    if (sheetName === SHEET_NAMES.MAPEL && target._row) {
+      try {
+        var sheet = getSheet(sheetName);
+        sheet.getRange(target._row, 5).setValue(statusVal);
+      } catch (eM) {}
+    }
+
+    SpreadsheetApp.flush();
+    invalidateCaches();
+    logActivity('TOGGLE_STATUS', 'Mengubah status ' + tableType + ' #' + id + ' menjadi ' + (statusVal === 1 ? 'Aktif' : 'Nonaktif'));
+    return { success: true, newStatus: statusVal, id: id };
+  } catch (err) {
+    Logger.log('apiToggleMasterStatus error: ' + err);
+    return { success: false, message: 'Gagal update status: ' + (err.message || err) };
   }
-  if (!target) return { success: false, message: 'Data tidak ditemukan' };
-
-  var statusVal;
-  if (newStatus !== undefined && newStatus !== null) {
-    statusVal = (newStatus === 1 || newStatus === '1' || newStatus === true || newStatus === 'true') ? 1 : 0;
-  } else {
-    var cur = parseInt(target.aktif, 10);
-    statusVal = (cur === 1) ? 0 : 1;
-  }
-
-  updateRowById(sheetName, id, {
-    aktif: statusVal,
-    is_active: statusVal,
-    status: (statusVal === 1 ? 'Aktif' : 'Nonaktif')
-  });
-
-  invalidateCaches();
-  logActivity('TOGGLE_STATUS', 'Mengubah status ' + tableType + ' #' + id + ' menjadi ' + (statusVal === 1 ? 'Aktif' : 'Nonaktif'));
-  return { success: true, newStatus: statusVal };
 }
 
 function apiSaveTemplate(payload) {

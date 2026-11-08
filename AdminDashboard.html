@@ -156,10 +156,11 @@
 var initialServerData = <?!= (typeof serverData !== 'undefined' && serverData) ? JSON.stringify(serverData) : 'null' ?>;
 
 function initDashboardPage() {
-    if (initialServerData) {
+    if (initialServerData && initialServerData.classes) {
         applyDashboardData(initialServerData);
+    } else {
+        loadDashboardStats();
     }
-    loadDashboardStats();
 }
 
 if (document.readyState === 'loading') {

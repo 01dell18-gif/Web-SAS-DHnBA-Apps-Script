@@ -139,8 +139,9 @@ function initSiswaPage() {
         siswaList = initialServerData.students;
         populateSiswaClasses(initialServerData.classes || []);
         filterSiswaTable();
+    } else {
+        loadSiswaData();
     }
-    loadSiswaData();
 }
 
 if (document.readyState === 'loading') {

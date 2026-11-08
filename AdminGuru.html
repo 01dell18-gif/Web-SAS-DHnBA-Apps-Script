@@ -116,8 +116,9 @@ function initGuruPage() {
         window.AppStore.data = initialServerData;
         guruList = initialServerData.teachers;
         renderGuruTable(guruList);
+    } else {
+        loadGuruData();
     }
-    loadGuruData();
 }
 
 if (document.readyState === 'loading') {
