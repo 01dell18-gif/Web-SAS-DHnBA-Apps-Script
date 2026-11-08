@@ -51,6 +51,12 @@ function ensureAllMasterSheetsSeeded() {
 
   try {
     var mp = readTable(SHEET_NAMES.MAPEL);
+    // Auto-repair if Mapel has shifted columns (empty aktif cell with 1 in created_at)
+    if (mp && mp.length > 0 && (mp[0].aktif === 0 || mp[0].aktif === '') && (mp[0].created_at === 1 || mp[0].created_at === '1')) {
+      seedDefaultMapel();
+      delete _requestTableCache[SHEET_NAMES.MAPEL];
+      mp = readTable(SHEET_NAMES.MAPEL);
+    }
     if (!mp || mp.length === 0) seedDefaultMapel();
   } catch (e4) {
     Logger.log('ensureAllMasterSheetsSeeded mapel error: ' + e4.message);
@@ -168,9 +174,16 @@ function renderTemplate(filename) {
   template.appUrl = getAppUrl();
   template.settings = getSettingsMap();
   template.schoolSettings = template.settings;
+  
+  // Attach initial data directly to template for instant client-side rendering
+  try {
+    template.serverData = apiGetInitialData();
+  } catch (e) {
+    template.serverData = null;
+  }
 
   return template.evaluate()
-    .setTitle('Generator Absensi & Berita Acara - SMK NEGERI FYJ Channel')
+    .setTitle('Generator Absensi & Berita Acara - ' + ((template.settings && template.settings.nama_sekolah) ? template.settings.nama_sekolah : 'SMK NEGERI FYJ Channel'))
     .addMetaTag('viewport', 'width=device-width, initial-scale=1.0')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
@@ -342,15 +355,32 @@ function readTable(sheetName) {
     var isEmpty = true;
     for (var j = 0; j < headers.length; j++) {
       var rawKey = String(headers[j]).trim();
+      if (!rawKey) continue;
       var lowerKey = rawKey.toLowerCase();
       var val = values[i][j];
-      if (val !== '' && val !== null && val !== undefined) isEmpty = false;
+      
+      // JSON Serialization Safety: Convert Date objects to formatted string
+      if (val instanceof Date) {
+        val = Utilities.formatDate(val, 'Asia/Makassar', 'yyyy-MM-dd HH:mm:ss');
+      } else if (val === null || val === undefined) {
+        val = '';
+      }
+
+      if (val !== '') isEmpty = false;
       rowObj[rawKey] = val;
-      rowObj[lowerKey] = val;
+      if (rawKey !== lowerKey) {
+        rowObj[lowerKey] = val;
+      }
     }
     if (!isEmpty) {
+      // Auto-correct Mapel if column E (aktif) is blank and column F contains 1
+      if (sheetName === SHEET_NAMES.MAPEL && (rowObj.aktif === '' || rowObj.aktif === undefined) && (rowObj.created_at === 1 || rowObj.created_at === '1')) {
+        rowObj.aktif = 1;
+      }
+
       // Robust multi-synonym status normalization
-      var rawStatus = rowObj.aktif !== undefined ? rowObj.aktif : (rowObj.is_active !== undefined ? rowObj.is_active : rowObj.status);
+      var rawStatus = (rowObj.aktif !== undefined && rowObj.aktif !== '') ? rowObj.aktif : 
+                     ((rowObj.is_active !== undefined && rowObj.is_active !== '') ? rowObj.is_active : rowObj.status);
       var isAct = (rawStatus === 1 || rawStatus === '1' || rawStatus === true || String(rawStatus).toLowerCase() === 'aktif' || String(rawStatus).toLowerCase() === 'active');
       rowObj.aktif = isAct ? 1 : 0;
       rowObj.is_active = isAct ? 1 : 0;
@@ -1107,18 +1137,27 @@ function apiGetInitialData() {
       };
     });
 
+    var safeLogs = (Array.isArray(logs) ? logs : []).slice(-20);
+
     var result = {
       success: true,
       settings: settings,
-      classes: classes,
-      students: students,
-      teachers: teachers,
-      mapels: mapels,
-      templates: templates,
-      users: sanitizedUsers,
-      absensi: absensi,
-      berita_acara: beritaAcara,
-      logs: logs.slice(-20)
+      classes: classes || [],
+      students: students || [],
+      teachers: teachers || [],
+      mapels: mapels || [],
+      templates: templates || [],
+      users: sanitizedUsers || [],
+      absensi: absensi || [],
+      berita_acara: beritaAcara || [],
+      logs: safeLogs,
+      stats: {
+        classesCount: (classes || []).length,
+        studentsCount: (students || []).length,
+        teachersCount: (teachers || []).length,
+        mapelsCount: (mapels || []).length,
+        usersCount: (sanitizedUsers || []).length
+      }
     };
 
     return result;

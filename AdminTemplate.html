@@ -200,7 +200,7 @@ const wysiwygSource = document.getElementById('wysiwygSource');
 const hiddenRedaksi = document.getElementById('tpl_redaksi_isi');
 const elJudul = document.getElementById('tpl_judul_ba');
 
-document.addEventListener('DOMContentLoaded', function() {
+onDocumentReady(function() {
     lastActiveField = wysiwygCanvas;
 
     // Attach WYSIWYG Toolbar Events

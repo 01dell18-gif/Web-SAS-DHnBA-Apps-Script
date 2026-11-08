@@ -80,7 +80,7 @@
 <script>
 var baList = [];
 
-document.addEventListener('DOMContentLoaded', function() {
+onDocumentReady(function() {
     loadBAData();
 });
 
@@ -88,15 +88,18 @@ function loadBAData() {
     google.script.run
         .withSuccessHandler(function(data) {
             window.AppStore.data = data;
-            baList = data.berita_acara || [];
+            baList = (data && data.berita_acara) || [];
 
             var filterKelas = document.getElementById('filterKelas');
-            data.classes.forEach(function(c) {
-                var opt = document.createElement('option');
-                opt.value = c.id;
-                opt.textContent = c.nama_kelas;
-                filterKelas.appendChild(opt);
-            });
+            if (filterKelas) {
+                filterKelas.innerHTML = '<option value="">Semua Rombel</option>';
+                ((data && data.classes) || []).forEach(function(c) {
+                    var opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.nama_kelas;
+                    filterKelas.appendChild(opt);
+                });
+            }
 
             filterArsipTable();
         })

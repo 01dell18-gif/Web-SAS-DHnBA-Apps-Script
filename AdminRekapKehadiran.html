@@ -115,36 +115,42 @@ var currentMatrixClassId = null;
 var currentClassStudents = [];
 var classSubjectSessions = [];
 
-document.addEventListener('DOMContentLoaded', function() {
+onDocumentReady(function() {
     google.script.run
         .withSuccessHandler(function(data) {
             window.AppStore.data = data;
             
             var cSelect = document.getElementById('selectMatrixClass');
-            cSelect.innerHTML = '';
-            data.classes.forEach(function(c) {
-                var opt = document.createElement('option');
-                opt.value = c.id;
-                opt.textContent = c.nama_kelas;
-                cSelect.appendChild(opt);
-            });
+            if (cSelect) {
+                cSelect.innerHTML = '';
+                ((data && data.classes) || []).forEach(function(c) {
+                    var opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.nama_kelas;
+                    cSelect.appendChild(opt);
+                });
+            }
 
             // Modal mapel datalist
             var dl = document.getElementById('modalDatalistMapel');
-            data.mapels.forEach(function(m) {
-                var opt = document.createElement('option');
-                opt.value = m.nama_mapel;
-                dl.appendChild(opt);
-            });
+            if (dl) {
+                dl.innerHTML = '';
+                ((data && data.mapels) || []).forEach(function(m) {
+                    var opt = document.createElement('option');
+                    opt.value = m.nama_mapel;
+                    dl.appendChild(opt);
+                });
+            }
 
+            var classes = (data && data.classes) || [];
             var serverCid = '<?= (params && params.class_id) ? params.class_id : "" ?>';
             var urlParams = new URLSearchParams(window.location.search);
             var initialCid = serverCid || urlParams.get('class_id');
-            if (initialCid && data.classes.some(function(c) { return String(c.id) === String(initialCid); })) {
-                cSelect.value = initialCid;
+            if (initialCid && classes.some(function(c) { return String(c.id) === String(initialCid); })) {
+                if (cSelect) cSelect.value = initialCid;
                 renderMatrixReport(initialCid);
-            } else if (data.classes.length > 0) {
-                renderMatrixReport(data.classes[0].id);
+            } else if (classes.length > 0) {
+                renderMatrixReport(classes[0].id);
             }
         })
         .apiGetInitialData();

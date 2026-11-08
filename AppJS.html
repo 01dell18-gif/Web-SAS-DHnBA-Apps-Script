@@ -585,8 +585,18 @@ window.compressPhoto = function(file, callback, customMaxDim) {
   reader.readAsDataURL(file);
 };
 
+// Universal DOM Ready Helper for iframes and Web Apps
+function onDocumentReady(fn) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fn);
+  } else {
+    setTimeout(fn, 1);
+  }
+}
+window.onDocumentReady = onDocumentReady;
+
 // Auto Initialize Header Profile Info
-document.addEventListener('DOMContentLoaded', function() {
+onDocumentReady(function() {
   try {
     var userJson = localStorage.getItem('sas_admin_user');
     var role = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();

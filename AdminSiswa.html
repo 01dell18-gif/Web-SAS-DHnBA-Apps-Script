@@ -131,66 +131,76 @@
 
 <script>
 var siswaList = [];
+var initialServerData = <?!= (typeof serverData !== 'undefined' && serverData) ? JSON.stringify(serverData) : 'null' ?>;
 
-document.addEventListener('DOMContentLoaded', function() {
+function initSiswaPage() {
+    if (initialServerData && initialServerData.students && initialServerData.students.length > 0) {
+        window.AppStore.data = initialServerData;
+        siswaList = initialServerData.students;
+        populateSiswaClasses(initialServerData.classes || []);
+        filterSiswaTable();
+    }
     loadSiswaData();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSiswaPage);
+} else {
+    initSiswaPage();
+}
+
+function populateSiswaClasses(classes) {
+    var fSelect = document.getElementById('filterSiswaKelas');
+    var mSelect = document.getElementById('siswa_class_id');
+    if (!fSelect || !mSelect) return;
+    var curVal = fSelect.value;
+    fSelect.innerHTML = '<option value="">Semua Kelas</option>';
+    mSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+
+    classes.forEach(function(c) {
+        var opt1 = document.createElement('option');
+        opt1.value = c.id;
+        opt1.textContent = c.nama_kelas;
+        fSelect.appendChild(opt1);
+
+        var opt2 = document.createElement('option');
+        opt2.value = c.id;
+        opt2.textContent = c.nama_kelas;
+        mSelect.appendChild(opt2);
+    });
+
+    var serverCid = '<?= (params && params.class_id) ? params.class_id : "" ?>';
+    var urlParams = new URLSearchParams(window.location.search);
+    var targetCid = curVal || serverCid || urlParams.get('class_id');
+    if (targetCid) fSelect.value = targetCid;
+}
 
 function loadSiswaData(isRetry) {
     var tbody = document.getElementById('tableSiswaBody');
-    if (tbody) {
+    if (tbody && (!siswaList || siswaList.length === 0)) {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);"><div class="spinner-border spinner-border-sm" role="status"></div> Memuat data siswa...</td></tr>';
     }
     google.script.run
         .withSuccessHandler(function(data) {
-            window.AppStore.data = data;
-            siswaList = (data && data.students) || [];
-
-            // Auto-heal: jika masih 0 dan belum pernah coba reseed otomatis
-            if ((!siswaList || siswaList.length === 0) && !isRetry) {
-                if (tbody) {
-                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);"><div class="spinner-border spinner-border-sm" role="status"></div> Menginisialisasi 258 data siswa resmi...</td></tr>';
+            if (!data || data.success === false) {
+                var errMsg = (data && data.error) ? data.error : 'Terjadi kegagalan mengambil data dari spreadsheet.';
+                if (tbody && (!siswaList || siswaList.length === 0)) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem;">' +
+                        '<div style="color: #e11d48; font-weight: 700; margin-bottom: 0.5rem;"><i class="bi bi-exclamation-triangle-fill"></i> Gagal Memuat Data Siswa</div>' +
+                        '<div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">' + errMsg + '</div>' +
+                        '<button type="button" class="btn btn-primary btn-sm" onclick="loadSiswaData()"><i class="bi bi-arrow-clockwise"></i> Coba Muat Ulang</button>' +
+                        '</td></tr>';
                 }
-                google.script.run
-                    .withSuccessHandler(function() {
-                        loadSiswaData(true);
-                    })
-                    .withFailureHandler(function() {
-                        filterSiswaTable();
-                    })
-                    .apiForceReseedAllMasterData();
+                showGlobalToast(errMsg, 'danger');
                 return;
             }
-
-            // Populate Class Selects
-            var fSelect = document.getElementById('filterSiswaKelas');
-            var mSelect = document.getElementById('siswa_class_id');
-            fSelect.innerHTML = '<option value="">Semua Kelas</option>';
-            mSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
-
-            var classes = (data && data.classes) || [];
-            classes.forEach(function(c) {
-                var opt1 = document.createElement('option');
-                opt1.value = c.id;
-                opt1.textContent = c.nama_kelas;
-                fSelect.appendChild(opt1);
-
-                var opt2 = document.createElement('option');
-                opt2.value = c.id;
-                opt2.textContent = c.nama_kelas;
-                mSelect.appendChild(opt2);
-            });
-
-            // Check URL param class_id
-            var serverCid = '<?= (params && params.class_id) ? params.class_id : "" ?>';
-            var urlParams = new URLSearchParams(window.location.search);
-            var targetCid = serverCid || urlParams.get('class_id');
-            if (targetCid) fSelect.value = targetCid;
-
+            window.AppStore.data = data;
+            siswaList = (data && data.students) || [];
+            populateSiswaClasses((data && data.classes) || []);
             filterSiswaTable();
         })
         .withFailureHandler(function(err) {
-            if (tbody) {
+            if (tbody && (!siswaList || siswaList.length === 0)) {
                 tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem;">' +
                     '<div style="color: #e11d48; font-weight: 700; margin-bottom: 0.5rem;"><i class="bi bi-exclamation-triangle-fill"></i> Gagal memuat data siswa</div>' +
                     '<div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">' + (err && err.message ? err.message : err) + '</div>' +

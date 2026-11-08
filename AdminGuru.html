@@ -109,38 +109,48 @@
 
 <script>
 var guruList = [];
+var initialServerData = <?!= (typeof serverData !== 'undefined' && serverData) ? JSON.stringify(serverData) : 'null' ?>;
 
-document.addEventListener('DOMContentLoaded', function() {
+function initGuruPage() {
+    if (initialServerData && initialServerData.teachers && initialServerData.teachers.length > 0) {
+        window.AppStore.data = initialServerData;
+        guruList = initialServerData.teachers;
+        renderGuruTable(guruList);
+    }
     loadGuruData();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initGuruPage);
+} else {
+    initGuruPage();
+}
 
 function loadGuruData(isRetry) {
     var tbody = document.getElementById('tableGuruBody');
-    if (tbody) {
+    if (tbody && (!guruList || guruList.length === 0)) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);"><div class="spinner-border spinner-border-sm" role="status"></div> Memuat data guru & pengawas...</td></tr>';
     }
     google.script.run
         .withSuccessHandler(function(data) {
-            window.AppStore.data = data;
-            guruList = (data && data.teachers) || [];
-            if ((!guruList || guruList.length === 0) && !isRetry) {
-                if (tbody) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);"><div class="spinner-border spinner-border-sm" role="status"></div> Menginisialisasi data master dewan guru...</td></tr>';
+            if (!data || data.success === false) {
+                var errMsg = (data && data.error) ? data.error : 'Terjadi kegagalan mengambil data dari spreadsheet.';
+                if (tbody && (!guruList || guruList.length === 0)) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">' +
+                        '<div style="color: #e11d48; font-weight: 700; margin-bottom: 0.5rem;"><i class="bi bi-exclamation-triangle-fill"></i> Gagal Memuat Data Guru</div>' +
+                        '<div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">' + errMsg + '</div>' +
+                        '<button type="button" class="btn btn-primary btn-sm" onclick="loadGuruData()"><i class="bi bi-arrow-clockwise"></i> Coba Muat Ulang</button>' +
+                        '</td></tr>';
                 }
-                google.script.run
-                    .withSuccessHandler(function() {
-                        loadGuruData(true);
-                    })
-                    .withFailureHandler(function() {
-                        renderGuruTable(guruList);
-                    })
-                    .apiForceReseedAllMasterData();
+                showGlobalToast(errMsg, 'danger');
                 return;
             }
+            window.AppStore.data = data;
+            guruList = (data && data.teachers) || [];
             renderGuruTable(guruList);
         })
         .withFailureHandler(function(err) {
-            if (tbody) {
+            if (tbody && (!guruList || guruList.length === 0)) {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">' +
                     '<div style="color: #e11d48; font-weight: 700; margin-bottom: 0.5rem;"><i class="bi bi-exclamation-triangle-fill"></i> Gagal memuat data guru</div>' +
                     '<div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">' + (err && err.message ? err.message : err) + '</div>' +

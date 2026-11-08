@@ -46,7 +46,7 @@
 <?!= include('AppJS'); ?>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+onDocumentReady(function() {
     var serverType = '<?= (params && params.type) ? params.type : "" ?>';
     var serverId = '<?= (params && params.id) ? params.id : "" ?>';
     var urlParams = new URLSearchParams(window.location.search);

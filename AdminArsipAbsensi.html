@@ -79,7 +79,7 @@
 <script>
 var arsipList = [];
 
-document.addEventListener('DOMContentLoaded', function() {
+onDocumentReady(function() {
     loadArsipData();
 });
 
@@ -87,15 +87,18 @@ function loadArsipData() {
     google.script.run
         .withSuccessHandler(function(data) {
             window.AppStore.data = data;
-            arsipList = data.absensi || [];
+            arsipList = (data && data.absensi) || [];
 
             var filterKelas = document.getElementById('filterKelas');
-            data.classes.forEach(function(c) {
-                var opt = document.createElement('option');
-                opt.value = c.id;
-                opt.textContent = c.nama_kelas;
-                filterKelas.appendChild(opt);
-            });
+            if (filterKelas) {
+                filterKelas.innerHTML = '<option value="">Semua Rombel</option>';
+                ((data && data.classes) || []).forEach(function(c) {
+                    var opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.nama_kelas;
+                    filterKelas.appendChild(opt);
+                });
+            }
 
             filterArsipTable();
         })

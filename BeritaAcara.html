@@ -443,7 +443,7 @@ var pad1 = null;
 var pad2 = null;
 var uploadedPhotos = [];
 
-document.addEventListener('DOMContentLoaded', function() {
+onDocumentReady(function() {
     var today = new Date().toISOString().split('T')[0];
     document.getElementById('tanggal_ujian').value = today;
 

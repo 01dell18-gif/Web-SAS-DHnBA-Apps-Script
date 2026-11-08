@@ -130,38 +130,48 @@
 
 <script>
 var mapelList = [];
+var initialServerData = <?!= (typeof serverData !== 'undefined' && serverData) ? JSON.stringify(serverData) : 'null' ?>;
 
-document.addEventListener('DOMContentLoaded', function() {
+function initMapelPage() {
+    if (initialServerData && initialServerData.mapels && initialServerData.mapels.length > 0) {
+        window.AppStore.data = initialServerData;
+        mapelList = initialServerData.mapels;
+        renderMapelTable(mapelList);
+    }
     loadMapelData();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMapelPage);
+} else {
+    initMapelPage();
+}
 
 function loadMapelData(isRetry) {
     var tbody = document.getElementById('tableMapelBody');
-    if (tbody) {
+    if (tbody && (!mapelList || mapelList.length === 0)) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);"><div class="spinner-border spinner-border-sm" role="status"></div> Memuat data mapel...</td></tr>';
     }
     google.script.run
         .withSuccessHandler(function(data) {
-            window.AppStore.data = data;
-            mapelList = (data && data.mapels) || [];
-            if ((!mapelList || mapelList.length === 0) && !isRetry) {
-                if (tbody) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);"><div class="spinner-border spinner-border-sm" role="status"></div> Menginisialisasi data master mapel...</td></tr>';
+            if (!data || data.success === false) {
+                var errMsg = (data && data.error) ? data.error : 'Terjadi kegagalan mengambil data dari spreadsheet.';
+                if (tbody && (!mapelList || mapelList.length === 0)) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">' +
+                        '<div style="color: #e11d48; font-weight: 700; margin-bottom: 0.5rem;"><i class="bi bi-exclamation-triangle-fill"></i> Gagal Memuat Data Mapel</div>' +
+                        '<div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">' + errMsg + '</div>' +
+                        '<button type="button" class="btn btn-primary btn-sm" onclick="loadMapelData()"><i class="bi bi-arrow-clockwise"></i> Coba Muat Ulang</button>' +
+                        '</td></tr>';
                 }
-                google.script.run
-                    .withSuccessHandler(function() {
-                        loadMapelData(true);
-                    })
-                    .withFailureHandler(function() {
-                        renderMapelTable(mapelList);
-                    })
-                    .apiForceReseedAllMasterData();
+                showGlobalToast(errMsg, 'danger');
                 return;
             }
+            window.AppStore.data = data;
+            mapelList = (data && data.mapels) || [];
             renderMapelTable(mapelList);
         })
         .withFailureHandler(function(err) {
-            if (tbody) {
+            if (tbody && (!mapelList || mapelList.length === 0)) {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">' +
                     '<div style="color: #e11d48; font-weight: 700; margin-bottom: 0.5rem;"><i class="bi bi-exclamation-triangle-fill"></i> Gagal memuat data mapel</div>' +
                     '<div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">' + (err && err.message ? err.message : err) + '</div>' +

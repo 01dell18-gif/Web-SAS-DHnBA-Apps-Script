@@ -73,7 +73,7 @@
 var currentAvatarBase64 = null;
 var currentUserId = 1;
 
-document.addEventListener('DOMContentLoaded', function() {
+onDocumentReady(function() {
     try {
         var u = JSON.parse(localStorage.getItem('sas_admin_user') || '{}');
         if (u.id) currentUserId = u.id;

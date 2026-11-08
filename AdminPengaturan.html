@@ -502,11 +502,17 @@ if (!Array.isArray(_daftarTahunAjaran) || _daftarTahunAjaran.length === 0) {
 var _tahunAktif = '<?= (settings && (settings.tahun_ajaran_aktif || settings.academic_year)) ? (settings.tahun_ajaran_aktif || settings.academic_year) : '2026/2027' ?>';
 var _dbUrl = '';
 
-document.addEventListener('DOMContentLoaded', function() {
+function initPengaturanPage() {
     renderTahunAjaran();
     loadInitialSettings();
     loadDatabaseInfo();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPengaturanPage);
+} else {
+    initPengaturanPage();
+}
 
 function formatDriveImageUrlClient(url) {
     if (!url) return '';

@@ -175,7 +175,7 @@
 var activeImportType = 'siswa';
 var parsedImportRows = [];
 
-document.addEventListener('DOMContentLoaded', function() {
+onDocumentReady(function() {
     var urlParams = new URLSearchParams(window.location.search);
     var targetTab = urlParams.get('tab') || 'siswa';
     switchImportTab(targetTab);

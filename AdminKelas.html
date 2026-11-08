@@ -114,38 +114,48 @@
 
 <script>
 var kelasList = [];
+var initialServerData = <?!= (typeof serverData !== 'undefined' && serverData) ? JSON.stringify(serverData) : 'null' ?>;
 
-document.addEventListener('DOMContentLoaded', function() {
+function initKelasPage() {
+    if (initialServerData && initialServerData.classes && initialServerData.classes.length > 0) {
+        window.AppStore.data = initialServerData;
+        kelasList = initialServerData.classes;
+        renderKelasTable(kelasList);
+    }
     loadKelasData();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initKelasPage);
+} else {
+    initKelasPage();
+}
 
 function loadKelasData(isRetry) {
     var tbody = document.getElementById('tableKelasBody');
-    if (tbody) {
+    if (tbody && (!kelasList || kelasList.length === 0)) {
         tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);"><div class="spinner-border spinner-border-sm" role="status"></div> Memuat data kelas...</td></tr>';
     }
     google.script.run
         .withSuccessHandler(function(data) {
-            window.AppStore.data = data;
-            kelasList = (data && data.classes) || [];
-            if ((!kelasList || kelasList.length === 0) && !isRetry) {
-                if (tbody) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);"><div class="spinner-border spinner-border-sm" role="status"></div> Menginisialisasi data master kelas...</td></tr>';
+            if (!data || data.success === false) {
+                var errMsg = (data && data.error) ? data.error : 'Terjadi kegagalan mengambil data dari spreadsheet.';
+                if (tbody && (!kelasList || kelasList.length === 0)) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">' +
+                        '<div style="color: #e11d48; font-weight: 700; margin-bottom: 0.5rem;"><i class="bi bi-exclamation-triangle-fill"></i> Gagal Memuat Data Kelas</div>' +
+                        '<div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">' + errMsg + '</div>' +
+                        '<button type="button" class="btn btn-primary btn-sm" onclick="loadKelasData()"><i class="bi bi-arrow-clockwise"></i> Coba Muat Ulang</button>' +
+                        '</td></tr>';
                 }
-                google.script.run
-                    .withSuccessHandler(function() {
-                        loadKelasData(true);
-                    })
-                    .withFailureHandler(function() {
-                        renderKelasTable(kelasList);
-                    })
-                    .apiForceReseedAllMasterData();
+                showGlobalToast(errMsg, 'danger');
                 return;
             }
+            window.AppStore.data = data;
+            kelasList = (data && data.classes) || [];
             renderKelasTable(kelasList);
         })
         .withFailureHandler(function(err) {
-            if (tbody) {
+            if (tbody && (!kelasList || kelasList.length === 0)) {
                 tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">' +
                     '<div style="color: #e11d48; font-weight: 700; margin-bottom: 0.5rem;"><i class="bi bi-exclamation-triangle-fill"></i> Gagal memuat data kelas</div>' +
                     '<div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">' + (err && err.message ? err.message : err) + '</div>' +

@@ -153,86 +153,106 @@
 <?!= include('AppJS'); ?>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+var initialServerData = <?!= (typeof serverData !== 'undefined' && serverData) ? JSON.stringify(serverData) : 'null' ?>;
+
+function initDashboardPage() {
+    if (initialServerData) {
+        applyDashboardData(initialServerData);
+    }
+    loadDashboardStats();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDashboardPage);
+} else {
+    initDashboardPage();
+}
+
+function applyDashboardData(data) {
+    if (!data) return;
+    window.AppStore.data = data;
+    
+    var cK = ((data && data.classes) || []).length;
+    var cS = ((data && data.students) || []).length;
+    var cG = ((data && data.teachers) || []).length;
+    var cM = ((data && data.mapels) || []).length;
+    var cDH = ((data && data.absensi) || []).length;
+    var cBA = ((data && data.berita_acara) || []).length;
+
+    var elK = document.getElementById('dashCountKelas'); if (elK) elK.textContent = cK;
+    var elS = document.getElementById('dashCountSiswa'); if (elS) elS.textContent = cS;
+    var elG = document.getElementById('dashCountGuru'); if (elG) elG.textContent = cG;
+    var elM = document.getElementById('dashCountMapel'); if (elM) elM.textContent = cM;
+    var elDH = document.getElementById('dashCountDH'); if (elDH) elDH.textContent = cDH;
+    var elBA = document.getElementById('dashCountBA'); if (elBA) elBA.textContent = cBA;
+
+    // Audit Check
+    if (cDH !== cBA) {
+        var alertEl = document.getElementById('dashReconciliationAlert');
+        if (alertEl) {
+            document.getElementById('dashReconciliationText').textContent = 'Perhatian: Terdapat selisih dokumen (' + cDH + ' Daftar Hadir vs ' + cBA + ' Berita Acara). Lakukan rekonsiliasi untuk memeriksa kelengkapan sesi.';
+            alertEl.style.display = 'flex';
+        }
+    }
+
+    // Render Class Summary Table
+    var tbody = document.getElementById('dashClassTableBody');
+    if (tbody) {
+        var classes = (data && data.classes) || [];
+        if (classes.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem 1rem; color: var(--text-muted);">' +
+                '<div style="font-weight: 700; color: #334155; margin-bottom: 0.5rem;"><i class="bi bi-database-exclamation" style="font-size: 1.75rem; color: #f59e0b; display: block; margin-bottom: 0.25rem;"></i>Basis data master di Google Sheets masih kosong</div>' +
+                '<p style="font-size: 0.85rem; margin-bottom: 1rem;">Klik tombol di bawah untuk menulis dan menyinkronkan seluruh data resmi (Kelas, Siswa, Guru, Mapel, Template) ke spreadsheet.</p>' +
+                '<button type="button" class="btn btn-primary btn-sm" onclick="reseedAllMasterTables(loadDashboardStats)"><i class="bi bi-magic"></i> Inisialisasi Seluruh Data Master Otomatis</button>' +
+                '</td></tr>';
+        } else {
+            var html = '';
+            var students = (data && data.students) || [];
+            classes.forEach(function(cls, idx) {
+                var sCount = students.filter(function(st) { return String(st.class_id) === String(cls.id); }).length;
+                html += '<tr>' +
+                    '<td>' + (idx + 1) + '</td>' +
+                    '<td><strong>' + cls.nama_kelas + '</strong></td>' +
+                    '<td>' + (cls.tingkat || 'XII') + '</td>' +
+                    '<td>' + (cls.program_keahlian || '-') + '</td>' +
+                    '<td style="text-align: center;"><span class="badge" style="background: #e0e7ff; color: #4338ca; font-weight: 700; padding: 4px 8px; border-radius: 6px;">' + sCount + ' Siswa</span></td>' +
+                    '<td style="text-align: center;"><a href="javascript:void(0)" onclick="navigateTo(\'siswa\', { class_id: ' + cls.id + ' })" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;"><i class="bi bi-eye"></i> Siswa</a></td>' +
+                    '</tr>';
+            });
+            tbody.innerHTML = html;
+        }
+    }
+
+    // Render Activity Logs
+    var lbody = document.getElementById('dashLogsTableBody');
+    if (lbody) {
+        var logs = ((data && data.logs) || []).slice(-10).reverse();
+        if (logs.length === 0) {
+            lbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 1rem; color: var(--text-muted);">Belum ada log aktivitas.</td></tr>';
+        } else {
+            var lHtml = '';
+            logs.forEach(function(l) {
+                lHtml += '<tr>' +
+                    '<td>' + (l.waktu || '-') + '</td>' +
+                    '<td><span class="badge" style="background:#f1f5f9; color:#475569; font-weight:600;">' + (l.aktivitas || '-') + '</span></td>' +
+                    '<td>' + (l.keterangan || '-') + '</td>' +
+                    '</tr>';
+            });
+            lbody.innerHTML = lHtml;
+        }
+    }
+}
+
+function loadDashboardStats() {
     google.script.run
         .withSuccessHandler(function(data) {
-            window.AppStore.data = data;
-            
-            var cK = ((data && data.classes) || []).length;
-            var cS = ((data && data.students) || []).length;
-            var cG = ((data && data.teachers) || []).length;
-            var cM = ((data && data.mapels) || []).length;
-            var cDH = ((data && data.absensi) || []).length;
-            var cBA = ((data && data.berita_acara) || []).length;
-
-            document.getElementById('dashCountKelas').textContent = cK;
-            document.getElementById('dashCountSiswa').textContent = cS;
-            document.getElementById('dashCountGuru').textContent = cG;
-            document.getElementById('dashCountMapel').textContent = cM;
-            document.getElementById('dashCountDH').textContent = cDH;
-            document.getElementById('dashCountBA').textContent = cBA;
-
-            // Audit Check
-            if (cDH !== cBA) {
-                var alertEl = document.getElementById('dashReconciliationAlert');
-                if (alertEl) {
-                    document.getElementById('dashReconciliationText').textContent = 'Perhatian: Terdapat selisih dokumen (' + cDH + ' Daftar Hadir vs ' + cBA + ' Berita Acara). Lakukan rekonsiliasi untuk memeriksa kelengkapan sesi.';
-                    alertEl.style.display = 'flex';
-                }
-            }
-
-            // Render Class Summary Table
-            var tbody = document.getElementById('dashClassTableBody');
-            if (tbody) {
-                var classes = (data && data.classes) || [];
-                if (classes.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem 1rem; color: var(--text-muted);">' +
-                        '<div style="font-weight: 700; color: #334155; margin-bottom: 0.5rem;"><i class="bi bi-database-exclamation" style="font-size: 1.75rem; color: #f59e0b; display: block; margin-bottom: 0.25rem;"></i>Basis data master di Google Sheets masih kosong</div>' +
-                        '<p style="font-size: 0.85rem; margin-bottom: 1rem;">Klik tombol di bawah untuk menulis dan menyinkronkan seluruh data resmi (Kelas, Siswa, Guru, Mapel, Template) ke spreadsheet.</p>' +
-                        '<button type="button" class="btn btn-primary btn-sm" onclick="reseedAllMasterTables(loadDashboardStats)"><i class="bi bi-magic"></i> Inisialisasi Seluruh Data Master Otomatis</button>' +
-                        '</td></tr>';
-                } else {
-                    var html = '';
-                    var students = (data && data.students) || [];
-                    classes.forEach(function(cls, idx) {
-                        var sCount = students.filter(function(st) { return String(st.class_id) === String(cls.id); }).length;
-                        html += '<tr>' +
-                            '<td>' + (idx + 1) + '</td>' +
-                            '<td><strong>' + cls.nama_kelas + '</strong></td>' +
-                            '<td>' + (cls.tingkat || 'XII') + '</td>' +
-                            '<td>' + (cls.program_keahlian || '-') + '</td>' +
-                            '<td style="text-align: center;"><span class="badge" style="background: #e0e7ff; color: #4338ca; font-weight: 700; padding: 4px 8px; border-radius: 6px;">' + sCount + ' Siswa</span></td>' +
-                            '<td style="text-align: center;"><a href="javascript:void(0)" onclick="navigateTo(\'siswa\', { class_id: ' + cls.id + ' })" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;"><i class="bi bi-eye"></i> Siswa</a></td>' +
-                            '</tr>';
-                    });
-                    tbody.innerHTML = html;
-                }
-            }
-
-            // Render Activity Logs
-            var lbody = document.getElementById('dashLogsTableBody');
-            if (lbody) {
-                var logs = ((data && data.logs) || []).slice(-10).reverse();
-                if (logs.length === 0) {
-                    lbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 1rem; color: var(--text-muted);">Belum ada log aktivitas.</td></tr>';
-                } else {
-                    var lHtml = '';
-                    logs.forEach(function(l) {
-                        lHtml += '<tr>' +
-                            '<td>' + (l.waktu || '-') + '</td>' +
-                            '<td><span class="badge" style="background:#f1f5f9; color:#475569; font-weight:600;">' + (l.aktivitas || '-') + '</span></td>' +
-                            '<td>' + (l.keterangan || '-') + '</td>' +
-                            '</tr>';
-                    });
-                    lbody.innerHTML = lHtml;
-                }
-            }
+            applyDashboardData(data);
         })
         .withFailureHandler(function(err) {
             showGlobalToast('Gagal memuat ringkasan dashboard: ' + (err.message || err), 'danger');
         })
         .apiGetInitialData();
-});
+}
 
 function openDatabaseSpreadsheet() {
     google.script.run
