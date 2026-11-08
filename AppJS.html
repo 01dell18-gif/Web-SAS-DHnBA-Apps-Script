@@ -316,8 +316,11 @@ window.showGlobalConfirmDialog = function(title, message, onProceed, proceedText
     btn.className = isDanger ? 'btn btn-danger' : 'btn btn-primary';
     btn.innerHTML = '<i class="bi ' + (isDanger ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill') + '"></i> ' + (proceedText || 'Lanjut');
     btn.onclick = function() {
+      var cb = _pendingGlobalConfirmCallback;
       closeGlobalConfirmDialog();
-      if (_pendingGlobalConfirmCallback) _pendingGlobalConfirmCallback();
+      if (typeof cb === 'function') {
+        cb();
+      }
     };
   }
 
@@ -553,6 +556,7 @@ window.toggleUniversalMasterStatus = function(tableType, id, currentStatus, btnE
 // Bulk Toggle Master Status (Semua Aktif / Semua Nonaktif)
 window.toggleAllMasterStatus = function(tableType, targetStatus, reloadCallback) {
   var isActivate = (targetStatus === 1 || targetStatus === '1');
+  var numStatus = isActivate ? 1 : 0;
   var actionText = isActivate ? 'MENGAKTIFKAN' : 'MENONAKTIFKAN';
   var statusLabel = isActivate ? 'Aktif' : 'Nonaktif';
   var titleMap = {
@@ -568,27 +572,88 @@ window.toggleAllMasterStatus = function(tableType, targetStatus, reloadCallback)
     'Konfirmasi ' + (isActivate ? 'Aktifkan' : 'Nonaktifkan') + ' Massal',
     'Apakah Anda yakin ingin ' + actionText + ' ' + labelTarget + ' sekaligus?',
     function() {
-      showGlobalToast('Sedang memproses perubahan status...', 'info');
+      // 1. Optimistic UI update across in-memory lists and DOM
+      function applyStatusToItems(list) {
+        if (!list || !Array.isArray(list)) return;
+        list.forEach(function(item) {
+          item.aktif = numStatus;
+          item.is_active = numStatus;
+          item.status = statusLabel;
+        });
+      }
 
+      if (tableType === 'kelas') {
+        if (typeof kelasList !== 'undefined') {
+          applyStatusToItems(kelasList);
+          if (typeof renderKelasTable === 'function') renderKelasTable(kelasList);
+        }
+      } else if (tableType === 'siswa') {
+        if (typeof siswaList !== 'undefined') {
+          applyStatusToItems(siswaList);
+          if (typeof renderSiswaTable === 'function') renderSiswaTable(siswaList);
+        }
+      } else if (tableType === 'guru') {
+        if (typeof guruList !== 'undefined') {
+          applyStatusToItems(guruList);
+          if (typeof renderGuruTable === 'function') renderGuruTable(guruList);
+        }
+      } else if (tableType === 'mapel') {
+        if (typeof mapelList !== 'undefined') {
+          applyStatusToItems(mapelList);
+          if (typeof renderMapelTable === 'function') renderMapelTable(mapelList);
+        }
+      }
+
+      if (window.AppStore && window.AppStore.data) {
+        var storeKey = tableType === 'kelas' ? 'classes' : (tableType === 'siswa' ? 'students' : (tableType === 'guru' ? 'teachers' : (tableType === 'mapel' ? 'mapels' : null)));
+        if (storeKey && window.AppStore.data[storeKey]) {
+          applyStatusToItems(window.AppStore.data[storeKey]);
+        }
+      }
+
+      showGlobalToast('Menyimpan status ' + statusLabel + ' untuk ' + labelTarget + '...', 'info');
+
+      // 2. Dispatch server RPC
       google.script.run
         .withSuccessHandler(function(res) {
           if (res && res.success) {
-            showGlobalNotificationDialog('Berhasil', 'Berhasil mengubah ' + res.count + ' data ' + tableType + ' menjadi ' + statusLabel + '!', 'success', function() {
-              if (typeof reloadCallback === 'function') {
-                reloadCallback();
-              } else {
-                location.reload();
+            // Sync with fresh server data if returned
+            if (res.data && Array.isArray(res.data)) {
+              if (tableType === 'kelas') {
+                if (typeof kelasList !== 'undefined') { kelasList = res.data; renderKelasTable(kelasList); }
+              } else if (tableType === 'siswa') {
+                if (typeof siswaList !== 'undefined') { siswaList = res.data; renderSiswaTable(siswaList); }
+              } else if (tableType === 'guru') {
+                if (typeof guruList !== 'undefined') { guruList = res.data; renderGuruTable(guruList); }
+              } else if (tableType === 'mapel') {
+                if (typeof mapelList !== 'undefined') { mapelList = res.data; renderMapelTable(mapelList); }
               }
-            });
-            if (typeof reloadCallback === 'function') reloadCallback();
+              if (window.AppStore && window.AppStore.data) {
+                var sKey = tableType === 'kelas' ? 'classes' : (tableType === 'siswa' ? 'students' : (tableType === 'guru' ? 'teachers' : (tableType === 'mapel' ? 'mapels' : null)));
+                if (sKey) window.AppStore.data[sKey] = res.data;
+              }
+            }
+
+            showGlobalNotificationDialog(
+              'Berhasil',
+              'Berhasil mengubah ' + res.count + ' data ' + tableType + ' menjadi ' + statusLabel + ' di database!',
+              'success',
+              function() {
+                if (typeof reloadCallback === 'function') {
+                  reloadCallback();
+                }
+              }
+            );
           } else {
             showGlobalNotificationDialog('Gagal', (res && res.message) ? res.message : 'Gagal mengubah status massal', 'danger');
+            if (typeof reloadCallback === 'function') reloadCallback();
           }
         })
         .withFailureHandler(function(err) {
           showGlobalNotificationDialog('Terjadi Kesalahan', (err && err.message) ? err.message : err, 'danger');
+          if (typeof reloadCallback === 'function') reloadCallback();
         })
-        .apiToggleAllMasterStatus(tableType, targetStatus);
+        .apiToggleAllMasterStatus(tableType, numStatus);
     },
     (isActivate ? 'Aktifkan Semua' : 'Nonaktifkan Semua'),
     !isActivate

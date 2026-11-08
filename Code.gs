@@ -1547,14 +1547,18 @@ function apiToggleAllMasterStatus(tableType, newStatus) {
     var sheet = getSheet(sheetName);
     var lastRow = sheet.getLastRow();
     var lastCol = sheet.getLastColumn();
-    if (lastRow < 2) return { success: true, count: 0, status: newStatus };
+    if (lastRow < 2) return { success: true, count: 0, status: newStatus, data: [] };
 
     var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
     var colIndices = [];
+    var updatedCol = -1;
     for (var j = 0; j < headers.length; j++) {
       var h = String(headers[j]).trim().toLowerCase();
       if (h === 'aktif' || h === 'is_active' || h === 'status') {
         colIndices.push({ col: j + 1, header: h });
+      }
+      if (h === 'updated_at') {
+        updatedCol = j + 1;
       }
     }
     // Fallback for Mapel if column 5 is aktif
@@ -1576,10 +1580,20 @@ function apiToggleAllMasterStatus(tableType, newStatus) {
       sheet.getRange(2, colInfo.col, numRows, 1).setValues(statusValues);
     });
 
+    if (updatedCol > 0) {
+      var nowStr = Utilities.formatDate(new Date(), 'Asia/Makassar', 'yyyy-MM-dd HH:mm:ss');
+      var updatedValues = [];
+      for (var u = 0; u < numRows; u++) {
+        updatedValues.push([nowStr]);
+      }
+      sheet.getRange(2, updatedCol, numRows, 1).setValues(updatedValues);
+    }
+
     SpreadsheetApp.flush();
     invalidateCaches();
+    var freshRows = readTable(sheetName);
     logActivity('BULK_STATUS_' + String(tableType).toUpperCase(), 'Mengubah status semua data ' + tableType + ' (' + numRows + ' data) menjadi ' + (targetValNum === 1 ? 'Aktif' : 'Nonaktif'));
-    return { success: true, count: numRows, status: targetValNum };
+    return { success: true, count: numRows, status: targetValNum, data: freshRows };
   } catch (err) {
     Logger.log('apiToggleAllMasterStatus error: ' + err);
     return { success: false, message: 'Gagal memperbarui status massal: ' + (err.message || err) };
