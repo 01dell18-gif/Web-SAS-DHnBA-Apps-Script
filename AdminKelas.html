@@ -277,7 +277,9 @@ function handleSaveKelas(e) {
             btn.disabled = false;
             btn.innerHTML = 'Simpan Kelas';
             closeKelasModal();
-            showGlobalNotificationDialog('Berhasil', 'Data kelas ' + nama + ' berhasil disimpan.', 'success');
+            showGlobalNotificationDialog('Berhasil', 'Data kelas ' + nama + ' berhasil disimpan.', 'success', function() {
+                loadKelasData();
+            });
             loadKelasData();
         })
         .withFailureHandler(function(err) {
@@ -295,7 +297,9 @@ function deleteKelas(id, nama) {
         function() {
             google.script.run
                 .withSuccessHandler(function() {
-                    showGlobalNotificationDialog('Berhasil', 'Kelas ' + nama + ' berhasil dihapus.', 'success');
+                    showGlobalNotificationDialog('Berhasil', 'Kelas ' + nama + ' berhasil dihapus.', 'success', function() {
+                        loadKelasData();
+                    });
                     loadKelasData();
                 })
                 .apiDeleteKelas(id);
@@ -310,7 +314,9 @@ function confirmResetAllKelas() {
         function() {
             google.script.run
                 .withSuccessHandler(function() {
-                    showGlobalNotificationDialog('Berhasil', 'Seluruh data kelas telah direset.', 'success');
+                    showGlobalNotificationDialog('Berhasil', 'Seluruh data kelas telah direset.', 'success', function() {
+                        location.reload();
+                    });
                     loadKelasData();
                 })
                 .apiDeleteAllKelas();

@@ -286,7 +286,9 @@ function handleSaveMapel(e) {
             btn.disabled = false;
             btn.innerHTML = 'Simpan Mapel';
             closeMapelModal();
-            showGlobalNotificationDialog('Berhasil', 'Mata pelajaran ' + nama + ' berhasil disimpan.', 'success');
+            showGlobalNotificationDialog('Berhasil', 'Mata pelajaran ' + nama + ' berhasil disimpan.', 'success', function() {
+                loadMapelData();
+            });
             loadMapelData();
         })
         .withFailureHandler(function(err) {
@@ -304,7 +306,9 @@ function deleteMapel(id, nama) {
         function() {
             google.script.run
                 .withSuccessHandler(function() {
-                    showGlobalNotificationDialog('Berhasil', 'Mapel ' + nama + ' berhasil dihapus.', 'success');
+                    showGlobalNotificationDialog('Berhasil', 'Mapel ' + nama + ' berhasil dihapus.', 'success', function() {
+                        loadMapelData();
+                    });
                     loadMapelData();
                 })
                 .apiDeleteMapel(id);
@@ -319,7 +323,9 @@ function confirmResetAllMapel() {
         function() {
             google.script.run
                 .withSuccessHandler(function() {
-                    showGlobalNotificationDialog('Berhasil', 'Seluruh data mata pelajaran telah direset.', 'success');
+                    showGlobalNotificationDialog('Berhasil', 'Seluruh data mata pelajaran telah direset.', 'success', function() {
+                        location.reload();
+                    });
                     loadMapelData();
                 })
                 .apiDeleteAllMapel();

@@ -300,7 +300,9 @@ function handleSaveUser(e) {
             btn.disabled = false;
             btn.innerHTML = 'Simpan User';
             closeUserModal();
-            showGlobalNotificationDialog('Berhasil', 'Pengguna ' + username + ' berhasil disimpan.', 'success');
+            showGlobalNotificationDialog('Berhasil', 'Pengguna ' + username + ' berhasil disimpan.', 'success', function() {
+                loadUsersData();
+            });
             loadUsersData();
         })
         .withFailureHandler(function(err) {
@@ -318,7 +320,9 @@ function deleteUser(id, username) {
         function() {
             google.script.run
                 .withSuccessHandler(function() {
-                    showGlobalNotificationDialog('Berhasil', 'User ' + username + ' berhasil dihapus.', 'success');
+                    showGlobalNotificationDialog('Berhasil', 'User ' + username + ' berhasil dihapus.', 'success', function() {
+                        loadUsersData();
+                    });
                     loadUsersData();
                 })
                 .apiDeleteUser(id);

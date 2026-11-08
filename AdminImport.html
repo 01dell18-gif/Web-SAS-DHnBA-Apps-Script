@@ -352,7 +352,9 @@ function executeCurrentImport() {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Proses Impor ke Database';
                 document.getElementById('importPreviewArea').style.display = 'none';
-                showGlobalNotificationDialog('Berhasil', 'Sukses mengimpor ' + res.count + ' data siswa!', 'success');
+                showGlobalNotificationDialog('Berhasil', 'Sukses mengimpor ' + res.count + ' data siswa!', 'success', function() {
+                    navigateTo('admin-siswa');
+                });
             })
             .withFailureHandler(function(err) {
                 btn.disabled = false;
@@ -376,7 +378,9 @@ function executeCurrentImport() {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Proses Impor ke Database';
                 document.getElementById('importPreviewArea').style.display = 'none';
-                showGlobalNotificationDialog('Berhasil', 'Sukses mengimpor ' + res.count + ' guru & pengawas!', 'success');
+                showGlobalNotificationDialog('Berhasil', 'Sukses mengimpor ' + res.count + ' guru & pengawas!', 'success', function() {
+                    navigateTo('admin-guru');
+                });
             })
             .withFailureHandler(function(err) {
                 btn.disabled = false;
@@ -400,7 +404,9 @@ function executeCurrentImport() {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Proses Impor ke Database';
                 document.getElementById('importPreviewArea').style.display = 'none';
-                showGlobalNotificationDialog('Berhasil', 'Sukses mengimpor ' + res.count + ' mata pelajaran!', 'success');
+                showGlobalNotificationDialog('Berhasil', 'Sukses mengimpor ' + res.count + ' mata pelajaran!', 'success', function() {
+                    navigateTo('admin-mapel');
+                });
             })
             .withFailureHandler(function(err) {
                 btn.disabled = false;
@@ -424,7 +430,9 @@ function executeCurrentImport() {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Proses Impor ke Database';
                 document.getElementById('importPreviewArea').style.display = 'none';
-                showGlobalNotificationDialog('Berhasil', 'Sukses mengimpor ' + res.count + ' rombel kelas!', 'success');
+                showGlobalNotificationDialog('Berhasil', 'Sukses mengimpor ' + res.count + ' rombel kelas!', 'success', function() {
+                    navigateTo('admin-kelas');
+                });
             })
             .withFailureHandler(function(err) {
                 btn.disabled = false;
@@ -449,7 +457,9 @@ function executeCurrentImport() {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Proses Impor ke Database';
                 document.getElementById('importPreviewArea').style.display = 'none';
-                showGlobalNotificationDialog('Berhasil', 'Sukses mengimpor ' + res.count + ' akun pengguna!', 'success');
+                showGlobalNotificationDialog('Berhasil', 'Sukses mengimpor ' + res.count + ' akun pengguna!', 'success', function() {
+                    navigateTo('admin-users');
+                });
             })
             .withFailureHandler(function(err) {
                 btn.disabled = false;

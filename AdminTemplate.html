@@ -437,7 +437,9 @@ function handleSaveTemplate(e) {
         .withSuccessHandler(function() {
             btn.disabled = false;
             btn.innerHTML = '<i class="bi bi-check-circle"></i> 💾 Simpan Perubahan Template';
-            showGlobalNotificationDialog('Berhasil', 'Template ujian dan redaksi WYSIWYG berhasil disimpan.', 'success');
+            showGlobalNotificationDialog('Berhasil', 'Template ujian dan redaksi WYSIWYG berhasil disimpan.', 'success', function() {
+                location.reload();
+            });
         })
         .withFailureHandler(function(err) {
             btn.disabled = false;

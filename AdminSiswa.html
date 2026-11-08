@@ -327,7 +327,9 @@ function handleSaveSiswa(e) {
             btn.disabled = false;
             btn.innerHTML = 'Simpan Siswa';
             closeSiswaModal();
-            showGlobalNotificationDialog('Berhasil', 'Data siswa ' + nama + ' berhasil disimpan.', 'success');
+            showGlobalNotificationDialog('Berhasil', 'Data siswa ' + nama + ' berhasil disimpan.', 'success', function() {
+                loadSiswaData();
+            });
             loadSiswaData();
         })
         .withFailureHandler(function(err) {
@@ -345,7 +347,9 @@ function deleteSiswa(id, nama) {
         function() {
             google.script.run
                 .withSuccessHandler(function() {
-                    showGlobalNotificationDialog('Berhasil', 'Siswa ' + nama + ' berhasil dihapus.', 'success');
+                    showGlobalNotificationDialog('Berhasil', 'Siswa ' + nama + ' berhasil dihapus.', 'success', function() {
+                        loadSiswaData();
+                    });
                     loadSiswaData();
                 })
                 .apiDeleteSiswa(id);
@@ -360,7 +364,9 @@ function confirmResetAllSiswa() {
         function() {
             google.script.run
                 .withSuccessHandler(function() {
-                    showGlobalNotificationDialog('Berhasil', 'Seluruh data siswa telah dikosongkan.', 'success');
+                    showGlobalNotificationDialog('Berhasil', 'Seluruh data siswa telah dikosongkan.', 'success', function() {
+                        location.reload();
+                    });
                     loadSiswaData();
                 })
                 .apiDeleteAllSiswa();

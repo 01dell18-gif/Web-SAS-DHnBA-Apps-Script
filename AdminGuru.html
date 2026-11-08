@@ -254,7 +254,9 @@ function handleSaveGuru(e) {
             btn.disabled = false;
             btn.innerHTML = 'Simpan Data';
             closeGuruModal();
-            showGlobalNotificationDialog('Berhasil', 'Data guru ' + nama + ' berhasil disimpan.', 'success');
+            showGlobalNotificationDialog('Berhasil', 'Data guru ' + nama + ' berhasil disimpan.', 'success', function() {
+                loadGuruData();
+            });
             loadGuruData();
         })
         .withFailureHandler(function(err) {
@@ -272,7 +274,9 @@ function deleteGuru(id, nama) {
         function() {
             google.script.run
                 .withSuccessHandler(function() {
-                    showGlobalNotificationDialog('Berhasil', 'Guru ' + nama + ' berhasil dihapus.', 'success');
+                    showGlobalNotificationDialog('Berhasil', 'Guru ' + nama + ' berhasil dihapus.', 'success', function() {
+                        loadGuruData();
+                    });
                     loadGuruData();
                 })
                 .apiDeleteGuru(id);
@@ -287,7 +291,9 @@ function confirmResetAllGuru() {
         function() {
             google.script.run
                 .withSuccessHandler(function() {
-                    showGlobalNotificationDialog('Berhasil', 'Seluruh data guru telah dikosongkan.', 'success');
+                    showGlobalNotificationDialog('Berhasil', 'Seluruh data guru telah dikosongkan.', 'success', function() {
+                        location.reload();
+                    });
                     loadGuruData();
                 })
                 .apiDeleteAllGuru();

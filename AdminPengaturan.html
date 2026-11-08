@@ -456,12 +456,9 @@
                         Aplikasi ini terhubung langsung ke Google Spreadsheet sebagai media penyimpanan basis data relasional. Seluruh perubahan pada menu pengaturan dan data master disinkronkan langsung secara runtut.
                     </p>
                     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; margin-bottom: 1.25rem; font-size: 0.85rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 6px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                             <span><strong>Target Database:</strong> <span id="dbSpreadsheetName">Google Spreadsheet Resmi</span></span>
                             <span class="badge" style="background:#dcfce7; color:#15803d; font-weight:700;"><i class="bi bi-check-circle"></i> Terhubung & Aktif</span>
-                        </div>
-                        <div style="color: var(--text-muted); word-break: break-all;">
-                            <strong>ID Spreadsheet:</strong> <code id="dbSpreadsheetId">1IA6B5Mgt6kIYeV9c8ZdR9RliccV0U2OTlGJhsD30c2Y</code>
                         </div>
                     </div>
                     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
@@ -1013,7 +1010,9 @@ function handleSaveSettings(e) {
         .withSuccessHandler(function(res) {
             btn.disabled = false;
             btn.innerHTML = '<i class="bi bi-check-circle"></i> Perbarui Seluruh Pengaturan Sistem';
-            showGlobalNotificationDialog('Berhasil', 'Pengaturan sekolah, logo, kop surat, dan tahun ajaran berhasil disimpan ke sheet Pengaturan Google Spreadsheet!', 'success');
+            showGlobalNotificationDialog('Berhasil', 'Pengaturan sekolah, logo, kop surat, dan konfigurasi sistem berhasil disimpan ke sheet Pengaturan Google Spreadsheet!', 'success', function() {
+                location.reload();
+            });
             if (schoolLogo) {
                 var navLogo = document.getElementById('headerLogoImg');
                 if (navLogo) navLogo.src = schoolLogo;
@@ -1032,8 +1031,6 @@ function loadDatabaseInfo() {
         .withSuccessHandler(function(res) {
             if (res && res.success) {
                 _dbUrl = res.url || 'https://docs.google.com/spreadsheets/d/1IA6B5Mgt6kIYeV9c8ZdR9RliccV0U2OTlGJhsD30c2Y/edit?usp=sharing';
-                var idEl = document.getElementById('dbSpreadsheetId');
-                if (idEl) idEl.textContent = res.id || '1IA6B5Mgt6kIYeV9c8ZdR9RliccV0U2OTlGJhsD30c2Y';
                 var nameEl = document.getElementById('dbSpreadsheetName');
                 if (nameEl) nameEl.textContent = res.name || 'Database SAS - SMK NEGERI FYJ CHANNEL';
             }
@@ -1056,8 +1053,9 @@ function isiDefaultOtomatisPengaturan() {
                 .withSuccessHandler(function(res) {
                     showLoading(false);
                     if (res && res.success) {
-                        showGlobalNotificationDialog('Berhasil', res.message || 'Sheet Pengaturan berhasil diisi nilai default resmi!', 'success');
-                        loadInitialSettings(false);
+                        showGlobalNotificationDialog('Berhasil', res.message || 'Sheet Pengaturan berhasil diisi nilai default resmi!', 'success', function() {
+                            location.reload();
+                        });
                     } else {
                         showGlobalNotificationDialog('Gagal', (res && res.message) || 'Gagal mengisi data default.', 'danger');
                     }
@@ -1081,9 +1079,9 @@ function confirmResetDatabase() {
                 .withSuccessHandler(function(res) {
                     showLoading(false);
                     if (res && res.success) {
-                        showGlobalNotificationDialog('Berhasil', 'Database berhasil diinisialisasi ulang!', 'success');
-                        loadDatabaseInfo();
-                        loadInitialSettings();
+                        showGlobalNotificationDialog('Berhasil', 'Database berhasil diinisialisasi ulang!', 'success', function() {
+                            location.reload();
+                        });
                     } else {
                         showGlobalNotificationDialog('Gagal', res.message || 'Terjadi kesalahan.', 'danger');
                     }
@@ -1107,11 +1105,12 @@ function forceReseedAllDataMaster() {
                 .withSuccessHandler(function(res) {
                     showLoading(false);
                     if (res && res.success) {
-                        showGlobalNotificationDialog('Berhasil Sinkronisasi', res.message || 'Seluruh data master berhasil ditulis ke spreadsheet!', 'success');
+                        showGlobalNotificationDialog('Berhasil Sinkronisasi', res.message || 'Seluruh data master berhasil ditulis ke spreadsheet!', 'success', function() {
+                            location.reload();
+                        });
                     } else {
                         showGlobalNotificationDialog('Info', (res && res.message) || 'Selesai disinkronkan.', 'info');
                     }
-                    loadInitialSettings(true);
                 })
                 .withFailureHandler(function(err) {
                     showLoading(false);

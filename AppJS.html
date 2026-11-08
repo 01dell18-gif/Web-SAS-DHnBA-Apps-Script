@@ -78,7 +78,10 @@ function navigateTo(page, params) {
 window.navigateTo = navigateTo;
 
 function openAdminPortal() {
-    var isAuth = localStorage.getItem('sas_admin_auth') === '1';
+    var isAuth = false;
+    try {
+        isAuth = (localStorage.getItem('sas_admin_auth') === '1');
+    } catch (e) {}
     if (isAuth) {
         navigateTo('dashboard');
     } else {
@@ -352,32 +355,44 @@ window.closeGlobalConfirmDialog = function() {
   document.getElementById('modalGlobalConfirmDialog').style.display = 'none';
 };
 
-window.showGlobalNotificationDialog = function(title, message, iconType) {
-  document.getElementById('globalNotificationTitle').textContent = title || 'Pemberitahuan';
-  document.getElementById('globalNotificationMessage').textContent = message || '';
+var _pendingGlobalNotificationCallback = null;
+window.showGlobalNotificationDialog = function(title, message, iconType, optOnClose) {
+  _pendingGlobalNotificationCallback = (typeof optOnClose === 'function') ? optOnClose : null;
+  var titleEl = document.getElementById('globalNotificationTitle');
+  if (titleEl) titleEl.textContent = title || 'Pemberitahuan';
+  
+  var msgEl = document.getElementById('globalNotificationMessage');
+  if (msgEl) msgEl.textContent = message || '';
   
   var icon = document.getElementById('globalNotificationIcon');
   var box = document.getElementById('globalNotificationIconBox');
   var card = document.getElementById('globalNotificationCard');
 
   if (iconType === 'success') {
-    icon.className = 'bi bi-check-circle-fill';
-    box.style.background = '#ecfdf5'; box.style.borderColor = '#a7f3d0'; box.style.color = '#059669';
-    card.style.borderTopColor = '#10b981';
+    if (icon) icon.className = 'bi bi-check-circle-fill';
+    if (box) { box.style.background = '#ecfdf5'; box.style.borderColor = '#a7f3d0'; box.style.color = '#059669'; }
+    if (card) card.style.borderTopColor = '#10b981';
   } else if (iconType === 'danger' || iconType === 'error') {
-    icon.className = 'bi bi-exclamation-triangle-fill';
-    box.style.background = '#fef2f2'; box.style.borderColor = '#fecaca'; box.style.color = '#dc2626';
-    card.style.borderTopColor = '#ef4444';
+    if (icon) icon.className = 'bi bi-exclamation-triangle-fill';
+    if (box) { box.style.background = '#fef2f2'; box.style.borderColor = '#fecaca'; box.style.color = '#dc2626'; }
+    if (card) card.style.borderTopColor = '#ef4444';
   } else {
-    icon.className = 'bi bi-info-circle-fill';
-    box.style.background = '#eff6ff'; box.style.borderColor = '#bfdbfe'; box.style.color = '#2563eb';
-    card.style.borderTopColor = '#3b82f6';
+    if (icon) icon.className = 'bi bi-info-circle-fill';
+    if (box) { box.style.background = '#eff6ff'; box.style.borderColor = '#bfdbfe'; box.style.color = '#2563eb'; }
+    if (card) card.style.borderTopColor = '#3b82f6';
   }
-  document.getElementById('modalGlobalNotificationDialog').style.display = 'flex';
+  var modal = document.getElementById('modalGlobalNotificationDialog');
+  if (modal) modal.style.display = 'flex';
 };
 
 window.closeGlobalNotificationDialog = function() {
-  document.getElementById('modalGlobalNotificationDialog').style.display = 'none';
+  var modal = document.getElementById('modalGlobalNotificationDialog');
+  if (modal) modal.style.display = 'none';
+  if (_pendingGlobalNotificationCallback) {
+    var cb = _pendingGlobalNotificationCallback;
+    _pendingGlobalNotificationCallback = null;
+    try { cb(); } catch (e) {}
+  }
 };
 
 // Universal Native Excel (.xlsx) Exporter with SheetJS
@@ -558,14 +573,14 @@ window.toggleAllMasterStatus = function(tableType, targetStatus, reloadCallback)
       google.script.run
         .withSuccessHandler(function(res) {
           if (res && res.success) {
-            showGlobalNotificationDialog('Berhasil', 'Berhasil mengubah ' + res.count + ' data ' + tableType + ' menjadi ' + statusLabel + '!', 'success');
-            if (typeof reloadCallback === 'function') {
-              reloadCallback();
-            } else if (typeof window.loadInitialData === 'function') {
-              window.loadInitialData(true);
-            } else {
-              location.reload();
-            }
+            showGlobalNotificationDialog('Berhasil', 'Berhasil mengubah ' + res.count + ' data ' + tableType + ' menjadi ' + statusLabel + '!', 'success', function() {
+              if (typeof reloadCallback === 'function') {
+                reloadCallback();
+              } else {
+                location.reload();
+              }
+            });
+            if (typeof reloadCallback === 'function') reloadCallback();
           } else {
             showGlobalNotificationDialog('Gagal', (res && res.message) ? res.message : 'Gagal mengubah status massal', 'danger');
           }
@@ -684,12 +699,14 @@ window.reseedAllMasterTables = function(optCallback) {
       google.script.run
         .withSuccessHandler(function(res) {
           if (res && res.success) {
-            showGlobalNotificationDialog('Berhasil Sinkronisasi Master', res.message || 'Seluruh data master berhasil ditulis ke Google Sheets!', 'success');
-            if (typeof optCallback === 'function') {
-              optCallback();
-            } else {
-              location.reload();
-            }
+            showGlobalNotificationDialog('Berhasil Sinkronisasi Master', res.message || 'Seluruh data master berhasil ditulis ke Google Sheets!', 'success', function() {
+              if (typeof optCallback === 'function') {
+                optCallback();
+              } else {
+                location.reload();
+              }
+            });
+            if (typeof optCallback === 'function') optCallback();
           } else {
             showGlobalNotificationDialog('Info', (res && res.message) || 'Inisialisasi selesai.', 'info');
           }
