@@ -302,26 +302,49 @@ window.proceedConfirmReset = function() {
 var _pendingGlobalConfirmCallback = null;
 window.showGlobalConfirmDialog = function(title, message, onProceed, proceedText, isDanger) {
   _pendingGlobalConfirmCallback = onProceed;
-  document.getElementById('globalConfirmTitle').textContent = title || 'Konfirmasi Tindakan';
-  document.getElementById('globalConfirmMessage').textContent = message || 'Apakah Anda yakin ingin melanjutkan tindakan ini?';
+  var titleEl = document.getElementById('globalConfirmTitle');
+  if (titleEl) titleEl.textContent = title || 'Konfirmasi Tindakan';
+
+  var msgEl = document.getElementById('globalConfirmMessage');
+  if (msgEl) msgEl.textContent = message || 'Apakah Anda yakin ingin melanjutkan tindakan ini?';
   
   var btn = document.getElementById('btnGlobalConfirmProceed');
-  btn.textContent = proceedText || 'Lanjut';
-  btn.className = isDanger ? 'btn btn-danger' : 'btn btn-primary';
+  if (btn) {
+    btn.className = isDanger ? 'btn btn-danger' : 'btn btn-primary';
+    btn.innerHTML = '<i class="bi ' + (isDanger ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill') + '"></i> ' + (proceedText || 'Lanjut');
+    btn.onclick = function() {
+      closeGlobalConfirmDialog();
+      if (_pendingGlobalConfirmCallback) _pendingGlobalConfirmCallback();
+    };
+  }
+
+  var cancelBtn = document.getElementById('btnGlobalConfirmCancel');
+  if (cancelBtn) {
+    cancelBtn.innerHTML = '<i class="bi bi-x-lg"></i> Batal';
+  }
 
   var iconBox = document.getElementById('globalConfirmIconBox');
+  var icon = document.getElementById('globalConfirmIcon');
+  var card = document.getElementById('globalConfirmCard') || document.querySelector('#modalGlobalConfirmDialog > div');
+
   if (isDanger) {
-    iconBox.style.background = '#fee2e2';
-    iconBox.style.color = '#dc2626';
+    if (iconBox) {
+      iconBox.style.background = '#fee2e2';
+      iconBox.style.color = '#dc2626';
+    }
+    if (icon) icon.className = 'bi bi-exclamation-triangle-fill';
+    if (card) card.style.borderTopColor = '#dc2626';
   } else {
-    iconBox.style.background = '#eff6ff';
-    iconBox.style.color = '#2563eb';
+    if (iconBox) {
+      iconBox.style.background = '#eff6ff';
+      iconBox.style.color = '#2563eb';
+    }
+    if (icon) icon.className = 'bi bi-question-circle-fill';
+    if (card) card.style.borderTopColor = '#2563eb';
   }
-  btn.onclick = function() {
-    closeGlobalConfirmDialog();
-    if (_pendingGlobalConfirmCallback) _pendingGlobalConfirmCallback();
-  };
-  document.getElementById('modalGlobalConfirmDialog').style.display = 'flex';
+
+  var modal = document.getElementById('modalGlobalConfirmDialog');
+  if (modal) modal.style.display = 'flex';
 };
 
 window.closeGlobalConfirmDialog = function() {
@@ -514,8 +537,9 @@ window.toggleUniversalMasterStatus = function(tableType, id, currentStatus, btnE
 
 // Bulk Toggle Master Status (Semua Aktif / Semua Nonaktif)
 window.toggleAllMasterStatus = function(tableType, targetStatus, reloadCallback) {
-  var actionText = (targetStatus === 1 || targetStatus === '1') ? 'MENGAKTIFKAN' : 'MENONAKTIFKAN';
-  var statusLabel = (targetStatus === 1 || targetStatus === '1') ? 'Aktif' : 'Nonaktif';
+  var isActivate = (targetStatus === 1 || targetStatus === '1');
+  var actionText = isActivate ? 'MENGAKTIFKAN' : 'MENONAKTIFKAN';
+  var statusLabel = isActivate ? 'Aktif' : 'Nonaktif';
   var titleMap = {
     'kelas': 'Semua Data Kelas',
     'siswa': 'Semua Data Siswa',
@@ -525,31 +549,35 @@ window.toggleAllMasterStatus = function(tableType, targetStatus, reloadCallback)
   };
   var labelTarget = titleMap[tableType] || ('Semua Data ' + tableType);
 
-  if (!confirm('Apakah Anda yakin ingin ' + actionText + ' ' + labelTarget + ' sekaligus?')) {
-    return;
-  }
+  showGlobalConfirmDialog(
+    'Konfirmasi ' + (isActivate ? 'Aktifkan' : 'Nonaktifkan') + ' Massal',
+    'Apakah Anda yakin ingin ' + actionText + ' ' + labelTarget + ' sekaligus?',
+    function() {
+      showGlobalToast('Sedang memproses perubahan status...', 'info');
 
-  showGlobalToast('Sedang memproses perubahan status...', 'info');
-
-  google.script.run
-    .withSuccessHandler(function(res) {
-      if (res && res.success) {
-        showGlobalToast('Berhasil mengubah ' + res.count + ' data ' + tableType + ' menjadi ' + statusLabel + '!', 'success');
-        if (typeof reloadCallback === 'function') {
-          reloadCallback();
-        } else if (typeof window.loadInitialData === 'function') {
-          window.loadInitialData(true);
-        } else {
-          location.reload();
-        }
-      } else {
-        showGlobalToast(res && res.message ? res.message : 'Gagal mengubah status massal', 'danger');
-      }
-    })
-    .withFailureHandler(function(err) {
-      showGlobalToast('Terjadi kesalahan: ' + (err.message || err), 'danger');
-    })
-    .apiToggleAllMasterStatus(tableType, targetStatus);
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res && res.success) {
+            showGlobalNotificationDialog('Berhasil', 'Berhasil mengubah ' + res.count + ' data ' + tableType + ' menjadi ' + statusLabel + '!', 'success');
+            if (typeof reloadCallback === 'function') {
+              reloadCallback();
+            } else if (typeof window.loadInitialData === 'function') {
+              window.loadInitialData(true);
+            } else {
+              location.reload();
+            }
+          } else {
+            showGlobalNotificationDialog('Gagal', (res && res.message) ? res.message : 'Gagal mengubah status massal', 'danger');
+          }
+        })
+        .withFailureHandler(function(err) {
+          showGlobalNotificationDialog('Terjadi Kesalahan', (err && err.message) ? err.message : err, 'danger');
+        })
+        .apiToggleAllMasterStatus(tableType, targetStatus);
+    },
+    (isActivate ? 'Aktifkan Semua' : 'Nonaktifkan Semua'),
+    !isActivate
+  );
 };
 
 // Helper Toast Notification
@@ -648,26 +676,38 @@ onDocumentReady(function() {
 
 // Universal Reseed Master Tables
 window.reseedAllMasterTables = function(optCallback) {
-  if (!confirm('Apakah Anda ingin menginisialisasi dan menyinkronkan seluruh data master resmi (11 Kelas, 258 Siswa, 10 Guru, 18 Mapel, Template Ujian, Users, Pengaturan) ke spreadsheet?')) {
-    return;
+  showGlobalConfirmDialog(
+    'Inisialisasi & Sinkronisasi Master',
+    'Apakah Anda ingin menginisialisasi dan menyinkronkan seluruh data master resmi (11 Kelas, 258 Siswa, 10 Guru, 18 Mapel, Template Ujian, Users, Pengaturan) ke spreadsheet?',
+    function() {
+      showGlobalToast('Sedang menulis seluruh basis data master ke Google Sheets...', 'info');
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res && res.success) {
+            showGlobalNotificationDialog('Berhasil Sinkronisasi Master', res.message || 'Seluruh data master berhasil ditulis ke Google Sheets!', 'success');
+            if (typeof optCallback === 'function') {
+              optCallback();
+            } else {
+              location.reload();
+            }
+          } else {
+            showGlobalNotificationDialog('Info', (res && res.message) || 'Inisialisasi selesai.', 'info');
+          }
+        })
+        .withFailureHandler(function(err) {
+          showGlobalNotificationDialog('Gagal Inisialisasi', (err && err.message) || err, 'danger');
+        })
+        .apiForceReseedAllMasterData();
+    },
+    'Mulai Inisialisasi',
+    false
+  );
+};
+
+// Polyfill / Override window.alert so all native alerts automatically become styled modal popups
+window.alert = function(msg) {
+  if (typeof window.showGlobalNotificationDialog === 'function') {
+    window.showGlobalNotificationDialog('Pemberitahuan', String(msg), 'info');
   }
-  showGlobalToast('Sedang menulis seluruh basis data master ke Google Sheets...', 'info');
-  google.script.run
-    .withSuccessHandler(function(res) {
-      if (res && res.success) {
-        showGlobalNotificationDialog('Berhasil Sinkronisasi Master', res.message || 'Seluruh data master berhasil ditulis ke Google Sheets!', 'success');
-        if (typeof optCallback === 'function') {
-          optCallback();
-        } else {
-          location.reload();
-        }
-      } else {
-        showGlobalNotificationDialog('Info', (res && res.message) || 'Inisialisasi selesai.', 'info');
-      }
-    })
-    .withFailureHandler(function(err) {
-      showGlobalNotificationDialog('Gagal Inisialisasi', (err && err.message) || err, 'danger');
-    })
-    .apiForceReseedAllMasterData();
 };
 </script>
