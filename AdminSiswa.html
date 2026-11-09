@@ -365,7 +365,7 @@ function confirmResetAllSiswa() {
             google.script.run
                 .withSuccessHandler(function() {
                     showGlobalNotificationDialog('Berhasil', 'Seluruh data siswa telah dikosongkan.', 'success', function() {
-                        location.reload();
+                        safeReload('siswa');
                     });
                     loadSiswaData();
                 })

@@ -292,7 +292,7 @@ function confirmResetAllGuru() {
             google.script.run
                 .withSuccessHandler(function() {
                     showGlobalNotificationDialog('Berhasil', 'Seluruh data guru telah dikosongkan.', 'success', function() {
-                        location.reload();
+                        safeReload('guru');
                     });
                     loadGuruData();
                 })

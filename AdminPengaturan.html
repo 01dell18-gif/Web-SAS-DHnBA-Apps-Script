@@ -1056,7 +1056,7 @@ function handleSaveSettings(e) {
             btn.disabled = false;
             btn.innerHTML = '<i class="bi bi-check-circle"></i> Perbarui Seluruh Pengaturan Sistem';
             showGlobalNotificationDialog('Berhasil', 'Pengaturan sekolah, logo, kop surat, dan konfigurasi sistem berhasil disimpan ke sheet Pengaturan Google Spreadsheet!', 'success', function() {
-                location.reload();
+                safeReload('pengaturan');
             });
             if (schoolLogo) {
                 var navLogo = document.getElementById('headerLogoImg');
@@ -1099,7 +1099,7 @@ function isiDefaultOtomatisPengaturan() {
                     showLoading(false);
                     if (res && res.success) {
                         showGlobalNotificationDialog('Berhasil', res.message || 'Sheet Pengaturan berhasil diisi nilai default resmi!', 'success', function() {
-                            location.reload();
+                            safeReload('pengaturan');
                         });
                     } else {
                         showGlobalNotificationDialog('Gagal', (res && res.message) || 'Gagal mengisi data default.', 'danger');
@@ -1125,7 +1125,7 @@ function confirmResetDatabase() {
                     showLoading(false);
                     if (res && res.success) {
                         showGlobalNotificationDialog('Berhasil', 'Database berhasil diinisialisasi ulang!', 'success', function() {
-                            location.reload();
+                            safeReload('pengaturan');
                         });
                     } else {
                         showGlobalNotificationDialog('Gagal', res.message || 'Terjadi kesalahan.', 'danger');
@@ -1151,7 +1151,7 @@ function forceReseedAllDataMaster() {
                     showLoading(false);
                     if (res && res.success) {
                         showGlobalNotificationDialog('Berhasil Sinkronisasi', res.message || 'Seluruh data master berhasil ditulis ke spreadsheet!', 'success', function() {
-                            location.reload();
+                            safeReload('pengaturan');
                         });
                     } else {
                         showGlobalNotificationDialog('Info', (res && res.message) || 'Selesai disinkronkan.', 'info');

@@ -324,7 +324,7 @@ function confirmResetAllMapel() {
             google.script.run
                 .withSuccessHandler(function() {
                     showGlobalNotificationDialog('Berhasil', 'Seluruh data mata pelajaran telah direset.', 'success', function() {
-                        location.reload();
+                        safeReload('mapel');
                     });
                     loadMapelData();
                 })

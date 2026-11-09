@@ -77,6 +77,24 @@ function navigateTo(page, params) {
 }
 window.navigateTo = navigateTo;
 
+function safeReload(optPage) {
+    var p = optPage;
+    if (!p) {
+        try {
+            var urlParams = new URLSearchParams(window.location.search);
+            p = urlParams.get('page');
+        } catch (e) {}
+    }
+    if (!p) {
+        try {
+            var m = window.location.href.match(/[?&]page=([^&#]+)/);
+            if (m && m[1]) p = decodeURIComponent(m[1]);
+        } catch (e2) {}
+    }
+    navigateTo(p || 'dashboard');
+}
+window.safeReload = safeReload;
+
 function openAdminPortal() {
     var isAuth = false;
     try {
@@ -252,10 +270,10 @@ window.hapusCacheWeb = function(event) {
 
   google.script.run
     .withSuccessHandler(function() {
-      window.location.reload();
+      safeReload();
     })
     .withFailureHandler(function() {
-      window.location.reload();
+      safeReload();
     })
     .apiClearCache();
 };
@@ -768,7 +786,7 @@ window.reseedAllMasterTables = function(optCallback) {
               if (typeof optCallback === 'function') {
                 optCallback();
               } else {
-                location.reload();
+                safeReload();
               }
             });
             if (typeof optCallback === 'function') optCallback();

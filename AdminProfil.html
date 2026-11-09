@@ -125,8 +125,24 @@ function handleSaveProfil(e) {
             btn.innerHTML = '<i class="bi bi-check-circle"></i> Simpan Pembaruan Profil';
             if (res.success && res.user) {
                 localStorage.setItem('sas_admin_user', JSON.stringify(res.user));
-                showGlobalNotificationDialog('Berhasil', 'Profil akun Anda berhasil diperbarui!', 'success');
-                setTimeout(function() { window.location.reload(); }, 1200);
+                // Perbarui avatar & identitas langsung di DOM tanpa reload (mencegah blank putih)
+                if (res.user.foto) {
+                    currentAvatarBase64 = res.user.foto;
+                    var pImg = document.getElementById('profilAvatarImg');
+                    var pIcon = document.getElementById('profilAvatarIcon');
+                    if (pImg) { pImg.src = res.user.foto; pImg.style.display = 'block'; }
+                    if (pIcon) { pIcon.style.display = 'none'; }
+
+                    var hImg = document.getElementById('headerAvatarImg');
+                    var hIcon = document.getElementById('headerAvatarIcon');
+                    if (hImg) { hImg.src = res.user.foto; hImg.style.display = 'block'; }
+                    if (hIcon) { hIcon.style.display = 'none'; }
+                }
+                if (res.user.nama_lengkap) {
+                    var hName = document.getElementById('headerUserName');
+                    if (hName) hName.textContent = res.user.nama_lengkap;
+                }
+                showGlobalNotificationDialog('Berhasil', 'Profil akun dan foto avatar Anda berhasil diperbarui!', 'success');
             }
         })
         .withFailureHandler(function(err) {

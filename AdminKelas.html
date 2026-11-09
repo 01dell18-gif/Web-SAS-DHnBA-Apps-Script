@@ -315,7 +315,7 @@ function confirmResetAllKelas() {
             google.script.run
                 .withSuccessHandler(function() {
                     showGlobalNotificationDialog('Berhasil', 'Seluruh data kelas telah direset.', 'success', function() {
-                        location.reload();
+                        safeReload('kelas');
                     });
                     loadKelasData();
                 })

@@ -140,8 +140,17 @@ function doGet(e) {
       'users': 'AdminUsers',
       'profil': 'AdminProfil',
       'preview': 'Preview',
-      // Backward Compatibility
+      // Backward Compatibility & Full Aliases
       'admin-arsip': 'AdminArsipAbsensi',
+      'admin-kelas': 'AdminKelas',
+      'admin-siswa': 'AdminSiswa',
+      'admin-guru': 'AdminGuru',
+      'admin-mapel': 'AdminMapel',
+      'admin-import': 'AdminImport',
+      'admin-users': 'AdminUsers',
+      'admin-profil': 'AdminProfil',
+      'admin-pengaturan': 'AdminPengaturan',
+      'admin-template': 'AdminTemplate',
       'database': 'AdminDashboard'
     };
 
