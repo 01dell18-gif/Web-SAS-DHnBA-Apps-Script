@@ -501,6 +501,7 @@ var _dbUrl = 'https://docs.google.com/spreadsheets/d/1IA6B5Mgt6kIYeV9c8ZdR9Rlicc
 
 function initPengaturanPage() {
     renderTahunAjaran();
+    updateDriveLinkBadges();
     // Form fields are pre-rendered server-side for sub-second page loads.
     // loadInitialSettings() and loadDatabaseInfo() are available on-demand via the refresh buttons.
 }
@@ -509,6 +510,37 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initPengaturanPage);
 } else {
     initPengaturanPage();
+}
+
+function extractDriveIdClient(url) {
+    if (!url) return null;
+    url = url.trim();
+    if (url.indexOf('/folders/') !== -1) return null;
+    var m1 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (m1 && m1[1]) return m1[1];
+    var m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (m2 && m2[1] && (url.indexOf('drive.google.com') !== -1 || url.indexOf('docs.google.com') !== -1)) return m2[1];
+    return null;
+}
+
+function updateDriveLinkBadges() {
+    var kopVal = document.getElementById('inputKopUrl') ? document.getElementById('inputKopUrl').value.trim() : '';
+    var kopId = extractDriveIdClient(kopVal);
+    var linkKopBox = document.getElementById('linkDriveKopBox');
+    if (kopId && linkKopBox) {
+        linkKopBox.innerHTML = '<a href="https://drive.google.com/file/d/' + kopId + '/view" target="_blank" class="text-primary fw-bold text-decoration-none"><i class="bi bi-google"></i> Buka File di Drive</a>';
+    } else if (linkKopBox) {
+        linkKopBox.innerHTML = '';
+    }
+
+    var logoVal = document.getElementById('inputLogoUrl') ? document.getElementById('inputLogoUrl').value.trim() : '';
+    var logoId = extractDriveIdClient(logoVal);
+    var linkLogoBox = document.getElementById('linkDriveLogoBox');
+    if (logoId && linkLogoBox) {
+        linkLogoBox.innerHTML = '<a href="https://drive.google.com/file/d/' + logoId + '/view" target="_blank" class="text-primary fw-bold text-decoration-none"><i class="bi bi-google"></i> Buka File di Drive</a>';
+    } else if (linkLogoBox) {
+        linkLogoBox.innerHTML = '';
+    }
 }
 
 function formatDriveImageUrlClient(url) {
@@ -579,6 +611,7 @@ function handleKopUrlInput(url) {
         preview.style.display = 'none';
         placeholder.style.display = 'block';
     }
+    updateDriveLinkBadges();
 }
 
 function handleLogoUrlInput(url) {
@@ -602,6 +635,7 @@ function handleLogoUrlInput(url) {
         preview.style.display = 'none';
         placeholder.style.display = 'block';
     }
+    updateDriveLinkBadges();
 }
 
 function uploadAssetToDriveDirect(type, inputElement) {
@@ -618,9 +652,7 @@ function uploadAssetToDriveDirect(type, inputElement) {
     if (statusEl) statusEl.innerHTML = '<span class="text-primary"><i class="bi bi-arrow-repeat spin"></i> Mengunggah ke Google Drive...</span>';
     if (btnEl) btnEl.disabled = true;
 
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        var base64 = e.target.result;
+    function processAndUpload(base64Payload, mimeType) {
         google.script.run
             .withSuccessHandler(function(res) {
                 if (btnEl) btnEl.disabled = false;
@@ -650,8 +682,9 @@ function uploadAssetToDriveDirect(type, inputElement) {
                     if (res.folderUrl && !document.getElementById('set_drive_url').value) {
                         document.getElementById('set_drive_url').value = res.folderUrl;
                     }
+                    updateDriveLinkBadges();
                     if (window.showGlobalToast) {
-                        window.showGlobalToast('Berkas ' + (type === 'logo' ? 'Logo' : 'Banner Kop') + ' berhasil disimpan di Drive & sheet Pengaturan!', 'success');
+                        window.showGlobalToast('Berkas ' + (type === 'logo' ? 'Logo' : 'Banner Kop') + ' berhasil disimpan di Drive & database (menggantikan berkas lama)!', 'success');
                     }
                 } else {
                     if (statusEl) statusEl.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Gagal unggah</span>';
@@ -665,9 +698,21 @@ function uploadAssetToDriveDirect(type, inputElement) {
                 showGlobalNotificationDialog('Gagal Upload', err.message, 'danger');
                 inputElement.value = '';
             })
-            .apiUploadAssetToDrive(type, base64, file.name, file.type);
-    };
-    reader.readAsDataURL(file);
+            .apiUploadAssetToDrive(type, base64Payload, file.name, mimeType || file.type);
+    }
+
+    if (file.size > 2 * 1024 * 1024 && typeof window.compressPhoto === 'function') {
+        var maxDim = (type === 'kop') ? 1800 : 800;
+        window.compressPhoto(file, function(compressedBase64) {
+            processAndUpload(compressedBase64, file.type);
+        }, maxDim);
+    } else {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            processAndUpload(e.target.result, file.type);
+        };
+        reader.readAsDataURL(file);
+    }
 }
 
 function loadInitialSettings(showToast) {

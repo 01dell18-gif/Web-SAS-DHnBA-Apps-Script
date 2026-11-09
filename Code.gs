@@ -822,6 +822,44 @@ function ensureSheetHasInitialData(sheetName, sheet) {
 /**
  * Settings Table Helper & Drive URL Utility
  */
+var PROTECTED_DEFAULT_ASSET_IDS = [
+  '1QXtnYwIrCc-pihDUoidjkRW5UVWykOn-', // Default sample banner kop
+  '1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI'  // Default sample school logo
+];
+
+function extractDriveFileId(url) {
+  if (!url || typeof url !== 'string') return null;
+  url = url.trim();
+  if (url.indexOf('/folders/') !== -1) return null;
+  var match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (match && match[1]) return match[1];
+  var matchId = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (matchId && matchId[1] && (url.indexOf('drive.google.com') !== -1 || url.indexOf('docs.google.com') !== -1)) {
+    return matchId[1];
+  }
+  if (/^[a-zA-Z0-9_-]{25,50}$/.test(url)) {
+    return url;
+  }
+  return null;
+}
+
+function safelyDeleteOldDriveAsset(oldUrlOrId, newFileId) {
+  try {
+    var oldId = extractDriveFileId(oldUrlOrId);
+    if (!oldId) return;
+    if (newFileId && oldId === newFileId) return;
+    if (PROTECTED_DEFAULT_ASSET_IDS.indexOf(oldId) !== -1) return;
+
+    var file = DriveApp.getFileById(oldId);
+    if (file) {
+      file.setTrashed(true);
+      Logger.log('Old Drive asset successfully trashed: ' + oldId);
+    }
+  } catch (e) {
+    Logger.log('Notice: safelyDeleteOldDriveAsset unable to trash ' + oldUrlOrId + ': ' + e.message);
+  }
+}
+
 function convertDriveUrlToThumbnail(url) {
   if (!url || typeof url !== 'string') return '';
   url = url.trim();
@@ -1552,40 +1590,55 @@ function apiSavePengaturan(payload) {
     if (k) existingMap[k] = r._row;
   }
 
+  var currentSettings = getSettingsMap();
+  var prevKop = currentSettings.kop_header || currentSettings.kop_image_path || '';
+  var prevLogo = currentSettings.school_logo || currentSettings.logo_path || '';
+
   // Auto-convert Google Drive URLs to direct thumbnail URLs
-  var kopUrl = payload.kop_header || payload.kop_image_path || '';
+  var kopUrl = payload.kop_header !== undefined ? payload.kop_header : (payload.kop_image_path !== undefined ? payload.kop_image_path : prevKop);
   if (kopUrl) kopUrl = convertDriveUrlToThumbnail(kopUrl);
 
-  var logoUrl = payload.school_logo || payload.logo_path || '';
+  var logoUrl = payload.school_logo !== undefined ? payload.school_logo : (payload.logo_path !== undefined ? payload.logo_path : prevLogo);
   if (logoUrl) logoUrl = convertDriveUrlToThumbnail(logoUrl);
 
-  var schoolName = payload.nama_sekolah || payload.school_name || 'SMK NEGERI FYJ CHANNEL';
-  var driveFolderUrl = payload.google_drive_folder_url || payload.drive_folder_url || '';
-  var tahunAktif = payload.tahun_ajaran_aktif || payload.academic_year || '2026/2027';
-  var semAktif = payload.semester_aktif || payload.default_semester || 'Ganjil';
-  var listTh = payload.daftar_tahun_ajaran;
+  // If Kop or Logo changed to a new file or new direct link, safely trash the old Drive asset
+  if ((payload.kop_header !== undefined || payload.kop_image_path !== undefined) && kopUrl !== prevKop && prevKop) {
+    var newKopId = extractDriveFileId(kopUrl);
+    safelyDeleteOldDriveAsset(prevKop, newKopId);
+  }
+
+  if ((payload.school_logo !== undefined || payload.logo_path !== undefined) && logoUrl !== prevLogo && prevLogo) {
+    var newLogoId = extractDriveFileId(logoUrl);
+    safelyDeleteOldDriveAsset(prevLogo, newLogoId);
+  }
+
+  var schoolName = payload.nama_sekolah || payload.school_name || currentSettings.nama_sekolah || currentSettings.school_name || 'SMK NEGERI FYJ CHANNEL';
+  var driveFolderUrl = payload.google_drive_folder_url || payload.drive_folder_url || currentSettings.google_drive_folder_url || currentSettings.drive_folder_url || '';
+  var tahunAktif = payload.tahun_ajaran_aktif || payload.academic_year || currentSettings.tahun_ajaran_aktif || currentSettings.academic_year || '2026/2027';
+  var semAktif = payload.semester_aktif || payload.default_semester || currentSettings.semester_aktif || currentSettings.default_semester || 'Ganjil';
+  var listTh = payload.daftar_tahun_ajaran !== undefined ? payload.daftar_tahun_ajaran : (currentSettings.daftar_tahun_ajaran || ['2024/2025', '2025/2026', '2026/2027', '2027/2028']);
   if (listTh && Array.isArray(listTh)) listTh = JSON.stringify(listTh);
 
   // Canonical keys only - NO DUPLICATES in spreadsheet!
   var cleanPayload = {
-    'kop_mode': payload.kop_mode || 'image',
+    'kop_mode': payload.kop_mode !== undefined ? payload.kop_mode : (currentSettings.kop_mode || 'image'),
     'kop_header': kopUrl,
-    'kop_baris_1': payload.kop_baris_1 || 'PEMERINTAH PROVINSI FYJ',
-    'kop_baris_2': payload.kop_baris_2 || 'DINAS PENDIDIKAN KEPEMUDAAN DAN OLAHRAGA',
-    'kop_baris_3': payload.kop_baris_3 || schoolName,
-    'kop_telepon': payload.kop_telepon || '',
-    'kop_website': payload.kop_website || '',
+    'kop_baris_1': payload.kop_baris_1 !== undefined ? payload.kop_baris_1 : (currentSettings.kop_baris_1 || 'PEMERINTAH PROVINSI FYJ'),
+    'kop_baris_2': payload.kop_baris_2 !== undefined ? payload.kop_baris_2 : (currentSettings.kop_baris_2 || 'DINAS PENDIDIKAN KEPEMUDAAN DAN OLAHRAGA'),
+    'kop_baris_3': payload.kop_baris_3 !== undefined ? payload.kop_baris_3 : (currentSettings.kop_baris_3 || schoolName),
+    'kop_telepon': payload.kop_telepon !== undefined ? payload.kop_telepon : (currentSettings.kop_telepon || ''),
+    'kop_website': payload.kop_website !== undefined ? payload.kop_website : (currentSettings.kop_website || ''),
     'school_logo': logoUrl,
     'nama_sekolah': schoolName,
-    'alamat_sekolah': payload.alamat_sekolah || '',
+    'alamat_sekolah': payload.alamat_sekolah !== undefined ? payload.alamat_sekolah : (currentSettings.alamat_sekolah || ''),
     'google_drive_folder_url': driveFolderUrl,
     'tahun_ajaran_aktif': tahunAktif,
     'semester_aktif': semAktif,
     'daftar_tahun_ajaran': listTh || JSON.stringify(['2024/2025', '2025/2026', '2026/2027', '2027/2028']),
-    'kepala_sekolah': payload.kepala_sekolah || 'Drs. I Ketut Suardana, M.Pd.',
-    'nip_kepala_sekolah': payload.nip_kepala_sekolah || '19680315 199412 1 002',
-    'tempat_cetak': payload.tempat_cetak || 'Denpasar',
-    'format_tanggal_cetak': payload.format_tanggal_cetak || 'd MMMM yyyy'
+    'kepala_sekolah': payload.kepala_sekolah !== undefined ? payload.kepala_sekolah : (currentSettings.kepala_sekolah || 'Drs. I Ketut Suardana, M.Pd.'),
+    'nip_kepala_sekolah': payload.nip_kepala_sekolah !== undefined ? payload.nip_kepala_sekolah : (currentSettings.nip_kepala_sekolah || '19680315 199412 1 002'),
+    'tempat_cetak': payload.tempat_cetak !== undefined ? payload.tempat_cetak : (currentSettings.tempat_cetak || 'Denpasar'),
+    'format_tanggal_cetak': payload.format_tanggal_cetak !== undefined ? payload.format_tanggal_cetak : (currentSettings.format_tanggal_cetak || 'd MMMM yyyy')
   };
 
   for (var key in cleanPayload) {
@@ -1799,21 +1852,29 @@ function apiUploadAssetToDrive(type, base64Data, filename, mimeType) {
     Logger.log('Set sharing notice: ' + e.message);
   }
 
+  var prevSettings = getSettingsMap();
+  var oldAssetUrl = (type === 'logo') ? 
+    (prevSettings.school_logo || prevSettings.logo_path || '') : 
+    (prevSettings.kop_header || prevSettings.kop_image_path || '');
+
   var fileId = file.getId();
   var driveViewUrl = file.getUrl();
   var directImageUrl = 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w1600';
 
+  // Safely trash the old Drive file (if present and not the same / not protected default template)
+  if (oldAssetUrl) {
+    safelyDeleteOldDriveAsset(oldAssetUrl, fileId);
+  }
+
   var updates = {};
   if (type === 'logo') {
     updates.school_logo = directImageUrl;
-    updates.logo_path = directImageUrl;
   } else {
     updates.kop_header = directImageUrl;
-    updates.kop_image_path = directImageUrl;
   }
 
   apiSavePengaturan(updates);
-  logActivity('UPLOAD_ASSET', 'Mengunggah ' + (type === 'logo' ? 'Logo Sekolah' : 'Banner Kop Surat') + ' ke Google Drive Arsip: ' + filename);
+  logActivity('UPLOAD_ASSET', 'Mengunggah ' + (type === 'logo' ? 'Logo Sekolah' : 'Banner Kop Surat') + ' ke Google Drive Arsip: ' + filename + ' (menggantikan file/link lama)');
 
   return {
     success: true,
