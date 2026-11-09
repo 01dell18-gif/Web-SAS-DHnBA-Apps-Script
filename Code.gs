@@ -27,7 +27,33 @@ var SHEET_NAMES = {
  * Router Multi-Page Utama Web App
  */
 
+function getScriptCacheJson(key) {
+  try {
+    var raw = CacheService.getScriptCache().get(key);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    Logger.log('Cache read error (' + key + '): ' + e);
+  }
+  return null;
+}
+
+function putScriptCacheJson(key, data, optTtl) {
+  try {
+    var str = JSON.stringify(data);
+    if (str && str.length < 100000) {
+      CacheService.getScriptCache().put(key, str, optTtl || 1800);
+    }
+  } catch (e) {
+    Logger.log('Cache write error (' + key + '): ' + e);
+  }
+}
+
 function ensureAllMasterSheetsSeeded() {
+  try {
+    var isSeeded = getScriptCacheJson('sas_seeded_flag');
+    if (isSeeded === true) return;
+  } catch (e) {}
+
   try {
     var cls = readTable(SHEET_NAMES.CLASSES);
     if (!cls || cls.length === 0) seedDefaultClasses();
@@ -75,6 +101,10 @@ function ensureAllMasterSheetsSeeded() {
   } catch (e6) {
     Logger.log('ensureAllMasterSheetsSeeded users error: ' + e6.message);
   }
+
+  try {
+    putScriptCacheJson('sas_seeded_flag', true, 21600);
+  } catch (e7) {}
 }
 
 function doGet(e) {
@@ -177,7 +207,12 @@ function renderTemplate(filename) {
   
   // Attach initial data directly to template for instant client-side rendering
   try {
-    template.serverData = apiGetInitialData();
+    if (filename === 'AdminPengaturan') {
+      // AdminPengaturan only requires settings, which is already attached
+      template.serverData = { success: true, settings: template.settings };
+    } else {
+      template.serverData = apiGetInitialData();
+    }
   } catch (e) {
     template.serverData = null;
   }
@@ -192,7 +227,9 @@ function renderTemplate(filename) {
  * In-Memory Request Cache & Database Helpers
  */
 var _cachedSpreadsheet = null;
+var _cachedSheetsMap = {};
 var _requestTableCache = {};
+var _cachedSettingsMap = null;
 
 function getSpreadsheet() {
   if (!_cachedSpreadsheet) {
@@ -234,6 +271,9 @@ function getSpreadsheet() {
 }
 
 function getSheet(sheetName) {
+  if (_cachedSheetsMap[sheetName]) {
+    return _cachedSheetsMap[sheetName];
+  }
   var ss = getSpreadsheet();
   var sheet = ss.getSheetByName(sheetName);
   if (!sheet) {
@@ -256,8 +296,9 @@ function getSheet(sheetName) {
   }
   if (!sheet) {
     sheet = ss.insertSheet(sheetName);
+    ensureSheetHasInitialData(sheetName, sheet);
   }
-  ensureSheetHasInitialData(sheetName, sheet);
+  _cachedSheetsMap[sheetName] = sheet;
   return sheet;
 }
 
@@ -283,13 +324,28 @@ function ensureSheetDimensions(sheet, requiredRows, requiredCols) {
 
 function invalidateCaches() {
   _requestTableCache = {};
+  _cachedSettingsMap = null;
+  _cachedSheetsMap = {};
   try {
     SpreadsheetApp.flush();
   } catch (e) {}
   try {
-    CacheService.getScriptCache().removeAll([
-      'sas_initial_data', 'sas_settings', 'sas_classes', 'sas_teachers', 'sas_mapel', 'sas_templates'
-    ]);
+    var keys = [
+      'sas_settings_map',
+      'sas_seeded_flag',
+      'sas_initial_data_bundle',
+      'sas_tbl_' + SHEET_NAMES.SETTINGS,
+      'sas_tbl_' + SHEET_NAMES.CLASSES,
+      'sas_tbl_' + SHEET_NAMES.STUDENTS,
+      'sas_tbl_' + SHEET_NAMES.TEACHERS,
+      'sas_tbl_' + SHEET_NAMES.MAPEL,
+      'sas_tbl_' + SHEET_NAMES.TEMPLATES,
+      'sas_tbl_' + SHEET_NAMES.USERS,
+      'sas_tbl_' + SHEET_NAMES.ABSENSI,
+      'sas_tbl_' + SHEET_NAMES.BERITA_ACARA,
+      'sas_tbl_' + SHEET_NAMES.LOGS
+    ];
+    CacheService.getScriptCache().removeAll(keys);
   } catch (e) {}
 }
 
@@ -340,11 +396,20 @@ function readTable(sheetName) {
   if (_requestTableCache[sheetName]) {
     return _requestTableCache[sheetName];
   }
+
+  // Check distributed ScriptCache (sub-5ms retrieval)
+  var cachedRows = getScriptCacheJson('sas_tbl_' + sheetName);
+  if (cachedRows && Array.isArray(cachedRows)) {
+    _requestTableCache[sheetName] = cachedRows;
+    return cachedRows;
+  }
+
   var sheet = getSheet(sheetName);
   var lastRow = sheet.getLastRow();
   var lastCol = sheet.getLastColumn();
   if (lastRow < 2 || lastCol < 1) {
     _requestTableCache[sheetName] = [];
+    putScriptCacheJson('sas_tbl_' + sheetName, [], 1800);
     return [];
   }
   var values = sheet.getRange(1, 1, lastRow, lastCol).getValues();
@@ -402,6 +467,7 @@ function readTable(sheetName) {
     }
   }
   _requestTableCache[sheetName] = rows;
+  putScriptCacheJson('sas_tbl_' + sheetName, rows, 1800);
   return rows;
 }
 
@@ -903,6 +969,15 @@ function apiGetFreshSettings() {
 }
 
 function getSettingsMap() {
+  if (_cachedSettingsMap) return _cachedSettingsMap;
+
+  // 1. Check high-speed ScriptCache (<5ms)
+  var cached = getScriptCacheJson('sas_settings_map');
+  if (cached && typeof cached === 'object' && cached.nama_sekolah) {
+    _cachedSettingsMap = cached;
+    return cached;
+  }
+
   try {
     var sheet = getSheet(SHEET_NAMES.SETTINGS);
     var lastRow = sheet.getLastRow();
@@ -1016,6 +1091,8 @@ function getSettingsMap() {
     if (!map.tempat_cetak) map.tempat_cetak = 'Denpasar';
     if (!map.format_tanggal_cetak) map.format_tanggal_cetak = 'd MMMM yyyy';
 
+    _cachedSettingsMap = map;
+    putScriptCacheJson('sas_settings_map', map, 21600);
     return map;
   } catch (e) {
     return {
@@ -1049,6 +1126,12 @@ function getSettingsMap() {
  */
 function apiGetInitialData() {
   try {
+    // 1. Check ScriptCache for the assembled bundle
+    var cached = getScriptCacheJson('sas_initial_data_bundle');
+    if (cached && typeof cached === 'object' && cached.classes && cached.classes.length > 0) {
+      return cached;
+    }
+
     ensureAllMasterSheetsSeeded();
 
     var settings = getSettingsMap();
@@ -1161,6 +1244,7 @@ function apiGetInitialData() {
       }
     };
 
+    putScriptCacheJson('sas_initial_data_bundle', result, 1800);
     return result;
   } catch (err) {
     Logger.log('Critical error in apiGetInitialData: ' + err.message);

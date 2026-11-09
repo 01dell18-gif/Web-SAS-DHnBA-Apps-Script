@@ -457,7 +457,7 @@
                     </p>
                     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; margin-bottom: 1.25rem; font-size: 0.85rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                            <span><strong>Target Database:</strong> <span id="dbSpreadsheetName">Google Spreadsheet Resmi</span></span>
+                            <span><strong>Target Database:</strong> <span id="dbSpreadsheetName">Web SAS Daftar Hadir dan Berita Acara</span></span>
                             <span class="badge" style="background:#dcfce7; color:#15803d; font-weight:700;"><i class="bi bi-check-circle"></i> Terhubung & Aktif</span>
                         </div>
                     </div>
@@ -497,12 +497,12 @@ if (!Array.isArray(_daftarTahunAjaran) || _daftarTahunAjaran.length === 0) {
     _daftarTahunAjaran = ['2024/2025', '2025/2026', '2026/2027', '2027/2028'];
 }
 var _tahunAktif = '<?= (settings && (settings.tahun_ajaran_aktif || settings.academic_year)) ? (settings.tahun_ajaran_aktif || settings.academic_year) : '2026/2027' ?>';
-var _dbUrl = '';
+var _dbUrl = 'https://docs.google.com/spreadsheets/d/1IA6B5Mgt6kIYeV9c8ZdR9RliccV0U2OTlGJhsD30c2Y/edit?usp=sharing';
 
 function initPengaturanPage() {
     renderTahunAjaran();
-    loadInitialSettings();
-    loadDatabaseInfo();
+    // Form fields are pre-rendered server-side for sub-second page loads.
+    // loadInitialSettings() and loadDatabaseInfo() are available on-demand via the refresh buttons.
 }
 
 if (document.readyState === 'loading') {
