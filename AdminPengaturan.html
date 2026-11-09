@@ -488,14 +488,20 @@
 <?!= include('Modals'); ?>
 <?!= include('AppJS'); ?>
 
+<script type="application/json" id="settingsDataTahunAjaran">
+<?= (settings && settings.daftar_tahun_ajaran) ? (typeof settings.daftar_tahun_ajaran === 'string' ? settings.daftar_tahun_ajaran : JSON.stringify(settings.daftar_tahun_ajaran)) : JSON.stringify(['2024/2025', '2025/2026', '2026/2027', '2027/2028']) ?>
+</script>
+
 <script>
-var _daftarTahunAjaran = <?= (settings && settings.daftar_tahun_ajaran) ? (typeof settings.daftar_tahun_ajaran === 'string' ? settings.daftar_tahun_ajaran : JSON.stringify(settings.daftar_tahun_ajaran)) : JSON.stringify(['2024/2025', '2025/2026', '2026/2027', '2027/2028']) ?>;
-if (typeof _daftarTahunAjaran === 'string') {
-    try { _daftarTahunAjaran = JSON.parse(_daftarTahunAjaran); } catch(e) { _daftarTahunAjaran = ['2024/2025', '2025/2026', '2026/2027', '2027/2028']; }
-}
-if (!Array.isArray(_daftarTahunAjaran) || _daftarTahunAjaran.length === 0) {
-    _daftarTahunAjaran = ['2024/2025', '2025/2026', '2026/2027', '2027/2028'];
-}
+var _daftarTahunAjaran = ['2024/2025', '2025/2026', '2026/2027', '2027/2028'];
+try {
+    var rawTahunEl = document.getElementById('settingsDataTahunAjaran');
+    if (rawTahunEl && rawTahunEl.textContent.trim()) {
+        var parsedTh = JSON.parse(rawTahunEl.textContent.trim());
+        if (typeof parsedTh === 'string') parsedTh = JSON.parse(parsedTh);
+        if (Array.isArray(parsedTh) && parsedTh.length > 0) _daftarTahunAjaran = parsedTh;
+    }
+} catch (e) {}
 var _tahunAktif = '<?= (settings && (settings.tahun_ajaran_aktif || settings.academic_year)) ? (settings.tahun_ajaran_aktif || settings.academic_year) : '2026/2027' ?>';
 var _dbUrl = 'https://docs.google.com/spreadsheets/d/1IA6B5Mgt6kIYeV9c8ZdR9RliccV0U2OTlGJhsD30c2Y/edit?usp=sharing';
 

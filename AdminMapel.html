@@ -128,9 +128,19 @@
 <?!= include('Modals'); ?>
 <?!= include('AppJS'); ?>
 
+<script type="application/json" id="serverDataMapel">
+<?!= (typeof serverData !== 'undefined' && serverData) ? JSON.stringify(serverData) : 'null' ?>
+</script>
+
 <script>
 var mapelList = [];
-var initialServerData = <?!= (typeof serverData !== 'undefined' && serverData) ? JSON.stringify(serverData) : 'null' ?>;
+var initialServerData = null;
+try {
+    var rawServerData = document.getElementById('serverDataMapel');
+    if (rawServerData && rawServerData.textContent.trim()) {
+        initialServerData = JSON.parse(rawServerData.textContent.trim());
+    }
+} catch (e) {}
 
 function initMapelPage() {
     if (initialServerData && initialServerData.mapels && initialServerData.mapels.length > 0) {

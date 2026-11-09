@@ -129,9 +129,19 @@
 <?!= include('Modals'); ?>
 <?!= include('AppJS'); ?>
 
+<script type="application/json" id="serverDataSiswa">
+<?!= (typeof serverData !== 'undefined' && serverData) ? JSON.stringify(serverData) : 'null' ?>
+</script>
+
 <script>
 var siswaList = [];
-var initialServerData = <?!= (typeof serverData !== 'undefined' && serverData) ? JSON.stringify(serverData) : 'null' ?>;
+var initialServerData = null;
+try {
+    var rawServerData = document.getElementById('serverDataSiswa');
+    if (rawServerData && rawServerData.textContent.trim()) {
+        initialServerData = JSON.parse(rawServerData.textContent.trim());
+    }
+} catch (e) {}
 
 function initSiswaPage() {
     if (initialServerData && initialServerData.students && initialServerData.students.length > 0) {

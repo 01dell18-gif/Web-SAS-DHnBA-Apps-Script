@@ -108,9 +108,19 @@
 <?!= include('Modals'); ?>
 <?!= include('AppJS'); ?>
 
+<script type="application/json" id="serverDataUsers">
+<?!= (typeof serverData !== 'undefined' && serverData) ? JSON.stringify(serverData) : 'null' ?>
+</script>
+
 <script>
 var usersList = [];
-var initialServerData = <?!= (typeof serverData !== 'undefined' && serverData) ? JSON.stringify(serverData) : 'null' ?>;
+var initialServerData = null;
+try {
+    var rawServerData = document.getElementById('serverDataUsers');
+    if (rawServerData && rawServerData.textContent.trim()) {
+        initialServerData = JSON.parse(rawServerData.textContent.trim());
+    }
+} catch (e) {}
 
 function initUsersPage() {
     if (initialServerData && initialServerData.users && initialServerData.users.length > 0) {
