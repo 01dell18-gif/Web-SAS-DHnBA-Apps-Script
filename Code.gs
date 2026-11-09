@@ -2052,7 +2052,48 @@ function apiUpdateProfil(payload) {
     updates.password_plain = payload.password_plain;
   }
   if (payload.foto !== undefined) {
-    updates.foto = payload.foto;
+    var rawFoto = payload.foto;
+    if (rawFoto && (rawFoto.indexOf(';base64,') !== -1 || rawFoto.indexOf('data:image/') === 0)) {
+      // Simpan foto profil ke Google Drive Arsip agar tidak melebihi batas 50000 karakter per sel Spreadsheet
+      var folder = getDriveFolderArsip();
+      if (!folder) throw new Error('Folder Google Drive Arsip tidak dapat diakses.');
+
+      // Bersihkan avatar lama di Drive jika ada
+      if (target.foto) {
+        safelyDeleteOldDriveAsset(target.foto);
+      }
+
+      var parts = rawFoto.split(';base64,');
+      var mimeType = 'image/jpeg';
+      if (parts[0] && parts[0].indexOf(':') !== -1) {
+        mimeType = parts[0].split(':')[1];
+      }
+      var ext = (mimeType.indexOf('png') !== -1) ? 'png' : 'jpg';
+      var cleanBase64 = parts[1] || parts[0];
+      var filename = 'avatar_' + (payload.username || target.username || 'user') + '_' + Utilities.formatDate(new Date(), 'Asia/Makassar', 'yyyyMMdd_HHmmss') + '.' + ext;
+      var bytes = Utilities.base64Decode(cleanBase64);
+      var blob = Utilities.newBlob(bytes, mimeType, filename);
+      var file = folder.createFile(blob);
+      try {
+        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      } catch (e) {
+        Logger.log('Set sharing avatar: ' + e.message);
+      }
+      var avatarDriveUrl = 'https://drive.google.com/thumbnail?id=' + file.getId() + '&sz=w500';
+      updates.foto = avatarDriveUrl;
+    } else if (rawFoto === '' || rawFoto === null) {
+      if (target.foto) {
+        safelyDeleteOldDriveAsset(target.foto);
+      }
+      updates.foto = '';
+    } else {
+      var converted = convertDriveUrlToThumbnail(rawFoto);
+      if (converted !== target.foto && target.foto) {
+        var newId = extractDriveFileId(converted);
+        safelyDeleteOldDriveAsset(target.foto, newId);
+      }
+      updates.foto = converted;
+    }
   }
 
   updateRowById(SHEET_NAMES.USERS, target.id, updates);
