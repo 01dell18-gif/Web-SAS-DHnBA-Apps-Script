@@ -105,7 +105,7 @@
                         <div class="grid-2">
                             <div class="form-group">
                                 <label class="form-label" for="tahun_ajaran">Tahun Ajaran <span class="required">*</span></label>
-                                <input type="text" id="tahun_ajaran" class="form-control" list="list_tahun_ajaran_ba" value="<?= (settings && settings.tahun_ajaran_aktif) ? settings.tahun_ajaran_aktif : '2026/2027' ?>" required oninput="updateLivePreview()">
+                                <input type="text" id="tahun_ajaran" class="form-control" list="list_tahun_ajaran_ba" value="<?= (settings && settings.tahun_ajaran_aktif) ? settings.tahun_ajaran_aktif : '2026/2027' ?>" required oninput="handleCriteriaChange()">
                                 <datalist id="list_tahun_ajaran_ba">
                                     <? if (settings && settings.daftar_tahun_ajaran && Array.isArray(settings.daftar_tahun_ajaran)) { ?>
                                         <? for (var y = 0; y < settings.daftar_tahun_ajaran.length; y++) { ?>
@@ -116,7 +116,7 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label" for="semester">Semester <span class="required">*</span></label>
-                                <select id="semester" class="form-select" required onchange="updateLivePreview()">
+                                <select id="semester" class="form-select" required onchange="handleCriteriaChange()">
                                     <option value="Ganjil" selected>Ganjil</option>
                                     <option value="Genap">Genap</option>
                                 </select>
@@ -126,11 +126,11 @@
                         <div class="grid-2">
                             <div class="form-group">
                                 <label class="form-label" for="tanggal_ujian">Tanggal Pelaksanaan <span class="required">*</span></label>
-                                <input type="date" id="tanggal_ujian" class="form-control" required onchange="updateLivePreview()">
+                                <input type="date" id="tanggal_ujian" class="form-control" required onchange="handleCriteriaChange()">
                             </div>
                             <div class="form-group">
                                 <label class="form-label" for="mata_pelajaran">Mata Pelajaran <span class="required">*</span></label>
-                                <input type="text" id="mata_pelajaran" class="form-control input-mapel-search" list="datalist_mapel" placeholder="Ketik atau pilih mapel..." autocomplete="off" required oninput="updateLivePreview()">
+                                <input type="text" id="mata_pelajaran" class="form-control input-mapel-search" list="datalist_mapel" placeholder="Ketik atau pilih mapel..." autocomplete="off" required oninput="handleCriteriaChange()">
                                 <datalist id="datalist_mapel"></datalist>
                             </div>
                         </div>
@@ -143,9 +143,9 @@
                             <div class="form-group">
                                 <label class="form-label">Waktu Mulai - Selesai</label>
                                 <div style="display: flex; gap: 6px; align-items: center;">
-                                    <input type="text" id="jam_mulai" class="form-control time-24h" value="07:30" maxlength="5" required oninput="updateLivePreview()">
+                                    <input type="text" id="jam_mulai" class="form-control time-24h" value="07:30" maxlength="5" required oninput="handleCriteriaChange()">
                                     <span>-</span>
-                                    <input type="text" id="jam_selesai" class="form-control time-24h" value="09:30" maxlength="5" required oninput="updateLivePreview()">
+                                    <input type="text" id="jam_selesai" class="form-control time-24h" value="09:30" maxlength="5" required oninput="handleCriteriaChange()">
                                 </div>
                             </div>
                         </div>
@@ -154,8 +154,11 @@
 
                 <!-- 2. Kelas & Kehadiran Peserta -->
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <span class="card-title"><i class="bi bi-people"></i> 2. Kelas & Kehadiran Peserta</span>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="reloadAbsensiAndSync()" style="font-size: 0.75rem; padding: 2px 8px;" title="Cek ulang dari database Daftar Hadir">
+                            <i class="bi bi-arrow-repeat"></i> Cek Ulang DH
+                        </button>
                     </div>
                     <div class="card-body">
                         <div class="form-group">
@@ -180,6 +183,7 @@
                             </div>
                         </div>
 
+                        <div id="absensiSyncNotice" style="display: none; font-size: 0.82rem; padding: 0.5rem 0.75rem; border-radius: 6px; margin-top: 0.5rem;"></div>
                         <div id="pesertaValidationAlert" class="alert alert-warning" style="display: none; font-size: 0.85rem; padding: 0.65rem 0.85rem; margin-top: 0.5rem;"></div>
 
                         <div class="grid-2" style="margin-top: 0.5rem;">
@@ -584,26 +588,182 @@ function renderLiveKop(s) {
     });
 }
 
+function normalizeTime24(timeStr) {
+    if (!timeStr) return '';
+    var s = String(timeStr).trim();
+    var m = s.match(/(\d{1,2}):(\d{2})/);
+    if (m) {
+        return (m[1].length === 1 ? '0' + m[1] : m[1]) + ':' + m[2];
+    }
+    return s;
+}
+
+function normalizeDateStr(dateStr) {
+    if (!dateStr) return '';
+    var s = String(dateStr).trim();
+    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return m[1] + '-' + m[2] + '-' + m[3];
+    return s.substring(0, 10);
+}
+
+function handleCriteriaChange() {
+    syncAttendanceFromAbsensi();
+    updateLivePreview();
+}
+
 function handleClassChange(classId) {
-    if (!window.AppStore.data) return;
+    syncAttendanceFromAbsensi();
+    updateLivePreview();
+}
+
+function syncAttendanceFromAbsensi() {
+    if (!window.AppStore || !window.AppStore.data) return;
+
+    var classSelect = document.getElementById('class_id');
+    var classId = classSelect ? classSelect.value : '';
+    var noticeBox = document.getElementById('absensiSyncNotice');
+
     if (!classId) {
         document.getElementById('peserta_seharusnya').value = 0;
         document.getElementById('peserta_hadir').value = 0;
         document.getElementById('peserta_tidak_hadir').value = 0;
+        if (noticeBox) noticeBox.style.display = 'none';
         validatePesertaCounts();
         return;
     }
 
-    var count = window.AppStore.data.students.filter(function(s) {
+    var selectedClassName = classSelect.options[classSelect.selectedIndex] ? classSelect.options[classSelect.selectedIndex].text.trim() : '';
+    var tahun = (document.getElementById('tahun_ajaran').value || '').trim();
+    var semester = (document.getElementById('semester').value || '').trim().toLowerCase();
+    var tgl = normalizeDateStr(document.getElementById('tanggal_ujian').value);
+    var mapel = (document.getElementById('mata_pelajaran').value || '').trim().toLowerCase();
+    var jamMulai = normalizeTime24(document.getElementById('jam_mulai').value);
+    var jamSelesai = normalizeTime24(document.getElementById('jam_selesai').value);
+
+    var classStudentCount = (window.AppStore.data.students || []).filter(function(s) {
         return String(s.class_id) === String(classId);
     }).length;
 
-    document.getElementById('peserta_seharusnya').value = count;
-    document.getElementById('peserta_hadir').value = count;
-    document.getElementById('peserta_tidak_hadir').value = 0;
+    var absensiList = window.AppStore.data.absensi || [];
+    var matched = null;
+
+    // Prioritas 1: Kecocokan Lengkap (Kelas, Tanggal, Mapel, Jam Mulai, Jam Selesai, Tahun, Semester)
+    matched = absensiList.find(function(a) {
+        var aClass = String(a.class_id || '');
+        var aClassName = String(a.nama_kelas || '').trim();
+        var matchClass = (aClass === String(classId)) || (selectedClassName && aClassName === selectedClassName);
+        if (!matchClass) return false;
+
+        var aTgl = normalizeDateStr(a.tanggal_ujian);
+        if (tgl && aTgl && aTgl !== tgl) return false;
+
+        var aMapel = String(a.mata_pelajaran || '').trim().toLowerCase();
+        if (mapel && aMapel && aMapel !== mapel) return false;
+
+        var aJamMulai = normalizeTime24(a.jam_mulai);
+        var aJamSelesai = normalizeTime24(a.jam_selesai);
+        if (jamMulai && aJamMulai && aJamMulai !== jamMulai) return false;
+        if (jamSelesai && aJamSelesai && aJamSelesai !== jamSelesai) return false;
+
+        var aTahun = String(a.tahun_ajaran || '').trim();
+        if (tahun && aTahun && aTahun !== tahun) return false;
+
+        var aSem = String(a.semester || '').trim().toLowerCase();
+        if (semester && aSem && aSem !== semester) return false;
+
+        return true;
+    });
+
+    // Prioritas 2: Jika jam belum sama persis, cocokkan Kelas + Tanggal + Mapel
+    if (!matched && tgl && mapel) {
+        matched = absensiList.find(function(a) {
+            var aClass = String(a.class_id || '');
+            var aClassName = String(a.nama_kelas || '').trim();
+            var matchClass = (aClass === String(classId)) || (selectedClassName && aClassName === selectedClassName);
+            if (!matchClass) return false;
+
+            var aTgl = normalizeDateStr(a.tanggal_ujian);
+            if (aTgl !== tgl) return false;
+
+            var aMapel = String(a.mata_pelajaran || '').trim().toLowerCase();
+            return aMapel === mapel;
+        });
+    }
+
+    if (matched) {
+        var total = parseInt(matched.total_peserta, 10);
+        if (isNaN(total) || total <= 0) total = classStudentCount;
+
+        var hadir = parseInt(matched.peserta_hadir, 10);
+        if (isNaN(hadir)) hadir = 0;
+
+        var tidakHadir = Math.max(0, total - hadir);
+
+        document.getElementById('peserta_seharusnya').value = total;
+        document.getElementById('peserta_hadir').value = hadir;
+        document.getElementById('peserta_tidak_hadir').value = tidakHadir;
+
+        // Auto-isi Ruang jika ada
+        if (matched.ruang && (!document.getElementById('ruang').value || document.getElementById('ruang').value === 'Lab 1')) {
+            document.getElementById('ruang').value = matched.ruang;
+        }
+
+        if (noticeBox) {
+            noticeBox.style.display = 'block';
+            noticeBox.style.background = '#f0fdf4';
+            noticeBox.style.border = '1px solid #bbf7d0';
+            noticeBox.style.color = '#166534';
+            noticeBox.innerHTML = '<i class="bi bi-check-circle-fill" style="color: #16a34a;"></i> <strong>Data Terverifikasi dari Daftar Hadir:</strong> ' +
+                'Seharusnya: <strong>' + total + '</strong>, Hadir: <strong>' + hadir + '</strong>, Tidak Hadir: <strong>' + tidakHadir + '</strong> ' +
+                '(Tersimpan di Arsip DH #' + matched.id + ').';
+        }
+    } else {
+        document.getElementById('peserta_seharusnya').value = classStudentCount;
+        document.getElementById('peserta_hadir').value = classStudentCount;
+        document.getElementById('peserta_tidak_hadir').value = 0;
+
+        if (noticeBox) {
+            if (tgl && mapel) {
+                noticeBox.style.display = 'block';
+                noticeBox.style.background = '#f8fafc';
+                noticeBox.style.border = '1px dashed #cbd5e1';
+                noticeBox.style.color = '#475569';
+                noticeBox.innerHTML = '<i class="bi bi-info-circle" style="color: #3b82f6;"></i> Belum ada Daftar Hadir tersimpan untuk sesi ' + (jamMulai ? jamMulai + '-' + jamSelesai : '') + ' mapel ini. Jumlah peserta otomatis disetel sesuai total siswa aktif kelas (' + classStudentCount + ' siswa). Anda dapat mengubahnya secara manual jika diperlukan.';
+            } else {
+                noticeBox.style.display = 'none';
+            }
+        }
+    }
 
     validatePesertaCounts();
-    updateLivePreview();
+}
+
+function reloadAbsensiAndSync() {
+    var btn = event ? event.target.closest('button') : null;
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Mengecek...';
+    }
+    google.script.run
+        .withSuccessHandler(function(data) {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Cek Ulang DH';
+            }
+            if (data) {
+                window.AppStore.data = data;
+                syncAttendanceFromAbsensi();
+                showGlobalToast('Data Daftar Hadir terbaru berhasil disinkronkan!', 'success');
+            }
+        })
+        .withFailureHandler(function(err) {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Cek Ulang DH';
+            }
+            showGlobalToast('Gagal mengecek data: ' + err.message, 'danger');
+        })
+        .apiGetInitialData();
 }
 
 function validatePesertaCounts() {

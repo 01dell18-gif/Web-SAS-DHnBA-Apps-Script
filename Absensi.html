@@ -762,6 +762,18 @@ function handleSaveAbsensi(e) {
             btn.disabled = false;
             btn.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Simpan ke Database';
             showGlobalNotificationDialog('Berhasil', 'Daftar Hadir berhasil disimpan ke database sekolah!', 'success');
+            if (res && res.id) {
+                payload.id = res.id;
+            }
+            if (window.AppStore && window.AppStore.data) {
+                if (!window.AppStore.data.absensi) window.AppStore.data.absensi = [];
+                var existingIdx = window.AppStore.data.absensi.findIndex(function(a) { return String(a.id) === String(payload.id); });
+                if (existingIdx !== -1) {
+                    window.AppStore.data.absensi[existingIdx] = payload;
+                } else {
+                    window.AppStore.data.absensi.push(payload);
+                }
+            }
         })
         .withFailureHandler(function(err) {
             btn.disabled = false;

@@ -421,7 +421,9 @@ function readTable(sheetName) {
     putScriptCacheJson('sas_tbl_' + sheetName, [], 1800);
     return [];
   }
-  var values = sheet.getRange(1, 1, lastRow, lastCol).getValues();
+  var range = sheet.getRange(1, 1, lastRow, lastCol);
+  var values = range.getValues();
+  var displayValues = range.getDisplayValues();
   var headers = values[0];
   var rows = [];
   for (var i = 1; i < values.length; i++) {
@@ -432,16 +434,33 @@ function readTable(sheetName) {
       if (!rawKey) continue;
       var lowerKey = rawKey.toLowerCase();
       var val = values[i][j];
+      var dispVal = displayValues[i][j];
       
-      // JSON Serialization Safety: Convert Date objects to formatted string
+      // JSON Serialization Safety: Convert Date/Time objects to formatted string
       if (val instanceof Date) {
-        var h = val.getHours();
-        var mi = val.getMinutes();
-        var s = val.getSeconds();
-        if (h === 0 && mi === 0 && s === 0) {
-          val = Utilities.formatDate(val, 'Asia/Makassar', 'yyyy-MM-dd');
+        // If it's a Time cell in Sheets (year <= 1900) or if column is a time field (jam_mulai, jam_selesai, waktu)
+        if (val.getFullYear() <= 1900 || lowerKey.indexOf('jam') !== -1 || lowerKey.indexOf('waktu') !== -1) {
+          var timeStr = String(dispVal || '').trim();
+          var timeMatch = timeStr.match(/^(\d{1,2}):(\d{2})/);
+          if (timeMatch) {
+            val = (timeMatch[1].length === 1 ? '0' + timeMatch[1] : timeMatch[1]) + ':' + timeMatch[2];
+          } else {
+            val = timeStr;
+          }
         } else {
-          val = Utilities.formatDate(val, 'Asia/Makassar', 'yyyy-MM-dd HH:mm:ss');
+          var h = val.getHours();
+          var mi = val.getMinutes();
+          var s = val.getSeconds();
+          if (h === 0 && mi === 0 && s === 0) {
+            val = Utilities.formatDate(val, 'Asia/Makassar', 'yyyy-MM-dd');
+          } else {
+            val = Utilities.formatDate(val, 'Asia/Makassar', 'yyyy-MM-dd HH:mm:ss');
+          }
+        }
+      } else if (typeof val === 'string' && (lowerKey.indexOf('jam') !== -1 || lowerKey.indexOf('waktu') !== -1)) {
+        var timeMatch2 = val.trim().match(/^(\d{1,2}):(\d{2})/);
+        if (timeMatch2) {
+          val = (timeMatch2[1].length === 1 ? '0' + timeMatch2[1] : timeMatch2[1]) + ':' + timeMatch2[2];
         }
       } else if (val === null || val === undefined) {
         val = '';

@@ -82,6 +82,16 @@ function formatIndoDate(dateStr) {
     return dayName + ', ' + d.getDate() + ' ' + monthName + ' ' + d.getFullYear();
 }
 
+function formatTimeStr(val) {
+    if (!val) return '';
+    var s = String(val).trim();
+    var m = s.match(/(\d{1,2}):(\d{2})/);
+    if (m) {
+        return (m[1].length === 1 ? '0' + m[1] : m[1]) + ':' + m[2];
+    }
+    return s;
+}
+
 function renderDocument(type, id) {
     var container = document.getElementById('previewStandaloneContainer');
     var settings = (window.AppStore.data && window.AppStore.data.settings) || {};
@@ -131,8 +141,10 @@ function renderDocument(type, id) {
         });
 
         var hariTanggalStr = formatIndoDate(rec.tanggal_ujian);
-        var waktuStr = (rec.jam_mulai && rec.jam_selesai) 
-            ? (rec.jam_mulai + ' - ' + rec.jam_selesai + ' WITA (Sesi ' + (rec.sesi || '1') + ')')
+        var jamMulaiStr = formatTimeStr(rec.jam_mulai);
+        var jamSelesaiStr = formatTimeStr(rec.jam_selesai);
+        var waktuStr = (jamMulaiStr && jamSelesaiStr) 
+            ? (jamMulaiStr + ' - ' + jamSelesaiStr + ' WITA (Sesi ' + (rec.sesi || '1') + ')')
             : ('Sesi ' + (rec.sesi || '1'));
         var ruangStr = rec.ruang || '-';
 
@@ -233,8 +245,8 @@ function renderDocument(type, id) {
                 'kelas': recBA.nama_kelas,
                 'mata_pelajaran': recBA.mata_pelajaran,
                 'ruang': recBA.ruang,
-                'jam_mulai': recBA.jam_mulai,
-                'jam_selesai': recBA.jam_selesai,
+                'jam_mulai': formatTimeStr(recBA.jam_mulai),
+                'jam_selesai': formatTimeStr(recBA.jam_selesai),
                 'peserta_seharusnya': recBA.peserta_seharusnya,
                 'peserta_hadir': recBA.peserta_hadir,
                 'peserta_tidak_hadir': recBA.peserta_tidak_hadir,
@@ -259,9 +271,9 @@ function renderDocument(type, id) {
             }
             redaksi = rendered;
         } else {
-            redaksi = '<p>Pada hari ini, tanggal <strong>' + (recBA.tanggal_ujian || '-') + '</strong>:</p>' +
+            redaksi = '<p>Pada hari ini, tanggal <strong>' + formatIndoDate(recBA.tanggal_ujian) + '</strong>:</p>' +
                 '<ol style="margin-top: 6px; margin-bottom: 12px; padding-left: 20px;">' +
-                '<li style="margin-bottom: 8px;">Telah diselenggarakan <strong>' + recBA.nama_ujian + '</strong> Tahun Ajaran <strong>' + recBA.tahun_ajaran + '</strong> dari pukul <strong>' + recBA.jam_mulai + '</strong> sampai dengan pukul <strong>' + recBA.jam_selesai + '</strong> WITA.' +
+                '<li style="margin-bottom: 8px;">Telah diselenggarakan <strong>' + recBA.nama_ujian + '</strong> Tahun Ajaran <strong>' + recBA.tahun_ajaran + '</strong> dari pukul <strong>' + formatTimeStr(recBA.jam_mulai) + '</strong> sampai dengan pukul <strong>' + formatTimeStr(recBA.jam_selesai) + '</strong> WITA.' +
                 '<ul style="margin-top: 4px; margin-bottom: 6px; margin-left: 18px; list-style-type: disc;">' +
                 '<li>Pada Sekolah: <strong>' + schoolName + '</strong></li>' +
                 '<li>Kelas: <strong>' + recBA.nama_kelas + '</strong></li>' +
