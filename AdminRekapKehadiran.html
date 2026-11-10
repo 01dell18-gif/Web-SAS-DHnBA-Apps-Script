@@ -5,7 +5,104 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rekap Kehadiran Siswa Matriks - <?= (settings && settings.nama_sekolah) ? settings.nama_sekolah : 'SMK NEGERI FYJ Channel' ?></title>
     <?!= include('StyleCSS'); ?>
-    <?!= include('PreviewA4CSS'); ?>
+    <style>
+    .matrix-print-header {
+        display: none;
+    }
+
+    @media print {
+        @page {
+            size: A4 landscape;
+            margin: 8mm 10mm;
+        }
+
+        body, html {
+            background: #ffffff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            font-size: 8.5pt !important;
+            color: #000000 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .navbar,
+        .admin-navbar,
+        .admin-sidebar,
+        .admin-bottom-nav,
+        .admin-sidebar-backdrop,
+        .rekap-header-area,
+        .horizontal-filter-card,
+        .card-header,
+        .btn,
+        .custom-modal,
+        .no-print {
+            display: none !important;
+        }
+
+        .admin-sidebar-layout,
+        .admin-main,
+        .card,
+        .card-matrix-print,
+        .table-matrix-wrapper {
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            border: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+            overflow: visible !important;
+        }
+
+        .matrix-print-header {
+            display: block !important;
+            margin-bottom: 12px !important;
+        }
+
+        .table-matrix {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            margin: 0 !important;
+            font-size: 8.5pt !important;
+            background: #ffffff !important;
+        }
+
+        .table-matrix th,
+        .table-matrix td {
+            border: 1px solid #000000 !important;
+            padding: 3px 5px !important;
+            color: #000000 !important;
+            background: transparent !important;
+        }
+
+        .table-matrix th.th-subject {
+            height: 125px !important;
+            vertical-align: bottom !important;
+            padding-bottom: 4px !important;
+            background: #f8fafc !important;
+        }
+
+        .table-matrix .rotated-subject-title {
+            font-size: 8pt !important;
+            color: #000000 !important;
+        }
+
+        .table-matrix .badge-status-h,
+        .table-matrix .badge-status-d,
+        .table-matrix .badge-status-i,
+        .table-matrix .badge-status-s,
+        .table-matrix .badge-status-a {
+            background: transparent !important;
+            color: #000000 !important;
+            font-weight: 700 !important;
+            padding: 0 !important;
+            border-radius: 0 !important;
+            font-size: 8.5pt !important;
+        }
+    }
+    </style>
 </head>
 <body>
 <?!= include('Header'); ?>
@@ -13,7 +110,7 @@
 <div class="admin-sidebar-layout">
     <?!= include('Sidebar'); ?>
     <main class="admin-main">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div class="rekap-header-area no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
             <div>
                 <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-heading); margin: 0;">Laporan Rekap Kehadiran Siswa</h1>
                 <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Matriks kehadiran kumulatif seluruh mata pelajaran per rombel kelas</p>
@@ -32,7 +129,7 @@
         </div>
 
         <!-- Filter Kelas -->
-        <div class="horizontal-filter-card">
+        <div class="horizontal-filter-card no-print">
             <div class="horizontal-filter-item" style="max-width: 280px;">
                 <label>Pilih Kelas Ujian</label>
                 <select id="selectMatrixClass" class="form-select form-select-sm" onchange="renderMatrixReport(this.value)"></select>
@@ -46,9 +143,20 @@
             </div>
         </div>
 
+        <!-- Header Dokumen Cetak A4 (Khusus Cetak Matriks) -->
+        <div class="matrix-print-header" id="matrixPrintHeader">
+            <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px;">
+                <div style="font-size: 13pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;" id="printSchoolName"><?= (settings && settings.nama_sekolah) ? settings.nama_sekolah : 'SMK NEGERI FYJ CHANNEL' ?></div>
+                <div style="font-size: 11pt; font-weight: 700; text-transform: uppercase; margin-top: 3px;">REKAPITULASI MATRIKS KEHADIRAN SISWA</div>
+                <div style="font-size: 9.5pt; color: #334155; margin-top: 2px;">
+                    Kelas: <strong id="printClassName">-</strong> &bull; Tahun Ajaran: <strong id="printTahunAjaran"><?= (settings && settings.tahun_ajaran_aktif) ? settings.tahun_ajaran_aktif : '2026/2027' ?></strong>
+                </div>
+            </div>
+        </div>
+
         <!-- Tabel Matriks Kehadiran -->
-        <div class="card">
-            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="card card-matrix-print">
+            <div class="card-header no-print" style="display: flex; justify-content: space-between; align-items: center;">
                 <span class="card-title" id="matrixTitleText"><i class="bi bi-grid-3x3"></i> Matriks Kehadiran Kelas</span>
                 <span id="matrixStatsBadge" class="badge" style="background:#e0e7ff; color:#4338ca; font-weight:700;">0 Mapel Terdata</span>
             </div>
@@ -166,6 +274,8 @@ function renderMatrixReport(classId) {
     var cls = data.classes.find(function(c) { return String(c.id) === String(classId); });
     var namaKelas = cls ? cls.nama_kelas : 'Kelas';
     document.getElementById('matrixTitleText').innerHTML = '<i class="bi bi-grid-3x3"></i> Matriks Kehadiran: ' + namaKelas;
+    var printClassEl = document.getElementById('printClassName');
+    if (printClassEl) printClassEl.textContent = namaKelas;
 
     // Get students of this class
     currentClassStudents = data.students.filter(function(s) {
@@ -191,7 +301,6 @@ function renderMatrixReport(classId) {
     classSubjectSessions.forEach(function(sess) {
         headerHtml += '<th class="th-subject">' +
             '<div class="rotated-subject-title" title="' + sess.mata_pelajaran + '">' + sess.mata_pelajaran + '</div>' +
-            '<div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 4px;">' + (sess.tanggal_ujian ? sess.tanggal_ujian.substring(5) : '') + '</div>' +
             '</th>';
     });
 
@@ -219,17 +328,48 @@ function renderMatrixReport(classId) {
         classSubjectSessions.forEach(function(sess) {
             var studentStatus = 'Hadir';
             try {
-                var list = typeof sess.data_siswa === 'string' ? JSON.parse(sess.data_siswa) : sess.data_siswa;
-                var found = list.find(function(item) { return String(item.id) === String(st.id); });
-                if (found && found.status) studentStatus = found.status;
+                var list = null;
+                if (typeof sess.data_siswa === 'string' && sess.data_siswa.trim()) {
+                    list = JSON.parse(sess.data_siswa);
+                } else if (Array.isArray(sess.data_siswa)) {
+                    list = sess.data_siswa;
+                }
+
+                if (Array.isArray(list)) {
+                    var found = list.find(function(item) {
+                        if (!item) return false;
+                        if (item.id !== undefined && st.id !== undefined && String(item.id) === String(st.id)) return true;
+                        if (item.nis && st.nis && String(item.nis) === String(st.nis)) return true;
+                        if (item.nama && st.nama && String(item.nama).trim().toLowerCase() === String(st.nama).trim().toLowerCase()) return true;
+                        return false;
+                    });
+                    if (found && found.status) {
+                        studentStatus = found.status;
+                    }
+                }
             } catch (e) {}
 
             var badge = '';
-            if (studentStatus === 'Hadir') { cH++; badge = '<span class="badge-status-h">H</span>'; }
-            else if (studentStatus === 'Dispensasi') { cD++; badge = '<span class="badge-status-d">D</span>'; }
-            else if (studentStatus === 'Izin') { cI++; badge = '<span class="badge-status-i">I</span>'; }
-            else if (studentStatus === 'Sakit') { cS++; badge = '<span class="badge-status-s">S</span>'; }
-            else { cA++; badge = '<span class="badge-status-a">A</span>'; }
+            var norm = String(studentStatus || '').trim().toLowerCase();
+            if (norm === 'hadir' || norm === 'h') {
+                cH++;
+                badge = '<span class="badge-status-h">H</span>';
+            } else if (norm === 'dispensasi' || norm === 'd') {
+                cD++;
+                badge = '<span class="badge-status-d">D</span>';
+            } else if (norm === 'izin' || norm === 'i') {
+                cI++;
+                badge = '<span class="badge-status-i">I</span>';
+            } else if (norm === 'sakit' || norm === 's') {
+                cS++;
+                badge = '<span class="badge-status-s">S</span>';
+            } else if (norm === 'tidak hadir' || norm === 'alpa' || norm === 'a') {
+                cA++;
+                badge = '<span class="badge-status-a">A</span>';
+            } else {
+                cH++;
+                badge = '<span class="badge-status-h">H</span>';
+            }
 
             cells += '<td>' + badge + '</td>';
         });
@@ -378,7 +518,7 @@ function exportMatrixExcel() {
 
     var headers = ['No', 'NIS', 'Nama Siswa'];
     classSubjectSessions.forEach(function(s) {
-        headers.push(s.mata_pelajaran + ' (' + s.tanggal_ujian + ')');
+        headers.push(s.mata_pelajaran);
     });
     headers.push('H', 'D', 'I', 'S', 'A', '% Hadir');
 
@@ -387,18 +527,34 @@ function exportMatrixExcel() {
         var row = [idx + 1, st.nis || '-', st.nama];
         var cH = 0, cD = 0, cI = 0, cS = 0, cA = 0;
         classSubjectSessions.forEach(function(sess) {
-            var status = 'H';
+            var studentStatus = 'Hadir';
             try {
-                var list = typeof sess.data_siswa === 'string' ? JSON.parse(sess.data_siswa) : sess.data_siswa;
-                var found = list.find(function(item) { return String(item.id) === String(st.id); });
-                if (found && found.status) status = found.status;
+                var list = null;
+                if (typeof sess.data_siswa === 'string' && sess.data_siswa.trim()) {
+                    list = JSON.parse(sess.data_siswa);
+                } else if (Array.isArray(sess.data_siswa)) {
+                    list = sess.data_siswa;
+                }
+
+                if (Array.isArray(list)) {
+                    var found = list.find(function(item) {
+                        if (!item) return false;
+                        if (item.id !== undefined && st.id !== undefined && String(item.id) === String(st.id)) return true;
+                        if (item.nis && st.nis && String(item.nis) === String(st.nis)) return true;
+                        if (item.nama && st.nama && String(item.nama).trim().toLowerCase() === String(st.nama).trim().toLowerCase()) return true;
+                        return false;
+                    });
+                    if (found && found.status) studentStatus = found.status;
+                }
             } catch (e) {}
 
-            if (status === 'Hadir') { cH++; row.push('H'); }
-            else if (status === 'Dispensasi') { cD++; row.push('D'); }
-            else if (status === 'Izin') { cI++; row.push('I'); }
-            else if (status === 'Sakit') { cS++; row.push('S'); }
-            else { cA++; row.push('A'); }
+            var norm = String(studentStatus || '').trim().toLowerCase();
+            if (norm === 'hadir' || norm === 'h') { cH++; row.push('H'); }
+            else if (norm === 'dispensasi' || norm === 'd') { cD++; row.push('D'); }
+            else if (norm === 'izin' || norm === 'i') { cI++; row.push('I'); }
+            else if (norm === 'sakit' || norm === 's') { cS++; row.push('S'); }
+            else if (norm === 'tidak hadir' || norm === 'alpa' || norm === 'a') { cA++; row.push('A'); }
+            else { cH++; row.push('H'); }
         });
 
         var total = classSubjectSessions.length;

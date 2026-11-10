@@ -1420,6 +1420,7 @@ function apiGetInitialData() {
         ttd_pengawas_2: a.ttd_pengawas_2 || '',
         has_ttd_1: !!a.ttd_pengawas_1,
         has_ttd_2: !!a.ttd_pengawas_2,
+        data_siswa: a.data_siswa || '',
         created_at: a.created_at || ''
       };
     });
