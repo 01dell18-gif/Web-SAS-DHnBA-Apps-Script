@@ -152,7 +152,7 @@
 <?!= include('Modals'); ?>
 <?!= include('AppJS'); ?>
 
-<script type="application/json" id="serverDataDashboard">
+<script type="text/template" id="serverDataDashboard">
 <?!= (typeof serverData !== 'undefined' && serverData) ? JSON.stringify(serverData) : 'null' ?>
 </script>
 
