@@ -413,6 +413,9 @@ a:hover {
         display: flex !important;
         align-items: center !important;
         justify-content: space-between !important;
+        background: #ffffff !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
 
     .navbar:not(.admin-navbar) .brand-text {
@@ -453,6 +456,7 @@ a:hover {
     }
 
     /* Modern Mobile Bottom Navigation Bar (Web Publik) */
+    #navLinks,
     .navbar:not(.admin-navbar) .nav-links {
         position: fixed !important;
         bottom: 0 !important;
@@ -461,10 +465,8 @@ a:hover {
         top: auto !important;
         width: 100% !important;
         height: 60px !important;
-        background: rgba(255, 255, 255, 0.96) !important;
-        backdrop-filter: blur(16px) saturate(180%) !important;
-        -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-        border-top: 1px solid rgba(226, 232, 240, 0.9) !important;
+        background: #ffffff !important;
+        border-top: 1.5px solid #e2e8f0 !important;
         box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08) !important;
         display: flex !important;
         flex-direction: row !important;
@@ -473,10 +475,11 @@ a:hover {
         padding: 0 !important;
         padding-bottom: env(safe-area-inset-bottom, 0px) !important;
         margin: 0 !important;
-        z-index: 1050 !important;
+        z-index: 99999 !important;
         list-style: none !important;
     }
 
+    #navLinks li,
     .navbar:not(.admin-navbar) .nav-links li {
         flex: 1 1 0 !important;
         width: auto !important;
@@ -488,6 +491,8 @@ a:hover {
         list-style: none !important;
     }
 
+    #navLinks .nav-link,
+    #navLinks .btn,
     .navbar:not(.admin-navbar) .nav-links .nav-link,
     .navbar:not(.admin-navbar) .nav-links .btn {
         display: flex !important;
@@ -514,6 +519,8 @@ a:hover {
         -webkit-tap-highlight-color: transparent !important;
     }
 
+    #navLinks .nav-link i,
+    #navLinks .btn i,
     .navbar:not(.admin-navbar) .nav-links .nav-link i,
     .navbar:not(.admin-navbar) .nav-links .btn i {
         font-size: 1.25rem !important;
@@ -523,35 +530,47 @@ a:hover {
         transition: transform 0.15s ease !important;
     }
 
+    #navLinks .nav-link:hover,
+    #navLinks .btn:hover,
     .navbar:not(.admin-navbar) .nav-links .nav-link:hover,
     .navbar:not(.admin-navbar) .nav-links .btn:hover {
         color: var(--primary) !important;
         background: rgba(79, 70, 229, 0.04) !important;
     }
 
+    #navLinks .nav-link.active,
+    #navLinks .btn.active,
     .navbar:not(.admin-navbar) .nav-links .nav-link.active,
     .navbar:not(.admin-navbar) .nav-links .btn.active {
         color: var(--primary) !important;
         font-weight: 700 !important;
     }
 
+    #navLinks .nav-link.active i,
+    #navLinks .btn.active i,
     .navbar:not(.admin-navbar) .nav-links .nav-link.active i,
     .navbar:not(.admin-navbar) .nav-links .btn.active i {
         color: var(--primary) !important;
         transform: translateY(-1px) scale(1.08) !important;
     }
 
+    #navLinks .nav-link:active,
+    #navLinks .btn:active,
     .navbar:not(.admin-navbar) .nav-links .nav-link:active,
     .navbar:not(.admin-navbar) .nav-links .btn:active {
         background: rgba(79, 70, 229, 0.08) !important;
     }
 
     @media (max-width: 360px) {
+        #navLinks .nav-link,
+        #navLinks .btn,
         .navbar:not(.admin-navbar) .nav-links .nav-link,
         .navbar:not(.admin-navbar) .nav-links .btn {
             font-size: 0.58rem !important;
             padding: 4px 1px !important;
         }
+        #navLinks .nav-link i,
+        #navLinks .btn i,
         .navbar:not(.admin-navbar) .nav-links .nav-link i,
         .navbar:not(.admin-navbar) .nav-links .btn i {
             font-size: 1.15rem !important;
@@ -2067,17 +2086,33 @@ body.sidebar-collapsed .admin-main {
     .admin-sidebar-layout {
         flex-direction: column;
     }
+    body.sidebar-collapsed .admin-sidebar {
+        width: 100% !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+    }
     .admin-sidebar {
         display: none;
         width: 100% !important;
         min-width: 100% !important;
         max-width: 100% !important;
-        border-right: none;
-        border-bottom: 1px solid var(--border);
+        border-right: none !important;
+        border-bottom: 1px solid var(--border) !important;
+        background: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+        z-index: 99 !important;
     }
-    body.mobile-sidebar-open .admin-sidebar {
-        display: flex;
-        animation: slideDownNav 0.2s ease-out;
+    body.mobile-sidebar-open .admin-sidebar,
+    .admin-sidebar.show {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        animation: slideDownNav 0.2s ease-out !important;
     }
 }
 

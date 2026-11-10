@@ -248,17 +248,59 @@ window.toggleAdminSidebar = function(event) {
   if (event) {
     try { event.preventDefault(); event.stopPropagation(); } catch (e) {}
   }
+  var sb = document.getElementById('adminSidebar');
   if (window.innerWidth <= 900) {
-    document.body.classList.toggle('mobile-sidebar-open');
+    document.body.classList.remove('sidebar-collapsed');
+    var isOpen = document.body.classList.toggle('mobile-sidebar-open');
+    if (sb) {
+      sb.classList.toggle('show');
+      if (isOpen) {
+        sb.style.setProperty('display', 'flex', 'important');
+        sb.style.setProperty('visibility', 'visible', 'important');
+        sb.style.setProperty('opacity', '1', 'important');
+        sb.style.setProperty('pointer-events', 'auto', 'important');
+      } else {
+        sb.style.setProperty('display', 'none', 'important');
+      }
+    }
   } else {
-    document.body.classList.toggle('sidebar-collapsed');
+    document.body.classList.remove('mobile-sidebar-open');
+    if (sb) {
+      sb.style.display = '';
+      sb.style.visibility = '';
+      sb.style.opacity = '';
+      sb.style.pointerEvents = '';
+    }
+    var isCollapsed = document.body.classList.toggle('sidebar-collapsed');
     try {
-      var isCollapsed = document.body.classList.contains('sidebar-collapsed');
       localStorage.setItem('admin_sidebar_collapsed', isCollapsed ? 'true' : 'false');
     } catch (err) {}
   }
   return false;
 };
+
+// Memastikan Bottom Navigation Bar pada Web Publik selalu berada di bawah layar (menempel ke body)
+window.repositionPublicNavLinks = function() {
+  var nav = document.getElementById('navLinks');
+  var header = document.querySelector('.navbar:not(.admin-navbar)');
+  if (!nav) return;
+  if (window.innerWidth <= 768) {
+    if (nav.parentElement && nav.parentElement !== document.body) {
+      document.body.appendChild(nav);
+    }
+  } else if (header) {
+    if (nav.parentElement !== header) {
+      header.appendChild(nav);
+    }
+  }
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', window.repositionPublicNavLinks);
+} else {
+  window.repositionPublicNavLinks();
+}
+window.addEventListener('resize', window.repositionPublicNavLinks);
 
 window.toggleMobileNav = function(event) {
   if (event) {

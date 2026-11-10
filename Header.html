@@ -1,3 +1,38 @@
+<script>
+window.toggleAdminSidebar = function(e) {
+    if (e) {
+        try { e.preventDefault(); e.stopPropagation(); } catch (err) {}
+    }
+    var body = document.body;
+    var sb = document.getElementById('adminSidebar');
+    if (window.innerWidth <= 900) {
+        body.classList.remove('sidebar-collapsed');
+        var isOpen = body.classList.toggle('mobile-sidebar-open');
+        if (sb) {
+            sb.classList.toggle('show');
+            if (isOpen) {
+                sb.style.setProperty('display', 'flex', 'important');
+                sb.style.setProperty('visibility', 'visible', 'important');
+                sb.style.setProperty('opacity', '1', 'important');
+                sb.style.setProperty('pointer-events', 'auto', 'important');
+            } else {
+                sb.style.setProperty('display', 'none', 'important');
+            }
+        }
+    } else {
+        body.classList.remove('mobile-sidebar-open');
+        if (sb) {
+            sb.style.display = '';
+            sb.style.visibility = '';
+            sb.style.opacity = '';
+            sb.style.pointerEvents = '';
+        }
+        var isCollapsed = body.classList.toggle('sidebar-collapsed');
+        try { localStorage.setItem('admin_sidebar_collapsed', isCollapsed ? 'true' : 'false'); } catch (err) {}
+    }
+    return false;
+};
+</script>
 <!-- Top Navigation Header -->
 <header class="navbar admin-navbar">
     <div class="admin-navbar-left">
