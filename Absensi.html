@@ -834,20 +834,145 @@ function exportAbsensiExcel() {
         showGlobalNotificationDialog('Peringatan', 'Pilih kelas terlebih dahulu untuk mengekspor presensi.', 'warning');
         return;
     }
+
+    var s = (window.AppStore && window.AppStore.data && window.AppStore.data.settings) || {};
+    var kop1 = s.kop_baris_1 || 'PEMERINTAH PROVINSI FYJ';
+    var kop2 = s.kop_baris_2 || 'DINAS PENDIDIKAN KEPEMUDAAN DAN OLAHRAGA';
+    var kop3 = s.kop_baris_3 || s.nama_sekolah || 'SMK NEGERI FYJ CHANNEL';
+    var kopContact = (s.kop_telepon ? 'Telp: ' + s.kop_telepon : '') + (s.kop_website ? ' • Web: ' + s.kop_website : '');
+
+    var namaUjian = (document.getElementById('nama_ujian') ? document.getElementById('nama_ujian').value : '') || 'SUMATIF AKHIR SEMESTER (SAS) GANJIL';
+    var tahunAjaran = (document.getElementById('tahun_ajaran') ? document.getElementById('tahun_ajaran').value : '') || (s.tahun_ajaran_aktif || '2026/2027');
     var mapel = document.getElementById('mata_pelajaran').value.trim() || 'Mapel';
     var classSelect = document.getElementById('class_id');
-    var namaKelas = classSelect.options[classSelect.selectedIndex].text;
-    var filename = 'Presensi_' + namaKelas.replace(/\s+/g, '_') + '_' + mapel.replace(/\s+/g, '_') + '.xlsx';
+    var namaKelas = classSelect.options[classSelect.selectedIndex] ? classSelect.options[classSelect.selectedIndex].text : '-';
+    var tgl = document.getElementById('tanggal_ujian').value;
+    var hariTanggalStr = formatIndoDate(tgl);
+    var jamMulai = document.getElementById('jam_mulai').value.trim();
+    var jamSelesai = document.getElementById('jam_selesai').value.trim();
+    var sesi = document.getElementById('sesi').value.trim() || '1';
+    var waktuStr = (jamMulai && jamSelesai) ? (jamMulai + ' - ' + jamSelesai + ' WITA (Sesi ' + sesi + ')') : ('Sesi ' + sesi);
+    var ruang = document.getElementById('ruang').value.trim() || 'Lab 1';
 
-    var headers = ['No', 'NIS', 'Nama Siswa', 'Status Kehadiran'];
-    var rows = [];
+    var p1 = document.getElementById('nama_pengawas_1').value.trim() || '-';
+    var nip1 = document.getElementById('nip_pengawas_1').value.trim() || '-';
+    var p2 = document.getElementById('nama_pengawas_2').value.trim() || '-';
+    var nip2 = document.getElementById('nip_pengawas_2').value.trim() || '-';
+
+    var filename = 'Daftar_Hadir_' + namaKelas.replace(/\s+/g, '_') + '_' + mapel.replace(/\s+/g, '_') + '.xlsx';
+
+    var includeTtd = isTtdVisible;
+    var maxCol = includeTtd ? 4 : 3;
+
+    var aoa = [];
+    var merges = [];
+
+    // 1. KOP SURAT
+    aoa.push([kop1]); merges.push({ s: { r: 0, c: 0 }, e: { r: 0, c: maxCol } });
+    aoa.push([kop2]); merges.push({ s: { r: 1, c: 0 }, e: { r: 1, c: maxCol } });
+    aoa.push([kop3]); merges.push({ s: { r: 2, c: 0 }, e: { r: 2, c: maxCol } });
+    if (kopContact) {
+        aoa.push([kopContact]); merges.push({ s: { r: 3, c: 0 }, e: { r: 3, c: maxCol } });
+    }
+    aoa.push([]); // blank
+
+    // 2. JUDUL DOKUMEN
+    var rJ = aoa.length;
+    aoa.push(['DAFTAR HADIR PESERTA']); merges.push({ s: { r: rJ, c: 0 }, e: { r: rJ, c: maxCol } });
+    aoa.push([namaUjian.toUpperCase()]); merges.push({ s: { r: rJ + 1, c: 0 }, e: { r: rJ + 1, c: maxCol } });
+    aoa.push(['TAHUN AJARAN ' + tahunAjaran]); merges.push({ s: { r: rJ + 2, c: 0 }, e: { r: rJ + 2, c: maxCol } });
+    aoa.push([]);
+
+    // 3. INFORMASI UJIAN
+    aoa.push(['Mata Pelajaran', ':', mapel, 'Hari / Tanggal', ':', hariTanggalStr]);
+    aoa.push(['Kelas', ':', namaKelas, 'Waktu / Sesi', ':', waktuStr]);
+    aoa.push(['Ruang Ujian', ':', ruang, '', '', '']);
+    aoa.push([]);
+
+    // 4. TABEL PESERTA
+    var th = ['No', 'NIS', 'Nama Siswa', 'Kehadiran'];
+    if (includeTtd) th.push('Tanda Tangan');
+    aoa.push(th);
+
+    var counts = { Hadir: 0, Dispensasi: 0, Izin: 0, Sakit: 0, 'Tidak Hadir': 0 };
+
     currentClassStudents.forEach(function(s, idx) {
+        var num = idx + 1;
         var sel = document.querySelector('.student-status-select[data-id="' + s.id + '"]');
         var st = sel ? sel.value : 'Hadir';
-        rows.push([idx + 1, s.nis || '-', s.nama, st]);
-    });
+        if (counts[st] !== undefined) counts[st]++;
+        else counts['Hadir']++;
 
-    downloadExcelXLS(filename, headers, rows);
+        var row = [num, s.nis || '-', s.nama, st];
+        if (includeTtd) {
+            row.push((num % 2 === 1) ? num + '. .............' : '        ' + num + '. .............');
+        }
+        aoa.push(row);
+    });
+    aoa.push([]);
+
+    // 5. REKAPITULASI KEHADIRAN
+    var rR = aoa.length;
+    aoa.push(['REKAPITULASI KEHADIRAN']); merges.push({ s: { r: rR, c: 0 }, e: { r: rR, c: maxCol } });
+    aoa.push(['Hadir (H)', 'Dispensasi (D)', 'Izin (I)', 'Sakit (S)', 'Tidak Hadir (A)', 'Total Peserta']);
+    aoa.push([counts['Hadir'], counts['Dispensasi'], counts['Izin'], counts['Sakit'], counts['Tidak Hadir'], currentClassStudents.length]);
+    aoa.push([]);
+
+    // 6. PENGESAHAN PENGAWAS
+    var rP = aoa.length;
+    if (includeTtd) {
+        aoa.push(['Pengawas 1,', '', '', 'Pengawas 2,', '']);
+        merges.push({ s: { r: rP, c: 0 }, e: { r: rP, c: 1 } });
+        merges.push({ s: { r: rP, c: 3 }, e: { r: rP, c: 4 } });
+
+        aoa.push([]);
+        aoa.push([]);
+
+        var rNama = aoa.length;
+        aoa.push([p1, '', '', p2, '']);
+        merges.push({ s: { r: rNama, c: 0 }, e: { r: rNama, c: 1 } });
+        merges.push({ s: { r: rNama, c: 3 }, e: { r: rNama, c: 4 } });
+
+        var rNip = aoa.length;
+        aoa.push(['NIP. ' + nip1, '', '', 'NIP. ' + nip2, '']);
+        merges.push({ s: { r: rNip, c: 0 }, e: { r: rNip, c: 1 } });
+        merges.push({ s: { r: rNip, c: 3 }, e: { r: rNip, c: 4 } });
+    } else {
+        aoa.push(['Pengawas 1,', '', 'Pengawas 2,', '']);
+        merges.push({ s: { r: rP, c: 0 }, e: { r: rP, c: 1 } });
+        merges.push({ s: { r: rP, c: 2 }, e: { r: rP, c: 3 } });
+
+        aoa.push([]);
+        aoa.push([]);
+
+        var rNama = aoa.length;
+        aoa.push([p1, '', p2, '']);
+        merges.push({ s: { r: rNama, c: 0 }, e: { r: rNama, c: 1 } });
+        merges.push({ s: { r: rNama, c: 2 }, e: { r: rNama, c: 3 } });
+
+        var rNip = aoa.length;
+        aoa.push(['NIP. ' + nip1, '', 'NIP. ' + nip2, '']);
+        merges.push({ s: { r: rNip, c: 0 }, e: { r: rNip, c: 1 } });
+        merges.push({ s: { r: rNip, c: 2 }, e: { r: rNip, c: 3 } });
+    }
+
+    if (typeof XLSX !== 'undefined') {
+        var ws = XLSX.utils.aoa_to_sheet(aoa);
+        ws['!merges'] = merges;
+        ws['!cols'] = [
+            { wch: 6 },  // A: No
+            { wch: 14 }, // B: NIS
+            { wch: 36 }, // C: Nama Siswa
+            { wch: 16 }, // D: Kehadiran
+            { wch: 22 }, // E: Tanda Tangan
+            { wch: 26 }  // F: Extra
+        ];
+        var wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Daftar Hadir");
+        XLSX.writeFile(wb, filename);
+    } else {
+        downloadExcelXLS(filename, th, rows);
+    }
 }
 </script>
 </body>
