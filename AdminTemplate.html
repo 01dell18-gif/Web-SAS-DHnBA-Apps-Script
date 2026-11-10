@@ -12,16 +12,46 @@
 <div class="admin-sidebar-layout">
     <?!= include('Sidebar'); ?>
     <main class="admin-main">
-        <div style="margin-bottom: 1.5rem;">
-            <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-heading); margin: 0;">Template Ujian & Redaksi Berita Acara</h1>
-            <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Konfigurasi nama ujian, tahun ajaran, dan teks redaksi berita acara secara visual (WYSIWYG) dengan placeholder dinamis.</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+            <div>
+                <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-heading); margin: 0;">Template Ujian & Redaksi Berita Acara</h1>
+                <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Konfigurasi nama ujian, tahun ajaran, dan teks redaksi berita acara secara visual (WYSIWYG) dengan placeholder dinamis.</p>
+            </div>
+            <div>
+                <button type="button" class="btn btn-primary" onclick="createNewTemplate()">
+                    <i class="bi bi-plus-circle"></i> Tambah Template Ujian Baru
+                </button>
+            </div>
+        </div>
+
+        <!-- Pemilih Template Ujian -->
+        <div class="card" style="margin-bottom: 1.25rem; border-left: 4px solid var(--primary);">
+            <div class="card-body" style="padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1; min-width: 280px;">
+                    <label class="form-label" for="selectAdminTemplate" style="margin-bottom: 0; font-weight: 700; white-space: nowrap;">
+                        <i class="bi bi-collection"></i> Pilih Template Ujian:
+                    </label>
+                    <select id="selectAdminTemplate" class="form-select" onchange="switchTemplate(this.value)" style="font-weight: 600; flex: 1;">
+                        <option value="">Memuat daftar template...</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="createNewTemplate()">
+                        <i class="bi bi-plus-lg"></i> Template Baru
+                    </button>
+                    <button type="button" id="btnDeleteTpl" class="btn btn-danger-soft btn-sm" onclick="confirmDeleteCurrentTemplate()" title="Hapus template yang dipilih">
+                        <i class="bi bi-trash"></i> Hapus
+                    </button>
+                </div>
+            </div>
         </div>
 
         <form id="formTemplateUjian" onsubmit="handleSaveTemplate(event)">
             <input type="hidden" id="template_id" value="1">
             <div class="card" style="margin-bottom: 1.5rem;">
-                <div class="card-header">
-                    <span class="card-title"><i class="bi bi-file-earmark-richtext"></i> Konfigurasi Template & Redaksi Berita Acara</span>
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                    <span class="card-title" id="cardTitleTemplate"><i class="bi bi-file-earmark-richtext"></i> Konfigurasi Template & Redaksi Berita Acara</span>
+                    <span id="badgeTplMode" class="badge" style="background: #e0f2fe; color: #0369a1; font-size: 0.8rem;">Mode Edit</span>
                 </div>
                 <div class="card-body">
                     <div class="grid-2">
@@ -237,26 +267,7 @@ onDocumentReady(function() {
     google.script.run
         .withSuccessHandler(function(data) {
             window.AppStore.data = data;
-            var tpl = (data.templates && data.templates[0]) || {};
-            document.getElementById('template_id').value = tpl.id || 1;
-            document.getElementById('tpl_nama_ujian').value = tpl.nama_ujian || 'Sumatif Akhir Semester (SAS) Ganjil';
-            document.getElementById('tpl_tahun_ajaran').value = tpl.tahun_ajaran || (data.settings && data.settings.tahun_ajaran_aktif) || '2026/2027';
-            document.getElementById('tpl_judul_ba').value = tpl.judul_berita_acara || 'BERITA ACARA \r\nPENYELENGGARAAN SUMATIF AKHIR SEMESTER (SAS) GANJIL\r\nTAHUN AJARAN [tahun_ajaran]';
-            document.getElementById('tpl_aktif').checked = (tpl.aktif === undefined || tpl.aktif === null || String(tpl.aktif) === '1' || tpl.aktif === true);
-
-            var rawHtml = tpl.redaksi_isi || DEFAULT_REDAKSI_HTML;
-            var initHtml = String(rawHtml)
-                .replace(/<p[^>]*>\s*Yang membuat berita acara\s*:\s*<\/p>/gi, '')
-                .replace(/\s*\([^)]*\[tanggal_teks\][^)]*\)/gi, '')
-                .replace(/\s*\([^)]*\[tahun_teks\][^)]*\)/gi, '')
-                .replace(/(tanggal\s*<strong>\d+<\/strong>)\s*\([^)]*\)/gi, '$1')
-                .replace(/(tahun\s*<strong>\d+<\/strong>)\s*\([^)]*\)/gi, '$1')
-                .replace(/&nbsp;\s*:/g, ':')
-                .replace(/&nbsp;\s+bulan/g, ' bulan')
-                .trim();
-            wysiwygCanvas.innerHTML = initHtml;
-            hiddenRedaksi.value = initHtml;
-            if (wysiwygSource) wysiwygSource.value = initHtml;
+            renderTemplatesList(data.templates);
 
             if (data.settings && data.settings.daftar_tahun_ajaran && Array.isArray(data.settings.daftar_tahun_ajaran)) {
                 var dl = document.getElementById('list_tahun_ajaran_tpl');
@@ -269,8 +280,6 @@ onDocumentReady(function() {
                     });
                 }
             }
-
-            syncFromCanvas();
         })
         .apiGetInitialData();
 });
@@ -425,17 +434,183 @@ function updateLiveSimulation() {
     if (pvKonten) pvKonten.innerHTML = simKonten;
 }
 
+
+function cleanRedaksiString(rawHtml) {
+    if (!rawHtml) return DEFAULT_REDAKSI_HTML;
+    return String(rawHtml)
+        .replace(/<p[^>]*>\s*Yang membuat berita acara\s*:\s*<\/p>/gi, '')
+        .replace(/\s*\([^)]*\[tanggal_teks\][^)]*\)/gi, '')
+        .replace(/\s*\([^)]*\[tahun_teks\][^)]*\)/gi, '')
+        .replace(/(tanggal\s*<strong>\d+<\/strong>)\s*\([^)]*\)/gi, '$1')
+        .replace(/(tahun\s*<strong>\d+<\/strong>)\s*\([^)]*\)/gi, '$1')
+        .replace(/&nbsp;\s*:/g, ':')
+        .replace(/&nbsp;\s+bulan/g, ' bulan')
+        .trim();
+}
+
+function renderTemplatesList(templates, selectIdToActive) {
+    var sel = document.getElementById('selectAdminTemplate');
+    if (!sel) return;
+    sel.innerHTML = '';
+    if (!templates || templates.length === 0) {
+        sel.innerHTML = '<option value="">(Belum ada template ujian)</option>';
+        createNewTemplate();
+        return;
+    }
+    var foundId = null;
+    templates.forEach(function(tpl) {
+        var opt = document.createElement('option');
+        opt.value = tpl.id;
+        var statusLabel = (String(tpl.aktif) === '1' || tpl.aktif === true || tpl.aktif === undefined || tpl.aktif === null) ? ' [Aktif]' : ' [Nonaktif]';
+        opt.textContent = (tpl.nama_ujian || 'Template #' + tpl.id) + ' (' + (tpl.tahun_ajaran || '-') + ')' + statusLabel;
+        sel.appendChild(opt);
+        if (selectIdToActive && String(tpl.id) === String(selectIdToActive)) {
+            foundId = tpl.id;
+        } else if (!foundId && (String(tpl.aktif) === '1' || tpl.aktif === true)) {
+            foundId = tpl.id;
+        }
+    });
+    var targetId = foundId || templates[0].id;
+    sel.value = targetId;
+    switchTemplate(targetId);
+}
+
+function switchTemplate(tplId) {
+    if (!tplId) return;
+    var templates = (window.AppStore.data && window.AppStore.data.templates) || [];
+    var tpl = templates.find(function(t) { return String(t.id) === String(tplId); });
+    if (!tpl) return;
+
+    document.getElementById('template_id').value = tpl.id;
+    document.getElementById('tpl_nama_ujian').value = tpl.nama_ujian || '';
+    document.getElementById('tpl_tahun_ajaran').value = tpl.tahun_ajaran || (window.AppStore.data && window.AppStore.data.settings && window.AppStore.data.settings.tahun_ajaran_aktif) || '2026/2027';
+    document.getElementById('tpl_judul_ba').value = tpl.judul_berita_acara || 'BERITA ACARA \r\nPENYELENGGARAAN SUMATIF AKHIR SEMESTER (SAS) GANJIL\r\nTAHUN AJARAN [tahun_ajaran]';
+    document.getElementById('tpl_aktif').checked = (tpl.aktif === undefined || tpl.aktif === null || String(tpl.aktif) === '1' || tpl.aktif === true);
+
+    var initHtml = cleanRedaksiString(tpl.redaksi_isi);
+    if (wysiwygCanvas) wysiwygCanvas.innerHTML = initHtml;
+    if (hiddenRedaksi) hiddenRedaksi.value = initHtml;
+    if (wysiwygSource) wysiwygSource.value = initHtml;
+
+    var badge = document.getElementById('badgeTplMode');
+    if (badge) {
+        badge.textContent = 'Mode Edit: #' + tpl.id;
+        badge.style.background = '#e0f2fe';
+        badge.style.color = '#0369a1';
+    }
+    var title = document.getElementById('cardTitleTemplate');
+    if (title) {
+        title.innerHTML = '<i class="bi bi-file-earmark-richtext"></i> Edit Template Ujian: ' + (tpl.nama_ujian || ('#' + tpl.id));
+    }
+    var btnDel = document.getElementById('btnDeleteTpl');
+    if (btnDel) btnDel.style.display = 'inline-flex';
+
+    syncFromCanvas();
+}
+
+function createNewTemplate() {
+    document.getElementById('template_id').value = '';
+    document.getElementById('tpl_nama_ujian').value = '';
+    document.getElementById('tpl_nama_ujian').placeholder = 'Contoh: Penilaian Akhir Semester (PAS) Genap';
+    var defaultThn = (window.AppStore.data && window.AppStore.data.settings && window.AppStore.data.settings.tahun_ajaran_aktif) || '2026/2027';
+    document.getElementById('tpl_tahun_ajaran').value = defaultThn;
+    document.getElementById('tpl_judul_ba').value = 'BERITA ACARA\r\nPENYELENGGARAAN [nama_ujian]\r\nTAHUN AJARAN [tahun_ajaran]';
+    document.getElementById('tpl_aktif').checked = true;
+
+    var initHtml = cleanRedaksiString(DEFAULT_REDAKSI_HTML);
+    if (wysiwygCanvas) wysiwygCanvas.innerHTML = initHtml;
+    if (hiddenRedaksi) hiddenRedaksi.value = initHtml;
+    if (wysiwygSource) wysiwygSource.value = initHtml;
+
+    var sel = document.getElementById('selectAdminTemplate');
+    if (sel) sel.value = '';
+
+    var badge = document.getElementById('badgeTplMode');
+    if (badge) {
+        badge.textContent = 'Mode Tambah Baru';
+        badge.style.background = '#dcfce7';
+        badge.style.color = '#15803d';
+    }
+    var title = document.getElementById('cardTitleTemplate');
+    if (title) {
+        title.innerHTML = '<i class="bi bi-plus-circle-fill"></i> Tambah Template Ujian Baru';
+    }
+    var btnDel = document.getElementById('btnDeleteTpl');
+    if (btnDel) btnDel.style.display = 'none';
+
+    syncFromCanvas();
+    document.getElementById('tpl_nama_ujian').focus();
+}
+
+function confirmDeleteCurrentTemplate() {
+    var tplId = document.getElementById('template_id').value;
+    if (!tplId) {
+        showGlobalNotificationDialog('Info', 'Pilih template yang ingin dihapus terlebih dahulu.', 'info');
+        return;
+    }
+    var templates = (window.AppStore.data && window.AppStore.data.templates) || [];
+    if (templates.length <= 1) {
+        showGlobalNotificationDialog('Peringatan', 'Sistem membutuhkan minimal 1 template ujian. Anda tidak dapat menghapus template terakhir.', 'warning');
+        return;
+    }
+    var tpl = templates.find(function(t) { return String(t.id) === String(tplId); });
+    var nama = (tpl && tpl.nama_ujian) || ('ID #' + tplId);
+
+    showGlobalConfirmDialog(
+        'Hapus Template Ujian',
+        'Apakah Anda yakin ingin menghapus template ujian "' + nama + '"? Berita acara yang telah dibuat sebelumnya tetap tersimpan.',
+        function() {
+            google.script.run
+                .withSuccessHandler(function(res) {
+                    if (res && res.success) {
+                        showGlobalNotificationDialog('Berhasil', res.message || 'Template ujian berhasil dihapus.', 'success');
+                        reloadTemplatesData();
+                    } else {
+                        showGlobalNotificationDialog('Gagal', (res && res.message) || 'Gagal menghapus template.', 'danger');
+                    }
+                })
+                .withFailureHandler(function(err) {
+                    showGlobalNotificationDialog('Gagal', err.message || err, 'danger');
+                })
+                .apiDeleteTemplate(tplId);
+        },
+        'Hapus Template',
+        true
+    );
+}
+
+function reloadTemplatesData(selectIdAfter) {
+    google.script.run
+        .withSuccessHandler(function(data) {
+            window.AppStore.data = data;
+            renderTemplatesList(data.templates, selectIdAfter);
+        })
+        .withFailureHandler(function(err) {
+            showGlobalNotificationDialog('Gagal Memuat Data', err.message || err, 'danger');
+        })
+        .apiGetInitialData();
+}
+
+
 function handleSaveTemplate(e) {
     e.preventDefault();
     syncFromCanvas();
+
+    var namaUjian = document.getElementById('tpl_nama_ujian').value.trim();
+    if (!namaUjian) {
+        showGlobalNotificationDialog('Peringatan', 'Nama Ujian Resmi wajib diisi.', 'warning');
+        document.getElementById('tpl_nama_ujian').focus();
+        return;
+    }
 
     var btn = document.getElementById('btnSaveTemplate');
     btn.disabled = true;
     btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Menyimpan...';
 
+    var isNew = !document.getElementById('template_id').value;
     var payload = {
-        id: document.getElementById('template_id').value,
-        nama_ujian: document.getElementById('tpl_nama_ujian').value.trim(),
+        id: document.getElementById('template_id').value || null,
+        nama_ujian: namaUjian,
         tahun_ajaran: document.getElementById('tpl_tahun_ajaran').value.trim(),
         judul_berita_acara: document.getElementById('tpl_judul_ba').value,
         redaksi_isi: document.getElementById('tpl_redaksi_isi').value,
@@ -443,17 +618,18 @@ function handleSaveTemplate(e) {
     };
 
     google.script.run
-        .withSuccessHandler(function() {
+        .withSuccessHandler(function(res) {
             btn.disabled = false;
             btn.innerHTML = '<i class="bi bi-check-circle"></i> 💾 Simpan Perubahan Template';
-            showGlobalNotificationDialog('Berhasil', 'Template ujian dan redaksi WYSIWYG berhasil disimpan.', 'success', function() {
-                safeReload('template');
-            });
+            var savedId = (res && res.id) ? res.id : payload.id;
+            var msg = isNew ? 'Template ujian baru berhasil dibuat dan disimpan!' : 'Perubahan template ujian berhasil disimpan!';
+            showGlobalNotificationDialog('Berhasil', msg, 'success');
+            reloadTemplatesData(savedId);
         })
         .withFailureHandler(function(err) {
             btn.disabled = false;
             btn.innerHTML = '<i class="bi bi-check-circle"></i> 💾 Simpan Perubahan Template';
-            showGlobalNotificationDialog('Gagal', err.message, 'danger');
+            showGlobalNotificationDialog('Gagal', err.message || err, 'danger');
         })
         .apiSaveTemplate(payload);
 }

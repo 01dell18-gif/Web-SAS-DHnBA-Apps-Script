@@ -517,12 +517,27 @@ function loadInitialMasterData() {
 
             var selectTpl = document.getElementById('selectTemplate');
             var templates = (data && data.templates) || [];
-            templates.forEach(function(t) {
-                var opt = document.createElement('option');
-                opt.value = t.id;
-                opt.textContent = t.nama_ujian + ' (' + t.tahun_ajaran + ')';
-                selectTpl.appendChild(opt);
-            });
+            if (selectTpl) {
+                selectTpl.innerHTML = '';
+                var defaultTplId = '';
+                templates.forEach(function(t) {
+                    var opt = document.createElement('option');
+                    opt.value = t.id;
+                    var isAktif = (String(t.aktif) === '1' || t.aktif === true || t.aktif === undefined || t.aktif === null);
+                    opt.textContent = t.nama_ujian + ' (' + (t.tahun_ajaran || '-') + ')' + (isAktif ? ' [Aktif]' : '');
+                    selectTpl.appendChild(opt);
+                    if (!defaultTplId && isAktif) {
+                        defaultTplId = t.id;
+                    }
+                });
+                if (!defaultTplId && templates.length > 0) {
+                    defaultTplId = templates[0].id;
+                }
+                if (defaultTplId) {
+                    selectTpl.value = defaultTplId;
+                    applyExamTemplate(defaultTplId);
+                }
+            }
 
             if (data && data.settings) {
                 var s = data.settings;
@@ -1061,7 +1076,7 @@ function handleSaveBeritaAcara(e) {
 
     var payload = {
         id: document.getElementById('edit_id').value || null,
-        template_id: 1,
+        template_id: (document.getElementById('selectTemplate') && document.getElementById('selectTemplate').value) ? parseInt(document.getElementById('selectTemplate').value, 10) : 1,
         nama_ujian: document.getElementById('nama_ujian').value.trim(),
         tahun_ajaran: document.getElementById('tahun_ajaran').value.trim(),
         semester: document.getElementById('semester').value,

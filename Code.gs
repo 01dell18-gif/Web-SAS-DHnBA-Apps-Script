@@ -1389,6 +1389,31 @@ function logActivity(activity, details) {
   } catch (e) {}
 }
 
+function apiClearActivityLogs() {
+  try {
+    var sheet = getSheet(SHEET_NAMES.LOGS);
+    var lastRow = sheet.getLastRow();
+    if (lastRow > 1) {
+      sheet.deleteRows(2, lastRow - 1);
+    }
+    delete _requestTableCache[SHEET_NAMES.LOGS];
+    logActivity('CLEAR_LOGS', 'Membersihkan seluruh catatan log aktivitas sistem');
+    return { success: true, message: 'Seluruh catatan aktivitas sistem berhasil dibersihkan.' };
+  } catch (e) {
+    return { success: false, message: 'Gagal membersihkan log: ' + e.message };
+  }
+}
+
+function apiDeleteActivityLog(id) {
+  try {
+    deleteRowById(SHEET_NAMES.LOGS, id);
+    delete _requestTableCache[SHEET_NAMES.LOGS];
+    return { success: true, message: 'Catatan log berhasil dihapus.' };
+  } catch (e) {
+    return { success: false, message: 'Gagal menghapus log: ' + e.message };
+  }
+}
+
 /**
  * CRUD Endpoints: Absensi & Berita Acara
  */
@@ -2048,14 +2073,29 @@ function apiToggleMasterStatus(tableType, id, newStatus) {
 }
 
 function apiSaveTemplate(payload) {
+  var savedId = null;
   if (payload.id && parseInt(payload.id, 10) > 0) {
     updateRowById(SHEET_NAMES.TEMPLATES, payload.id, payload);
     logActivity('UPDATE_TEMPLATE', 'Memperbarui template ujian ID #' + payload.id);
+    savedId = payload.id;
   } else {
-    insertRow(SHEET_NAMES.TEMPLATES, payload);
+    var saved = insertRow(SHEET_NAMES.TEMPLATES, payload);
     logActivity('CREATE_TEMPLATE', 'Menambahkan template ujian baru ' + payload.nama_ujian);
+    savedId = saved ? saved.id : null;
   }
-  return { success: true };
+  delete _requestTableCache[SHEET_NAMES.TEMPLATES];
+  return { success: true, id: savedId };
+}
+
+function apiDeleteTemplate(id) {
+  try {
+    deleteRowById(SHEET_NAMES.TEMPLATES, id);
+    delete _requestTableCache[SHEET_NAMES.TEMPLATES];
+    logActivity('DELETE_TEMPLATE', 'Menghapus template ujian ID #' + id);
+    return { success: true, message: 'Template ujian berhasil dihapus.' };
+  } catch (e) {
+    return { success: false, message: 'Gagal menghapus template: ' + e.message };
+  }
 }
 
 function apiSaveUser(payload) {

@@ -128,8 +128,11 @@
 
         <!-- Log Aktivitas Terbaru -->
         <div class="card">
-            <div class="card-header">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
                 <span class="card-title"><i class="bi bi-clock-history"></i> Catatan Aktivitas Sistem Terbaru</span>
+                <button type="button" class="btn btn-danger-soft btn-sm" onclick="confirmClearActivityLogs()" style="padding: 3px 10px; font-size: 0.75rem;">
+                    <i class="bi bi-trash"></i> Bersihkan Log
+                </button>
             </div>
             <div class="table-responsive">
                 <table class="table" style="font-size: 0.825rem;">
@@ -138,10 +141,11 @@
                             <th style="width: 160px;">Waktu</th>
                             <th style="width: 140px;">Aktivitas</th>
                             <th>Keterangan</th>
+                            <th style="width: 60px; text-align: center;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="dashLogsTableBody">
-                        <tr><td colspan="3" style="text-align: center; padding: 1rem; color: var(--text-muted);">Memuat log...</td></tr>
+                        <tr><td colspan="4" style="text-align: center; padding: 1rem; color: var(--text-muted);">Memuat log...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -237,9 +241,9 @@ function applyDashboardData(data) {
     // Render Activity Logs
     var lbody = document.getElementById('dashLogsTableBody');
     if (lbody) {
-        var logs = ((data && data.logs) || []).slice(-10).reverse();
+        var logs = ((data && data.logs) || []).slice(-15).reverse();
         if (logs.length === 0) {
-            lbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 1rem; color: var(--text-muted);">Belum ada log aktivitas.</td></tr>';
+            lbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 1rem; color: var(--text-muted);">Belum ada log aktivitas.</td></tr>';
         } else {
             var lHtml = '';
             logs.forEach(function(l) {
@@ -247,11 +251,59 @@ function applyDashboardData(data) {
                     '<td>' + (l.waktu || '-') + '</td>' +
                     '<td><span class="badge" style="background:#f1f5f9; color:#475569; font-weight:600;">' + (l.aktivitas || '-') + '</span></td>' +
                     '<td>' + (l.keterangan || '-') + '</td>' +
+                    '<td style="text-align: center;"><button type="button" class="btn btn-danger-soft btn-sm" onclick="deleteSingleLog(' + l.id + ')" title="Hapus catatan log ini" style="padding: 2px 7px; font-size: 0.75rem;"><i class="bi bi-trash"></i></button></td>' +
                     '</tr>';
             });
             lbody.innerHTML = lHtml;
         }
     }
+}
+
+function confirmClearActivityLogs() {
+    showGlobalConfirmDialog(
+        'Bersihkan Seluruh Log',
+        'Apakah Anda yakin ingin menghapus seluruh catatan aktivitas sistem? Tindakan ini tidak dapat dibatalkan.',
+        function() {
+            google.script.run
+                .withSuccessHandler(function(res) {
+                    if (res && res.success) {
+                        showGlobalNotificationDialog('Berhasil', res.message || 'Log aktivitas berhasil dibersihkan.', 'success');
+                        loadDashboardStats();
+                    } else {
+                        showGlobalNotificationDialog('Gagal', (res && res.message) || 'Gagal membersihkan log.', 'danger');
+                    }
+                })
+                .withFailureHandler(function(err) {
+                    showGlobalNotificationDialog('Gagal', err.message || err, 'danger');
+                })
+                .apiClearActivityLogs();
+        },
+        'Bersihkan Log',
+        true
+    );
+}
+
+function deleteSingleLog(id) {
+    showGlobalConfirmDialog(
+        'Hapus Catatan Log',
+        'Hapus catatan aktivitas ini?',
+        function() {
+            google.script.run
+                .withSuccessHandler(function(res) {
+                    if (res && res.success) {
+                        loadDashboardStats();
+                    } else {
+                        showGlobalNotificationDialog('Gagal', (res && res.message) || 'Gagal menghapus log.', 'danger');
+                    }
+                })
+                .withFailureHandler(function(err) {
+                    showGlobalNotificationDialog('Gagal', err.message || err, 'danger');
+                })
+                .apiDeleteActivityLog(id);
+        },
+        'Hapus',
+        true
+    );
 }
 
 function loadDashboardStats() {
