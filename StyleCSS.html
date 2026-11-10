@@ -396,78 +396,180 @@ a:hover {
     font-weight: 700;
 }
 
-/* Responsif Mobile Header & Nav */
+/* Responsif Mobile Header & Bottom Navigation Bar (Web Publik & Admin) */
 @media (max-width: 768px) {
-    .navbar {
-        padding: 0.6rem 1rem;
-        position: sticky;
-        top: 0;
-        z-index: 1000;
+    /* Padding bawah pada body agar konten tidak tertutup bottom nav */
+    body {
+        padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
     }
 
-    .brand-text {
-        display: none !important;
+    /* Top Navbar pada Web Publik: Ringkas, Rapi, Identitas Sekolah Tetap Tampak */
+    .navbar:not(.admin-navbar) {
+        padding: 0.5rem 1rem !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 1000 !important;
+        min-height: 52px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
     }
 
-    .navbar-logo {
-        height: 36px;
-        width: 36px;
+    .navbar:not(.admin-navbar) .brand-text {
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+    }
+
+    .navbar:not(.admin-navbar) .brand-title {
+        font-size: 0.85rem !important;
+        font-weight: 700 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 250px !important;
+        letter-spacing: -0.01em !important;
+    }
+
+    .navbar:not(.admin-navbar) .brand-subtitle {
+        font-size: 0.65rem !important;
+        font-weight: 500 !important;
+        color: var(--text-muted) !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 250px !important;
+    }
+
+    .navbar:not(.admin-navbar) .navbar-logo {
+        height: 34px !important;
+        width: 34px !important;
+        border-radius: 8px !important;
+        flex-shrink: 0 !important;
     }
 
     .mobile-nav-toggle {
         display: none !important;
     }
 
-    .nav-links {
+    /* Modern Mobile Bottom Navigation Bar (Web Publik) */
+    .navbar:not(.admin-navbar) .nav-links {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        top: auto !important;
+        width: 100% !important;
+        height: 60px !important;
+        background: rgba(255, 255, 255, 0.96) !important;
+        backdrop-filter: blur(16px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+        border-top: 1px solid rgba(226, 232, 240, 0.9) !important;
+        box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08) !important;
         display: flex !important;
-        flex-direction: row;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 0.35rem;
-        position: static;
-        box-shadow: none;
-        border: none;
-        padding: 0;
+        flex-direction: row !important;
+        justify-content: space-around !important;
+        align-items: stretch !important;
+        padding: 0 !important;
+        padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+        margin: 0 !important;
+        z-index: 1050 !important;
+        list-style: none !important;
     }
 
-    .nav-links.show {
+    .navbar:not(.admin-navbar) .nav-links li {
+        flex: 1 1 0 !important;
+        width: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
         display: flex !important;
-        animation: slideDownNav 0.2s ease-out;
+        align-items: center !important;
+        justify-content: center !important;
+        list-style: none !important;
     }
 
-    .nav-link {
-        padding: 0.7rem 0.9rem;
-        font-size: 0.925rem;
-        font-weight: 600;
-        border-radius: var(--radius-sm);
-        display: flex;
-        align-items: center;
-        text-align: left;
-        background: var(--bg-body);
-        border: 1px solid var(--border);
+    .navbar:not(.admin-navbar) .nav-links .nav-link,
+    .navbar:not(.admin-navbar) .nav-links .btn {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        height: 100% !important;
+        padding: 5px 2px !important;
+        margin: 0 !important;
+        gap: 2px !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        color: #64748b !important;
+        text-decoration: none !important;
+        font-size: 0.65rem !important;
+        font-weight: 500 !important;
+        line-height: 1.1 !important;
+        letter-spacing: -0.01em !important;
+        white-space: nowrap !important;
+        transition: color 0.15s ease, background-color 0.15s ease !important;
+        -webkit-tap-highlight-color: transparent !important;
     }
 
-    .nav-link:hover, .nav-link.active {
-        background-color: var(--primary-light);
-        color: var(--primary);
-        border-color: var(--lavender);
+    .navbar:not(.admin-navbar) .nav-links .nav-link i,
+    .navbar:not(.admin-navbar) .nav-links .btn i {
+        font-size: 1.25rem !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+        display: block !important;
+        transition: transform 0.15s ease !important;
     }
 
-    .nav-links li {
-        width: 100%;
-        list-style: none;
+    .navbar:not(.admin-navbar) .nav-links .nav-link:hover,
+    .navbar:not(.admin-navbar) .nav-links .btn:hover {
+        color: var(--primary) !important;
+        background: rgba(79, 70, 229, 0.04) !important;
     }
 
-    .nav-links .btn {
-        width: 100%;
-        text-align: center;
-        padding: 0.75rem;
-        margin-top: 0.25rem;
-        display: flex;
-        justify-content: center;
+    .navbar:not(.admin-navbar) .nav-links .nav-link.active,
+    .navbar:not(.admin-navbar) .nav-links .btn.active {
+        color: var(--primary) !important;
+        font-weight: 700 !important;
     }
 
+    .navbar:not(.admin-navbar) .nav-links .nav-link.active i,
+    .navbar:not(.admin-navbar) .nav-links .btn.active i {
+        color: var(--primary) !important;
+        transform: translateY(-1px) scale(1.08) !important;
+    }
+
+    .navbar:not(.admin-navbar) .nav-links .nav-link:active,
+    .navbar:not(.admin-navbar) .nav-links .btn:active {
+        background: rgba(79, 70, 229, 0.08) !important;
+    }
+
+    @media (max-width: 360px) {
+        .navbar:not(.admin-navbar) .nav-links .nav-link,
+        .navbar:not(.admin-navbar) .nav-links .btn {
+            font-size: 0.58rem !important;
+            padding: 4px 1px !important;
+        }
+        .navbar:not(.admin-navbar) .nav-links .nav-link i,
+        .navbar:not(.admin-navbar) .nav-links .btn i {
+            font-size: 1.15rem !important;
+        }
+    }
+
+    /* Container & Content Spacing on Mobile */
+    .container,
+    .choices-container,
+    .panel-preview {
+        padding-bottom: calc(75px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    .quick-status-toast {
+        bottom: 75px !important;
+    }
+
+    /* Admin Elements on Mobile */
     .admin-mobile-toggle {
         display: flex;
         align-items: center;
