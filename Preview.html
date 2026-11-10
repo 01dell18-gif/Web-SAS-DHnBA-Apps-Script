@@ -206,7 +206,9 @@ function renderDocument(type, id) {
             '<thead><tr style="background:#f1f5f9; text-align:center;"><th style="width:32px; padding: 4px;">No</th><th style="width:80px; padding: 4px;">NIS</th><th style="padding: 4px; text-align: left;">Nama Siswa</th><th style="width:75px; padding: 4px;">Kehadiran</th><th style="width:100px; padding: 4px;" class="col-ttd-peserta">Tanda Tangan</th></tr></thead>' +
             '<tbody>' + rowsHtml + '</tbody>' +
             '</table>' +
-            '<table style="width: 100%; font-size: 9.5pt; border-collapse: collapse; margin-bottom: 18px;" border="1">' +
+            '<!-- WRAPPER REKAPITULASI & TTD PENGAWAS (Pencegah TTD Terpotong) -->' +
+            '<div class="rekap-ttd-wrapper" style="page-break-inside: avoid; break-inside: avoid; margin-top: 10px;">' +
+            '<table style="width: 100%; font-size: 9.5pt; border-collapse: collapse; margin-bottom: 12px;" border="1">' +
             '<tr style="background: #f8fafc; font-weight: bold; text-align: center;">' +
             '<td style="padding: 4px;">Hadir (H)</td>' +
             '<td style="padding: 4px;">Dispensasi (D)</td>' +
@@ -227,16 +229,17 @@ function renderDocument(type, id) {
             (function() {
                 var hasP2 = !!(rec.nama_pengawas_2 && rec.nama_pengawas_2.trim() && rec.nama_pengawas_2.trim() !== '-');
                 if (hasP2) {
-                    return '<div style="display: flex; justify-content: space-between; font-size: 10pt; margin-top: 15px;">' +
-                        '<div style="width: 45%; text-align: center;"><div>Pengawas 1,</div><div style="height: 65px; display: flex; align-items: center; justify-content: center;">' + signImg1 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (rec.nama_pengawas_1 || '( ........................................ )') + '</div><div style="font-size: 8.5pt;">NIP. ' + (rec.nip_pengawas_1 || '-') + '</div></div>' +
-                        '<div style="width: 45%; text-align: center;"><div>Pengawas 2,</div><div style="height: 65px; display: flex; align-items: center; justify-content: center;">' + signImg2 + '</div><div style="font-weight: bold; text-decoration: underline;">' + rec.nama_pengawas_2 + '</div><div style="font-size: 8.5pt;">NIP. ' + (rec.nip_pengawas_2 || '-') + '</div></div>' +
+                    return '<div style="display: flex; justify-content: space-between; font-size: 10pt; margin-top: 10px; page-break-inside: avoid; break-inside: avoid;">' +
+                        '<div style="width: 45%; text-align: center;"><div>Pengawas 1,</div><div style="height: 58px; display: flex; align-items: center; justify-content: center;">' + signImg1 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (rec.nama_pengawas_1 || '( ........................................ )') + '</div><div style="font-size: 8.5pt;">NIP. ' + (rec.nip_pengawas_1 || '-') + '</div></div>' +
+                        '<div style="width: 45%; text-align: center;"><div>Pengawas 2,</div><div style="height: 58px; display: flex; align-items: center; justify-content: center;">' + signImg2 + '</div><div style="font-weight: bold; text-decoration: underline;">' + rec.nama_pengawas_2 + '</div><div style="font-size: 8.5pt;">NIP. ' + (rec.nip_pengawas_2 || '-') + '</div></div>' +
                         '</div>';
                 } else {
-                    return '<div style="display: flex; justify-content: flex-end; font-size: 10pt; margin-top: 15px;">' +
-                        '<div style="width: 45%; text-align: center;"><div>Pengawas,</div><div style="height: 65px; display: flex; align-items: center; justify-content: center;">' + signImg1 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (rec.nama_pengawas_1 || '( ........................................ )') + '</div><div style="font-size: 8.5pt;">NIP. ' + (rec.nip_pengawas_1 || '-') + '</div></div>' +
+                    return '<div style="display: flex; justify-content: flex-end; font-size: 10pt; margin-top: 10px; page-break-inside: avoid; break-inside: avoid;">' +
+                        '<div style="width: 45%; text-align: center;"><div>Pengawas,</div><div style="height: 58px; display: flex; align-items: center; justify-content: center;">' + signImg1 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (rec.nama_pengawas_1 || '( ........................................ )') + '</div><div style="font-size: 8.5pt;">NIP. ' + (rec.nip_pengawas_1 || '-') + '</div></div>' +
                         '</div>';
                 }
             })() +
+            '</div>' + // end .rekap-ttd-wrapper
             '</div>';
 
         container.innerHTML = html;

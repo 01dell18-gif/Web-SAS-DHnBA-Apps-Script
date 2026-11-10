@@ -316,43 +316,46 @@
                         </tbody>
                     </table>
 
-                    <!-- REKAPITULASI DOKUMEN -->
-                    <table style="width: 100%; font-size: 9.5pt; border-collapse: collapse; margin-bottom: 18px;" border="1">
-                        <tr style="background: #f8fafc; font-weight: bold; text-align: center;">
-                            <td style="padding: 4px;">Hadir (H)</td>
-                            <td style="padding: 4px;">Dispensasi (D)</td>
-                            <td style="padding: 4px;">Izin (I)</td>
-                            <td style="padding: 4px;">Sakit (S)</td>
-                            <td style="padding: 4px;">Tidak Hadir (A)</td>
-                            <td style="padding: 4px; background: #e2e8f0;">Total Peserta</td>
-                        </tr>
-                        <tr style="text-align: center; font-weight: bold;">
-                            <td id="prevRekapH">0</td>
-                            <td id="prevRekapD">0</td>
-                            <td id="prevRekapI">0</td>
-                            <td id="prevRekapS">0</td>
-                            <td id="prevRekapA">0</td>
-                            <td id="prevRekapTotal" style="background: #f1f5f9;">0</td>
-                        </tr>
-                    </table>
+                    <!-- WRAPPER REKAPITULASI & TTD PENGAWAS (Pencegah TTD Terpotong) -->
+                    <div class="rekap-ttd-wrapper" style="page-break-inside: avoid; break-inside: avoid; margin-top: 10px;">
+                        <!-- REKAPITULASI DOKUMEN -->
+                        <table style="width: 100%; font-size: 9.5pt; border-collapse: collapse; margin-bottom: 12px;" border="1">
+                            <tr style="background: #f8fafc; font-weight: bold; text-align: center;">
+                                <td style="padding: 4px;">Hadir (H)</td>
+                                <td style="padding: 4px;">Dispensasi (D)</td>
+                                <td style="padding: 4px;">Izin (I)</td>
+                                <td style="padding: 4px;">Sakit (S)</td>
+                                <td style="padding: 4px;">Tidak Hadir (A)</td>
+                                <td style="padding: 4px; background: #e2e8f0;">Total Peserta</td>
+                            </tr>
+                            <tr style="text-align: center; font-weight: bold;">
+                                <td id="prevRekapH">0</td>
+                                <td id="prevRekapD">0</td>
+                                <td id="prevRekapI">0</td>
+                                <td id="prevRekapS">0</td>
+                                <td id="prevRekapA">0</td>
+                                <td id="prevRekapTotal" style="background: #f1f5f9;">0</td>
+                            </tr>
+                        </table>
 
-                    <!-- PENGESAHAN PENGAWAS -->
-                    <div style="display: flex; justify-content: flex-end; font-size: 10pt; margin-top: 15px;" id="prevPengawasContainer">
-                        <div style="width: 45%; text-align: center;" id="prevBoxPengawas1">
-                            <div id="prevLabelPengawas1">Pengawas,</div>
-                            <div style="height: 65px; display: flex; align-items: center; justify-content: center;" id="prevSignBox1">
-                                <img id="prevSignImg1" src="" style="max-height: 60px; max-width: 150px; display: none;">
+                        <!-- PENGESAHAN PENGAWAS -->
+                        <div style="display: flex; justify-content: flex-end; font-size: 10pt; margin-top: 10px; page-break-inside: avoid; break-inside: avoid;" id="prevPengawasContainer">
+                            <div style="width: 45%; text-align: center;" id="prevBoxPengawas1">
+                                <div id="prevLabelPengawas1">Pengawas,</div>
+                                <div style="height: 58px; display: flex; align-items: center; justify-content: center;" id="prevSignBox1">
+                                    <img id="prevSignImg1" src="" style="max-height: 55px; max-width: 150px; display: none;">
+                                </div>
+                                <div style="font-weight: bold; text-decoration: underline;" id="prevNamaPengawas1">( ........................................ )</div>
+                                <div style="font-size: 8.5pt;" id="prevNipPengawas1">NIP. -</div>
                             </div>
-                            <div style="font-weight: bold; text-decoration: underline;" id="prevNamaPengawas1">( ........................................ )</div>
-                            <div style="font-size: 8.5pt;" id="prevNipPengawas1">NIP. -</div>
-                        </div>
-                        <div style="width: 45%; text-align: center; display: none;" id="prevBoxPengawas2">
-                            <div>Pengawas 2,</div>
-                            <div style="height: 65px; display: flex; align-items: center; justify-content: center;" id="prevSignBox2">
-                                <img id="prevSignImg2" src="" style="max-height: 60px; max-width: 150px; display: none;">
+                            <div style="width: 45%; text-align: center; display: none;" id="prevBoxPengawas2">
+                                <div>Pengawas 2,</div>
+                                <div style="height: 58px; display: flex; align-items: center; justify-content: center;" id="prevSignBox2">
+                                    <img id="prevSignImg2" src="" style="max-height: 55px; max-width: 150px; display: none;">
+                                </div>
+                                <div style="font-weight: bold; text-decoration: underline;" id="prevNamaPengawas2">( ........................................ )</div>
+                                <div style="font-size: 8.5pt;" id="prevNipPengawas2">NIP. -</div>
                             </div>
-                            <div style="font-weight: bold; text-decoration: underline;" id="prevNamaPengawas2">( ........................................ )</div>
-                            <div style="font-size: 8.5pt;" id="prevNipPengawas2">NIP. -</div>
                         </div>
                     </div>
                 </div>

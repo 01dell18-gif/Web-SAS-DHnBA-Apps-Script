@@ -310,7 +310,7 @@
             margin: 0 auto !important;
             width: 210mm !important;
             min-height: 297mm !important;
-            padding: 15mm 20mm !important;
+            padding: 10mm 15mm !important;
             page-break-after: always !important;
             break-after: page !important;
             box-sizing: border-box !important;
@@ -321,6 +321,22 @@
         .a4-page:last-child {
             page-break-after: auto !important;
             break-after: auto !important;
+        }
+
+        /* Pencegah Pemotongan TTD & Rekapitulasi */
+        .rekap-ttd-wrapper,
+        .pengesahan-pengawas-wrapper,
+        #prevPengawasContainer,
+        #prevPage2PengawasContainer {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            display: block;
+        }
+
+        .table-preview-a4 tr,
+        .a4-page table tr {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
         }
     }
 </style>
