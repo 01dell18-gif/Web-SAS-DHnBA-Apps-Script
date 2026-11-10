@@ -28,6 +28,22 @@
 </header>
 
 <div class="container" style="padding-top: 1.5rem; padding-bottom: 3rem;">
+    <!-- Statistik Ringkasan -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+        <div class="card" style="padding: 1rem; text-align: center;">
+            <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">TOTAL SESI TERDATA</div>
+            <div style="font-size: 1.75rem; font-weight: 800; color: var(--primary);" id="statTotalSesi">0</div>
+        </div>
+        <div class="card" style="padding: 1rem; text-align: center;">
+            <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">SESI LENGKAP (DH & BA)</div>
+            <div style="font-size: 1.75rem; font-weight: 800; color: #10b981;" id="statSesiLengkap">0</div>
+        </div>
+        <div class="card" style="padding: 1rem; text-align: center;">
+            <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">BELUM LENGKAP</div>
+            <div style="font-size: 1.75rem; font-weight: 800; color: #f59e0b;" id="statSesiBelum">0</div>
+        </div>
+    </div>
+
     <!-- Horizontal Filter Bar -->
     <div class="horizontal-filter-card">
         <div class="horizontal-filter-item">
@@ -56,22 +72,6 @@
             <button type="button" class="btn btn-secondary btn-sm" onclick="resetFilters()" style="margin-top: 1.25rem;">
                 <i class="bi bi-arrow-counterclockwise"></i> Reset
             </button>
-        </div>
-    </div>
-
-    <!-- Statistik Ringkasan -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-        <div class="card" style="padding: 1rem; text-align: center;">
-            <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">TOTAL SESI TERDATA</div>
-            <div style="font-size: 1.75rem; font-weight: 800; color: var(--primary);" id="statTotalSesi">0</div>
-        </div>
-        <div class="card" style="padding: 1rem; text-align: center;">
-            <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">SESI LENGKAP (DH & BA)</div>
-            <div style="font-size: 1.75rem; font-weight: 800; color: #10b981;" id="statSesiLengkap">0</div>
-        </div>
-        <div class="card" style="padding: 1rem; text-align: center;">
-            <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">BELUM LENGKAP</div>
-            <div style="font-size: 1.75rem; font-weight: 800; color: #f59e0b;" id="statSesiBelum">0</div>
         </div>
     </div>
 
