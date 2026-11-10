@@ -29,6 +29,9 @@
 
 <!-- Floating Toolbar -->
 <div class="floating-preview-toolbar">
+    <button type="button" class="btn btn-secondary btn-sm" id="btnToggleTtdArsip" onclick="toggleTtdColumn()" style="display: none;">
+        <i class="bi bi-pen" id="icnToggleTtdArsip"></i> <span id="lblToggleTtdArsip">Sembunyikan Kolom TTD</span>
+    </button>
     <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
         <i class="bi bi-printer"></i> Cetak Dokumen / Simpan PDF
     </button>
@@ -136,7 +139,7 @@ function renderDocument(type, id) {
                 '<td style="text-align: center; padding: 4px;">' + (s.nis || '-') + '</td>' +
                 '<td style="padding: 4px;">' + s.nama + '</td>' +
                 '<td style="text-align: center; padding: 4px;">' + s.status + '</td>' +
-                '<td style="padding: 4px; font-size: 8.5pt;">' + sign + '</td>' +
+                '<td style="padding: 4px; font-size: 8.5pt;" class="col-ttd-peserta">' + sign + '</td>' +
                 '</tr>';
         });
 
@@ -183,7 +186,7 @@ function renderDocument(type, id) {
             '</tr>' +
             '</table>' +
             '<table class="table-preview-a4" style="width: 100%; border-collapse: collapse; font-size: 9.5pt; margin-bottom: 12px;" border="1">' +
-            '<thead><tr style="background:#f1f5f9; text-align:center;"><th style="width:32px; padding: 4px;">No</th><th style="width:80px; padding: 4px;">NIS</th><th style="padding: 4px; text-align: left;">Nama Siswa</th><th style="width:75px; padding: 4px;">Kehadiran</th><th style="width:100px; padding: 4px;">Tanda Tangan</th></tr></thead>' +
+            '<thead><tr style="background:#f1f5f9; text-align:center;"><th style="width:32px; padding: 4px;">No</th><th style="width:80px; padding: 4px;">NIS</th><th style="padding: 4px; text-align: left;">Nama Siswa</th><th style="width:75px; padding: 4px;">Kehadiran</th><th style="width:100px; padding: 4px;" class="col-ttd-peserta">Tanda Tangan</th></tr></thead>' +
             '<tbody>' + rowsHtml + '</tbody>' +
             '</table>' +
             '<table style="width: 100%; font-size: 9.5pt; border-collapse: collapse; margin-bottom: 18px;" border="1">' +
@@ -211,8 +214,13 @@ function renderDocument(type, id) {
             '</div>';
 
         container.innerHTML = html;
+        var btnTtd = document.getElementById('btnToggleTtdArsip');
+        if (btnTtd) btnTtd.style.display = 'inline-flex';
 
     } else {
+        var btnTtd = document.getElementById('btnToggleTtdArsip');
+        if (btnTtd) btnTtd.style.display = 'none';
+
         // Berita Acara (2 Halaman)
         var recBA = (window.AppStore.data.berita_acara || []).find(function(b) { return String(b.id) === String(id); });
         if (!recBA) {
@@ -348,6 +356,33 @@ function renderDocument(type, id) {
             '</div>';
 
         container.innerHTML = html;
+    }
+}
+
+var isTtdVisible = true;
+function toggleTtdColumn() {
+    isTtdVisible = !isTtdVisible;
+    var container = document.getElementById('previewStandaloneContainer');
+    if (container) {
+        if (!isTtdVisible) {
+            container.classList.add('hide-ttd-peserta');
+        } else {
+            container.classList.remove('hide-ttd-peserta');
+        }
+    }
+    var lbl = document.getElementById('lblToggleTtdArsip');
+    if (lbl) lbl.textContent = isTtdVisible ? 'Sembunyikan Kolom TTD' : 'Tampilkan Kolom TTD';
+    var icn = document.getElementById('icnToggleTtdArsip');
+    if (icn) icn.className = isTtdVisible ? 'bi bi-pen' : 'bi bi-pen-fill';
+    var btn = document.getElementById('btnToggleTtdArsip');
+    if (btn) {
+        if (!isTtdVisible) {
+            btn.classList.remove('btn-secondary');
+            btn.classList.add('btn-primary');
+        } else {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-secondary');
+        }
     }
 }
 </script>
