@@ -61,6 +61,27 @@ onDocumentReady(function() {
         .apiGetInitialData();
 });
 
+function formatIndoDate(dateStr) {
+    if (!dateStr) return '-';
+    var d = null;
+    if (typeof dateStr === 'string') {
+        var m = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (m) {
+            d = new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+        } else {
+            d = new Date(dateStr);
+        }
+    } else if (dateStr instanceof Date) {
+        d = dateStr;
+    }
+    if (!d || isNaN(d.getTime())) return String(dateStr);
+    var days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    var months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    var dayName = days[d.getDay()] || '';
+    var monthName = months[d.getMonth()] || '';
+    return dayName + ', ' + d.getDate() + ' ' + monthName + ' ' + d.getFullYear();
+}
+
 function renderDocument(type, id) {
     var container = document.getElementById('previewStandaloneContainer');
     var settings = (window.AppStore.data && window.AppStore.data.settings) || {};
@@ -109,8 +130,14 @@ function renderDocument(type, id) {
                 '</tr>';
         });
 
-        var signImg1 = rec.ttd_pengawas_1 ? '<img src="' + rec.ttd_pengawas_1 + '" style="max-height: 55px;">' : '';
-        var signImg2 = rec.ttd_pengawas_2 ? '<img src="' + rec.ttd_pengawas_2 + '" style="max-height: 55px;">' : '';
+        var hariTanggalStr = formatIndoDate(rec.tanggal_ujian);
+        var waktuStr = (rec.jam_mulai && rec.jam_selesai) 
+            ? (rec.jam_mulai + ' - ' + rec.jam_selesai + ' WITA (Sesi ' + (rec.sesi || '1') + ')')
+            : ('Sesi ' + (rec.sesi || '1'));
+        var ruangStr = rec.ruang || '-';
+
+        var signImg1 = rec.ttd_pengawas_1 ? '<img src="' + rec.ttd_pengawas_1 + '" style="max-height: 60px; max-width: 150px;">' : '';
+        var signImg2 = rec.ttd_pengawas_2 ? '<img src="' + rec.ttd_pengawas_2 + '" style="max-height: 60px; max-width: 150px;">' : '';
 
         var html = '<div class="a4-page">' +
             kopHtml +
@@ -119,23 +146,55 @@ function renderDocument(type, id) {
             '<h3 style="font-size: 11pt; font-weight: bold; margin: 2px 0 0 0; text-transform: uppercase;">' + (rec.nama_ujian || 'SUMATIF AKHIR SEMESTER').toUpperCase() + '</h3>' +
             '<div style="font-size: 11pt; font-weight: bold; text-transform: uppercase;">TAHUN AJARAN ' + (rec.tahun_ajaran || '2026/2027') + '</div>' +
             '</div>' +
-            '<table style="width: 100%; font-size: 10pt; margin-bottom: 10px;">' +
-            '<tr><td style="width:18%; font-weight:bold;">Mata Pelajaran</td><td style="width:2%;">:</td><td style="width:40%; font-weight:bold;">' + rec.mata_pelajaran + '</td>' +
-            '<td style="width:15%; font-weight:bold;">Tanggal</td><td style="width:2%;">:</td><td>' + rec.tanggal_ujian + '</td></tr>' +
-            '<tr><td style="font-weight:bold;">Kelas</td><td>:</td><td style="font-weight:bold;">' + rec.nama_kelas + '</td>' +
-            '<td style="font-weight:bold;">Ruang / Sesi</td><td>:</td><td>' + rec.ruang + ' / Sesi ' + rec.sesi + '</td></tr>' +
+            '<table style="width: 100%; font-size: 10pt; margin-bottom: 10px; border-collapse: collapse;">' +
+            '<tr>' +
+            '<td style="width: 18%; font-weight: bold;">Mata Pelajaran</td>' +
+            '<td style="width: 2%;">:</td>' +
+            '<td style="width: 40%; font-weight: bold;">' + (rec.mata_pelajaran || '-') + '</td>' +
+            '<td style="width: 15%; font-weight: bold;">Hari / Tanggal</td>' +
+            '<td style="width: 2%;">:</td>' +
+            '<td style="width: 23%;">' + hariTanggalStr + '</td>' +
+            '</tr>' +
+            '<tr>' +
+            '<td style="font-weight: bold;">Kelas</td>' +
+            '<td>:</td>' +
+            '<td style="font-weight: bold;">' + (rec.nama_kelas || '-') + '</td>' +
+            '<td style="font-weight: bold;">Waktu / Sesi</td>' +
+            '<td>:</td>' +
+            '<td>' + waktuStr + '</td>' +
+            '</tr>' +
+            '<tr>' +
+            '<td style="font-weight: bold;">Ruang Ujian</td>' +
+            '<td>:</td>' +
+            '<td>' + ruangStr + '</td>' +
+            '<td></td><td></td><td></td>' +
+            '</tr>' +
             '</table>' +
             '<table class="table-preview-a4" style="width: 100%; border-collapse: collapse; font-size: 9.5pt; margin-bottom: 12px;" border="1">' +
-            '<thead><tr style="background:#f1f5f9; text-align:center;"><th style="width:32px;">No</th><th style="width:80px;">NIS</th><th>Nama Siswa</th><th style="width:75px;">Kehadiran</th><th style="width:100px;">Tanda Tangan</th></tr></thead>' +
+            '<thead><tr style="background:#f1f5f9; text-align:center;"><th style="width:32px; padding: 4px;">No</th><th style="width:80px; padding: 4px;">NIS</th><th style="padding: 4px; text-align: left;">Nama Siswa</th><th style="width:75px; padding: 4px;">Kehadiran</th><th style="width:100px; padding: 4px;">Tanda Tangan</th></tr></thead>' +
             '<tbody>' + rowsHtml + '</tbody>' +
             '</table>' +
             '<table style="width: 100%; font-size: 9.5pt; border-collapse: collapse; margin-bottom: 18px;" border="1">' +
-            '<tr style="background:#f8fafc; font-weight:bold; text-align:center;"><td>H</td><td>D</td><td>I</td><td>S</td><td>A</td><td style="background:#e2e8f0;">Total</td></tr>' +
-            '<tr style="text-align:center; font-weight:bold;"><td>' + (rec.peserta_hadir || 0) + '</td><td>' + (rec.peserta_dispensasi || 0) + '</td><td>' + (rec.peserta_izin || 0) + '</td><td>' + (rec.peserta_sakit || 0) + '</td><td>' + (rec.peserta_tidak_hadir || 0) + '</td><td style="background:#f1f5f9;">' + (rec.total_peserta || 0) + '</td></tr>' +
+            '<tr style="background: #f8fafc; font-weight: bold; text-align: center;">' +
+            '<td style="padding: 4px;">Hadir (H)</td>' +
+            '<td style="padding: 4px;">Dispensasi (D)</td>' +
+            '<td style="padding: 4px;">Izin (I)</td>' +
+            '<td style="padding: 4px;">Sakit (S)</td>' +
+            '<td style="padding: 4px;">Tidak Hadir (A)</td>' +
+            '<td style="padding: 4px; background: #e2e8f0;">Total Peserta</td>' +
+            '</tr>' +
+            '<tr style="text-align: center; font-weight: bold;">' +
+            '<td style="padding: 4px;">' + (rec.peserta_hadir || 0) + '</td>' +
+            '<td style="padding: 4px;">' + (rec.peserta_dispensasi || 0) + '</td>' +
+            '<td style="padding: 4px;">' + (rec.peserta_izin || 0) + '</td>' +
+            '<td style="padding: 4px;">' + (rec.peserta_sakit || 0) + '</td>' +
+            '<td style="padding: 4px;">' + (rec.peserta_tidak_hadir || 0) + '</td>' +
+            '<td style="padding: 4px; background: #f1f5f9;">' + (rec.total_peserta || 0) + '</td>' +
+            '</tr>' +
             '</table>' +
             '<div style="display: flex; justify-content: space-between; font-size: 10pt; margin-top: 15px;">' +
-            '<div style="width: 45%; text-align: center;"><div>Pengawas 1,</div><div style="height: 60px; display: flex; align-items: center; justify-content: center;">' + signImg1 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (rec.nama_pengawas_1 || '( ........................................ )') + '</div><div style="font-size: 8.5pt;">NIP. ' + (rec.nip_pengawas_1 || '-') + '</div></div>' +
-            '<div style="width: 45%; text-align: center;"><div>Pengawas 2,</div><div style="height: 60px; display: flex; align-items: center; justify-content: center;">' + signImg2 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (rec.nama_pengawas_2 || '( ........................................ )') + '</div><div style="font-size: 8.5pt;">NIP. ' + (rec.nip_pengawas_2 || '-') + '</div></div>' +
+            '<div style="width: 45%; text-align: center;"><div>Pengawas 1,</div><div style="height: 65px; display: flex; align-items: center; justify-content: center;">' + signImg1 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (rec.nama_pengawas_1 || '( ........................................ )') + '</div><div style="font-size: 8.5pt;">NIP. ' + (rec.nip_pengawas_1 || '-') + '</div></div>' +
+            '<div style="width: 45%; text-align: center;"><div>Pengawas 2,</div><div style="height: 65px; display: flex; align-items: center; justify-content: center;">' + signImg2 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (rec.nama_pengawas_2 || '( ........................................ )') + '</div><div style="font-size: 8.5pt;">NIP. ' + (rec.nip_pengawas_2 || '-') + '</div></div>' +
             '</div>' +
             '</div>';
 
@@ -256,9 +315,9 @@ function renderDocument(type, id) {
             '<h2 style="font-size: 12pt; font-weight: bold; margin: 0; text-transform: uppercase;">LAMPIRAN BUKTI DOKUMENTASI PELAKSANAAN UJIAN</h2>' +
             '<div style="font-size: 10pt; color: #475569; margin-top: 3px;">Foto Bukti Pengawasan & Kegiatan Ruangan Ujian</div>' +
             '</div>' +
-            '<table style="width: 100%; font-size: 10pt; margin-bottom: 15px;">' +
-            '<tr><td style="width:20%; font-weight:bold;">Mata Pelajaran</td><td style="width:2%;">:</td><td style="width:38%;">' + recBA.mata_pelajaran + '</td><td style="width:15%; font-weight:bold;">Tanggal</td><td style="width:2%;">:</td><td>' + recBA.tanggal_ujian + '</td></tr>' +
-            '<tr><td style="font-weight:bold;">Kelas</td><td>:</td><td>' + recBA.nama_kelas + '</td><td style="font-weight:bold;">Ruang</td><td>:</td><td>' + recBA.ruang + '</td></tr>' +
+            '<table style="width: 100%; font-size: 10pt; margin-bottom: 15px; border-collapse: collapse;">' +
+            '<tr><td style="width:20%; font-weight:bold;">Mata Pelajaran</td><td style="width:2%;">:</td><td style="width:38%; font-weight:bold;">' + (recBA.mata_pelajaran || '-') + '</td><td style="width:15%; font-weight:bold;">Tanggal</td><td style="width:2%;">:</td><td style="width:25%;">' + formatIndoDate(recBA.tanggal_ujian) + '</td></tr>' +
+            '<tr><td style="font-weight:bold;">Kelas</td><td>:</td><td style="font-weight:bold;">' + (recBA.nama_kelas || '-') + '</td><td style="font-weight:bold;">Ruang</td><td>:</td><td>' + (recBA.ruang || '-') + '</td></tr>' +
             '</table>' +
             '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px;">' + photosHtml + '</div>' +
             '<div style="display: flex; justify-content: space-between; font-size: 10pt; margin-top: 20px;">' +

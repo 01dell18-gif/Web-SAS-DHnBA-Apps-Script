@@ -435,7 +435,14 @@ function readTable(sheetName) {
       
       // JSON Serialization Safety: Convert Date objects to formatted string
       if (val instanceof Date) {
-        val = Utilities.formatDate(val, 'Asia/Makassar', 'yyyy-MM-dd HH:mm:ss');
+        var h = val.getHours();
+        var mi = val.getMinutes();
+        var s = val.getSeconds();
+        if (h === 0 && mi === 0 && s === 0) {
+          val = Utilities.formatDate(val, 'Asia/Makassar', 'yyyy-MM-dd');
+        } else {
+          val = Utilities.formatDate(val, 'Asia/Makassar', 'yyyy-MM-dd HH:mm:ss');
+        }
       } else if (val === null || val === undefined) {
         val = '';
       }
