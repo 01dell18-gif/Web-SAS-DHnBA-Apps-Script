@@ -121,7 +121,7 @@
                         <span class="card-title"><i class="bi bi-people"></i> 2. Peserta & Status Kehadiran</span>
                         <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                             <button type="button" id="btnToggleTtd" class="btn btn-secondary btn-sm" onclick="toggleTtdColumn()" title="Sembunyikan atau tampilkan kolom tanda tangan peserta pada cetak dokumen">
-                                <i class="bi bi-pen" id="icnToggleTtd"></i> <span id="lblToggleTtd">Sembunyikan Kolom TTD</span>
+                                <i class="bi bi-pen" id="icnToggleTtd"></i> <span id="lblToggleTtd">Tampilkan Kolom TTD</span>
                             </button>
                             <button type="button" id="btnSetAllHadir" class="btn btn-secondary btn-sm" onclick="setAllHadir()">
                                 <i class="bi bi-check2-all"></i> Set Semua Hadir
@@ -242,10 +242,10 @@
             <div class="a4-wrapper">
                 <div class="preview-toolbar-inline no-print" style="width: 100%; max-width: 210mm; display: flex; justify-content: flex-end; gap: 8px; margin-bottom: -15px;">
                     <button type="button" id="btnToggleTtdPreview" class="btn btn-secondary btn-sm" onclick="toggleTtdColumn()" style="box-shadow: 0 2px 4px rgba(0,0,0,0.06);">
-                        <i class="bi bi-pen" id="icnToggleTtdPreview"></i> <span id="lblToggleTtdPreview">Sembunyikan Kolom TTD</span>
+                        <i class="bi bi-pen" id="icnToggleTtdPreview"></i> <span id="lblToggleTtdPreview">Tampilkan Kolom TTD</span>
                     </button>
                 </div>
-                <div class="a4-page" id="printableA4Area">
+                <div class="a4-page hide-ttd-peserta" id="printableA4Area">
                     <!-- KOP SURAT -->
                     <div id="previewKopSurat" class="<?= (settings && settings.kop_mode === 'image' && (settings.kop_header || settings.kop_image_path)) ? 'kop-surat-banner' : 'kop-surat' ?>">
                     <? if (settings && settings.kop_mode === 'image' && (settings.kop_header || settings.kop_image_path)) { ?>
@@ -589,7 +589,7 @@ function setAllHadir() {
     updateRekapCounts();
 }
 
-var isTtdVisible = true;
+var isTtdVisible = false;
 function toggleTtdColumn() {
     isTtdVisible = !isTtdVisible;
     var previewArea = document.getElementById('printableA4Area');
@@ -601,7 +601,7 @@ function toggleTtdColumn() {
         }
     }
     var lblText = isTtdVisible ? 'Sembunyikan Kolom TTD' : 'Tampilkan Kolom TTD';
-    var iconClass = isTtdVisible ? 'bi bi-pen' : 'bi bi-pen-fill';
+    var iconClass = isTtdVisible ? 'bi bi-pen-fill' : 'bi bi-pen';
 
     ['lblToggleTtd', 'lblToggleTtdPreview'].forEach(function(id) {
         var el = document.getElementById(id);
@@ -614,7 +614,7 @@ function toggleTtdColumn() {
     ['btnToggleTtd', 'btnToggleTtdPreview'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el) {
-            if (!isTtdVisible) {
+            if (isTtdVisible) {
                 el.classList.remove('btn-secondary');
                 el.classList.add('btn-primary');
             } else {

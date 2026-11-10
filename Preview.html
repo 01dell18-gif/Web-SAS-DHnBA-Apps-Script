@@ -30,7 +30,7 @@
 <!-- Floating Toolbar -->
 <div class="floating-preview-toolbar">
     <button type="button" class="btn btn-secondary btn-sm" id="btnToggleTtdArsip" onclick="toggleTtdColumn()" style="display: none;">
-        <i class="bi bi-pen" id="icnToggleTtdArsip"></i> <span id="lblToggleTtdArsip">Sembunyikan Kolom TTD</span>
+        <i class="bi bi-pen" id="icnToggleTtdArsip"></i> <span id="lblToggleTtdArsip">Tampilkan Kolom TTD</span>
     </button>
     <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
         <i class="bi bi-printer"></i> Cetak Dokumen / Simpan PDF
@@ -40,7 +40,7 @@
     </button>
 </div>
 
-<div class="a4-wrapper" id="previewStandaloneContainer">
+<div class="a4-wrapper hide-ttd-peserta" id="previewStandaloneContainer">
     <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
         <i class="bi bi-arrow-repeat spin" style="font-size: 2rem;"></i><br><br>Memuat dokumen cetak A4...
     </div>
@@ -359,7 +359,7 @@ function renderDocument(type, id) {
     }
 }
 
-var isTtdVisible = true;
+var isTtdVisible = false;
 function toggleTtdColumn() {
     isTtdVisible = !isTtdVisible;
     var container = document.getElementById('previewStandaloneContainer');
@@ -373,10 +373,10 @@ function toggleTtdColumn() {
     var lbl = document.getElementById('lblToggleTtdArsip');
     if (lbl) lbl.textContent = isTtdVisible ? 'Sembunyikan Kolom TTD' : 'Tampilkan Kolom TTD';
     var icn = document.getElementById('icnToggleTtdArsip');
-    if (icn) icn.className = isTtdVisible ? 'bi bi-pen' : 'bi bi-pen-fill';
+    if (icn) icn.className = isTtdVisible ? 'bi bi-pen-fill' : 'bi bi-pen';
     var btn = document.getElementById('btnToggleTtdArsip');
     if (btn) {
-        if (!isTtdVisible) {
+        if (isTtdVisible) {
             btn.classList.remove('btn-secondary');
             btn.classList.add('btn-primary');
         } else {
