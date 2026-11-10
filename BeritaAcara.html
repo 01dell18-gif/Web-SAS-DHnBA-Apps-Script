@@ -220,8 +220,9 @@
 
                 <!-- 4. Pengawas Ujian & TTD -->
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <span class="card-title"><i class="bi bi-person-check"></i> 4. Pengawas Ujian & Tanda Tangan</span>
+                        <span id="pengawasSyncBadge" class="badge" style="display: none; background: #dcfce7; color: #15803d; font-size: 0.75rem; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 9999px;"><i class="bi bi-check-circle"></i> Otomatis dari DH</span>
                     </div>
                     <div class="card-body">
                         <div class="form-group">
@@ -628,6 +629,8 @@ function syncAttendanceFromAbsensi() {
         document.getElementById('peserta_hadir').value = 0;
         document.getElementById('peserta_tidak_hadir').value = 0;
         if (noticeBox) noticeBox.style.display = 'none';
+        var pengawasBadge = document.getElementById('pengawasSyncBadge');
+        if (pengawasBadge) pengawasBadge.style.display = 'none';
         validatePesertaCounts();
         return;
     }
@@ -717,10 +720,56 @@ function syncAttendanceFromAbsensi() {
                 'Seharusnya: <strong>' + total + '</strong>, Hadir: <strong>' + hadir + '</strong>, Tidak Hadir: <strong>' + tidakHadir + '</strong> ' +
                 '(Tersimpan di Arsip DH #' + matched.id + ').';
         }
+
+        // Auto-sinkronkan Section 4: Pengawas Ujian & Tanda Tangan dari Daftar Hadir
+        if (matched.nama_pengawas_1) {
+            document.getElementById('nama_pengawas_1').value = matched.nama_pengawas_1;
+            document.getElementById('nip_pengawas_1').value = matched.nip_pengawas_1 || '';
+        }
+        if (matched.nama_pengawas_2) {
+            document.getElementById('nama_pengawas_2').value = matched.nama_pengawas_2;
+            document.getElementById('nip_pengawas_2').value = matched.nip_pengawas_2 || '';
+        }
+
+        var sigMode = matched.signature_mode || 'digital';
+        var sigRadio = document.querySelector('input[name="signature_mode"][value="' + sigMode + '"]');
+        if (sigRadio) {
+            sigRadio.checked = true;
+            toggleSignatureMode(sigMode);
+        }
+
+        if (sigMode === 'digital') {
+            if (matched.ttd_pengawas_1) {
+                document.getElementById('ttd_pengawas_1_data').value = matched.ttd_pengawas_1;
+                var img1 = document.getElementById('prevSignImg1');
+                var p2Img1 = document.getElementById('prevPage2SignImg1');
+                if (img1) { img1.src = matched.ttd_pengawas_1; img1.style.display = 'block'; }
+                if (p2Img1) { p2Img1.src = matched.ttd_pengawas_1; p2Img1.style.display = 'block'; }
+                if (pad1 && typeof pad1.fromDataURL === 'function') {
+                    pad1.fromDataURL(matched.ttd_pengawas_1);
+                }
+            }
+            if (matched.ttd_pengawas_2) {
+                document.getElementById('ttd_pengawas_2_data').value = matched.ttd_pengawas_2;
+                var img2 = document.getElementById('prevSignImg2');
+                var p2Img2 = document.getElementById('prevPage2SignImg2');
+                if (img2) { img2.src = matched.ttd_pengawas_2; img2.style.display = 'block'; }
+                if (p2Img2) { p2Img2.src = matched.ttd_pengawas_2; p2Img2.style.display = 'block'; }
+                if (pad2 && typeof pad2.fromDataURL === 'function') {
+                    pad2.fromDataURL(matched.ttd_pengawas_2);
+                }
+            }
+        }
+
+        var pengawasBadge = document.getElementById('pengawasSyncBadge');
+        if (pengawasBadge) pengawasBadge.style.display = 'inline-flex';
     } else {
         document.getElementById('peserta_seharusnya').value = classStudentCount;
         document.getElementById('peserta_hadir').value = classStudentCount;
         document.getElementById('peserta_tidak_hadir').value = 0;
+
+        var pengawasBadge = document.getElementById('pengawasSyncBadge');
+        if (pengawasBadge) pengawasBadge.style.display = 'none';
 
         if (noticeBox) {
             if (tgl && mapel) {
@@ -942,6 +991,15 @@ function updateLivePreview() {
             var rx = new RegExp('\\[' + vk + '\\]', 'gi');
             rendered = rendered.replace(rx, tplVars[vk]);
         }
+        rendered = String(rendered)
+            .replace(/<p[^>]*>\s*Yang membuat berita acara\s*:\s*<\/p>/gi, '')
+            .replace(/\s*\([^)]*\[tanggal_teks\][^)]*\)/gi, '')
+            .replace(/\s*\([^)]*\[tahun_teks\][^)]*\)/gi, '')
+            .replace(/(tanggal\s*<strong>\d+<\/strong>)\s*\([^)]*\)/gi, '$1')
+            .replace(/(tahun\s*<strong>\d+<\/strong>)\s*\([^)]*\)/gi, '$1')
+            .replace(/&nbsp;\s*:/g, ':')
+            .replace(/&nbsp;\s+bulan/g, ' bulan')
+            .trim();
         redaksi = rendered;
     } else {
         redaksi = '<p>Pada hari ini <strong>' + dayName + '</strong>, tanggal <strong>' + dateNum + '</strong> bulan <strong>' + monthName + '</strong> tahun <strong>' + yearNum + '</strong>:</p>' +

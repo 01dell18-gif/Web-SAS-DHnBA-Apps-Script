@@ -172,7 +172,7 @@ TAHUN AJARAN [tahun_ajaran]</textarea>
 
 <script>
 // Template Redaksi Standar Resmi (Default Fallback)
-const DEFAULT_REDAKSI_HTML = `<p>Pada hari ini <strong>[hari]</strong>, tanggal <strong>[tanggal]</strong> (<strong><em>[tanggal_teks]</em></strong>) bulan <strong>[bulan]</strong> tahun <strong>[tahun]</strong> (<strong><em>[tahun_teks]</em></strong>):</p>
+const DEFAULT_REDAKSI_HTML = `<p>Pada hari ini <strong>[hari]</strong>, tanggal <strong>[tanggal]</strong> bulan <strong>[bulan]</strong> tahun <strong>[tahun]</strong>:</p>
 <ol style="margin: 6px 0 12px 24px; padding: 0;">
     <li style="margin-bottom: 8px;">Telah diselenggarakan <strong>[nama_ujian]</strong> Tahun Ajaran <strong>[tahun_ajaran]</strong> dari pukul <strong>[jam_mulai]</strong> sampai dengan pukul <strong>[jam_selesai]</strong> WITA.
         <ul style="list-style-type: disc; margin: 4px 0 6px 20px; padding: 0;">
@@ -244,7 +244,16 @@ onDocumentReady(function() {
             document.getElementById('tpl_judul_ba').value = tpl.judul_berita_acara || 'BERITA ACARA \r\nPENYELENGGARAAN SUMATIF AKHIR SEMESTER (SAS) GANJIL\r\nTAHUN AJARAN [tahun_ajaran]';
             document.getElementById('tpl_aktif').checked = (tpl.aktif === undefined || tpl.aktif === null || String(tpl.aktif) === '1' || tpl.aktif === true);
 
-            var initHtml = tpl.redaksi_isi || DEFAULT_REDAKSI_HTML;
+            var rawHtml = tpl.redaksi_isi || DEFAULT_REDAKSI_HTML;
+            var initHtml = String(rawHtml)
+                .replace(/<p[^>]*>\s*Yang membuat berita acara\s*:\s*<\/p>/gi, '')
+                .replace(/\s*\([^)]*\[tanggal_teks\][^)]*\)/gi, '')
+                .replace(/\s*\([^)]*\[tahun_teks\][^)]*\)/gi, '')
+                .replace(/(tanggal\s*<strong>\d+<\/strong>)\s*\([^)]*\)/gi, '$1')
+                .replace(/(tahun\s*<strong>\d+<\/strong>)\s*\([^)]*\)/gi, '$1')
+                .replace(/&nbsp;\s*:/g, ':')
+                .replace(/&nbsp;\s+bulan/g, ' bulan')
+                .trim();
             wysiwygCanvas.innerHTML = initHtml;
             hiddenRedaksi.value = initHtml;
             if (wysiwygSource) wysiwygSource.value = initHtml;

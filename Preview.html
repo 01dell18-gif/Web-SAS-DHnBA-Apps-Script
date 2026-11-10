@@ -269,6 +269,15 @@ function renderDocument(type, id) {
                 var rx = new RegExp('\\[' + vk + '\\]', 'gi');
                 rendered = rendered.replace(rx, tplVars[vk]);
             }
+            rendered = String(rendered)
+                .replace(/<p[^>]*>\s*Yang membuat berita acara\s*:\s*<\/p>/gi, '')
+                .replace(/\s*\([^)]*\[tanggal_teks\][^)]*\)/gi, '')
+                .replace(/\s*\([^)]*\[tahun_teks\][^)]*\)/gi, '')
+                .replace(/(tanggal\s*<strong>\d+<\/strong>)\s*\([^)]*\)/gi, '$1')
+                .replace(/(tahun\s*<strong>\d+<\/strong>)\s*\([^)]*\)/gi, '$1')
+                .replace(/&nbsp;\s*:/g, ':')
+                .replace(/&nbsp;\s+bulan/g, ' bulan')
+                .trim();
             redaksi = rendered;
         } else {
             redaksi = '<p>Pada hari ini, tanggal <strong>' + formatIndoDate(recBA.tanggal_ujian) + '</strong>:</p>' +
