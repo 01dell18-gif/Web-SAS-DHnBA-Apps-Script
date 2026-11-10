@@ -307,14 +307,9 @@ function deleteSingleLog(id) {
 }
 
 function loadDashboardStats() {
-    google.script.run
-        .withSuccessHandler(function(data) {
-            applyDashboardData(data);
-        })
-        .withFailureHandler(function(err) {
-            showGlobalToast('Gagal memuat ringkasan dashboard: ' + (err.message || err), 'danger');
-        })
-        .apiGetInitialData();
+    window.AppStore.loadInitialData(function(data) {
+        applyDashboardData(data);
+    });
 }
 
 function openDatabaseSpreadsheet() {

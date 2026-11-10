@@ -83,6 +83,10 @@
 <?!= include('Modals'); ?>
 <?!= include('AppJS'); ?>
 
+<script type="text/template" id="serverDataPayload">
+<?!= (typeof serverData !== 'undefined' && serverData) ? JSON.stringify(serverData) : 'null' ?>
+</script>
+
 <script>
 var reconciledSessions = [];
 var activeRekonFilter = 'all';
@@ -92,50 +96,49 @@ onDocumentReady(function() {
 });
 
 function loadRekonData() {
-    google.script.run
-        .withSuccessHandler(function(data) {
-            window.AppStore.data = data;
-            
-            var map = {};
-            (data.absensi || []).forEach(function(a) {
-                var key = a.tanggal_ujian + '||' + a.class_id + '||' + (a.mata_pelajaran || '').trim().toLowerCase();
-                if (!map[key]) {
-                    map[key] = {
-                        tanggal: a.tanggal_ujian,
-                        class_id: a.class_id,
-                        nama_kelas: a.nama_kelas,
-                        mata_pelajaran: a.mata_pelajaran,
-                        dh: a,
-                        ba: null
-                    };
-                } else {
-                    map[key].dh = a;
-                }
-            });
+    window.AppStore.loadInitialData(function(data) {
+        if (!data) return;
+        window.AppStore.data = data;
+        
+        var map = {};
+        (data.absensi || []).forEach(function(a) {
+            var key = a.tanggal_ujian + '||' + a.class_id + '||' + (a.mata_pelajaran || '').trim().toLowerCase();
+            if (!map[key]) {
+                map[key] = {
+                    tanggal: a.tanggal_ujian,
+                    class_id: a.class_id,
+                    nama_kelas: a.nama_kelas,
+                    mata_pelajaran: a.mata_pelajaran,
+                    dh: a,
+                    ba: null
+                };
+            } else {
+                map[key].dh = a;
+            }
+        });
 
-            (data.berita_acara || []).forEach(function(b) {
-                var key = b.tanggal_ujian + '||' + b.class_id + '||' + (b.mata_pelajaran || '').trim().toLowerCase();
-                if (!map[key]) {
-                    map[key] = {
-                        tanggal: b.tanggal_ujian,
-                        class_id: b.class_id,
-                        nama_kelas: b.nama_kelas,
-                        mata_pelajaran: b.mata_pelajaran,
-                        dh: null,
-                        ba: b
-                    };
-                } else {
-                    map[key].ba = b;
-                }
-            });
+        (data.berita_acara || []).forEach(function(b) {
+            var key = b.tanggal_ujian + '||' + b.class_id + '||' + (b.mata_pelajaran || '').trim().toLowerCase();
+            if (!map[key]) {
+                map[key] = {
+                    tanggal: b.tanggal_ujian,
+                    class_id: b.class_id,
+                    nama_kelas: b.nama_kelas,
+                    mata_pelajaran: b.mata_pelajaran,
+                    dh: null,
+                    ba: b
+                };
+            } else {
+                map[key].ba = b;
+            }
+        });
 
-            reconciledSessions = Object.values(map).sort(function(x, y) {
-                return (y.tanggal || '').localeCompare(x.tanggal || '');
-            });
+        reconciledSessions = Object.values(map).sort(function(x, y) {
+            return (y.tanggal || '').localeCompare(x.tanggal || '');
+        });
 
-            renderRekonTable();
-        })
-        .apiGetInitialData();
+        renderRekonTable();
+    });
 }
 
 function setRekonFilter(st) {

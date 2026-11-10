@@ -2733,4 +2733,18 @@ body.sidebar-collapsed .admin-main {
     color: #ffffff;
     border-color: #0284c7;
 }
+
+/* Instant Top Navigation Progress Bar */
+#globalNavProgressBar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 0%;
+    background: linear-gradient(90deg, #4f46e5, #06b6d4, #10b981);
+    z-index: 9999999;
+    box-shadow: 0 0 10px rgba(79, 70, 229, 0.75);
+    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+    pointer-events: none;
+}
 </style>

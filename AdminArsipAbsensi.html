@@ -76,6 +76,10 @@
 <?!= include('Modals'); ?>
 <?!= include('AppJS'); ?>
 
+<script type="text/template" id="serverDataPayload">
+<?!= (typeof serverData !== 'undefined' && serverData) ? JSON.stringify(serverData) : 'null' ?>
+</script>
+
 <script>
 var arsipList = [];
 
@@ -84,25 +88,25 @@ onDocumentReady(function() {
 });
 
 function loadArsipData() {
-    google.script.run
-        .withSuccessHandler(function(data) {
-            window.AppStore.data = data;
-            arsipList = (data && data.absensi) || [];
+    window.AppStore.loadInitialData(function(data) {
+        window.AppStore.data = data;
+        arsipList = (data && data.absensi) || [];
 
-            var filterKelas = document.getElementById('filterKelas');
-            if (filterKelas) {
-                filterKelas.innerHTML = '<option value="">Semua Rombel</option>';
-                ((data && data.classes) || []).forEach(function(c) {
-                    var opt = document.createElement('option');
-                    opt.value = c.id;
-                    opt.textContent = c.nama_kelas;
-                    filterKelas.appendChild(opt);
-                });
-            }
+        var filterKelas = document.getElementById('filterKelas');
+        if (filterKelas) {
+            var currCid = filterKelas.value;
+            filterKelas.innerHTML = '<option value="">Semua Rombel</option>';
+            ((data && data.classes) || []).forEach(function(c) {
+                var opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.nama_kelas;
+                if (String(c.id) === String(currCid)) opt.selected = true;
+                filterKelas.appendChild(opt);
+            });
+        }
 
-            filterArsipTable();
-        })
-        .apiGetInitialData();
+        filterArsipTable();
+    });
 }
 
 function filterArsipTable() {

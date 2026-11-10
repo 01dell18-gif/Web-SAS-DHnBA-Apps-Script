@@ -200,6 +200,10 @@ TAHUN AJARAN [tahun_ajaran]</textarea>
 <?!= include('Modals'); ?>
 <?!= include('AppJS'); ?>
 
+<script type="text/template" id="serverDataPayload">
+<?!= (typeof serverData !== 'undefined' && serverData) ? JSON.stringify(serverData) : 'null' ?>
+</script>
+
 <script>
 // Template Redaksi Standar Resmi (Default Fallback)
 const DEFAULT_REDAKSI_HTML = `<p>Pada hari ini <strong>[hari]</strong>, tanggal <strong>[tanggal]</strong> bulan <strong>[bulan]</strong> tahun <strong>[tahun]</strong>:</p>
@@ -264,24 +268,23 @@ onDocumentReady(function() {
     }
 
     // Load initial data
-    google.script.run
-        .withSuccessHandler(function(data) {
-            window.AppStore.data = data;
-            renderTemplatesList(data.templates);
+    window.AppStore.loadInitialData(function(data) {
+        if (!data) return;
+        window.AppStore.data = data;
+        renderTemplatesList(data.templates);
 
-            if (data.settings && data.settings.daftar_tahun_ajaran && Array.isArray(data.settings.daftar_tahun_ajaran)) {
-                var dl = document.getElementById('list_tahun_ajaran_tpl');
-                if (dl) {
-                    dl.innerHTML = '';
-                    data.settings.daftar_tahun_ajaran.forEach(function(th) {
-                        var opt = document.createElement('option');
-                        opt.value = th;
-                        dl.appendChild(opt);
-                    });
-                }
+        if (data.settings && data.settings.daftar_tahun_ajaran && Array.isArray(data.settings.daftar_tahun_ajaran)) {
+            var dl = document.getElementById('list_tahun_ajaran_tpl');
+            if (dl) {
+                dl.innerHTML = '';
+                data.settings.daftar_tahun_ajaran.forEach(function(th) {
+                    var opt = document.createElement('option');
+                    opt.value = th;
+                    dl.appendChild(opt);
+                });
             }
-        })
-        .apiGetInitialData();
+        }
+    });
 });
 
 // Sync from contenteditable to hidden input and source
@@ -580,15 +583,13 @@ function confirmDeleteCurrentTemplate() {
 }
 
 function reloadTemplatesData(selectIdAfter) {
-    google.script.run
-        .withSuccessHandler(function(data) {
+    if (window.AppStore && window.AppStore.clearClientCache) window.AppStore.clearClientCache();
+    window.AppStore.loadInitialData(function(data) {
+        if (data) {
             window.AppStore.data = data;
             renderTemplatesList(data.templates, selectIdAfter);
-        })
-        .withFailureHandler(function(err) {
-            showGlobalNotificationDialog('Gagal Memuat Data', err.message || err, 'danger');
-        })
-        .apiGetInitialData();
+        }
+    }, true);
 }
 
 

@@ -37,7 +37,59 @@ function getAppUrl() {
 }
 window.getAppUrl = getAppUrl;
 
+function showNavigationProgress() {
+    try {
+        var bar = document.getElementById('globalNavProgressBar');
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'globalNavProgressBar';
+            bar.style.cssText = 'position:fixed;top:0;left:0;height:3px;width:0%;background:linear-gradient(90deg,#4f46e5,#06b6d4,#10b981);z-index:9999999;box-shadow:0 0 10px rgba(79,70,229,0.7);transition:width 0.35s cubic-bezier(0.4,0,0.2,1),opacity 0.25s ease;pointer-events:none;';
+            document.body.appendChild(bar);
+        }
+        bar.style.opacity = '1';
+        bar.style.width = '35%';
+        setTimeout(function() { if (bar) bar.style.width = '75%'; }, 180);
+        setTimeout(function() { if (bar) bar.style.width = '90%'; }, 600);
+    } catch (e) {}
+}
+window.showNavigationProgress = showNavigationProgress;
+
+function completeNavigationProgress() {
+    try {
+        var bar = document.getElementById('globalNavProgressBar');
+        if (bar) {
+            bar.style.width = '100%';
+            setTimeout(function() {
+                if (bar) {
+                    bar.style.opacity = '0';
+                    setTimeout(function() {
+                        if (bar && bar.parentElement) bar.parentElement.removeChild(bar);
+                    }, 350);
+                }
+            }, 180);
+        }
+    } catch (e) {}
+}
+window.completeNavigationProgress = completeNavigationProgress;
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', completeNavigationProgress);
+} else {
+    completeNavigationProgress();
+}
+
+document.addEventListener('click', function(e) {
+    var el = e.target && e.target.closest('a, button');
+    if (!el) return;
+    var href = el.getAttribute('href') || '';
+    var onclick = el.getAttribute('onclick') || '';
+    if (href.indexOf('page=') !== -1 || onclick.indexOf('navigateTo') !== -1 || onclick.indexOf('openAdminPortal') !== -1) {
+        showNavigationProgress();
+    }
+}, true);
+
 function navigateTo(page, params) {
+    showNavigationProgress();
     var baseUrl = getAppUrl();
     var query = '?page=' + encodeURIComponent(page);
     if (params && typeof params === 'object') {
@@ -108,10 +160,105 @@ function openAdminPortal() {
 }
 window.openAdminPortal = openAdminPortal;
 
-// Universal State Container
+// Universal High-Speed State Container with Stale-While-Revalidate Caching
 window.AppStore = {
   data: null,
-  isLoaded: false
+  isLoaded: false,
+
+  loadInitialData: function(callback, forceRefresh) {
+    var self = this;
+
+    // A. Already loaded in memory
+    if (!forceRefresh && self.data && self.isLoaded) {
+      if (typeof callback === 'function') callback(self.data);
+      return;
+    }
+
+    // B. Check pre-rendered serverData from DOM
+    if (!forceRefresh) {
+      try {
+        var elPayload = document.getElementById('serverDataPayload') ||
+                        document.getElementById('serverDataDashboard') ||
+                        document.getElementById('serverDataGuru') ||
+                        document.getElementById('serverDataKelas') ||
+                        document.getElementById('serverDataMapel') ||
+                        document.getElementById('serverDataSiswa') ||
+                        document.getElementById('serverDataUsers');
+        if (elPayload && elPayload.textContent.trim()) {
+          var parsed = JSON.parse(elPayload.textContent.trim());
+          if (parsed && typeof parsed === 'object' && parsed.classes && parsed.classes.length > 0) {
+            self.data = parsed;
+            self.isLoaded = true;
+            try {
+              sessionStorage.setItem('sas_cache_bundle', JSON.stringify(parsed));
+              sessionStorage.setItem('sas_cache_time', String(Date.now()));
+            } catch (eStore) {}
+            if (typeof callback === 'function') callback(self.data);
+            setTimeout(function() { self.fetchFromServer(null, true); }, 1000);
+            return;
+          }
+        }
+      } catch (eDom) {}
+    }
+
+    // C. Check sessionStorage cache (<10 minutes old)
+    if (!forceRefresh) {
+      try {
+        var rawCache = sessionStorage.getItem('sas_cache_bundle');
+        var cacheTime = parseInt(sessionStorage.getItem('sas_cache_time') || '0', 10);
+        if (rawCache && (Date.now() - cacheTime < 600000)) {
+          var cached = JSON.parse(rawCache);
+          if (cached && cached.classes && cached.classes.length > 0) {
+            self.data = cached;
+            self.isLoaded = true;
+            if (typeof callback === 'function') callback(self.data);
+            setTimeout(function() { self.fetchFromServer(null, true); }, 500);
+            return;
+          }
+        }
+      } catch (eSession) {}
+    }
+
+    // D. Fetch from server
+    self.fetchFromServer(callback, false);
+  },
+
+  fetchFromServer: function(callback, isBackground) {
+    var self = this;
+    if (typeof google === 'undefined' || !google.script || !google.script.run) return;
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.success !== false) {
+          self.data = res;
+          self.isLoaded = true;
+          try {
+            sessionStorage.setItem('sas_cache_bundle', JSON.stringify(res));
+            sessionStorage.setItem('sas_cache_time', String(Date.now()));
+          } catch (eSave) {}
+          if (!isBackground && typeof callback === 'function') {
+            callback(res);
+          }
+        }
+      })
+      .withFailureHandler(function(err) {
+        if (!isBackground) {
+          if (typeof showGlobalToast === 'function') {
+            showGlobalToast('Gagal memuat data master: ' + (err.message || err), 'danger');
+          }
+        }
+      })
+      .apiGetInitialData();
+  },
+
+  clearClientCache: function() {
+    this.data = null;
+    this.isLoaded = false;
+    try {
+      sessionStorage.removeItem('sas_cache_bundle');
+      sessionStorage.removeItem('sas_cache_time');
+    } catch (e) {}
+  }
 };
 
 // Simple Signature Pad Class

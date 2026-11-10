@@ -443,6 +443,10 @@
 <?!= include('Modals'); ?>
 <?!= include('AppJS'); ?>
 
+<script type="text/template" id="serverDataPayload">
+<?!= (typeof serverData !== 'undefined' && serverData) ? JSON.stringify(serverData) : 'null' ?>
+</script>
+
 <script>
 var pad1 = null;
 var pad2 = null;
@@ -481,89 +485,100 @@ onDocumentReady(function() {
 });
 
 function loadInitialMasterData() {
-    google.script.run
-        .withSuccessHandler(function(data) {
-            window.AppStore.data = data;
-            window.AppStore.isLoaded = true;
+    window.AppStore.loadInitialData(function(data) {
+        populateBeritaAcaraMasterData(data);
+    });
+}
 
-            var classSelect = document.getElementById('class_id');
-            classSelect.innerHTML = '<option value="">-- Pilih Kelas Aktif --</option>';
-            var classes = (data && data.classes) || [];
-            classes.forEach(function(c) {
-                var opt = document.createElement('option');
-                opt.value = c.id;
-                opt.textContent = c.nama_kelas;
-                classSelect.appendChild(opt);
-            });
+function populateBeritaAcaraMasterData(data) {
+    if (!data) return;
+    window.AppStore.data = data;
+    window.AppStore.isLoaded = true;
 
-            var dlMapel = document.getElementById('datalist_mapel');
-            dlMapel.innerHTML = '';
-            var mapels = (data && data.mapels) || [];
-            mapels.forEach(function(m) {
-                var opt = document.createElement('option');
-                opt.value = m.nama_mapel;
-                opt.textContent = (m.kode_mapel ? '[' + m.kode_mapel + '] ' : '') + m.nama_mapel;
-                dlMapel.appendChild(opt);
-            });
+    var classSelect = document.getElementById('class_id');
+    if (classSelect) {
+        var currentVal = classSelect.value;
+        classSelect.innerHTML = '<option value="">-- Pilih Kelas Aktif --</option>';
+        var classes = (data && data.classes) || [];
+        classes.forEach(function(c) {
+            var opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.nama_kelas;
+            if (String(c.id) === String(currentVal)) opt.selected = true;
+            classSelect.appendChild(opt);
+        });
+    }
 
-            var dlGuru = document.getElementById('datalist_guru');
-            dlGuru.innerHTML = '';
-            var teachers = (data && data.teachers) || [];
-            teachers.forEach(function(g) {
-                var opt = document.createElement('option');
-                opt.value = g.nama;
-                dlGuru.appendChild(opt);
-            });
+    var dlMapel = document.getElementById('datalist_mapel');
+    if (dlMapel) {
+        dlMapel.innerHTML = '';
+        var mapels = (data && data.mapels) || [];
+        mapels.forEach(function(m) {
+            var opt = document.createElement('option');
+            opt.value = m.nama_mapel;
+            opt.textContent = (m.kode_mapel ? '[' + m.kode_mapel + '] ' : '') + m.nama_mapel;
+            dlMapel.appendChild(opt);
+        });
+    }
 
-            var selectTpl = document.getElementById('selectTemplate');
-            var templates = (data && data.templates) || [];
-            if (selectTpl) {
-                selectTpl.innerHTML = '';
-                var defaultTplId = '';
-                templates.forEach(function(t) {
+    var dlGuru = document.getElementById('datalist_guru');
+    if (dlGuru) {
+        dlGuru.innerHTML = '';
+        var teachers = (data && data.teachers) || [];
+        teachers.forEach(function(g) {
+            var opt = document.createElement('option');
+            opt.value = g.nama;
+            opt.setAttribute('data-nip', g.nip || '');
+            dlGuru.appendChild(opt);
+        });
+    }
+
+    var selectTpl = document.getElementById('selectTemplate');
+    var templates = (data && data.templates) || [];
+    if (selectTpl) {
+        var currTpl = selectTpl.value;
+        selectTpl.innerHTML = '';
+        var defaultTplId = '';
+        templates.forEach(function(t) {
+            var opt = document.createElement('option');
+            opt.value = t.id;
+            var isAktif = (String(t.aktif) === '1' || t.aktif === true || t.aktif === undefined || t.aktif === null);
+            opt.textContent = t.nama_ujian + ' (' + (t.tahun_ajaran || '-') + ')' + (isAktif ? ' [Aktif]' : '');
+            if (String(t.id) === String(currTpl)) opt.selected = true;
+            selectTpl.appendChild(opt);
+            if (!defaultTplId && isAktif) {
+                defaultTplId = t.id;
+            }
+        });
+        if (!defaultTplId && templates.length > 0) {
+            defaultTplId = templates[0].id;
+        }
+        if (defaultTplId && !currTpl) {
+            selectTpl.value = defaultTplId;
+            applyExamTemplate(defaultTplId);
+        }
+    }
+
+    if (data && data.settings) {
+        var s = data.settings;
+        if (s.tahun_ajaran_aktif && !document.getElementById('edit_id').value) {
+            document.getElementById('tahun_ajaran').value = s.tahun_ajaran_aktif;
+        }
+        if (s.daftar_tahun_ajaran && Array.isArray(s.daftar_tahun_ajaran)) {
+            var dlTh = document.getElementById('list_tahun_ajaran_ba');
+            if (dlTh) {
+                dlTh.innerHTML = '';
+                s.daftar_tahun_ajaran.forEach(function(th) {
                     var opt = document.createElement('option');
-                    opt.value = t.id;
-                    var isAktif = (String(t.aktif) === '1' || t.aktif === true || t.aktif === undefined || t.aktif === null);
-                    opt.textContent = t.nama_ujian + ' (' + (t.tahun_ajaran || '-') + ')' + (isAktif ? ' [Aktif]' : '');
-                    selectTpl.appendChild(opt);
-                    if (!defaultTplId && isAktif) {
-                        defaultTplId = t.id;
-                    }
+                    opt.value = th;
+                    dlTh.appendChild(opt);
                 });
-                if (!defaultTplId && templates.length > 0) {
-                    defaultTplId = templates[0].id;
-                }
-                if (defaultTplId) {
-                    selectTpl.value = defaultTplId;
-                    applyExamTemplate(defaultTplId);
-                }
             }
+        }
+        renderLiveKop(s);
+    }
 
-            if (data && data.settings) {
-                var s = data.settings;
-                if (s.tahun_ajaran_aktif && !document.getElementById('edit_id').value) {
-                    document.getElementById('tahun_ajaran').value = s.tahun_ajaran_aktif;
-                }
-                if (s.daftar_tahun_ajaran && Array.isArray(s.daftar_tahun_ajaran)) {
-                    var dlTh = document.getElementById('list_tahun_ajaran_ba');
-                    if (dlTh) {
-                        dlTh.innerHTML = '';
-                        s.daftar_tahun_ajaran.forEach(function(th) {
-                            var opt = document.createElement('option');
-                            opt.value = th;
-                            dlTh.appendChild(opt);
-                        });
-                    }
-                }
-                renderLiveKop(s);
-            }
-
-            updateLivePreview();
-        })
-        .withFailureHandler(function(err) {
-            showGlobalToast('Gagal memuat data master: ' + (err.message || err), 'danger');
-        })
-        .apiGetInitialData();
+    updateLivePreview();
 }
 
 function applyExamTemplate(tplId) {
@@ -1109,6 +1124,7 @@ function handleSaveBeritaAcara(e) {
             btn.disabled = false;
             btn.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Simpan ke Database';
             showGlobalNotificationDialog('Berhasil', 'Berita Acara berhasil disimpan ke database sekolah!', 'success');
+            if (window.AppStore && window.AppStore.clearClientCache) window.AppStore.clearClientCache();
         })
         .withFailureHandler(function(err) {
             btn.disabled = false;

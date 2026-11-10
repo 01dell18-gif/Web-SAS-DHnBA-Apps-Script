@@ -48,7 +48,68 @@ function putScriptCacheJson(key, data, optTtl) {
   }
 }
 
+/**
+ * Large Cache Handler (Chunking up to 500KB+ across 90KB parts)
+ */
+function putLargeScriptCacheJson(key, data, optTtl) {
+  try {
+    var str = JSON.stringify(data);
+    var ttl = optTtl || 1800;
+    var cache = CacheService.getScriptCache();
+    var CHUNK_SIZE = 90000;
+    if (str.length < CHUNK_SIZE) {
+      cache.put(key, str, ttl);
+      cache.remove(key + '_chunks');
+    } else {
+      var numChunks = Math.ceil(str.length / CHUNK_SIZE);
+      var chunkMap = {};
+      chunkMap[key + '_chunks'] = String(numChunks);
+      for (var c = 0; c < numChunks; c++) {
+        chunkMap[key + '_' + c] = str.substr(c * CHUNK_SIZE, CHUNK_SIZE);
+      }
+      cache.putAll(chunkMap, ttl);
+      cache.remove(key);
+    }
+  } catch (e) {
+    Logger.log('putLargeScriptCacheJson error (' + key + '): ' + e);
+  }
+}
+
+function getLargeScriptCacheJson(key) {
+  try {
+    var cache = CacheService.getScriptCache();
+    var numChunksStr = cache.get(key + '_chunks');
+    if (numChunksStr) {
+      var numChunks = parseInt(numChunksStr, 10);
+      var keys = [];
+      for (var c = 0; c < numChunks; c++) {
+        keys.push(key + '_' + c);
+      }
+      var map = cache.getAll(keys);
+      var fullStr = '';
+      for (var i = 0; i < numChunks; i++) {
+        var part = map[key + '_' + i];
+        if (!part) return null; // Missing chunk, cache miss
+        fullStr += part;
+      }
+      return JSON.parse(fullStr);
+    }
+    var raw = cache.get(key);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    Logger.log('getLargeScriptCacheJson error (' + key + '): ' + e);
+  }
+  return null;
+}
+
 function ensureAllMasterSheetsSeeded() {
+  // 1. Fast Check via ScriptProperties (<0.5ms)
+  try {
+    var seededProp = PropertiesService.getScriptProperties().getProperty('sas_db_seeded');
+    if (seededProp === '1') return;
+  } catch (eProp) {}
+
+  // 2. Fallback check via ScriptCache
   try {
     var isSeeded = getScriptCacheJson('sas_seeded_flag');
     if (isSeeded === true) return;
@@ -103,6 +164,7 @@ function ensureAllMasterSheetsSeeded() {
   }
 
   try {
+    PropertiesService.getScriptProperties().setProperty('sas_db_seeded', '1');
     putScriptCacheJson('sas_seeded_flag', true, 21600);
   } catch (e7) {}
 }
@@ -343,6 +405,12 @@ function invalidateCaches() {
       'sas_settings_map',
       'sas_seeded_flag',
       'sas_initial_data_bundle',
+      'sas_initial_data_bundle_chunks',
+      'sas_initial_data_bundle_0',
+      'sas_initial_data_bundle_1',
+      'sas_initial_data_bundle_2',
+      'sas_initial_data_bundle_3',
+      'sas_initial_data_bundle_4',
       'sas_tbl_' + SHEET_NAMES.SETTINGS,
       'sas_tbl_' + SHEET_NAMES.CLASSES,
       'sas_tbl_' + SHEET_NAMES.STUDENTS,
@@ -1199,8 +1267,8 @@ function getSettingsMap() {
  */
 function apiGetInitialData() {
   try {
-    // 1. Check ScriptCache for the assembled bundle
-    var cached = getScriptCacheJson('sas_initial_data_bundle');
+    // 1. Check ScriptCache for the assembled bundle (<10ms)
+    var cached = getLargeScriptCacheJson('sas_initial_data_bundle');
     if (cached && typeof cached === 'object' && cached.classes && cached.classes.length > 0) {
       return cached;
     }
@@ -1307,30 +1375,113 @@ function apiGetInitialData() {
       };
     });
 
+    var safeStudents = (students || []).map(function(s) {
+      return {
+        id: s.id,
+        class_id: s.class_id,
+        nama_kelas: s.nama_kelas || '',
+        nis: s.nis || '',
+        nama: s.nama || '',
+        jenis_kelamin: s.jenis_kelamin || 'L',
+        no_peserta: s.no_peserta || '',
+        ruang: s.ruang || '',
+        aktif: (s.aktif !== undefined) ? s.aktif : 1
+      };
+    });
+
+    // Strip heavy student data from list bundle while preserving signatures & headers
+    var safeAbsensi = (absensi || []).map(function(a) {
+      return {
+        id: a.id,
+        nama_ujian: a.nama_ujian || '',
+        tahun_ajaran: a.tahun_ajaran || '',
+        semester: a.semester || '',
+        class_id: a.class_id || '',
+        nama_kelas: a.nama_kelas || '',
+        tingkat: a.tingkat || '',
+        mata_pelajaran: a.mata_pelajaran || '',
+        sesi: a.sesi || '1',
+        ruang: a.ruang || '',
+        tanggal_ujian: a.tanggal_ujian || '',
+        jam_mulai: a.jam_mulai || '',
+        jam_selesai: a.jam_selesai || '',
+        peserta_hadir: a.peserta_hadir || 0,
+        peserta_dispensasi: a.peserta_dispensasi || 0,
+        peserta_izin: a.peserta_izin || 0,
+        peserta_sakit: a.peserta_sakit || 0,
+        peserta_tidak_hadir: a.peserta_tidak_hadir || 0,
+        total_peserta: a.total_peserta || 0,
+        nama_pengawas_1: a.nama_pengawas_1 || '',
+        nip_pengawas_1: a.nip_pengawas_1 || '',
+        nama_pengawas_2: a.nama_pengawas_2 || '',
+        nip_pengawas_2: a.nip_pengawas_2 || '',
+        signature_mode: a.signature_mode || 'digital',
+        ttd_pengawas_1: a.ttd_pengawas_1 || '',
+        ttd_pengawas_2: a.ttd_pengawas_2 || '',
+        has_ttd_1: !!a.ttd_pengawas_1,
+        has_ttd_2: !!a.ttd_pengawas_2,
+        created_at: a.created_at || ''
+      };
+    });
+
+    // Strip heavy photo base64 strings from general list bundle
+    var safeBeritaAcara = (beritaAcara || []).map(function(b) {
+      return {
+        id: b.id,
+        template_id: b.template_id || '',
+        nama_ujian: b.nama_ujian || '',
+        tahun_ajaran: b.tahun_ajaran || '',
+        semester: b.semester || '',
+        class_id: b.class_id || '',
+        nama_kelas: b.nama_kelas || '',
+        tingkat: b.tingkat || '',
+        mata_pelajaran: b.mata_pelajaran || '',
+        tanggal_ujian: b.tanggal_ujian || '',
+        jam_mulai: b.jam_mulai || '',
+        jam_selesai: b.jam_selesai || '',
+        ruang: b.ruang || '',
+        peserta_seharusnya: b.peserta_seharusnya || 0,
+        peserta_hadir: b.peserta_hadir || 0,
+        peserta_tidak_hadir: b.peserta_tidak_hadir || 0,
+        blangko_berita_acara: b.blangko_berita_acara || 1,
+        blangko_daftar_hadir: b.blangko_daftar_hadir || 1,
+        catatan_pelaksanaan: b.catatan_pelaksanaan || '',
+        nama_pengawas_1: b.nama_pengawas_1 || '',
+        nip_pengawas_1: b.nip_pengawas_1 || '',
+        nama_pengawas_2: b.nama_pengawas_2 || '',
+        nip_pengawas_2: b.nip_pengawas_2 || '',
+        signature_mode: b.signature_mode || 'digital',
+        ttd_pengawas_1: b.ttd_pengawas_1 || '',
+        ttd_pengawas_2: b.ttd_pengawas_2 || '',
+        has_photos: !!(b.foto_dokumentasi && b.foto_dokumentasi !== '[]'),
+        created_at: b.created_at || ''
+      };
+    });
+
     var safeLogs = (Array.isArray(logs) ? logs : []).slice(-20);
 
     var result = {
       success: true,
       settings: settings,
       classes: classes || [],
-      students: students || [],
+      students: safeStudents,
       teachers: teachers || [],
       mapels: mapels || [],
       templates: templates || [],
       users: sanitizedUsers || [],
-      absensi: absensi || [],
-      berita_acara: beritaAcara || [],
+      absensi: safeAbsensi,
+      berita_acara: safeBeritaAcara,
       logs: safeLogs,
       stats: {
         classesCount: (classes || []).length,
-        studentsCount: (students || []).length,
+        studentsCount: (safeStudents || []).length,
         teachersCount: (teachers || []).length,
         mapelsCount: (mapels || []).length,
         usersCount: (sanitizedUsers || []).length
       }
     };
 
-    putScriptCacheJson('sas_initial_data_bundle', result, 1800);
+    putLargeScriptCacheJson('sas_initial_data_bundle', result, 1800);
     return result;
   } catch (err) {
     Logger.log('Critical error in apiGetInitialData: ' + err.message);
@@ -1348,6 +1499,33 @@ function apiGetInitialData() {
       berita_acara: [],
       logs: []
     };
+  }
+}
+
+/**
+ * Fast Dedicated Document Detail RPC (Loads full document + photos/signatures on-demand)
+ */
+function apiGetDocumentDetail(type, id) {
+  try {
+    var tbl = (type === 'absensi') ? SHEET_NAMES.ABSENSI : SHEET_NAMES.BERITA_ACARA;
+    var rows = readTable(tbl);
+    var found = null;
+    for (var i = 0; i < rows.length; i++) {
+      if (String(rows[i].id) === String(id)) {
+        found = rows[i];
+        break;
+      }
+    }
+    return {
+      success: true,
+      type: type,
+      id: id,
+      document: found,
+      settings: getSettingsMap(),
+      templates: readTable(SHEET_NAMES.TEMPLATES)
+    };
+  } catch (err) {
+    return { success: false, error: err.message };
   }
 }
 
@@ -2257,6 +2435,7 @@ function setupSpreadsheetDatabase() {
 
 function apiForceReseedAllMasterData() {
   try {
+    try { PropertiesService.getScriptProperties().deleteProperty('sas_db_seeded'); } catch (eProp) {}
     seedDefaultSettings();
     seedDefaultClasses();
     seedDefaultStudents();
@@ -2264,6 +2443,7 @@ function apiForceReseedAllMasterData() {
     seedDefaultMapel();
     seedDefaultTemplate();
     seedDefaultUsers();
+    try { PropertiesService.getScriptProperties().setProperty('sas_db_seeded', '1'); } catch (eProp2) {}
     invalidateCaches();
     logActivity('RESEED_DATABASE', 'Inisialisasi ulang seluruh data master ke spreadsheet database');
     return {

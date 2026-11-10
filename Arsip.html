@@ -106,6 +106,10 @@
 <?!= include('Modals'); ?>
 <?!= include('AppJS'); ?>
 
+<script type="text/template" id="serverDataPayload">
+<?!= (typeof serverData !== 'undefined' && serverData) ? JSON.stringify(serverData) : 'null' ?>
+</script>
+
 <script>
 var allSessions = [];
 
@@ -114,67 +118,72 @@ onDocumentReady(function() {
 });
 
 function loadArsipData() {
-    google.script.run
-        .withSuccessHandler(function(data) {
-            window.AppStore.data = data;
-            
-            var filterKelas = document.getElementById('filterKelas');
-            if (filterKelas) {
-                filterKelas.innerHTML = '<option value="">Semua Rombel</option>';
-                ((data && data.classes) || []).forEach(function(c) {
-                    var opt = document.createElement('option');
-                    opt.value = c.id;
-                    opt.textContent = c.nama_kelas;
-                    filterKelas.appendChild(opt);
-                });
-            }
+    window.AppStore.loadInitialData(function(data) {
+        populateArsipData(data);
+    });
+}
 
-            var map = {};
-            (data.absensi || []).forEach(function(a) {
-                var key = a.tanggal_ujian + '||' + a.class_id + '||' + (a.mata_pelajaran || '').trim().toLowerCase();
-                if (!map[key]) {
-                    map[key] = {
-                        tanggal: a.tanggal_ujian,
-                        class_id: a.class_id,
-                        nama_kelas: a.nama_kelas,
-                        mata_pelajaran: a.mata_pelajaran,
-                        ruang: a.ruang || '-',
-                        sesi: a.sesi || '1',
-                        pengawas: a.nama_pengawas_1 || '-',
-                        dh: a,
-                        ba: null
-                    };
-                } else {
-                    map[key].dh = a;
-                }
-            });
+function populateArsipData(data) {
+    if (!data) return;
+    window.AppStore.data = data;
+    
+    var filterKelas = document.getElementById('filterKelas');
+    if (filterKelas) {
+        var currCid = filterKelas.value;
+        filterKelas.innerHTML = '<option value="">Semua Rombel</option>';
+        ((data && data.classes) || []).forEach(function(c) {
+            var opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.nama_kelas;
+            if (String(c.id) === String(currCid)) opt.selected = true;
+            filterKelas.appendChild(opt);
+        });
+    }
 
-            (data.berita_acara || []).forEach(function(b) {
-                var key = b.tanggal_ujian + '||' + b.class_id + '||' + (b.mata_pelajaran || '').trim().toLowerCase();
-                if (!map[key]) {
-                    map[key] = {
-                        tanggal: b.tanggal_ujian,
-                        class_id: b.class_id,
-                        nama_kelas: b.nama_kelas,
-                        mata_pelajaran: b.mata_pelajaran,
-                        ruang: b.ruang || '-',
-                        sesi: '1',
-                        pengawas: b.nama_pengawas_1 || '-',
-                        dh: null,
-                        ba: b
-                    };
-                } else {
-                    map[key].ba = b;
-                }
-            });
+    var map = {};
+    (data.absensi || []).forEach(function(a) {
+        var key = a.tanggal_ujian + '||' + a.class_id + '||' + (a.mata_pelajaran || '').trim().toLowerCase();
+        if (!map[key]) {
+            map[key] = {
+                tanggal: a.tanggal_ujian,
+                class_id: a.class_id,
+                nama_kelas: a.nama_kelas,
+                mata_pelajaran: a.mata_pelajaran,
+                ruang: a.ruang || '-',
+                sesi: a.sesi || '1',
+                pengawas: a.nama_pengawas_1 || '-',
+                dh: a,
+                ba: null
+            };
+        } else {
+            map[key].dh = a;
+        }
+    });
 
-            allSessions = Object.values(map).sort(function(x, y) {
-                return (y.tanggal || '').localeCompare(x.tanggal || '');
-            });
+    (data.berita_acara || []).forEach(function(b) {
+        var key = b.tanggal_ujian + '||' + b.class_id + '||' + (b.mata_pelajaran || '').trim().toLowerCase();
+        if (!map[key]) {
+            map[key] = {
+                tanggal: b.tanggal_ujian,
+                class_id: b.class_id,
+                nama_kelas: b.nama_kelas,
+                mata_pelajaran: b.mata_pelajaran,
+                ruang: b.ruang || '-',
+                sesi: '1',
+                pengawas: b.nama_pengawas_1 || '-',
+                dh: null,
+                ba: b
+            };
+        } else {
+            map[key].ba = b;
+        }
+    });
 
-            filterArchives();
-        })
-        .apiGetInitialData();
+    allSessions = Object.values(map).sort(function(x, y) {
+        return (y.tanggal || '').localeCompare(x.tanggal || '');
+    });
+
+    filterArchives();
 }
 
 function filterArchives() {

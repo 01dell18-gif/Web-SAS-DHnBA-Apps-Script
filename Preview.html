@@ -56,12 +56,29 @@ onDocumentReady(function() {
     var type = serverType || urlParams.get('type') || 'absensi';
     var id = serverId || urlParams.get('id');
 
+    // Fast Single-Document RPC with full images & detail
     google.script.run
-        .withSuccessHandler(function(data) {
-            window.AppStore.data = data;
-            renderDocument(type, id);
+        .withSuccessHandler(function(res) {
+            if (res && res.success && res.document) {
+                window.AppStore.data = {
+                    settings: res.settings || {},
+                    templates: res.templates || [],
+                    absensi: (type === 'absensi') ? [res.document] : [],
+                    berita_acara: (type === 'berita-acara' || type === 'berita_acara') ? [res.document] : []
+                };
+                renderDocument(type, id);
+            } else {
+                window.AppStore.loadInitialData(function(data) {
+                    renderDocument(type, id);
+                });
+            }
         })
-        .apiGetInitialData();
+        .withFailureHandler(function() {
+            window.AppStore.loadInitialData(function(data) {
+                renderDocument(type, id);
+            });
+        })
+        .apiGetDocumentDetail(type, id);
 });
 
 function formatIndoDate(dateStr) {
