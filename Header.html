@@ -5,31 +5,31 @@ window.toggleAdminSidebar = function(e) {
     }
     var body = document.body;
     var sb = document.getElementById('adminSidebar');
+    var bd = document.getElementById('adminSidebarBackdrop');
     if (window.innerWidth <= 900) {
         body.classList.remove('sidebar-collapsed');
         var isOpen = body.classList.toggle('mobile-sidebar-open');
-        if (sb) {
-            sb.classList.toggle('show');
-            if (isOpen) {
-                sb.style.setProperty('display', 'flex', 'important');
-                sb.style.setProperty('visibility', 'visible', 'important');
-                sb.style.setProperty('opacity', '1', 'important');
-                sb.style.setProperty('pointer-events', 'auto', 'important');
-            } else {
-                sb.style.setProperty('display', 'none', 'important');
-            }
-        }
+        if (sb) sb.classList.toggle('show', isOpen);
+        if (bd) bd.classList.toggle('show', isOpen);
     } else {
         body.classList.remove('mobile-sidebar-open');
-        if (sb) {
-            sb.style.display = '';
-            sb.style.visibility = '';
-            sb.style.opacity = '';
-            sb.style.pointerEvents = '';
-        }
+        if (sb) sb.classList.remove('show');
+        if (bd) bd.classList.remove('show');
         var isCollapsed = body.classList.toggle('sidebar-collapsed');
         try { localStorage.setItem('admin_sidebar_collapsed', isCollapsed ? 'true' : 'false'); } catch (err) {}
     }
+    return false;
+};
+
+window.closeAdminSidebar = function(e) {
+    if (e) {
+        try { e.preventDefault(); e.stopPropagation(); } catch (err) {}
+    }
+    document.body.classList.remove('mobile-sidebar-open');
+    var sb = document.getElementById('adminSidebar');
+    if (sb) sb.classList.remove('show');
+    var bd = document.getElementById('adminSidebarBackdrop');
+    if (bd) bd.classList.remove('show');
     return false;
 };
 </script>
@@ -71,10 +71,10 @@ window.toggleAdminSidebar = function(e) {
         <button type="button" class="btn btn-secondary btn-sm" id="btnHapusCacheWeb" onclick="hapusCacheWeb(event)" title="Hapus Cache & Muat Ulang Data" aria-label="Hapus Cache" style="padding: 0.45rem 0.65rem; border-radius: var(--radius-sm); display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
             <i class="bi bi-trash3"></i>
         </button>
-        <a href="<?= appUrl ?>?page=index" target="_top" onclick="navigateTo('index'); return false;" class="btn btn-secondary btn-sm" title="Buka Halaman Publik">
+        <a href="<?= appUrl ?>?page=index" target="_top" onclick="navigateTo('index'); return false;" class="btn btn-secondary btn-sm btn-header-web-publik" title="Buka Halaman Publik">
             <i class="bi bi-globe2"></i> <span>Web Publik</span>
         </a>
-        <button type="button" class="btn btn-danger-soft btn-sm" onclick="logoutAdmin()" title="Keluar dari sesi admin">
+        <button type="button" class="btn btn-danger-soft btn-sm btn-header-logout" onclick="logoutAdmin()" title="Keluar dari sesi admin">
             <i class="bi bi-box-arrow-right"></i> <span>Keluar</span>
         </button>
     </div>

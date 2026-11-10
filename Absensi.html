@@ -209,7 +209,7 @@
                                     <label class="form-label" for="nip_pengawas_2">NIP Pengawas 2</label>
                                     <input type="text" id="nip_pengawas_2" class="form-control" placeholder="NIP Pengawas 2" oninput="updateLivePreview()">
                                 </div>
-                                <div class="canvas-wrapper-box" id="canvasBox2">
+                                <div class="canvas-wrapper-box" id="canvasBox2" style="display: none;">
                                     <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                                         <span style="font-size: 0.75rem; color: var(--text-muted);">Goreskan tanda tangan:</span>
                                         <button type="button" class="btn btn-secondary btn-sm" onclick="clearSignature(2)" style="padding: 2px 8px; font-size: 0.75rem;">Hapus</button>
@@ -337,16 +337,16 @@
                     </table>
 
                     <!-- PENGESAHAN PENGAWAS -->
-                    <div style="display: flex; justify-content: space-between; font-size: 10pt; margin-top: 15px;">
-                        <div style="width: 45%; text-align: center;">
-                            <div>Pengawas 1,</div>
+                    <div style="display: flex; justify-content: flex-end; font-size: 10pt; margin-top: 15px;" id="prevPengawasContainer">
+                        <div style="width: 45%; text-align: center;" id="prevBoxPengawas1">
+                            <div id="prevLabelPengawas1">Pengawas,</div>
                             <div style="height: 65px; display: flex; align-items: center; justify-content: center;" id="prevSignBox1">
                                 <img id="prevSignImg1" src="" style="max-height: 60px; max-width: 150px; display: none;">
                             </div>
                             <div style="font-weight: bold; text-decoration: underline;" id="prevNamaPengawas1">( ........................................ )</div>
                             <div style="font-size: 8.5pt;" id="prevNipPengawas1">NIP. -</div>
                         </div>
-                        <div style="width: 45%; text-align: center;">
+                        <div style="width: 45%; text-align: center; display: none;" id="prevBoxPengawas2">
                             <div>Pengawas 2,</div>
                             <div style="height: 65px; display: flex; align-items: center; justify-content: center;" id="prevSignBox2">
                                 <img id="prevSignImg2" src="" style="max-height: 60px; max-width: 150px; display: none;">
@@ -680,12 +680,13 @@ function handlePengawasInput(num) {
 function toggleSignatureMode(mode) {
     var b1 = document.getElementById('canvasBox1');
     var b2 = document.getElementById('canvasBox2');
+    var p2 = document.getElementById('nama_pengawas_2') ? document.getElementById('nama_pengawas_2').value.trim() : '';
     if (mode === 'digital') {
-        b1.style.display = 'block';
-        b2.style.display = 'block';
+        if (b1) b1.style.display = 'block';
+        if (b2) b2.style.display = p2 ? 'block' : 'none';
     } else {
-        b1.style.display = 'none';
-        b2.style.display = 'none';
+        if (b1) b1.style.display = 'none';
+        if (b2) b2.style.display = 'none';
         clearSignature(1);
         clearSignature(2);
     }
@@ -736,10 +737,39 @@ function updateLivePreview() {
     var p2 = document.getElementById('nama_pengawas_2').value.trim();
     var nip2 = document.getElementById('nip_pengawas_2').value.trim();
 
-    document.getElementById('prevNamaPengawas1').textContent = p1 ? p1 : '( ........................................ )';
-    document.getElementById('prevNipPengawas1').textContent = nip1 ? 'NIP. ' + nip1 : 'NIP. -';
-    document.getElementById('prevNamaPengawas2').textContent = p2 ? p2 : '( ........................................ )';
-    document.getElementById('prevNipPengawas2').textContent = nip2 ? 'NIP. ' + nip2 : 'NIP. -';
+    // Toggle canvasBox2 jika dalam mode digital
+    var sigMode = (document.querySelector('input[name="signature_mode"]:checked') || {}).value || 'digital';
+    var canvasBox2 = document.getElementById('canvasBox2');
+    if (canvasBox2) {
+        if (sigMode === 'digital') {
+            canvasBox2.style.display = p2 ? 'block' : 'none';
+        } else {
+            canvasBox2.style.display = 'none';
+        }
+    }
+
+    var cont = document.getElementById('prevPengawasContainer');
+    var lblPengawas1 = document.getElementById('prevLabelPengawas1');
+    var bPengawas2 = document.getElementById('prevBoxPengawas2');
+
+    if (p2) {
+        if (cont) cont.style.justifyContent = 'space-between';
+        if (lblPengawas1) lblPengawas1.textContent = 'Pengawas 1,';
+        if (bPengawas2) bPengawas2.style.display = 'block';
+        document.getElementById('prevNamaPengawas1').textContent = p1 ? p1 : '( ........................................ )';
+        document.getElementById('prevNipPengawas1').textContent = nip1 ? 'NIP. ' + nip1 : 'NIP. -';
+        document.getElementById('prevNamaPengawas2').textContent = p2;
+        document.getElementById('prevNipPengawas2').textContent = nip2 ? 'NIP. ' + nip2 : 'NIP. -';
+    } else {
+        if (cont) cont.style.justifyContent = 'flex-end';
+        if (lblPengawas1) lblPengawas1.textContent = 'Pengawas,';
+        if (bPengawas2) bPengawas2.style.display = 'none';
+        document.getElementById('prevNamaPengawas1').textContent = p1 ? p1 : '( ........................................ )';
+        document.getElementById('prevNipPengawas1').textContent = nip1 ? 'NIP. ' + nip1 : 'NIP. -';
+        if (pad2 && !pad2.isEmpty()) pad2.clear();
+        var img2 = document.getElementById('prevSignImg2');
+        if (img2) img2.style.display = 'none';
+    }
 }
 
 function switchMobileTab(tab) {
@@ -871,9 +901,11 @@ function exportAbsensiExcel() {
     var waktuStr = (jamMulai && jamSelesai) ? (jamMulai + ' - ' + jamSelesai + ' WITA (Sesi ' + sesi + ')') : ('Sesi ' + sesi);
     var ruang = document.getElementById('ruang').value.trim() || 'Lab 1';
 
+    var rawP2 = document.getElementById('nama_pengawas_2') ? document.getElementById('nama_pengawas_2').value.trim() : '';
+    var hasP2 = !!rawP2;
     var p1 = document.getElementById('nama_pengawas_1').value.trim() || '-';
     var nip1 = document.getElementById('nip_pengawas_1').value.trim() || '-';
-    var p2 = document.getElementById('nama_pengawas_2').value.trim() || '-';
+    var p2 = rawP2 || '-';
     var nip2 = document.getElementById('nip_pengawas_2').value.trim() || '-';
 
     var filename = 'Daftar_Hadir_' + namaKelas.replace(/\s+/g, '_') + '_' + mapel.replace(/\s+/g, '_') + '.xlsx';
@@ -937,40 +969,66 @@ function exportAbsensiExcel() {
 
     // 6. PENGESAHAN PENGAWAS
     var rP = aoa.length;
-    if (includeTtd) {
-        aoa.push(['Pengawas 1,', '', '', 'Pengawas 2,', '']);
-        merges.push({ s: { r: rP, c: 0 }, e: { r: rP, c: 1 } });
-        merges.push({ s: { r: rP, c: 3 }, e: { r: rP, c: 4 } });
+    var rightColStart = includeTtd ? 3 : 2;
+    var rightColEnd = includeTtd ? 4 : 3;
 
-        aoa.push([]);
-        aoa.push([]);
+    if (hasP2) {
+        if (includeTtd) {
+            aoa.push(['Pengawas 1,', '', '', 'Pengawas 2,', '']);
+            merges.push({ s: { r: rP, c: 0 }, e: { r: rP, c: 1 } });
+            merges.push({ s: { r: rP, c: 3 }, e: { r: rP, c: 4 } });
 
-        var rNama = aoa.length;
-        aoa.push([p1, '', '', p2, '']);
-        merges.push({ s: { r: rNama, c: 0 }, e: { r: rNama, c: 1 } });
-        merges.push({ s: { r: rNama, c: 3 }, e: { r: rNama, c: 4 } });
+            aoa.push([]);
+            aoa.push([]);
 
-        var rNip = aoa.length;
-        aoa.push(['NIP. ' + nip1, '', '', 'NIP. ' + nip2, '']);
-        merges.push({ s: { r: rNip, c: 0 }, e: { r: rNip, c: 1 } });
-        merges.push({ s: { r: rNip, c: 3 }, e: { r: rNip, c: 4 } });
+            var rNama = aoa.length;
+            aoa.push([p1, '', '', p2, '']);
+            merges.push({ s: { r: rNama, c: 0 }, e: { r: rNama, c: 1 } });
+            merges.push({ s: { r: rNama, c: 3 }, e: { r: rNama, c: 4 } });
+
+            var rNip = aoa.length;
+            aoa.push(['NIP. ' + nip1, '', '', 'NIP. ' + nip2, '']);
+            merges.push({ s: { r: rNip, c: 0 }, e: { r: rNip, c: 1 } });
+            merges.push({ s: { r: rNip, c: 3 }, e: { r: rNip, c: 4 } });
+        } else {
+            aoa.push(['Pengawas 1,', '', 'Pengawas 2,', '']);
+            merges.push({ s: { r: rP, c: 0 }, e: { r: rP, c: 1 } });
+            merges.push({ s: { r: rP, c: 2 }, e: { r: rP, c: 3 } });
+
+            aoa.push([]);
+            aoa.push([]);
+
+            var rNama = aoa.length;
+            aoa.push([p1, '', p2, '']);
+            merges.push({ s: { r: rNama, c: 0 }, e: { r: rNama, c: 1 } });
+            merges.push({ s: { r: rNama, c: 2 }, e: { r: rNama, c: 3 } });
+
+            var rNip = aoa.length;
+            aoa.push(['NIP. ' + nip1, '', 'NIP. ' + nip2, '']);
+            merges.push({ s: { r: rNip, c: 0 }, e: { r: rNip, c: 1 } });
+            merges.push({ s: { r: rNip, c: 2 }, e: { r: rNip, c: 3 } });
+        }
     } else {
-        aoa.push(['Pengawas 1,', '', 'Pengawas 2,', '']);
-        merges.push({ s: { r: rP, c: 0 }, e: { r: rP, c: 1 } });
-        merges.push({ s: { r: rP, c: 2 }, e: { r: rP, c: 3 } });
+        // Hanya Pengawas 1, diletakkan di sebelah kanan sebagai 'Pengawas,'
+        var rowTtd = new Array(maxCol + 1).fill('');
+        rowTtd[rightColStart] = 'Pengawas,';
+        aoa.push(rowTtd);
+        merges.push({ s: { r: rP, c: rightColStart }, e: { r: rP, c: rightColEnd } });
 
         aoa.push([]);
         aoa.push([]);
 
         var rNama = aoa.length;
-        aoa.push([p1, '', p2, '']);
-        merges.push({ s: { r: rNama, c: 0 }, e: { r: rNama, c: 1 } });
-        merges.push({ s: { r: rNama, c: 2 }, e: { r: rNama, c: 3 } });
+        var rowNama = new Array(maxCol + 1).fill('');
+        rowNama[rightColStart] = p1;
+        aoa.push(rowNama);
+        merges.push({ s: { r: rNama, c: rightColStart }, e: { r: rNama, c: rightColEnd } });
 
         var rNip = aoa.length;
-        aoa.push(['NIP. ' + nip1, '', 'NIP. ' + nip2, '']);
-        merges.push({ s: { r: rNip, c: 0 }, e: { r: rNip, c: 1 } });
-        merges.push({ s: { r: rNip, c: 2 }, e: { r: rNip, c: 3 } });
+        var rowNip = new Array(maxCol + 1).fill('');
+        rowNip[rightColStart] = 'NIP. ' + nip1;
+        aoa.push(rowNip);
+        merges.push({ s: { r: rNip, c: rightColStart }, e: { r: rNip, c: rightColEnd } });
     }
 
     if (typeof XLSX !== 'undefined') {

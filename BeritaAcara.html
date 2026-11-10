@@ -267,7 +267,7 @@
                                     <label class="form-label" for="nip_pengawas_2">NIP Pengawas 2</label>
                                     <input type="text" id="nip_pengawas_2" class="form-control" placeholder="NIP Pengawas 2" oninput="updateLivePreview()">
                                 </div>
-                                <div class="canvas-wrapper-box" id="canvasBox2">
+                                <div class="canvas-wrapper-box" id="canvasBox2" style="display: none;">
                                     <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                                         <span style="font-size: 0.75rem; color: var(--text-muted);">Goreskan tanda tangan:</span>
                                         <button type="button" class="btn btn-secondary btn-sm" onclick="clearSignature(2)" style="padding: 2px 8px; font-size: 0.75rem;">Hapus</button>
@@ -337,16 +337,16 @@
                     <div style="text-align: center; margin-top: 20px; font-size: 11pt;">
                         <div>Yang membuat berita acara :</div>
                     </div>
-                    <div style="display: flex; justify-content: space-between; font-size: 10.5pt; margin-top: 15px;">
-                        <div style="width: 45%; text-align: center;">
-                            <div>Pengawas 1,</div>
+                    <div style="display: flex; justify-content: flex-end; font-size: 10.5pt; margin-top: 15px;" id="prevPengawasContainer">
+                        <div style="width: 45%; text-align: center;" id="prevBoxPengawas1">
+                            <div id="prevLabelPengawas1">Pengawas,</div>
                             <div style="height: 65px; display: flex; align-items: center; justify-content: center;">
                                 <img id="prevSignImg1" src="" style="max-height: 60px; max-width: 150px; display: none;">
                             </div>
                             <div style="font-weight: bold; text-decoration: underline;" id="prevNamaPengawas1">( ........................................ )</div>
                             <div style="font-size: 9pt;" id="prevNipPengawas1">NIP. -</div>
                         </div>
-                        <div style="width: 45%; text-align: center;">
+                        <div style="width: 45%; text-align: center; display: none;" id="prevBoxPengawas2">
                             <div>Pengawas 2,</div>
                             <div style="height: 65px; display: flex; align-items: center; justify-content: center;">
                                 <img id="prevSignImg2" src="" style="max-height: 60px; max-width: 150px; display: none;">
@@ -418,15 +418,15 @@
                     </div>
 
                     <!-- TTD HALAMAN 2 -->
-                    <div style="display: flex; justify-content: space-between; font-size: 10pt; margin-top: 20px;">
-                        <div style="width: 45%; text-align: center;">
-                            <div>Pengawas 1,</div>
+                    <div style="display: flex; justify-content: flex-end; font-size: 10pt; margin-top: 20px;" id="prevPage2PengawasContainer">
+                        <div style="width: 45%; text-align: center;" id="prevPage2BoxPengawas1">
+                            <div id="prevPage2LabelPengawas1">Pengawas,</div>
                             <div style="height: 55px; display: flex; align-items: center; justify-content: center;">
                                 <img id="prevPage2SignImg1" src="" style="max-height: 50px; max-width: 140px; display: none;">
                             </div>
                             <div style="font-weight: bold; text-decoration: underline;" id="prevPage2NamaPengawas1">( ........................................ )</div>
                         </div>
-                        <div style="width: 45%; text-align: center;">
+                        <div style="width: 45%; text-align: center; display: none;" id="prevPage2BoxPengawas2">
                             <div>Pengawas 2,</div>
                             <div style="height: 55px; display: flex; align-items: center; justify-content: center;">
                                 <img id="prevPage2SignImg2" src="" style="max-height: 50px; max-width: 140px; display: none;">
@@ -926,12 +926,13 @@ function handlePengawasInput(num) {
 function toggleSignatureMode(mode) {
     var b1 = document.getElementById('canvasBox1');
     var b2 = document.getElementById('canvasBox2');
+    var p2 = document.getElementById('nama_pengawas_2') ? document.getElementById('nama_pengawas_2').value.trim() : '';
     if (mode === 'digital') {
-        b1.style.display = 'block';
-        b2.style.display = 'block';
+        if (b1) b1.style.display = 'block';
+        if (b2) b2.style.display = p2 ? 'block' : 'none';
     } else {
-        b1.style.display = 'none';
-        b2.style.display = 'none';
+        if (b1) b1.style.display = 'none';
+        if (b2) b2.style.display = 'none';
         clearSignature(1);
         clearSignature(2);
     }
@@ -1063,13 +1064,61 @@ function updateLivePreview() {
     var p2 = document.getElementById('nama_pengawas_2').value.trim();
     var nip2 = document.getElementById('nip_pengawas_2').value.trim();
 
-    document.getElementById('prevNamaPengawas1').textContent = p1 ? p1 : '( ........................................ )';
-    document.getElementById('prevNipPengawas1').textContent = nip1 ? 'NIP. ' + nip1 : 'NIP. -';
-    document.getElementById('prevNamaPengawas2').textContent = p2 ? p2 : '( ........................................ )';
-    document.getElementById('prevNipPengawas2').textContent = nip2 ? 'NIP. ' + nip2 : 'NIP. -';
+    // Toggle canvasBox2 jika dalam mode digital
+    var sigMode = (document.querySelector('input[name="signature_mode"]:checked') || {}).value || 'digital';
+    var canvasBox2 = document.getElementById('canvasBox2');
+    if (canvasBox2) {
+        if (sigMode === 'digital') {
+            canvasBox2.style.display = p2 ? 'block' : 'none';
+        } else {
+            canvasBox2.style.display = 'none';
+        }
+    }
 
-    document.getElementById('prevPage2NamaPengawas1').textContent = p1 ? p1 : '( ........................................ )';
-    document.getElementById('prevPage2NamaPengawas2').textContent = p2 ? p2 : '( ........................................ )';
+    var cont1 = document.getElementById('prevPengawasContainer');
+    var lblPengawas1 = document.getElementById('prevLabelPengawas1');
+    var bPengawas2 = document.getElementById('prevBoxPengawas2');
+
+    var cont2 = document.getElementById('prevPage2PengawasContainer');
+    var lblPage2Pengawas1 = document.getElementById('prevPage2LabelPengawas1');
+    var bPage2Pengawas2 = document.getElementById('prevPage2BoxPengawas2');
+
+    if (p2) {
+        if (cont1) cont1.style.justifyContent = 'space-between';
+        if (lblPengawas1) lblPengawas1.textContent = 'Pengawas 1,';
+        if (bPengawas2) bPengawas2.style.display = 'block';
+
+        if (cont2) cont2.style.justifyContent = 'space-between';
+        if (lblPage2Pengawas1) lblPage2Pengawas1.textContent = 'Pengawas 1,';
+        if (bPage2Pengawas2) bPage2Pengawas2.style.display = 'block';
+
+        document.getElementById('prevNamaPengawas1').textContent = p1 ? p1 : '( ........................................ )';
+        document.getElementById('prevNipPengawas1').textContent = nip1 ? 'NIP. ' + nip1 : 'NIP. -';
+        document.getElementById('prevNamaPengawas2').textContent = p2;
+        document.getElementById('prevNipPengawas2').textContent = nip2 ? 'NIP. ' + nip2 : 'NIP. -';
+
+        document.getElementById('prevPage2NamaPengawas1').textContent = p1 ? p1 : '( ........................................ )';
+        document.getElementById('prevPage2NamaPengawas2').textContent = p2;
+    } else {
+        if (cont1) cont1.style.justifyContent = 'flex-end';
+        if (lblPengawas1) lblPengawas1.textContent = 'Pengawas,';
+        if (bPengawas2) bPengawas2.style.display = 'none';
+
+        if (cont2) cont2.style.justifyContent = 'flex-end';
+        if (lblPage2Pengawas1) lblPage2Pengawas1.textContent = 'Pengawas,';
+        if (bPage2Pengawas2) bPage2Pengawas2.style.display = 'none';
+
+        document.getElementById('prevNamaPengawas1').textContent = p1 ? p1 : '( ........................................ )';
+        document.getElementById('prevNipPengawas1').textContent = nip1 ? 'NIP. ' + nip1 : 'NIP. -';
+
+        document.getElementById('prevPage2NamaPengawas1').textContent = p1 ? p1 : '( ........................................ )';
+
+        if (pad2 && !pad2.isEmpty()) pad2.clear();
+        var img2_1 = document.getElementById('prevSignImg2');
+        var img2_2 = document.getElementById('prevPage2SignImg2');
+        if (img2_1) img2_1.style.display = 'none';
+        if (img2_2) img2_2.style.display = 'none';
+    }
 }
 
 function handleSaveBeritaAcara(e) {

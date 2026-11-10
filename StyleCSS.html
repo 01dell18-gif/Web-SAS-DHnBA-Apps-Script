@@ -1250,14 +1250,15 @@ textarea.form-control {
     animation: fadeInUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+.sidebar-mobile-header,
+.admin-sidebar-backdrop,
+.admin-bottom-nav {
+    display: none;
+}
+
 @media (max-width: 900px) {
     .admin-sidebar-layout {
         flex-direction: column;
-    }
-    .admin-sidebar {
-        width: 100%;
-        border-right: none;
-        border-bottom: 1px solid var(--border);
     }
 }
 
@@ -2063,7 +2064,7 @@ body.sidebar-collapsed .admin-main {
     max-width: 100% !important;
 }
 
-/* Mobile Sidebar & Header Toggle State */
+/* Mobile Sidebar Drawer & Bottom Navigation (Admin Mode) */
 @media (max-width: 900px) {
     .admin-navbar {
         padding: 0.5rem 0.85rem !important;
@@ -2083,36 +2084,186 @@ body.sidebar-collapsed .admin-main {
         order: -1;
         padding-left: 0;
     }
+    /* Sembunyikan tombol header yang sudah dipindahkan ke bottom nav pada mode mobile */
+    .admin-navbar .btn-sidebar-toggle,
+    .admin-navbar .btn-header-web-publik,
+    .admin-navbar .btn-header-logout {
+        display: none !important;
+    }
+
     .admin-sidebar-layout {
         flex-direction: column;
     }
-    body.sidebar-collapsed .admin-sidebar {
-        width: 100% !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-        pointer-events: auto !important;
-    }
+
+    /* Admin Sidebar sebagai Offcanvas Drawer dari Kiri */
     .admin-sidebar {
-        display: none;
-        width: 100% !important;
-        min-width: 100% !important;
-        max-width: 100% !important;
-        border-right: none !important;
-        border-bottom: 1px solid var(--border) !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        width: 290px !important;
+        max-width: 85vw !important;
+        height: 100vh !important;
         background: #ffffff !important;
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
-        z-index: 99 !important;
+        z-index: 100000 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        box-shadow: none !important;
+        border-right: 1px solid #e2e8f0 !important;
+        border-bottom: none !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        transform: translateX(-100%) !important;
+        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        padding: 0 0.5rem 2rem 0.5rem !important;
     }
+
     body.mobile-sidebar-open .admin-sidebar,
     .admin-sidebar.show {
-        display: flex !important;
+        transform: translateX(0) !important;
         visibility: visible !important;
+        pointer-events: auto !important;
+        box-shadow: 10px 0 35px rgba(15, 23, 42, 0.25) !important;
+    }
+
+    /* Header Drawer di Mobile */
+    .sidebar-mobile-header {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 0.85rem;
+        margin: 0 -0.5rem 0.85rem -0.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        background: #f8fafc;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    .sidebar-mobile-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: #0f172a;
+    }
+    .btn-close-sidebar {
+        background: transparent;
+        border: none;
+        color: #64748b;
+        font-size: 1.15rem;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .btn-close-sidebar:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+
+    /* Backdrop Drawer */
+    .admin-sidebar-backdrop {
+        display: block !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        background: rgba(15, 23, 42, 0.45) !important;
+        backdrop-filter: blur(2px) !important;
+        -webkit-backdrop-filter: blur(2px) !important;
+        z-index: 99999 !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        transition: opacity 0.25s ease !important;
+    }
+    body.mobile-sidebar-open .admin-sidebar-backdrop,
+    .admin-sidebar-backdrop.show {
         opacity: 1 !important;
         pointer-events: auto !important;
+    }
+
+    /* Bottom Navigation Bar Admin */
+    .admin-bottom-nav {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
         width: 100% !important;
-        min-width: 100% !important;
-        max-width: 100% !important;
-        animation: slideDownNav 0.2s ease-out !important;
+        height: 60px !important;
+        background: #ffffff !important;
+        border-top: 1.5px solid #e2e8f0 !important;
+        box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08) !important;
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-around !important;
+        align-items: stretch !important;
+        padding: 0 !important;
+        padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+        margin: 0 !important;
+        z-index: 99990 !important;
+    }
+
+    .admin-bottom-nav-item {
+        flex: 1 1 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        height: 100% !important;
+        padding: 5px 2px !important;
+        margin: 0 !important;
+        gap: 2px !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        color: #64748b !important;
+        text-decoration: none !important;
+        font-size: 0.65rem !important;
+        font-weight: 500 !important;
+        line-height: 1.1 !important;
+        letter-spacing: -0.01em !important;
+        white-space: nowrap !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease !important;
+    }
+    .admin-bottom-nav-item i {
+        font-size: 1.25rem !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+        display: block !important;
+        transition: transform 0.15s ease !important;
+    }
+    .admin-bottom-nav-item:hover {
+        color: var(--primary) !important;
+        background: rgba(79, 70, 229, 0.04) !important;
+    }
+    .admin-bottom-nav-item.active {
+        color: var(--primary) !important;
+        font-weight: 700 !important;
+    }
+    .admin-bottom-nav-item.active i {
+        color: var(--primary) !important;
+        transform: translateY(-1px) scale(1.08) !important;
+    }
+    .admin-bottom-nav-item.nav-item-logout:hover {
+        color: #ef4444 !important;
+    }
+
+    /* Padding bawah konten agar tidak tertutup bottom bar admin */
+    .admin-main,
+    .admin-content,
+    .admin-sidebar-layout {
+        padding-bottom: calc(75px + env(safe-area-inset-bottom, 0px)) !important;
     }
 }
 

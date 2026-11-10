@@ -1,5 +1,16 @@
 <!-- Admin Sidebar Tree Navigation -->
 <aside class="admin-sidebar" id="adminSidebar">
+    <!-- Mobile Sidebar Drawer Header -->
+    <div class="sidebar-mobile-header">
+        <div class="sidebar-mobile-title">
+            <i class="bi bi-grid-fill" style="color: var(--primary);"></i>
+            <span>Menu Navigasi</span>
+        </div>
+        <button type="button" class="btn-close-sidebar" onclick="closeAdminSidebar(event)" aria-label="Tutup Menu">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+
     <!-- Dashboard Standalone -->
     <a href="<?= appUrl ?>?page=dashboard" target="_top" onclick="navigateTo('dashboard'); return false;" class="admin-menu-item <?= (currentPage === 'dashboard') ? 'active' : '' ?>" style="margin-bottom: 0.5rem;">
         <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
@@ -104,3 +115,26 @@
         </div>
     </div>
 </aside>
+
+<!-- Mobile Drawer Backdrop Overlay -->
+<div class="admin-sidebar-backdrop" id="adminSidebarBackdrop" onclick="closeAdminSidebar(event)"></div>
+
+<!-- Admin Mobile Bottom Navigation Bar -->
+<nav class="admin-bottom-nav" id="adminBottomNav">
+    <button type="button" class="admin-bottom-nav-item" id="btnAdminNavMenu" onclick="toggleAdminSidebar(event)">
+        <i class="bi bi-list"></i>
+        <span>Menu</span>
+    </button>
+    <a href="<?= appUrl ?>?page=dashboard" target="_top" onclick="navigateTo('dashboard'); return false;" class="admin-bottom-nav-item <?= (currentPage === 'dashboard') ? 'active' : '' ?>">
+        <i class="bi bi-speedometer2"></i>
+        <span>Dashboard</span>
+    </a>
+    <a href="<?= appUrl ?>?page=index" target="_top" onclick="navigateTo('index'); return false;" class="admin-bottom-nav-item">
+        <i class="bi bi-globe2"></i>
+        <span>Web Publik</span>
+    </a>
+    <button type="button" class="admin-bottom-nav-item nav-item-logout" onclick="logoutAdmin()">
+        <i class="bi bi-box-arrow-right"></i>
+        <span>Keluar</span>
+    </button>
+</nav>

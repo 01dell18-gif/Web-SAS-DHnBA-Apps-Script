@@ -35,7 +35,7 @@
     <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
         <i class="bi bi-printer"></i> Cetak Dokumen / Simpan PDF
     </button>
-    <button type="button" class="btn btn-secondary btn-sm" onclick="window.close()">
+    <button type="button" class="btn btn-secondary btn-sm" onclick="closePreviewWindow()">
         <i class="bi bi-x-lg"></i> Tutup
     </button>
 </div>
@@ -224,10 +224,19 @@ function renderDocument(type, id) {
             '<td style="padding: 4px; background: #f1f5f9;">' + (rec.total_peserta || 0) + '</td>' +
             '</tr>' +
             '</table>' +
-            '<div style="display: flex; justify-content: space-between; font-size: 10pt; margin-top: 15px;">' +
-            '<div style="width: 45%; text-align: center;"><div>Pengawas 1,</div><div style="height: 65px; display: flex; align-items: center; justify-content: center;">' + signImg1 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (rec.nama_pengawas_1 || '( ........................................ )') + '</div><div style="font-size: 8.5pt;">NIP. ' + (rec.nip_pengawas_1 || '-') + '</div></div>' +
-            '<div style="width: 45%; text-align: center;"><div>Pengawas 2,</div><div style="height: 65px; display: flex; align-items: center; justify-content: center;">' + signImg2 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (rec.nama_pengawas_2 || '( ........................................ )') + '</div><div style="font-size: 8.5pt;">NIP. ' + (rec.nip_pengawas_2 || '-') + '</div></div>' +
-            '</div>' +
+            (function() {
+                var hasP2 = !!(rec.nama_pengawas_2 && rec.nama_pengawas_2.trim() && rec.nama_pengawas_2.trim() !== '-');
+                if (hasP2) {
+                    return '<div style="display: flex; justify-content: space-between; font-size: 10pt; margin-top: 15px;">' +
+                        '<div style="width: 45%; text-align: center;"><div>Pengawas 1,</div><div style="height: 65px; display: flex; align-items: center; justify-content: center;">' + signImg1 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (rec.nama_pengawas_1 || '( ........................................ )') + '</div><div style="font-size: 8.5pt;">NIP. ' + (rec.nip_pengawas_1 || '-') + '</div></div>' +
+                        '<div style="width: 45%; text-align: center;"><div>Pengawas 2,</div><div style="height: 65px; display: flex; align-items: center; justify-content: center;">' + signImg2 + '</div><div style="font-weight: bold; text-decoration: underline;">' + rec.nama_pengawas_2 + '</div><div style="font-size: 8.5pt;">NIP. ' + (rec.nip_pengawas_2 || '-') + '</div></div>' +
+                        '</div>';
+                } else {
+                    return '<div style="display: flex; justify-content: flex-end; font-size: 10pt; margin-top: 15px;">' +
+                        '<div style="width: 45%; text-align: center;"><div>Pengawas,</div><div style="height: 65px; display: flex; align-items: center; justify-content: center;">' + signImg1 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (rec.nama_pengawas_1 || '( ........................................ )') + '</div><div style="font-size: 8.5pt;">NIP. ' + (rec.nip_pengawas_1 || '-') + '</div></div>' +
+                        '</div>';
+                }
+            })() +
             '</div>';
 
         container.innerHTML = html;
@@ -348,10 +357,19 @@ function renderDocument(type, id) {
             '</div>' +
             '<div style="font-size: 11pt; line-height: 1.5; text-align: justify; margin-bottom: 20px;">' + redaksi + '</div>' +
             '<div style="text-align: center; margin-top: 20px; font-size: 11pt;"><div>Yang membuat berita acara :</div></div>' +
-            '<div style="display: flex; justify-content: space-between; font-size: 10.5pt; margin-top: 15px;">' +
-            '<div style="width: 45%; text-align: center;"><div>Pengawas 1,</div><div style="height: 60px; display: flex; align-items: center; justify-content: center;">' + signImg1 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (recBA.nama_pengawas_1 || '( ........................................ )') + '</div><div style="font-size: 9pt;">NIP. ' + (recBA.nip_pengawas_1 || '-') + '</div></div>' +
-            '<div style="width: 45%; text-align: center;"><div>Pengawas 2,</div><div style="height: 60px; display: flex; align-items: center; justify-content: center;">' + signImg2 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (recBA.nama_pengawas_2 || '( ........................................ )') + '</div><div style="font-size: 9pt;">NIP. ' + (recBA.nip_pengawas_2 || '-') + '</div></div>' +
-            '</div>' +
+            (function() {
+                var hasP2 = !!(recBA.nama_pengawas_2 && recBA.nama_pengawas_2.trim() && recBA.nama_pengawas_2.trim() !== '-');
+                if (hasP2) {
+                    return '<div style="display: flex; justify-content: space-between; font-size: 10.5pt; margin-top: 15px;">' +
+                        '<div style="width: 45%; text-align: center;"><div>Pengawas 1,</div><div style="height: 60px; display: flex; align-items: center; justify-content: center;">' + signImg1 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (recBA.nama_pengawas_1 || '( ........................................ )') + '</div><div style="font-size: 9pt;">NIP. ' + (recBA.nip_pengawas_1 || '-') + '</div></div>' +
+                        '<div style="width: 45%; text-align: center;"><div>Pengawas 2,</div><div style="height: 60px; display: flex; align-items: center; justify-content: center;">' + signImg2 + '</div><div style="font-weight: bold; text-decoration: underline;">' + recBA.nama_pengawas_2 + '</div><div style="font-size: 9pt;">NIP. ' + (recBA.nip_pengawas_2 || '-') + '</div></div>' +
+                        '</div>';
+                } else {
+                    return '<div style="display: flex; justify-content: flex-end; font-size: 10.5pt; margin-top: 15px;">' +
+                        '<div style="width: 45%; text-align: center;"><div>Pengawas,</div><div style="height: 60px; display: flex; align-items: center; justify-content: center;">' + signImg1 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (recBA.nama_pengawas_1 || '( ........................................ )') + '</div><div style="font-size: 9pt;">NIP. ' + (recBA.nip_pengawas_1 || '-') + '</div></div>' +
+                        '</div>';
+                }
+            })() +
             '</div>' +
 
             '<!-- HALAMAN 2 -->' +
@@ -366,10 +384,19 @@ function renderDocument(type, id) {
             '<tr><td style="font-weight:bold;">Kelas</td><td>:</td><td style="font-weight:bold;">' + (recBA.nama_kelas || '-') + '</td><td style="font-weight:bold;">Ruang</td><td>:</td><td>' + (recBA.ruang || '-') + '</td></tr>' +
             '</table>' +
             '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px;">' + photosHtml + '</div>' +
-            '<div style="display: flex; justify-content: space-between; font-size: 10pt; margin-top: 20px;">' +
-            '<div style="width: 45%; text-align: center;"><div>Pengawas 1,</div><div style="height: 55px; display: flex; align-items: center; justify-content: center;">' + signImg1 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (recBA.nama_pengawas_1 || '( ........................................ )') + '</div></div>' +
-            '<div style="width: 45%; text-align: center;"><div>Pengawas 2,</div><div style="height: 55px; display: flex; align-items: center; justify-content: center;">' + signImg2 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (recBA.nama_pengawas_2 || '( ........................................ )') + '</div></div>' +
-            '</div>' +
+            (function() {
+                var hasP2 = !!(recBA.nama_pengawas_2 && recBA.nama_pengawas_2.trim() && recBA.nama_pengawas_2.trim() !== '-');
+                if (hasP2) {
+                    return '<div style="display: flex; justify-content: space-between; font-size: 10pt; margin-top: 20px;">' +
+                        '<div style="width: 45%; text-align: center;"><div>Pengawas 1,</div><div style="height: 55px; display: flex; align-items: center; justify-content: center;">' + signImg1 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (recBA.nama_pengawas_1 || '( ........................................ )') + '</div></div>' +
+                        '<div style="width: 45%; text-align: center;"><div>Pengawas 2,</div><div style="height: 55px; display: flex; align-items: center; justify-content: center;">' + signImg2 + '</div><div style="font-weight: bold; text-decoration: underline;">' + recBA.nama_pengawas_2 + '</div></div>' +
+                        '</div>';
+                } else {
+                    return '<div style="display: flex; justify-content: flex-end; font-size: 10pt; margin-top: 20px;">' +
+                        '<div style="width: 45%; text-align: center;"><div>Pengawas,</div><div style="height: 55px; display: flex; align-items: center; justify-content: center;">' + signImg1 + '</div><div style="font-weight: bold; text-decoration: underline;">' + (recBA.nama_pengawas_1 || '( ........................................ )') + '</div></div>' +
+                        '</div>';
+                }
+            })() +
             '</div>';
 
         container.innerHTML = html;
@@ -401,6 +428,31 @@ function toggleTtdColumn() {
             btn.classList.add('btn-secondary');
         }
     }
+}
+
+function closePreviewWindow() {
+    try {
+        if (window.opener && !window.opener.closed) {
+            window.close();
+            return;
+        }
+    } catch (e) {}
+
+    try {
+        window.close();
+    } catch (e) {}
+
+    setTimeout(function() {
+        if (window.history.length > 1) {
+            window.history.back();
+        } else {
+            if (typeof navigateTo === 'function') {
+                navigateTo('arsip');
+            } else {
+                window.location.href = '?page=arsip';
+            }
+        }
+    }, 120);
 }
 </script>
 </body>

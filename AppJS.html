@@ -89,6 +89,9 @@ document.addEventListener('click', function(e) {
 }, true);
 
 function navigateTo(page, params) {
+    if (typeof window.closeAdminSidebar === 'function') {
+        try { window.closeAdminSidebar(); } catch (e) {}
+    }
     showNavigationProgress();
     var baseUrl = getAppUrl();
     var query = '?page=' + encodeURIComponent(page);
