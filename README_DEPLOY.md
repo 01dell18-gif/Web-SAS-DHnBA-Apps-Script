@@ -83,15 +83,67 @@ Berikut adalah panduan langkah-demi-langkah jika Anda ingin menerapkan sistem in
 
 ---
 
-### Langkah 2: Salin Berkas Proyek ke Apps Script
-Jika menggunakan proyek Apps Script baru, unggah/salin seluruh berkas proyek:
-- Berkas script: `Code.gs`
-- Berkas HTML umum: `StyleCSS.html`, `Header.html`, `Sidebar.html`, `AppJS.html`, `PreviewA4CSS.html`
-- Berkas antarmuka publik: `Index.html`, `Absensi.html`, `BeritaAcara.html`, `Arsip.html`, `Login.html`
-- Berkas panel admin: `AdminDashboard.html`, `AdminSiswa.html`, `AdminGuru.html`, `AdminTemplate.html`, `AdminArsip.html`, `AdminPengaturan.html`, `AdminUsers.html`, `AdminDatabase.html`
-- Manifes proyek: `appsscript.json` (pastikan `timeZone` sesuai, misalnya `Asia/Makassar` atau `Asia/Jakarta`, serta akses `webapp`).
+### Langkah 2: Cara Memasukkan Seluruh Berkas Kode ke Apps Script Baru
 
-*(Jika menggunakan clasp di terminal lokal: `npx @google/clasp push`)*
+Proyek ini terdiri dari **28 berkas** (`Code.gs`, `appsscript.json`, dan 26 berkas template `.html`). Untuk memasukkan seluruh berkas ke proyek Apps Script baru secara efisien, Anda dapat memilih salah satu dari **3 Cara** berikut:
+
+#### ⚡ Opsi A (Paling Cepat & Direkomendasikan): Menggunakan Google Clasp CLI
+Hanya butuh 1 baris perintah untuk mengunggah ke-28 file secara instan dan otomatis tanpa perlu membuat file satu per satu.
+
+1. **Aktifkan Google Apps Script API**:
+   - Buka browser dan login ke Google: [https://script.google.com/home/usersettings](https://script.google.com/home/usersettings)
+   - Pastikan opsi **Google Apps Script API** disetel ke posisi **ON (Aktif)**.
+2. **Ambil Script ID Apps Script Baru Anda**:
+   - Buka proyek Google Apps Script baru di browser.
+   - Klik menu **Setelan Proyek (Project Settings)** (ikon roda gigi di bilah navigasi kiri).
+   - Di bagian *ID Script (Script ID)*, klik tombol **Salin (Copy)**.
+3. **Hubungkan ID ke File `.clasp.json`**:
+   - Buka file `.clasp.json` yang ada di folder proyek ini di komputer Anda, lalu ganti `scriptId`:
+     ```json
+     {
+       "scriptId": "TEMPELKAN_SCRIPT_ID_BARU_ANDA_DI_SINI",
+       "rootDir": "."
+     }
+     ```
+4. **Login & Unggah Seluruh File**:
+   - Buka terminal / PowerShell di folder proyek ini:
+     ```bash
+     # 1. Login akun Google (hanya perlu jika belum pernah login clasp)
+     npx @google/clasp login
+
+     # 2. Upload seluruh 28 berkas secara otomatis
+     npx @google/clasp push --force
+     ```
+   - *Selesai! Buka / refresh halaman Apps Script di browser, seluruh 28 file langsung muncul lengkap dan rapi.*
+
+---
+
+#### 🌐 Opsi B (Semi-Otomatis): Menggunakan Ekstensi Chrome "Google Apps Script GitHub Assistant"
+Cocok jika Anda ingin mengimpor langsung dari repositori GitHub tanpa menggunakan terminal/Node.js.
+
+1. Pasang ekstensi **Google Apps Script GitHub Assistant** dari Chrome Web Store.
+2. Buka editor Google Apps Script baru Anda di Chrome.
+3. Pada bilah atas editor, akan muncul menu integrasi GitHub:
+   - Hubungkan akun GitHub Anda.
+   - Masukkan nama repositori proyek ini: `01dell18-gif/Web-SAS-DHnBA-Apps-Script` (branch `main`).
+4. Klik tombol **Pull**. Seluruh 28 berkas akan langsung terimpor otomatis ke Apps Script Anda.
+
+---
+
+#### 📋 Opsi C (Manual): Salin Tempel Lewat Editor Google Apps Script
+Jika tidak menggunakan alat bantu terminal atau ekstensi:
+
+1. Buka editor Apps Script baru di browser Anda.
+2. Tampilkan file manifes:
+   - Buka **Setelan Proyek (Project Settings)** > centang pilihan **"Perlihatkan file manifes 'appsscript.json' di editor"**.
+   - Kembali ke tab Editor, buka file `appsscript.json`, lalu timpa isinya dengan isi file `appsscript.json` proyek ini.
+3. Buka file `Code.gs` bawaan, lalu salin dan tempel seluruh isi `Code.gs`.
+4. Untuk berkas `.html`, klik tombol **+ (Tambah file)** di bilah kiri > pilih **HTML**:
+   - Ketikkan nama file persis sama **tanpa ekstensi `.html`** (misalnya cukup ketik: `Index`, `Absensi`, `BeritaAcara`, `StyleCSS`, `Header`, `Sidebar`, dll).
+   - Tempelkan kode HTML yang bersesuaian ke dalam file tersebut.
+   - Ulangi untuk seluruh 26 file HTML pendukung.
+
+---
 
 ---
 
