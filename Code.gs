@@ -279,7 +279,10 @@ function renderTemplate(filename) {
   // Attach initial data directly to template for instant client-side rendering
   try {
     if (filename === 'AdminPengaturan') {
-      // AdminPengaturan only requires settings, which is already attached
+      // AdminPengaturan requires 100% fresh settings directly from the sheet
+      invalidateCaches();
+      template.settings = getSettingsMap();
+      template.schoolSettings = template.settings;
       template.serverData = { success: true, settings: template.settings };
     } else {
       template.serverData = apiGetInitialData();
@@ -1002,7 +1005,7 @@ function getDefaultSettingsRows() {
     // 4. Master Tahun Ajaran & Semester
     ['tahun_ajaran_aktif', '2026/2027'],
     ['semester_aktif', 'Ganjil'],
-    ['daftar_tahun_ajaran', JSON.stringify(['2024/2025', '2025/2026', '2026/2027', '2027/2028'])],
+    ['daftar_tahun_ajaran', JSON.stringify(['2026/2027', '2027/2028'])],
 
     // 5. Pejabat Penandatangan Dokumen Resmi
     ['kepala_sekolah', 'Drs. I Ketut Suardana, M.Pd.'],
@@ -1040,7 +1043,7 @@ function bersihkanDuplikatPengaturan() {
       ['google_drive_folder_url', map.google_drive_folder_url || map.drive_folder_url || 'https://drive.google.com/drive/folders/19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR'],
       ['tahun_ajaran_aktif', map.tahun_ajaran_aktif || map.academic_year || '2026/2027'],
       ['semester_aktif', map.semester_aktif || map.default_semester || 'Ganjil'],
-      ['daftar_tahun_ajaran', typeof map.daftar_tahun_ajaran === 'string' ? map.daftar_tahun_ajaran : JSON.stringify(map.daftar_tahun_ajaran || ['2024/2025', '2025/2026', '2026/2027', '2027/2028'])],
+      ['daftar_tahun_ajaran', typeof map.daftar_tahun_ajaran === 'string' ? map.daftar_tahun_ajaran : JSON.stringify(map.daftar_tahun_ajaran || ['2026/2027', '2027/2028'])],
       ['kepala_sekolah', map.kepala_sekolah || 'Drs. I Ketut Suardana, M.Pd.'],
       ['nip_kepala_sekolah', map.nip_kepala_sekolah || '19680315 199412 1 002'],
       ['tempat_cetak', map.tempat_cetak || 'Denpasar'],
@@ -1210,7 +1213,7 @@ function getSettingsMap() {
     map.logo_path = logoImg;
 
     // Academic years parsing
-    var defaultYears = ['2024/2025', '2025/2026', '2026/2027', '2027/2028'];
+    var defaultYears = ['2026/2027', '2027/2028'];
     if (map.daftar_tahun_ajaran) {
       if (typeof map.daftar_tahun_ajaran === 'string') {
         try {
@@ -1241,7 +1244,7 @@ function getSettingsMap() {
       alamat_sekolah: 'Jl. Merpati No. 1',
       tahun_ajaran_aktif: '2026/2027',
       semester_aktif: 'Ganjil',
-      daftar_tahun_ajaran: ['2024/2025', '2025/2026', '2026/2027', '2027/2028'],
+      daftar_tahun_ajaran: ['2026/2027', '2027/2028'],
       kop_mode: 'image',
       kop_header: 'https://drive.google.com/thumbnail?id=1QXtnYwIrCc-pihDUoidjkRW5UVWykOn-&sz=w1600',
       kop_image_path: 'https://drive.google.com/thumbnail?id=1QXtnYwIrCc-pihDUoidjkRW5UVWykOn-&sz=w1600',
@@ -1868,7 +1871,7 @@ function apiSavePengaturan(payload) {
   var driveFolderUrl = payload.google_drive_folder_url || payload.drive_folder_url || currentSettings.google_drive_folder_url || currentSettings.drive_folder_url || '';
   var tahunAktif = payload.tahun_ajaran_aktif || payload.academic_year || currentSettings.tahun_ajaran_aktif || currentSettings.academic_year || '2026/2027';
   var semAktif = payload.semester_aktif || payload.default_semester || currentSettings.semester_aktif || currentSettings.default_semester || 'Ganjil';
-  var listTh = payload.daftar_tahun_ajaran !== undefined ? payload.daftar_tahun_ajaran : (currentSettings.daftar_tahun_ajaran || ['2024/2025', '2025/2026', '2026/2027', '2027/2028']);
+  var listTh = payload.daftar_tahun_ajaran !== undefined ? payload.daftar_tahun_ajaran : (currentSettings.daftar_tahun_ajaran || ['2026/2027', '2027/2028']);
   if (listTh && Array.isArray(listTh)) listTh = JSON.stringify(listTh);
 
   // Canonical keys only - NO DUPLICATES in spreadsheet!
@@ -1886,7 +1889,7 @@ function apiSavePengaturan(payload) {
     'google_drive_folder_url': driveFolderUrl,
     'tahun_ajaran_aktif': tahunAktif,
     'semester_aktif': semAktif,
-    'daftar_tahun_ajaran': listTh || JSON.stringify(['2024/2025', '2025/2026', '2026/2027', '2027/2028']),
+    'daftar_tahun_ajaran': listTh || JSON.stringify(['2026/2027', '2027/2028']),
     'kepala_sekolah': payload.kepala_sekolah !== undefined ? payload.kepala_sekolah : (currentSettings.kepala_sekolah || 'Drs. I Ketut Suardana, M.Pd.'),
     'nip_kepala_sekolah': payload.nip_kepala_sekolah !== undefined ? payload.nip_kepala_sekolah : (currentSettings.nip_kepala_sekolah || '19680315 199412 1 002'),
     'tempat_cetak': payload.tempat_cetak !== undefined ? payload.tempat_cetak : (currentSettings.tempat_cetak || 'Denpasar'),

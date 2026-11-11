@@ -125,11 +125,11 @@
                         <label class="form-label" style="font-weight: 700; margin-bottom: 6px;">Mode Kop Dokumen (Cetak A4 & Pratinjau):</label>
                         <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
                             <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem;">
-                                <input type="radio" name="kop_mode" value="image" id="mode_image" checked onchange="toggleKopMode()">
+                                <input type="radio" name="kop_mode" value="image" id="mode_image" <?= (settings && settings.kop_mode === 'text') ? '' : 'checked' ?> onchange="toggleKopMode()">
                                 <span><strong>Mode Banner Lengkap</strong> (Rekomendasi Utama: Banner Resmi A4 berisi Logo Pemprov, Teks Dinas, & Lambang Sekolah)</span>
                             </label>
                             <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem;">
-                                <input type="radio" name="kop_mode" value="text" id="mode_text" onchange="toggleKopMode()">
+                                <input type="radio" name="kop_mode" value="text" id="mode_text" <?= (settings && settings.kop_mode === 'text') ? 'checked' : '' ?> onchange="toggleKopMode()">
                                 <span><strong>Mode Susunan Teks & Logo Terpisah</strong> (Logo di kiri + susunan teks instansi)</span>
                             </label>
                         </div>
@@ -354,7 +354,7 @@
                 <div class="card">
                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <span class="card-title"><i class="bi bi-calendar-check"></i> 3. Master Tahun Ajaran & Semester</span>
-                        <span class="badge" id="badgeTotalTahunAjaran" style="background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">4 Terdaftar</span>
+                        <span class="badge" id="badgeTotalTahunAjaran" style="background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;"><?= (settings && settings.daftar_tahun_ajaran) ? (Array.isArray(settings.daftar_tahun_ajaran) ? settings.daftar_tahun_ajaran.length : (function(){ try { return JSON.parse(settings.daftar_tahun_ajaran).length; } catch(e){ return 2; } })()) : 2 ?> Terdaftar</span>
                     </div>
                     <div class="card-body">
                         <!-- Pilihan Aktif Saat Ini -->
@@ -368,8 +368,8 @@
                             <div class="form-group">
                                 <label class="form-label" for="set_semester_aktif">Semester Aktif <span class="required">*</span></label>
                                 <select id="set_semester_aktif" class="form-select">
-                                    <option value="Ganjil" selected>Ganjil</option>
-                                    <option value="Genap">Genap</option>
+                                    <option value="Ganjil" <?= (settings && (settings.semester_aktif === 'Ganjil' || settings.default_semester === 'Ganjil' || !settings.semester_aktif)) ? 'selected' : '' ?>>Ganjil</option>
+                                    <option value="Genap" <?= (settings && (settings.semester_aktif === 'Genap' || settings.default_semester === 'Genap')) ? 'selected' : '' ?>>Genap</option>
                                 </select>
                             </div>
                         </div>
@@ -489,19 +489,31 @@
 <?!= include('AppJS'); ?>
 
 <script type="text/template" id="settingsDataTahunAjaran">
-<?= (settings && settings.daftar_tahun_ajaran) ? (typeof settings.daftar_tahun_ajaran === 'string' ? settings.daftar_tahun_ajaran : JSON.stringify(settings.daftar_tahun_ajaran)) : JSON.stringify(['2024/2025', '2025/2026', '2026/2027', '2027/2028']) ?>
+<?!= (settings && settings.daftar_tahun_ajaran) ? (typeof settings.daftar_tahun_ajaran === 'string' ? settings.daftar_tahun_ajaran : JSON.stringify(settings.daftar_tahun_ajaran)) : JSON.stringify(['2026/2027', '2027/2028']) ?>
 </script>
 
 <script>
-var _daftarTahunAjaran = ['2024/2025', '2025/2026', '2026/2027', '2027/2028'];
+var _daftarTahunAjaran = [];
 try {
     var rawTahunEl = document.getElementById('settingsDataTahunAjaran');
     if (rawTahunEl && rawTahunEl.textContent.trim()) {
-        var parsedTh = JSON.parse(rawTahunEl.textContent.trim());
+        var rawStr = rawTahunEl.textContent.trim();
+        // Decode HTML entities safely if present
+        if (rawStr.indexOf('&quot;') !== -1 || rawStr.indexOf('&amp;') !== -1) {
+            var txt = document.createElement('textarea');
+            txt.innerHTML = rawStr;
+            rawStr = txt.value;
+        }
+        var parsedTh = JSON.parse(rawStr);
         if (typeof parsedTh === 'string') parsedTh = JSON.parse(parsedTh);
         if (Array.isArray(parsedTh) && parsedTh.length > 0) _daftarTahunAjaran = parsedTh;
     }
-} catch (e) {}
+} catch (e) {
+    console.warn('Gagal memuat daftar tahun ajaran dari database:', e);
+}
+if (_daftarTahunAjaran.length === 0) {
+    _daftarTahunAjaran = ['2026/2027', '2027/2028'];
+}
 var _tahunAktif = '<?= (settings && (settings.tahun_ajaran_aktif || settings.academic_year)) ? (settings.tahun_ajaran_aktif || settings.academic_year) : '2026/2027' ?>';
 var _dbUrl = 'https://docs.google.com/spreadsheets/d/1IA6B5Mgt6kIYeV9c8ZdR9RliccV0U2OTlGJhsD30c2Y/edit?usp=sharing';
 
