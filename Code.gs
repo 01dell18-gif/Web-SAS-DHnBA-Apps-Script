@@ -124,7 +124,7 @@ function ensureAllMasterSheetsSeeded() {
 
   try {
     var st = readTable(SHEET_NAMES.STUDENTS);
-    if (!st || st.length < 50) seedDefaultStudents();
+    if (!st || st.length === 0) seedDefaultStudents();
   } catch (e2) {
     Logger.log('ensureAllMasterSheetsSeeded students error: ' + e2.message);
   }
@@ -1302,15 +1302,24 @@ function apiGetInitialData() {
       }
     } catch (e) { Logger.log('Error reading classes: ' + e); }
 
-    // 2. Students (258 participants)
+    // 2. Students
     try {
       students = readTable(SHEET_NAMES.STUDENTS);
-      if (!students || students.length < 50) {
+      if (!students || students.length === 0) {
         seedDefaultStudents();
         delete _requestTableCache[SHEET_NAMES.STUDENTS];
         students = readTable(SHEET_NAMES.STUDENTS);
       }
     } catch (e) { Logger.log('Error reading students: ' + e); }
+
+    // Auto-sync master classes from student data if students have classes
+    try {
+      var syncRes = syncClassesFromStudents();
+      if (syncRes && syncRes.added > 0) {
+        delete _requestTableCache[SHEET_NAMES.CLASSES];
+        classes = readTable(SHEET_NAMES.CLASSES);
+      }
+    } catch (eSync) { Logger.log('Auto sync classes error: ' + eSync); }
 
     // 3. Teachers & Proctors
     try {
@@ -1736,6 +1745,11 @@ function apiSaveSiswa(payload) {
     insertRow(SHEET_NAMES.STUDENTS, payload);
     logActivity('CREATE_SISWA', 'Menambahkan siswa ' + payload.nama);
   }
+  try {
+    syncClassesFromStudents();
+  } catch (eSync) {
+    Logger.log('syncClassesFromStudents in apiSaveSiswa error: ' + eSync.message);
+  }
   return { success: true };
 }
 
@@ -1754,7 +1768,158 @@ function apiDeleteAllSiswa() {
 function apiImportSiswa(students) {
   var count = insertRows(SHEET_NAMES.STUDENTS, students);
   logActivity('IMPORT_SISWA', 'Mengimpor ' + count + ' data siswa dari Excel');
+  try {
+    syncClassesFromStudents();
+  } catch (eSync) {
+    Logger.log('syncClassesFromStudents in apiImportSiswa error: ' + eSync.message);
+  }
   return { success: true, count: count };
+}
+
+/**
+ * Sinkronisasi Master Data Kelas dari Data Siswa.
+ * Jika siswa memiliki nama_kelas yang belum ada di master kelas, kelas baru akan ditambahkan otomatis.
+ * Sekaligus merapikan class_id, tingkat, dan program_keahlian yang bersesuaian.
+ */
+function syncClassesFromStudents() {
+  var classes = readTable(SHEET_NAMES.CLASSES) || [];
+  var students = readTable(SHEET_NAMES.STUDENTS) || [];
+
+  if (!students || students.length === 0) {
+    return { success: true, added: 0, classes: classes };
+  }
+
+  // 1. Map existing classes by normalized uppercase name
+  var classMap = {};
+  var maxId = 0;
+  for (var i = 0; i < classes.length; i++) {
+    var c = classes[i];
+    var cId = parseInt(c.id, 10);
+    if (!isNaN(cId) && cId > maxId) maxId = cId;
+    if (c.nama_kelas) {
+      classMap[String(c.nama_kelas).trim().toUpperCase()] = c;
+    }
+  }
+
+  // 2. Scan students to discover any new classes or adjustments
+  var newClassesToAdd = [];
+  var newClassMap = {};
+
+  for (var s = 0; s < students.length; s++) {
+    var st = students[s];
+    var rawKelas = (st.nama_kelas || st.kelas || '').trim();
+    if (!rawKelas) continue;
+    var normKey = rawKelas.toUpperCase();
+
+    if (!classMap[normKey] && !newClassMap[normKey]) {
+      maxId++;
+      // Determine tingkat: X, XI, XII
+      var tingkat = 'XII';
+      if (/^X[\s\.\-_]/i.test(rawKelas) || normKey === 'X') tingkat = 'X';
+      else if (/^XI[\s\.\-_]/i.test(rawKelas) || normKey === 'XI') tingkat = 'XI';
+      else if (/^XII[\s\.\-_]/i.test(rawKelas) || normKey === 'XII') tingkat = 'XII';
+
+      // Determine program_keahlian
+      var prog = (st.program_keahlian || st.jurusan || '').trim();
+      if (!prog || prog === '-') {
+        if (/TKJ/i.test(rawKelas)) prog = 'Teknik Komputer dan Jaringan';
+        else if (/DKV/i.test(rawKelas)) prog = 'Desain Komunikasi Visual';
+        else if (/TSM/i.test(rawKelas)) prog = 'Teknik Sepeda Motor';
+        else if (/LPKKK/i.test(rawKelas)) prog = 'Layanan Penunjang Kefarmasian Klinis dan Komunitas';
+        else if (/BD/i.test(rawKelas)) prog = 'Bisnis Digital';
+        else if (/MP/i.test(rawKelas)) prog = 'Manajemen Perkantoran dan Layanan Bisnis';
+        else if (/LPB/i.test(rawKelas)) prog = 'Layanan Perbankan';
+        else if (/AK/i.test(rawKelas)) prog = 'Akuntansi dan Keuangan Lembaga';
+        else if (/RPL/i.test(rawKelas)) prog = 'Rekayasa Perangkat Lunak';
+        else prog = '-';
+      }
+
+      var newCls = {
+        id: maxId,
+        nama_kelas: rawKelas,
+        tingkat: tingkat,
+        program_keahlian: prog,
+        aktif: 1
+      };
+      newClassesToAdd.push(newCls);
+      newClassMap[normKey] = newCls;
+      classMap[normKey] = newCls;
+    }
+  }
+
+  // 3. If there are new classes to add, insert into SHEET_NAMES.CLASSES
+  if (newClassesToAdd.length > 0) {
+    insertRows(SHEET_NAMES.CLASSES, newClassesToAdd);
+    delete _requestTableCache[SHEET_NAMES.CLASSES];
+    classes = readTable(SHEET_NAMES.CLASSES);
+    logActivity('SYNC_KELAS', 'Menambahkan otomatis ' + newClassesToAdd.length + ' kelas baru dari data siswa');
+  }
+
+  // 4. Update student class_id and nama_kelas to align with master classes
+  var studentUpdatesNeeded = false;
+  for (var s2 = 0; s2 < students.length; s2++) {
+    var stud = students[s2];
+    var sClassName = (stud.nama_kelas || stud.kelas || '').trim();
+    if (sClassName) {
+      var matchedCls = classMap[sClassName.toUpperCase()];
+      if (matchedCls) {
+        if (String(stud.class_id) !== String(matchedCls.id)) {
+          stud.class_id = matchedCls.id;
+          studentUpdatesNeeded = true;
+        }
+        if (!stud.nama_kelas || stud.nama_kelas !== matchedCls.nama_kelas) {
+          stud.nama_kelas = matchedCls.nama_kelas;
+          studentUpdatesNeeded = true;
+        }
+        if ((!stud.program_keahlian || stud.program_keahlian === '-') && matchedCls.program_keahlian && matchedCls.program_keahlian !== '-') {
+          stud.program_keahlian = matchedCls.program_keahlian;
+          studentUpdatesNeeded = true;
+        }
+      }
+    }
+  }
+
+  if (studentUpdatesNeeded) {
+    var studentSheet = getSheet(SHEET_NAMES.STUDENTS);
+    var lastCol = studentSheet.getLastColumn();
+    if (lastCol > 0 && students.length > 0) {
+      var headers = studentSheet.getRange(1, 1, 1, lastCol).getValues()[0];
+      var nowStr = Utilities.formatDate(new Date(), 'Asia/Makassar', 'yyyy-MM-dd HH:mm:ss');
+      var updatedData = [];
+      for (var r = 0; r < students.length; r++) {
+        var rowObj = students[r];
+        rowObj.updated_at = nowStr;
+        var rowArr = [];
+        for (var cIdx = 0; cIdx < headers.length; cIdx++) {
+          var hName = String(headers[cIdx]).trim();
+          var v = getFieldWithSynonyms(rowObj, hName);
+          rowArr.push(v !== undefined ? v : '');
+        }
+        updatedData.push(rowArr);
+      }
+      studentSheet.getRange(2, 1, updatedData.length, headers.length).setValues(updatedData);
+      delete _requestTableCache[SHEET_NAMES.STUDENTS];
+      invalidateCaches();
+    }
+  }
+
+  return { success: true, added: newClassesToAdd.length, classes: classes };
+}
+
+function apiSyncClassesFromStudents() {
+  try {
+    var res = syncClassesFromStudents();
+    return {
+      success: true,
+      added: res.added,
+      classes: res.classes,
+      message: res.added > 0 
+        ? ('Berhasil menyinkronkan data. ' + res.added + ' kelas baru berhasil ditambahkan otomatis dari data siswa.')
+        : 'Data kelas sudah sinkron dengan data siswa.'
+    };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
 }
 
 function apiSaveGuru(payload) {

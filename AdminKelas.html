@@ -21,6 +21,9 @@
                 <button type="button" class="btn btn-primary btn-sm" onclick="openKelasModal()">
                     <i class="bi bi-plus-circle"></i> Tambah Kelas
                 </button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnSyncKelas" onclick="syncKelasFromSiswa()" title="Sinkronkan master data kelas otomatis dari data siswa yang sudah ada">
+                    <i class="bi bi-arrow-repeat"></i> Singkron dari Siswa
+                </button>
                 <a href="<?= appUrl ?>?page=import" target="_top" onclick="navigateTo('import', { tab: 'kelas' }); return false;" class="btn btn-secondary btn-sm">
                     <i class="bi bi-file-earmark-arrow-up"></i> Impor Excel
                 </a>
@@ -183,8 +186,8 @@ function renderKelasTable(classes) {
     if (!classes || classes.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">' +
             '<div style="font-size: 1.05rem; font-weight: 700; color: #334155; margin-bottom: 0.5rem;"><i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; color: #94a3b8;"></i>Belum ada data rombel kelas di database</div>' +
-            '<p style="font-size: 0.85rem; margin-bottom: 1rem;">Data kelas di spreadsheet masih kosong. Anda dapat menginisialisasi 11 rombel kelas resmi secara otomatis.</p>' +
-            '<button type="button" class="btn btn-primary btn-sm" onclick="reseedAllMasterTables(loadKelasData)"><i class="bi bi-magic"></i> Inisialisasi Data Master Default (11 Kelas, 258 Siswa)</button>' +
+            '<p style="font-size: 0.85rem; margin-bottom: 1rem;">Data kelas otomatis tersinkron saat data siswa telah terisi, atau Anda dapat menyinkronkan langsung sekarang.</p>' +
+            '<button type="button" class="btn btn-primary btn-sm" onclick="syncKelasFromSiswa()"><i class="bi bi-arrow-repeat"></i> Singkronkan Data Kelas dari Siswa</button>' +
             '</td></tr>';
         return;
     }
@@ -192,7 +195,10 @@ function renderKelasTable(classes) {
     var html = '';
     var students = (window.AppStore.data && window.AppStore.data.students) || [];
     classes.forEach(function(c, idx) {
-        var sCount = students.filter(function(s) { return String(s.class_id) === String(c.id); }).length;
+        var sCount = students.filter(function(s) { 
+            return String(s.class_id) === String(c.id) || 
+                   (s.nama_kelas && c.nama_kelas && String(s.nama_kelas).trim().toLowerCase() === String(c.nama_kelas).trim().toLowerCase()); 
+        }).length;
         var isActive = (String(c.aktif) === '1' || c.aktif === true || c.aktif == 1);
         var stBadge = '<button type="button" class="status-toggle-btn" onclick="toggleUniversalMasterStatus(\'kelas\', ' + c.id + ', ' + (isActive ? 1 : 0) + ', this)" title="Klik untuk mengubah status Kelas Aktif / Nonaktif">' +
             '<span class="status-pill-badge ' + (isActive ? 'is-active' : 'is-inactive') + '">' +
@@ -216,11 +222,45 @@ function renderKelasTable(classes) {
     tbody.innerHTML = html;
 }
 
+function syncKelasFromSiswa() {
+    var btn = document.getElementById('btnSyncKelas');
+    var originalHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Menyinkronkan...';
+    }
+    google.script.run
+        .withSuccessHandler(function(res) {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+            if (res && res.success) {
+                showGlobalNotificationDialog('Sinkronisasi Sukses', res.message || 'Master data kelas berhasil disinkronkan dengan data siswa.', 'success', function() {
+                    loadKelasData();
+                });
+            } else {
+                showGlobalToast((res && res.error) || 'Gagal menyinkronkan data kelas.', 'danger');
+            }
+        })
+        .withFailureHandler(function(err) {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+            showGlobalToast('Gagal menghubungi server: ' + (err && err.message ? err.message : err), 'danger');
+        })
+        .apiSyncClassesFromStudents();
+}
+
 function exportKelasExcel() {
     var headers = ['No', 'Nama Kelas', 'Tingkat', 'Program Keahlian', 'Jumlah Siswa', 'Status'];
     var students = (window.AppStore.data && window.AppStore.data.students) || [];
     var rows = kelasList.map(function(c, i) {
-        var sCount = students.filter(function(s) { return String(s.class_id) === String(c.id); }).length;
+        var sCount = students.filter(function(s) { 
+            return String(s.class_id) === String(c.id) || 
+                   (s.nama_kelas && c.nama_kelas && String(s.nama_kelas).trim().toLowerCase() === String(c.nama_kelas).trim().toLowerCase()); 
+        }).length;
         return [i + 1, c.nama_kelas, c.tingkat || 'XII', c.program_keahlian || '-', sCount, (c.aktif == 1 ? 'Aktif' : 'Nonaktif')];
     });
     var filename = 'Data_Kelas_' + new Date().toISOString().split('T')[0] + '.xlsx';
