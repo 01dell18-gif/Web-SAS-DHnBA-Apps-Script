@@ -64,40 +64,90 @@ Berikut adalah rekapitulasi seluruh tombol aksi di aplikasi, fungsinya, dan lemb
 
 ---
 
-## 🚀 3. Panduan Deployment Cepat
+## 🚀 3. Panduan Penerapan di Database & Akun Baru (Deployment Guide)
 
-### Langkah 1: Buat Google Spreadsheet Baru (Database Aktif)
+Berikut adalah panduan langkah-demi-langkah jika Anda ingin menerapkan sistem ini ke Google Spreadsheet / Akun Google / Sekolah baru:
 
-1. Kunjungi [Google Sheets](https://sheets.new).
-2. Beri nama: `DB_ADMINISTRASI_UJIAN_SMK_FYJ`.
-3. Buka menu **Ekstensi** (*Extensions*) > **Apps Script**.
-4. *Script otomatis mendeteksi spreadsheet yang aktif tanpa perlu input ID Spreadsheet manual.*
+### Langkah 1: Siapkan Spreadsheet Database Baru
+1. Kunjungi [Google Sheets](https://sheets.new) untuk membuat spreadsheet kosong baru.
+2. Beri nama file spreadsheet, misalnya: `DB_ADMINISTRASI_UJIAN_SMK_BARU`.
+3. Salin **ID Spreadsheet** dari kolom URL browser Anda:
+   ```text
+   https://docs.google.com/spreadsheets/d/[SALIN_KODE_ID_DISINI]/edit
+   ```
+4. Buka file `Code.gs` di baris 9, lalu ganti nilai `TARGET_SPREADSHEET_ID`:
+   ```javascript
+   var TARGET_SPREADSHEET_ID = 'TEMPELKAN_ID_SPREADSHEET_BARU_DI_SINI';
+   ```
+   *(Catatan: Jika script dibuat langsung di dalam menu Ekstensi > Apps Script spreadsheet tersebut (container-bound), Anda juga dapat mengosongkan nilai ini `var TARGET_SPREADSHEET_ID = '';` karena sistem otomatis mendeteksi sheet aktif).*
 
-### Langkah 2: Salin Berkas Proyek
+---
 
-Salin seluruh berkas ke editor Apps Script:
+### Langkah 2: Salin Berkas Proyek ke Apps Script
+Jika menggunakan proyek Apps Script baru, unggah/salin seluruh berkas proyek:
+- Berkas script: `Code.gs`
+- Berkas HTML umum: `StyleCSS.html`, `Header.html`, `Sidebar.html`, `AppJS.html`, `PreviewA4CSS.html`
+- Berkas antarmuka publik: `Index.html`, `Absensi.html`, `BeritaAcara.html`, `Arsip.html`, `Login.html`
+- Berkas panel admin: `AdminDashboard.html`, `AdminSiswa.html`, `AdminGuru.html`, `AdminTemplate.html`, `AdminArsip.html`, `AdminPengaturan.html`, `AdminUsers.html`, `AdminDatabase.html`
+- Manifes proyek: `appsscript.json` (pastikan `timeZone` sesuai, misalnya `Asia/Makassar` atau `Asia/Jakarta`, serta akses `webapp`).
 
-- `Code.gs` (Server script)
-- `StyleCSS.html`, `Header.html`, `Sidebar.html`, `AppJS.html`, `PreviewA4CSS.html` (Komponen bersama)
-- `Index.html`, `Absensi.html`, `BeritaAcara.html`, `Arsip.html`, `Login.html` (Publik)
-- `AdminDashboard.html`, `AdminSiswa.html`, `AdminGuru.html`, `AdminTemplate.html`, `AdminArsip.html`, `AdminPengaturan.html`, `AdminUsers.html`, `AdminDatabase.html` (Panel Admin)
-- `appsscript.json` (Setelan manifes: timezone `Asia/Makassar`, akses webapp `ANYONE`).
+*(Jika menggunakan clasp di terminal lokal: `npx @google/clasp push`)*
 
-### Langkah 3: Jalankan Inisialisasi Data Awal (*Seeder*)
+---
 
-1. Pada toolbar atas Apps Script, pilih fungsi **`jalankanIsiDataAwal`** (atau `setupSpreadsheetDatabase`).
-2. Klik tombol **Jalankan** (*Run*).
-3. Setujui dialog izin otorisasi Google (*Review Permissions* > Akun Google > *Advanced* > *Allow*).
-4. Sembilan (9) sheet basis data beserta data awal akan otomatis terbuat.
+### Langkah 3: Inisialisasi Database Otomatis (Seeder)
+1. Pada editor Apps Script, di dropdown fungsi bagian atas, pilih fungsi **`setupSpreadsheetDatabase`** (atau `jalankanIsiDataAwal`).
+2. Klik tombol **Jalankan (Run)**.
+3. Saat muncul kotak dialog izin otorisasi Google, pilih **Review Permissions** > pilih Akun Google Anda > klik **Advanced** (*Lanjutan*) > klik **Go to [Nama Proyek] (unsafe)** > klik **Allow (Izinkan)**.
+4. Tunggu beberapa detik hingga proses selesai. Sistem akan otomatis:
+   - Membuat 9 tabel/sheet lengkap beserta format header tebal (*bold*).
+   - Mengisi data awal default (10 siswa dummy, 10 guru dummy, 10 mapel dummy, template ujian resmi, dan setelan dasar sekolah).
 
-### Langkah 4: Terapkan Sebagai Aplikasi Web (*Web App Deployment*)
+---
 
-1. Klik **Terapkan** (*Deploy*) > **Penerapan Baru** (*New deployment*).
-2. Pilih jenis **Aplikasi Web** (*Web app*).
-3. Konfigurasi wajib:
-   - **Jalankan sebagai** (*Execute as*): **Saya** (*Me* / Pemilik Google Sheet).
-   - **Yang memiliki akses** (*Who has access*): **Siapa saja** (*Anyone*).
-4. Klik **Terapkan** dan salin URL Web App yang dihasilkan.
+### Langkah 4: Terapkan Sebagai Aplikasi Web (Deploy Web App)
+1. Di pojok kanan atas Apps Script, klik tombol biru **Terapkan (Deploy)** > pilih **Penerapan baru (New deployment)**.
+2. Klik ikon roda gigi (*gear*) di sebelah "Pilih jenis" > pilih **Aplikasi Web (Web App)**.
+3. Atur konfigurasi penting berikut:
+   - **Deskripsi**: misal `Versi 1.0 Produksi`
+   - **Jalankan sebagai (*Execute as*)**: **Saya (*Me*)** *(PENTING: agar sistem membaca/menulis database menggunakan izin pemilik tanpa meminta login akun google pengguna umum)*.
+   - **Yang memiliki akses (*Who has access*)**: **Siapa saja (*Anyone*)** *(PENTING: agar guru/siswa/pengawas dapat mengakses formulir publik tanpa error otorisasi)*.
+4. Klik **Terapkan (Deploy)**.
+5. Salin tautan **URL Aplikasi Web** yang berakhiran `/exec`. Contoh:
+   ```text
+   https://script.google.com/macros/s/AKfycb.../exec
+   ```
+
+---
+
+### Langkah 5: Sesuaikan Fallback URL di `Code.gs`
+Di dalam fungsi `getAppUrl()` pada file `Code.gs` (sekitar baris 268):
+```javascript
+function getAppUrl() {
+  try {
+    var url = ScriptApp.getService().getUrl();
+    if (url && url.length > 0) {
+      return url;
+    }
+  } catch (e) {
+    Logger.log('Tidak dapat mengambil URL via ScriptApp: ' + e.message);
+  }
+
+  // Fallback: URL deployment standar project
+  return 'https://script.google.com/macros/s/AKfycb.../exec';
+}
+```
+1. **Fungsi kode**: Baris `ScriptApp.getService().getUrl()` secara cerdas mendeteksi URL aktif tempat user membuka web. Sedangkan baris `return 'https://...'` adalah *fallback* (jaring pengaman cadangan) jika fungsi dijalankan langsung dari console/editor tanpa konteks request browser.
+2. **Cara memperbarui**: Tempelkan URL Web App hasil Langkah 4 ke dalam string return fallback tersebut.
+3. Setelah memperbarui baris tersebut, simpan file `Code.gs`.
+
+---
+
+### 💡 Tips Pembaruan Kode Selanjutnya (Kelola Penerapan)
+Jika di masa depan Anda melakukan revisi/perubahan kode:
+- **JANGAN** membuat *New Deployment* baru (karena URL web akan berubah dan Anda harus membagikan link baru lagi ke pengguna).
+- Cukup gunakan menu: **Terapkan (Deploy)** > **Kelola penerapan (Manage deployments)** > klik ikon **Pensil (Edit)** pada deployment aktif > di bagian *Versi* pilih **Versi baru (New version)** > klik **Terapkan**.
+- Dengan cara ini, link web yang sudah dibagikan ke seluruh guru dan pengawas **tetap sama dan tidak akan pernah berubah**.
 
 ---
 
