@@ -201,8 +201,8 @@ function renderMapelTable(mapels) {
     if (!mapels || mapels.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">' +
             '<div style="font-size: 1.05rem; font-weight: 700; color: #334155; margin-bottom: 0.5rem;"><i class="bi bi-book" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; color: #94a3b8;"></i>Belum ada data mata pelajaran di database</div>' +
-            '<p style="font-size: 0.85rem; margin-bottom: 1rem;">Data mapel di spreadsheet masih kosong. Anda dapat menginisialisasi 18 mapel resmi secara otomatis.</p>' +
-            '<button type="button" class="btn btn-primary btn-sm" onclick="reseedAllMasterTables(loadMapelData)"><i class="bi bi-magic"></i> Inisialisasi Data Master Default (18 Mapel)</button>' +
+            '<p style="font-size: 0.85rem; margin-bottom: 1rem;">Data mata pelajaran di database masih kosong. Anda dapat menambahkan mapel baru melalui formulir input.</p>' +
+            '<button type="button" class="btn btn-primary btn-sm" onclick="openMapelModal()"><i class="bi bi-plus-circle"></i> Tambah Mapel Baru</button>' +
             '</td></tr>';
         return;
     }

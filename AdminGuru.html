@@ -178,8 +178,8 @@ function renderGuruTable(teachers) {
     if (!teachers || teachers.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">' +
             '<div style="font-size: 1.05rem; font-weight: 700; color: #334155; margin-bottom: 0.5rem;"><i class="bi bi-person-workspace" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; color: #94a3b8;"></i>Belum ada data guru & pengawas di database</div>' +
-            '<p style="font-size: 0.85rem; margin-bottom: 1rem;">Data guru di spreadsheet masih kosong. Anda dapat menginisialisasi 10 dewan guru resmi secara otomatis.</p>' +
-            '<button type="button" class="btn btn-primary btn-sm" onclick="reseedAllMasterTables(loadGuruData)"><i class="bi bi-magic"></i> Inisialisasi Data Master Default (10 Guru & Pengawas)</button>' +
+            '<p style="font-size: 0.85rem; margin-bottom: 1rem;">Data guru di database masih kosong. Anda dapat menambahkan guru baru melalui formulir input.</p>' +
+            '<button type="button" class="btn btn-primary btn-sm" onclick="openGuruModal()"><i class="bi bi-person-plus"></i> Tambah Guru Baru</button>' +
             '</td></tr>';
         return;
     }

@@ -248,8 +248,11 @@ function renderSiswaTable(students) {
     if (!students || students.length === 0) {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">' +
             '<div style="font-size: 1.05rem; font-weight: 700; color: #334155; margin-bottom: 0.5rem;"><i class="bi bi-people" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; color: #94a3b8;"></i>Belum ada data siswa di database</div>' +
-            '<p style="font-size: 0.85rem; margin-bottom: 1rem;">Data siswa di spreadsheet masih kosong. Anda dapat menginisialisasi 258 siswa peserta ujian resmi secara otomatis.</p>' +
-            '<button type="button" class="btn btn-primary btn-sm" onclick="reseedAllMasterTables(loadSiswaData)"><i class="bi bi-magic"></i> Inisialisasi Data Master Default (11 Kelas, 258 Siswa)</button>' +
+            '<p style="font-size: 0.85rem; margin-bottom: 1rem;">Data siswa di database masih kosong. Anda dapat menambahkan siswa baru atau mengimpor file Excel.</p>' +
+            '<div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">' +
+            '<button type="button" class="btn btn-primary btn-sm" onclick="openSiswaModal()"><i class="bi bi-person-plus"></i> Tambah Siswa Baru</button>' +
+            '<a href="<?= getAppUrl() ?>?page=import" class="btn btn-secondary btn-sm"><i class="bi bi-file-earmark-spreadsheet"></i> Menu Import Excel</a>' +
+            '</div>' +
             '</td></tr>';
         return;
     }

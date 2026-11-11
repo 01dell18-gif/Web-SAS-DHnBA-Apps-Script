@@ -115,39 +115,8 @@ function ensureAllMasterSheetsSeeded() {
     if (isSeeded === true) return;
   } catch (e) {}
 
-  try {
-    var cls = readTable(SHEET_NAMES.CLASSES);
-    if (!cls || cls.length === 0) seedDefaultClasses();
-  } catch (e1) {
-    Logger.log('ensureAllMasterSheetsSeeded classes error: ' + e1.message);
-  }
-
-  try {
-    var st = readTable(SHEET_NAMES.STUDENTS);
-    if (!st || st.length === 0) seedDefaultStudents();
-  } catch (e2) {
-    Logger.log('ensureAllMasterSheetsSeeded students error: ' + e2.message);
-  }
-
-  try {
-    var tch = readTable(SHEET_NAMES.TEACHERS);
-    if (!tch || tch.length === 0) seedDefaultTeachers();
-  } catch (e3) {
-    Logger.log('ensureAllMasterSheetsSeeded teachers error: ' + e3.message);
-  }
-
-  try {
-    var mp = readTable(SHEET_NAMES.MAPEL);
-    // Auto-repair if Mapel has shifted columns (empty aktif cell with 1 in created_at)
-    if (mp && mp.length > 0 && (mp[0].aktif === 0 || mp[0].aktif === '') && (mp[0].created_at === 1 || mp[0].created_at === '1')) {
-      seedDefaultMapel();
-      delete _requestTableCache[SHEET_NAMES.MAPEL];
-      mp = readTable(SHEET_NAMES.MAPEL);
-    }
-    if (!mp || mp.length === 0) seedDefaultMapel();
-  } catch (e4) {
-    Logger.log('ensureAllMasterSheetsSeeded mapel error: ' + e4.message);
-  }
+  // Master data (Kelas, Siswa, Guru, Mapel) TIDAK di-seed otomatis saat kosong agar tombol 'Reset Hapus Semua'
+  // benar-benar mengosongkan tabel. Seed data default hanya dijalankan melalui menu Pengaturan.
 
   try {
     var tpl = readTable(SHEET_NAMES.TEMPLATES);
@@ -898,21 +867,32 @@ function seedDefaultUsers(optSheet) {
 function ensureSheetHasInitialData(sheetName, sheet) {
   try {
     var lastRow = sheet.getLastRow();
-    if (lastRow >= 2) {
-      var val = sheet.getRange(2, 1).getValue();
-      if (val !== '' && val !== null && val !== undefined) return; // Sudah memiliki data valid
+    if (lastRow >= 1) {
+      return; // Header sudah ada. Jangan pernah timpa atau isi data otomatis saat kosong.
     }
 
     if (sheetName === SHEET_NAMES.SETTINGS) {
       seedDefaultSettings(sheet);
     } else if (sheetName === SHEET_NAMES.CLASSES) {
-      seedDefaultClasses(sheet);
+      var clsHeaders = ['id', 'nama_kelas', 'tingkat', 'program_keahlian', 'aktif', 'created_at', 'updated_at'];
+      sheet.clear();
+      sheet.getRange(1, 1, 1, clsHeaders.length).setValues([clsHeaders]);
+      sheet.getRange(1, 1, 1, clsHeaders.length).setFontWeight('bold');
     } else if (sheetName === SHEET_NAMES.STUDENTS) {
-      seedDefaultStudents(sheet);
+      var stHeaders = ['id', 'class_id', 'nama_kelas', 'nis', 'nisn', 'nama', 'program_keahlian', 'aktif', 'created_at', 'updated_at'];
+      sheet.clear();
+      sheet.getRange(1, 1, 1, stHeaders.length).setValues([stHeaders]);
+      sheet.getRange(1, 1, 1, stHeaders.length).setFontWeight('bold');
     } else if (sheetName === SHEET_NAMES.TEACHERS) {
-      seedDefaultTeachers(sheet);
+      var tchHeaders = ['id', 'nama', 'nip', 'jabatan', 'aktif', 'created_at', 'updated_at'];
+      sheet.clear();
+      sheet.getRange(1, 1, 1, tchHeaders.length).setValues([tchHeaders]);
+      sheet.getRange(1, 1, 1, tchHeaders.length).setFontWeight('bold');
     } else if (sheetName === SHEET_NAMES.MAPEL) {
-      seedDefaultMapel(sheet);
+      var mpHeaders = ['id', 'kode_mapel', 'nama_mapel', 'kelompok', 'aktif', 'created_at', 'updated_at'];
+      sheet.clear();
+      sheet.getRange(1, 1, 1, mpHeaders.length).setValues([mpHeaders]);
+      sheet.getRange(1, 1, 1, mpHeaders.length).setFontWeight('bold');
     } else if (sheetName === SHEET_NAMES.TEMPLATES) {
       seedDefaultTemplate(sheet);
     } else if (sheetName === SHEET_NAMES.USERS) {
@@ -1307,52 +1287,23 @@ function apiGetInitialData() {
 
     // 1. Classes
     try {
-      classes = readTable(SHEET_NAMES.CLASSES);
-      if (!classes || classes.length === 0) {
-        seedDefaultClasses();
-        delete _requestTableCache[SHEET_NAMES.CLASSES];
-        classes = readTable(SHEET_NAMES.CLASSES);
-      }
-    } catch (e) { Logger.log('Error reading classes: ' + e); }
+      classes = readTable(SHEET_NAMES.CLASSES) || [];
+    } catch (e) { Logger.log('Error reading classes: ' + e); classes = []; }
 
     // 2. Students
     try {
-      students = readTable(SHEET_NAMES.STUDENTS);
-      if (!students || students.length === 0) {
-        seedDefaultStudents();
-        delete _requestTableCache[SHEET_NAMES.STUDENTS];
-        students = readTable(SHEET_NAMES.STUDENTS);
-      }
-    } catch (e) { Logger.log('Error reading students: ' + e); }
-
-    // Auto-sync master classes from student data if students have classes
-    try {
-      var syncRes = syncClassesFromStudents();
-      if (syncRes && syncRes.added > 0) {
-        delete _requestTableCache[SHEET_NAMES.CLASSES];
-        classes = readTable(SHEET_NAMES.CLASSES);
-      }
-    } catch (eSync) { Logger.log('Auto sync classes error: ' + eSync); }
+      students = readTable(SHEET_NAMES.STUDENTS) || [];
+    } catch (e) { Logger.log('Error reading students: ' + e); students = []; }
 
     // 3. Teachers & Proctors
     try {
-      teachers = readTable(SHEET_NAMES.TEACHERS);
-      if (!teachers || teachers.length === 0) {
-        seedDefaultTeachers();
-        delete _requestTableCache[SHEET_NAMES.TEACHERS];
-        teachers = readTable(SHEET_NAMES.TEACHERS);
-      }
-    } catch (e) { Logger.log('Error reading teachers: ' + e); }
+      teachers = readTable(SHEET_NAMES.TEACHERS) || [];
+    } catch (e) { Logger.log('Error reading teachers: ' + e); teachers = []; }
 
     // 4. Subjects (Mapel)
     try {
-      mapels = readTable(SHEET_NAMES.MAPEL);
-      if (!mapels || mapels.length === 0) {
-        seedDefaultMapel();
-        delete _requestTableCache[SHEET_NAMES.MAPEL];
-        mapels = readTable(SHEET_NAMES.MAPEL);
-      }
-    } catch (e) { Logger.log('Error reading mapels: ' + e); }
+      mapels = readTable(SHEET_NAMES.MAPEL) || [];
+    } catch (e) { Logger.log('Error reading mapels: ' + e); mapels = []; }
 
     // 5. Exam Templates
     try {
