@@ -43,7 +43,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
                         <div>
                             <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0;">Unggah Berkas Excel Siswa</h3>
-                            <p style="font-size: 0.825rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">Format kolom: <code>Nama Siswa</code>, <code>Kelas</code>, <code>NIS</code>, <code>NISN</code>, <code>Program Keahlian</code></p>
+                            <p style="font-size: 0.825rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">Format kolom: <code>No</code>, <code>NIS</code>, <code>NISN</code>, <code>Nama Siswa</code>, <code>Kelas</code>, <code>Program Keahlian</code>, <code>Status</code> (kompatibel langsung dengan file ekspor & fleksibel)</p>
                         </div>
                         <button type="button" class="btn btn-secondary btn-sm" onclick="downloadTemplateSiswa()">
                             <i class="bi bi-download"></i> Unduh Template Excel Siswa (.xlsx)
@@ -174,11 +174,17 @@
 <script>
 var activeImportType = 'siswa';
 var parsedImportRows = [];
+var parsedImportHeaders = [];
 
 onDocumentReady(function() {
     var urlParams = new URLSearchParams(window.location.search);
     var targetTab = urlParams.get('tab') || 'siswa';
     switchImportTab(targetTab);
+
+    // Preload AppStore classes for mapping class names to class IDs
+    if (window.AppStore && typeof window.AppStore.loadInitialData === 'function') {
+        window.AppStore.loadInitialData();
+    }
 });
 
 function switchImportTab(type) {
@@ -190,6 +196,7 @@ function switchImportTab(type) {
     document.querySelectorAll('.import-panel').forEach(function(p) { p.style.display = 'none'; });
     document.getElementById('importPreviewArea').style.display = 'none';
     parsedImportRows = [];
+    parsedImportHeaders = [];
 
     var tabMap = {
         'siswa': { btn: 'tabBtnSiswa', panel: 'panelImportSiswa' },
@@ -212,48 +219,79 @@ function switchImportTab(type) {
 }
 
 function downloadTemplateSiswa() {
-    var headers = ['Nama Siswa', 'Kelas', 'NIS', 'NISN', 'Program Keahlian'];
+    var headers = ['No', 'NIS', 'NISN', 'Nama Siswa', 'Kelas', 'Program Keahlian', 'Status'];
     var samples = [
-        ['Aldo Valentino', 'XII TSM', '13526', '0061234567', 'Teknik Sepeda Motor'],
-        ['ARKANANTA MAULANA', 'XII TSM', '13527', '0061234568', 'Teknik Sepeda Motor']
+        [1, '13526', '0061234567', 'Aldo Valentino', 'XII TSM', 'Teknik Sepeda Motor', 'Aktif'],
+        [2, '13527', '0061234568', 'ARKANANTA MAULANA', 'XII TSM', 'Teknik Sepeda Motor', 'Aktif']
     ];
     downloadExcelXLS('template_impor_siswa.xlsx', headers, samples);
 }
 
 function downloadTemplateGuru() {
-    var headers = ['Nama Lengkap & Gelar', 'NIP', 'Jabatan'];
+    var headers = ['No', 'Nama Lengkap Guru / Pengawas', 'NIP', 'Jabatan', 'Status'];
     var samples = [
-        ['I Wayan Sukadana, S.Pd.', '19820514 200801 1 012', 'Guru / Pengawas'],
-        ['Ni Made Rai Artini, S.Kom.', '19870921 201101 2 008', 'Guru / Pengawas']
+        [1, 'I Wayan Sukadana, S.Pd.', '19820514 200801 1 012', 'Guru / Pengawas', 'Aktif'],
+        [2, 'Ni Made Rai Artini, S.Kom.', '19870921 201101 2 008', 'Guru / Pengawas', 'Aktif']
     ];
     downloadExcelXLS('template_impor_guru.xlsx', headers, samples);
 }
 
 function downloadTemplateMapel() {
-    var headers = ['Kode Mapel', 'Nama Mata Pelajaran', 'Kelompok'];
+    var headers = ['No', 'Kode Mapel', 'Nama Mata Pelajaran', 'Kelompok Kurikulum', 'Status'];
     var samples = [
-        ['MP-001', 'Bahasa Indonesia', 'Umum'],
-        ['MP-010', 'Desain Komunikasi Visual', 'Kejuruan']
+        [1, 'MP-001', 'Bahasa Indonesia', 'Umum', 'Aktif'],
+        [2, 'MP-010', 'Desain Komunikasi Visual', 'Kejuruan', 'Aktif']
     ];
     downloadExcelXLS('template_impor_mapel.xlsx', headers, samples);
 }
 
 function downloadTemplateKelas() {
-    var headers = ['Nama Kelas', 'Tingkat', 'Program Keahlian'];
+    var headers = ['No', 'Nama Kelas', 'Tingkat', 'Program Keahlian', 'Status'];
     var samples = [
-        ['XII DKV 1', 'XII', 'Desain Komunikasi Visual'],
-        ['XII TKJ 1', 'XII', 'Teknik Komputer dan Jaringan']
+        [1, 'XII DKV', 'XII', 'Desain Komunikasi Visual', 'Aktif'],
+        [2, 'XII TKJ', 'XII', 'Teknik Komputer dan Jaringan', 'Aktif']
     ];
     downloadExcelXLS('template_impor_kelas.xlsx', headers, samples);
 }
 
 function downloadTemplateUsers() {
-    var headers = ['Username', 'Nama Lengkap', 'Peran', 'Password'];
+    var headers = ['No', 'Username', 'Nama Lengkap', 'Peran', 'Password'];
     var samples = [
-        ['operator_ujian', 'I Putu Eka Pratama', 'operator', '123456'],
-        ['admin_wakasek', 'Drs. I Ketut Suardana, M.Pd.', 'admin', 'admin123']
+        [1, 'operator_ujian', 'I Putu Eka Pratama', 'operator', '123456'],
+        [2, 'admin_wakasek', 'Drs. I Ketut Suardana, M.Pd.', 'admin', 'admin123']
     ];
     downloadExcelXLS('template_impor_users.xlsx', headers, samples);
+}
+
+function hasNoColumn(headers, rows) {
+    if (headers && headers.length > 0) {
+        var h0 = String(headers[0] || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (h0 === 'no' || h0 === 'nomor' || h0 === 'number' || h0 === 'num') return true;
+    }
+    if (rows && rows.length > 0) {
+        var val0 = String(rows[0][0] || '').trim();
+        if (val0 === '1' && (rows.length === 1 || String(rows[1][0] || '').trim() === '2')) return true;
+    }
+    return false;
+}
+
+function getRowValue(r, headers, aliases, fallbackIndex) {
+    if (headers && headers.length > 0) {
+        for (var i = 0; i < headers.length; i++) {
+            var normH = String(headers[i] || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+            for (var a = 0; a < aliases.length; a++) {
+                var normA = aliases[a].toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (normH === normA) {
+                    var val = r[i];
+                    return (val !== undefined && val !== null) ? String(val).trim() : '';
+                }
+            }
+        }
+    }
+    if (fallbackIndex !== undefined && fallbackIndex >= 0 && r[fallbackIndex] !== undefined && r[fallbackIndex] !== null) {
+        return String(r[fallbackIndex]).trim();
+    }
+    return '';
 }
 
 function parseImportFile(input, type) {
@@ -296,6 +334,7 @@ function parseImportFile(input, type) {
 
         var headers = rows[0].map(function(h) { return String(h).trim(); });
         var dataRows = rows.slice(1);
+        parsedImportHeaders = headers;
         parsedImportRows = [];
 
         var thead = document.getElementById('importTableHead');
@@ -329,21 +368,56 @@ function executeCurrentImport() {
     btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Mengimpor ke Database...';
 
     if (activeImportType === 'siswa') {
+        var isOffset = hasNoColumn(parsedImportHeaders, parsedImportRows);
+        var offset = isOffset ? 1 : 0;
+
         var students = parsedImportRows.map(function(r) {
-            var namaKelas = r[1] || 'XII DKV';
+            var nama = getRowValue(r, parsedImportHeaders, [
+                'namasiswa', 'namalengkap', 'nama', 'peserta', 'namapeserta', 'namapesertadidik', 'siswa', 'student'
+            ], offset === 1 ? 3 : 0);
+
+            var rawKelas = getRowValue(r, parsedImportHeaders, [
+                'kelas', 'namakelas', 'rombel', 'rombonganbelajar', 'tingkatkelas', 'class'
+            ], offset === 1 ? 4 : 1);
+            var namaKelas = rawKelas || 'XII DKV';
+
+            var nis = getRowValue(r, parsedImportHeaders, [
+                'nis', 'noinduk', 'nomorinduk', 'noinduksiswa', 'nomorinduksiswa'
+            ], offset === 1 ? 1 : 2);
+
+            var nisn = getRowValue(r, parsedImportHeaders, [
+                'nisn', 'nomorinduksiswanasional'
+            ], offset === 1 ? 2 : 3);
+
+            var progKeahlian = getRowValue(r, parsedImportHeaders, [
+                'programkeahlian', 'jurusan', 'konsentrasikeahlian', 'kompetensikeahlian', 'prodi', 'keahlian'
+            ], offset === 1 ? 5 : 4);
+
+            var rawStatus = getRowValue(r, parsedImportHeaders, ['status', 'aktif', 'isactive'], offset === 1 ? 6 : -1);
+            var isAktif = 1;
+            if (rawStatus) {
+                var sLower = rawStatus.toLowerCase();
+                if (sLower === 'nonaktif' || sLower === 'tidak aktif' || sLower === '0' || sLower === 'false') {
+                    isAktif = 0;
+                }
+            }
+
             var cid = 1;
-            if (window.AppStore.data && window.AppStore.data.classes) {
-                var cls = window.AppStore.data.classes.find(function(c) { return c.nama_kelas.toLowerCase() === String(namaKelas).toLowerCase(); });
+            if (window.AppStore && window.AppStore.data && window.AppStore.data.classes) {
+                var cls = window.AppStore.data.classes.find(function(c) {
+                    return c.nama_kelas && c.nama_kelas.toLowerCase().trim() === String(namaKelas).toLowerCase().trim();
+                });
                 if (cls) cid = cls.id;
             }
+
             return {
-                nama: r[0],
+                nama: nama,
                 class_id: cid,
                 nama_kelas: namaKelas,
-                nis: r[2] || '',
-                nisn: r[3] || '',
-                program_keahlian: r[4] || '',
-                aktif: 1
+                nis: (nis === '-' ? '' : nis),
+                nisn: (nisn === '-' ? '' : nisn),
+                program_keahlian: (progKeahlian === '-' ? '' : progKeahlian),
+                aktif: isAktif
             };
         });
 
@@ -364,12 +438,36 @@ function executeCurrentImport() {
             .apiImportSiswa(students);
 
     } else if (activeImportType === 'guru') {
+        var isOffset = hasNoColumn(parsedImportHeaders, parsedImportRows);
+        var offset = isOffset ? 1 : 0;
+
         var teachers = parsedImportRows.map(function(r) {
+            var nama = getRowValue(r, parsedImportHeaders, [
+                'namalengkapgurupengawas', 'namalengkapgelar', 'namalengkapdangelar', 'namaguru', 'namalengkap', 'nama', 'guru', 'pengawas', 'namapendidik'
+            ], offset === 1 ? 1 : 0);
+
+            var nip = getRowValue(r, parsedImportHeaders, [
+                'nip', 'nomorindukpegawai', 'nik', 'nuptk', 'nonip'
+            ], offset === 1 ? 2 : 1);
+
+            var jabatan = getRowValue(r, parsedImportHeaders, [
+                'jabatan', 'peran', 'tugas', 'role', 'posisi'
+            ], offset === 1 ? 3 : 2);
+
+            var rawStatus = getRowValue(r, parsedImportHeaders, ['status', 'aktif', 'isactive'], offset === 1 ? 4 : -1);
+            var isAktif = 1;
+            if (rawStatus) {
+                var sLower = rawStatus.toLowerCase();
+                if (sLower === 'nonaktif' || sLower === 'tidak aktif' || sLower === '0' || sLower === 'false') {
+                    isAktif = 0;
+                }
+            }
+
             return {
-                nama: r[0],
-                nip: r[1] || '-',
-                jabatan: r[2] || 'Guru / Pengawas',
-                aktif: 1
+                nama: nama,
+                nip: (nip === '-' ? '' : nip),
+                jabatan: jabatan || 'Guru / Pengawas',
+                aktif: isAktif
             };
         });
 
@@ -390,12 +488,36 @@ function executeCurrentImport() {
             .apiImportGuru(teachers);
 
     } else if (activeImportType === 'mapel') {
+        var isOffset = hasNoColumn(parsedImportHeaders, parsedImportRows);
+        var offset = isOffset ? 1 : 0;
+
         var mapels = parsedImportRows.map(function(r, idx) {
+            var kode = getRowValue(r, parsedImportHeaders, [
+                'kodemapel', 'kode', 'kodematapelajaran', 'idmapel'
+            ], offset === 1 ? 1 : 0);
+
+            var nama = getRowValue(r, parsedImportHeaders, [
+                'namamatapelajaran', 'namamapel', 'matapelajaran', 'mapel', 'subject'
+            ], offset === 1 ? 2 : 1);
+
+            var kelompok = getRowValue(r, parsedImportHeaders, [
+                'kelompokkurikulum', 'kelompok', 'kategori', 'jenismapel'
+            ], offset === 1 ? 3 : 2);
+
+            var rawStatus = getRowValue(r, parsedImportHeaders, ['status', 'aktif', 'isactive'], offset === 1 ? 4 : -1);
+            var isAktif = 1;
+            if (rawStatus) {
+                var sLower = rawStatus.toLowerCase();
+                if (sLower === 'nonaktif' || sLower === 'tidak aktif' || sLower === '0' || sLower === 'false') {
+                    isAktif = 0;
+                }
+            }
+
             return {
-                kode_mapel: r[0] || ('MP-' + String(idx + 1).padStart(3, '0')),
-                nama_mapel: r[1] || r[0],
-                kelompok: r[2] || 'Kejuruan',
-                aktif: 1
+                kode_mapel: (kode && kode !== '-') ? kode : ('MP-' + String(idx + 1).padStart(3, '0')),
+                nama_mapel: nama || kode,
+                kelompok: kelompok || 'Kejuruan',
+                aktif: isAktif
             };
         });
 
@@ -416,12 +538,36 @@ function executeCurrentImport() {
             .apiImportMapel(mapels);
 
     } else if (activeImportType === 'kelas') {
+        var isOffset = hasNoColumn(parsedImportHeaders, parsedImportRows);
+        var offset = isOffset ? 1 : 0;
+
         var classes = parsedImportRows.map(function(r) {
+            var namaKelas = getRowValue(r, parsedImportHeaders, [
+                'namakelas', 'kelas', 'rombel', 'rombonganbelajar'
+            ], offset === 1 ? 1 : 0);
+
+            var tingkat = getRowValue(r, parsedImportHeaders, [
+                'tingkat', 'tingkatkelas', 'jenjang', 'grade'
+            ], offset === 1 ? 2 : 1);
+
+            var progKeahlian = getRowValue(r, parsedImportHeaders, [
+                'programkeahlian', 'jurusan', 'konsentrasikeahlian', 'kompetensikeahlian'
+            ], offset === 1 ? 3 : 2);
+
+            var rawStatus = getRowValue(r, parsedImportHeaders, ['status', 'aktif', 'isactive'], offset === 1 ? 5 : -1);
+            var isAktif = 1;
+            if (rawStatus) {
+                var sLower = rawStatus.toLowerCase();
+                if (sLower === 'nonaktif' || sLower === 'tidak aktif' || sLower === '0' || sLower === 'false') {
+                    isAktif = 0;
+                }
+            }
+
             return {
-                nama_kelas: r[0],
-                tingkat: r[1] || 'XII',
-                program_keahlian: r[2] || '-',
-                aktif: 1
+                nama_kelas: namaKelas,
+                tingkat: tingkat || 'XII',
+                program_keahlian: (progKeahlian === '-' ? '' : progKeahlian),
+                aktif: isAktif
             };
         });
 
@@ -442,13 +588,32 @@ function executeCurrentImport() {
             .apiImportKelas(classes);
 
     } else if (activeImportType === 'users') {
+        var isOffset = hasNoColumn(parsedImportHeaders, parsedImportRows);
+        var offset = isOffset ? 1 : 0;
+
         var users = parsedImportRows.map(function(r) {
+            var username = getRowValue(r, parsedImportHeaders, [
+                'username', 'user', 'namapengguna', 'iduser'
+            ], offset === 1 ? 1 : 0);
+
+            var namaLengkap = getRowValue(r, parsedImportHeaders, [
+                'namalengkap', 'nama', 'name', 'namaakun'
+            ], offset === 1 ? 2 : 1);
+
+            var role = getRowValue(r, parsedImportHeaders, [
+                'peran', 'role', 'jabatan', 'tipe'
+            ], offset === 1 ? 3 : 2);
+
+            var pw = getRowValue(r, parsedImportHeaders, [
+                'password', 'katasandi', 'sandi', 'pass', 'pin'
+            ], offset === 1 ? 4 : 3);
+
             return {
-                username: r[0],
-                nama_lengkap: r[1] || r[0],
-                role: (r[2] && r[2].toLowerCase() === 'admin') ? 'admin' : 'operator',
-                password_plain: r[3] || '123456',
-                password: r[3] || '123456'
+                username: username,
+                nama_lengkap: namaLengkap || username,
+                role: (role && role.toLowerCase() === 'admin') ? 'admin' : 'operator',
+                password_plain: pw || '123456',
+                password: pw || '123456'
             };
         });
 
