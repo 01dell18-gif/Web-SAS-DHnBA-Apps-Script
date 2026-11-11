@@ -976,7 +976,7 @@ onDocumentReady(function() {
       }
     }
 
-    if (role === 'operator') {
+    if (role !== 'admin') {
       var adminOnly = document.querySelectorAll('.admin-only-item');
       adminOnly.forEach(function(el) { el.style.display = 'none'; });
     }

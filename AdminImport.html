@@ -32,7 +32,7 @@
                 <button type="button" class="tab-btn-import" id="tabBtnKelas" onclick="switchImportTab('kelas')" style="padding: 1rem 1.25rem; font-weight: 700; border: none; background: transparent; cursor: pointer; color: var(--text-muted); white-space: nowrap;">
                     <i class="bi bi-buildings"></i> Impor Rombel Kelas
                 </button>
-                <button type="button" class="tab-btn-import" id="tabBtnUsers" onclick="switchImportTab('users')" style="padding: 1rem 1.25rem; font-weight: 700; border: none; background: transparent; cursor: pointer; color: var(--text-muted); white-space: nowrap;">
+                <button type="button" class="tab-btn-import admin-only-item" id="tabBtnUsers" onclick="switchImportTab('users')" style="padding: 1rem 1.25rem; font-weight: 700; border: none; background: transparent; cursor: pointer; color: var(--text-muted); white-space: nowrap;">
                     <i class="bi bi-shield-lock"></i> Impor Pengguna (RBAC)
                 </button>
             </div>
@@ -127,7 +127,7 @@
                 </div>
 
                 <!-- Tab Panel Users -->
-                <div id="panelImportUsers" class="import-panel" style="display: none;">
+                <div id="panelImportUsers" class="import-panel admin-only-item" style="display: none;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
                         <div>
                             <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0;">Unggah Berkas Excel Pengguna (RBAC)</h3>
@@ -179,6 +179,16 @@ var parsedImportHeaders = [];
 onDocumentReady(function() {
     var urlParams = new URLSearchParams(window.location.search);
     var targetTab = urlParams.get('tab') || 'siswa';
+
+    var role = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    if (role !== 'admin') {
+        var usersBtn = document.getElementById('tabBtnUsers');
+        if (usersBtn) usersBtn.style.display = 'none';
+        var usersPanel = document.getElementById('panelImportUsers');
+        if (usersPanel) usersPanel.style.display = 'none';
+        if (targetTab === 'users') targetTab = 'siswa';
+    }
+
     switchImportTab(targetTab);
 
     // Preload AppStore classes for mapping class names to class IDs
@@ -188,6 +198,11 @@ onDocumentReady(function() {
 });
 
 function switchImportTab(type) {
+    var role = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+    if (type === 'users' && role !== 'admin') {
+        type = 'siswa';
+    }
+
     activeImportType = type;
     document.querySelectorAll('.tab-btn-import').forEach(function(b) {
         b.style.borderBottom = 'none';
@@ -588,6 +603,14 @@ function executeCurrentImport() {
             .apiImportKelas(classes);
 
     } else if (activeImportType === 'users') {
+        var role = (localStorage.getItem('sas_admin_role') || 'admin').toLowerCase();
+        if (role !== 'admin') {
+            showGlobalNotificationDialog('Akses Ditolak', 'Hanya Administrator yang memiliki akses untuk mengimpor akun pengguna.', 'danger');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Proses Impor ke Database';
+            return;
+        }
+
         var isOffset = hasNoColumn(parsedImportHeaders, parsedImportRows);
         var offset = isOffset ? 1 : 0;
 
