@@ -260,8 +260,9 @@ function getAppUrl() {
 
   try {
     var settings = getSettingsMap();
-    if (settings && settings.web_app_url && settings.web_app_url.indexOf('/macros/s/') !== -1) {
-      return settings.web_app_url;
+    var customAppUrl = settings ? (settings.web_app_url || settings.app_url) : null;
+    if (customAppUrl && customAppUrl.indexOf('/macros/s/') !== -1) {
+      return customAppUrl;
     }
   } catch (e) {}
 
@@ -275,6 +276,18 @@ function renderTemplate(filename) {
   template.appUrl = getAppUrl();
   template.settings = getSettingsMap();
   template.schoolSettings = template.settings;
+  
+  try {
+    var ss = getSpreadsheet();
+    template.spreadsheetUrl = ss ? ss.getUrl() : '';
+    template.spreadsheetName = ss ? ss.getName() : 'Database SAS';
+    var pSheet = ss ? ss.getSheetByName(SHEET_NAMES.SETTINGS) : null;
+    template.settingsSheetUrl = template.spreadsheetUrl + (pSheet ? ('#gid=' + pSheet.getSheetId()) : '');
+  } catch (eSs) {
+    template.spreadsheetUrl = '';
+    template.spreadsheetName = 'Database SAS';
+    template.settingsSheetUrl = '';
+  }
   
   // Attach initial data directly to template for instant client-side rendering
   try {
@@ -2561,11 +2574,16 @@ function jalankanIsiDataAwal() {
 function apiGetDatabaseInfo() {
   try {
     var ss = getSpreadsheet();
+    var pSheet = ss.getSheetByName(SHEET_NAMES.SETTINGS);
+    var settingsUrl = ss.getUrl() + (pSheet ? ('#gid=' + pSheet.getSheetId()) : '');
+    var settings = getSettingsMap();
     return {
       success: true,
       id: ss.getId(),
       name: ss.getName(),
-      url: ss.getUrl()
+      url: settingsUrl,
+      spreadsheetUrl: ss.getUrl(),
+      driveUrl: (settings && (settings.google_drive_folder_url || settings.drive_folder_url)) || ''
     };
   } catch (e) {
     return {

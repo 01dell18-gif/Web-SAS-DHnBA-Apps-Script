@@ -21,7 +21,7 @@
                 <button type="button" class="btn btn-outline-success btn-sm" onclick="openDatabaseSpreadsheet()" title="Buka Google Sheets">
                     <i class="bi bi-file-earmark-spreadsheet"></i> Google Sheets
                 </button>
-                <a href="<?= (settings && settings.google_drive_folder_url) ? settings.google_drive_folder_url : '#' ?>" target="_blank" class="btn btn-secondary btn-sm" title="Buka Folder Google Drive">
+                <a href="<?= (settings && (settings.google_drive_folder_url || settings.drive_folder_url)) ? (settings.google_drive_folder_url || settings.drive_folder_url) : '#' ?>" target="_blank" class="btn btn-secondary btn-sm" title="Buka Folder Google Drive" onclick="if(this.getAttribute('href')==='#'||!this.getAttribute('href')){openDriveFolderDashboard();return false;}">
                     <i class="bi bi-google"></i> Google Drive
                 </a>
             </div>
@@ -313,12 +313,30 @@ function loadDashboardStats() {
 }
 
 function openDatabaseSpreadsheet() {
+    var sUrl = '<?= (typeof spreadsheetUrl !== "undefined" && spreadsheetUrl) ? spreadsheetUrl : "" ?>';
+    if (sUrl && sUrl.length > 10) {
+        window.open(sUrl, '_blank');
+        return;
+    }
     google.script.run
         .withSuccessHandler(function(res) {
-            if (res && res.url) {
-                window.open(res.url, '_blank');
+            var url = (res && (res.spreadsheetUrl || res.url));
+            if (url) {
+                window.open(url, '_blank');
             } else {
                 showGlobalNotificationDialog('Info', 'Spreadsheet belum dapat dibuka: ' + (res.message || ''), 'warning');
+            }
+        })
+        .apiGetDatabaseInfo();
+}
+
+function openDriveFolderDashboard() {
+    google.script.run
+        .withSuccessHandler(function(res) {
+            if (res && res.driveUrl && res.driveUrl.length > 5) {
+                window.open(res.driveUrl, '_blank');
+            } else {
+                showGlobalNotificationDialog('Info', 'Tautan folder Google Drive belum dikonfigurasi di menu Pengaturan.', 'info');
             }
         })
         .apiGetDatabaseInfo();

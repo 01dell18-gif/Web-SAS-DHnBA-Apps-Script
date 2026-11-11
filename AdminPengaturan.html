@@ -457,7 +457,7 @@
                     </p>
                     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; margin-bottom: 1.25rem; font-size: 0.85rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                            <span><strong>Target Database:</strong> <span id="dbSpreadsheetName">Web SAS Daftar Hadir dan Berita Acara</span></span>
+                            <span><strong>Target Database:</strong> <span id="dbSpreadsheetName"><?= (typeof spreadsheetName !== "undefined" && spreadsheetName) ? spreadsheetName : "Google Sheets" ?></span></span>
                             <span class="badge" style="background:#dcfce7; color:#15803d; font-weight:700;"><i class="bi bi-check-circle"></i> Terhubung & Aktif</span>
                         </div>
                     </div>
@@ -515,7 +515,7 @@ if (_daftarTahunAjaran.length === 0) {
     _daftarTahunAjaran = ['2026/2027', '2027/2028'];
 }
 var _tahunAktif = '<?= (settings && (settings.tahun_ajaran_aktif || settings.academic_year)) ? (settings.tahun_ajaran_aktif || settings.academic_year) : '2026/2027' ?>';
-var _dbUrl = 'https://docs.google.com/spreadsheets/d/1IA6B5Mgt6kIYeV9c8ZdR9RliccV0U2OTlGJhsD30c2Y/edit?usp=sharing';
+var _dbUrl = '<?= (typeof settingsSheetUrl !== "undefined" && settingsSheetUrl) ? settingsSheetUrl : ((typeof spreadsheetUrl !== "undefined" && spreadsheetUrl) ? spreadsheetUrl : "") ?>';
 
 function updatePreviewDisplays() {
     var kopVal = document.getElementById('inputKopUrl') ? document.getElementById('inputKopUrl').value.trim() : '';
@@ -847,7 +847,7 @@ function loadInitialSettings(showToast) {
             if (typeof arrYears === 'string') {
                 try { arrYears = JSON.parse(arrYears); } catch(e) {}
             }
-            if (Array.isArray(arrYears) && arrYears.length > 0) {
+            if (Array.isArray(arrYears)) {
                 _daftarTahunAjaran = arrYears.slice();
             }
             _tahunAktif = s.tahun_ajaran_aktif || s.academic_year || '2026/2027';
@@ -1124,17 +1124,33 @@ function loadDatabaseInfo() {
     google.script.run
         .withSuccessHandler(function(res) {
             if (res && res.success) {
-                _dbUrl = res.url || 'https://docs.google.com/spreadsheets/d/1IA6B5Mgt6kIYeV9c8ZdR9RliccV0U2OTlGJhsD30c2Y/edit?usp=sharing';
+                _dbUrl = res.url || res.spreadsheetUrl || _dbUrl;
                 var nameEl = document.getElementById('dbSpreadsheetName');
-                if (nameEl) nameEl.textContent = res.name || 'Database SAS - SMK NEGERI FYJ CHANNEL';
+                if (nameEl) nameEl.textContent = res.name || 'Database Google Sheets';
             }
         })
         .apiGetDatabaseInfo();
 }
 
 function openDatabaseSpreadsheet() {
-    var url = _dbUrl || 'https://docs.google.com/spreadsheets/d/1IA6B5Mgt6kIYeV9c8ZdR9RliccV0U2OTlGJhsD30c2Y/edit?usp=sharing';
-    window.open(url, '_blank');
+    if (_dbUrl && _dbUrl.length > 10) {
+        window.open(_dbUrl, '_blank');
+        return;
+    }
+    showGlobalToast('Menghubungkan ke Google Sheets database...', 'info');
+    google.script.run
+        .withSuccessHandler(function(res) {
+            if (res && res.url) {
+                _dbUrl = res.url;
+                window.open(res.url, '_blank');
+            } else {
+                showGlobalToast('Tidak dapat menemukan URL Spreadsheet: ' + (res && res.message ? res.message : ''), 'danger');
+            }
+        })
+        .withFailureHandler(function(err) {
+            showGlobalToast('Gagal membuka spreadsheet: ' + (err && err.message ? err.message : err), 'danger');
+        })
+        .apiGetDatabaseInfo();
 }
 
 function isiDefaultOtomatisPengaturan() {
