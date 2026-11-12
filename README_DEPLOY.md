@@ -52,11 +52,12 @@ Berikut adalah rekapitulasi seluruh tombol aksi di aplikasi, fungsinya, dan lemb
 | **Template Ujian** (`AdminTemplate`) | **Simpan Template Baru** | Menyimpan template ujian baru ke basis data | Sheet `TemplateUjian` (`SHEET_NAMES.TEMPLATES`) |
 | **Template Ujian** (`AdminTemplate`) | **Aktifkan Template** | Menjadikan template default di Daftar Hadir & BA | Sheet `TemplateUjian` & Sheet `Pengaturan` |
 | **Template Ujian** (`AdminTemplate`) | **Hapus Template** | Menghapus template ujian dari daftar | Sheet `TemplateUjian` (`SHEET_NAMES.TEMPLATES`) |
-| **Pengaturan** (`AdminPengaturan`) | **Textarea Mata Pelajaran** | Input mapel 1 baris per mapel dengan badge jumlah | Sheet `MataPelajaran` & Sheet `Pengaturan` |
-| **Pengaturan** (`AdminPengaturan`) | **Textarea Tahun Ajaran** | Input tahun ajaran 1 baris per tahun | Sheet `TahunAjaran` & Sheet `Pengaturan` |
-| **Pengaturan** (`AdminPengaturan`) | **Perbarui Pengaturan** | Menyimpan seluruh identitas, mapel, tahun, & kelas | Sheet `Pengaturan`, `MataPelajaran`, `TahunAjaran` |
-| **Pengaturan** (`AdminPengaturan`) | **Reset Logo ke Bawaan** | Mengembalikan logo sekolah ke standar default resmi | Sheet `Pengaturan` & Script Properties |
-| **Pengaturan** (`AdminPengaturan`) | **Reset Kop ke Bawaan** | Mengembalikan kop surat ke standar default resmi | Sheet `Pengaturan` & Script Properties |
+| **Pengaturan** (`AdminPengaturan`) | **Perbarui Seluruh Pengaturan Sistem** | Menyimpan identitas sekolah, kop surat, logo, folder Drive, tahun ajaran, & `web_app_url` | Sheet `Pengaturan` (`SHEET_NAMES.SETTINGS`) |
+| **Pengaturan** (`AdminPengaturan`) | **Deteksi URL Deploy** | Mengambil otomatis link `/exec` aktif ke kolom `web_app_url` (simpan agar masuk database) | Kolom input -> Sheet `Pengaturan` |
+| **Pengaturan** (`AdminPengaturan`) | **Hubungkan & Ganti Database** | Validasi akses & pindah koneksi ke Google Spreadsheet lain tanpa edit `Code.gs` | `CUSTOM_SPREADSHEET_ID` (`ScriptProperties`) |
+| **Pengaturan** (`AdminPengaturan`) | **Default (Database)** | Mengembalikan target database ke `TARGET_SPREADSHEET_ID` bawaan di `Code.gs` | Menghapus `CUSTOM_SPREADSHEET_ID` |
+| **Pengaturan** (`AdminPengaturan`) | **Inisialisasi Ulang Database & Seed Data** | Membuat seluruh 10 sheet dan mengisi ulang data master bawaan ke database aktif | Seluruh 10 Sheet di Google Spreadsheet |
+| **Pengaturan** (`AdminPengaturan`) | **Reset Logo / Kop ke Bawaan** | Mengembalikan logo atau kop surat ke standar default resmi | Sheet `Pengaturan` |
 | **Arsip Admin** (`AdminArsip`) | **Hapus Arsip Dokumen** | Menghapus arsip (otomatis menghapus berkas kembar) | Sheet `ArsipDokumen` (`SHEET_NAMES.ARCHIVES`) |
 | **User Admin** (`AdminUsers`) | **Tambah / Edit / Hapus User** | Mengelola kredensial akun admin & operator | Sheet `Users` (`SHEET_NAMES.USERS`) |
 | **Database** (`AdminDatabase`) | **Unduh SQL / JSON Dump** | Backup cadangan database mandiri | Berkas Lokal Pengguna (.sql / .json) |
@@ -84,7 +85,9 @@ Berikut adalah panduan langkah-demi-langkah jika Anda ingin menerapkan sistem in
    var TARGET_SPREADSHEET_ID = 'TEMPELKAN_ID_SPREADSHEET_BARU_DI_SINI';
    ```
 
-   *(Catatan: Jika script dibuat langsung di dalam menu Ekstensi > Apps Script spreadsheet tersebut (container-bound), Anda juga dapat mengosongkan nilai ini `var TARGET_SPREADSHEET_ID = '';` karena sistem otomatis mendeteksi sheet aktif).*
+   *(Catatan:
+   - Jika script dibuat langsung di dalam menu Ekstensi > Apps Script spreadsheet tersebut (`container-bound`), Anda dapat mengosongkan `var TARGET_SPREADSHEET_ID = '';` karena sistem otomatis mendeteksi sheet aktif.
+   - **Cara lebih praktis tanpa edit kode**: Anda juga tetap bisa men-deploy aplikasi apa adanya, lalu mengganti database Spreadsheet kapan saja langsung dari browser melalui **Menu Pengaturan > Bagian 5** — lihat bagian **Panduan Pengaturan Fleksibel: Link Deploy & Ganti Database Tanpa Edit Kode** di bawah).*
 
 ---
 
@@ -165,8 +168,9 @@ Jika tidak menggunakan alat bantu terminal atau ekstensi:
 2. Klik tombol **Jalankan (Run)**.
 3. Saat muncul kotak dialog izin otorisasi Google, pilih **Review Permissions** > pilih Akun Google Anda > klik **Advanced** (*Lanjutan*) > klik **Go to [Nama Proyek] (unsafe)** > klik **Allow (Izinkan)**.
 4. Tunggu beberapa detik hingga proses selesai. Sistem akan otomatis:
-   - Membuat 9 tabel/sheet lengkap beserta format header tebal (*bold*).
-   - Mengisi data awal default (10 siswa dummy, 10 guru dummy, 10 mapel dummy, template ujian resmi, dan setelan dasar sekolah).
+   - Membuat 10 lembar sheet (`Pengaturan`, `Kelas`, `Siswa`, `Guru`, `Mapel`, `TemplateUjian`, `Absensi`, `BeritaAcara`, `Users`, `ActivityLogs`) lengkap beserta header tebal (*bold*).
+   - Mengisi data awal bawaan (data kelas, siswa, guru, mapel, template ujian, pengaturan sekolah, dan akun pengguna default).
+   - *(Catatan: Di aplikasi web, jika Anda menekan tombol **Hapus Semua** / **Reset Hapus Semua** di menu master, data akan benar-benar kosong. Data bawaan hanya diisi ulang apabila Anda menekan tombol **Inisialisasi Ulang Database & Seed Data** di menu **Pengaturan**).*
 
 ---
 
@@ -187,29 +191,46 @@ Jika tidak menggunakan alat bantu terminal atau ekstensi:
 
 ---
 
-### Langkah 5: Sesuaikan Fallback URL di `Code.gs`
+### Langkah 5: Pengaturan Link Deploy Web App (Sudah Otomatis & Fleksibel — Tidak Perlu Edit Kode!)
 
-Di dalam fungsi `getAppUrl()` pada file `Code.gs` (sekitar baris 268):
+Sekarang **tidak ada lagi link deploy yang di-hardcode** di dalam `Code.gs`, `AppJS.html`, maupun `StyleCSS.html`. Anda **tidak perlu** repot mengubah link di file kode satu per satu saat deploy ke akun atau URL baru.
 
-```javascript
-function getAppUrl() {
-  try {
-    var url = ScriptApp.getService().getUrl();
-    if (url && url.length > 0) {
-      return url;
-    }
-  } catch (e) {
-    Logger.log('Tidak dapat mengambil URL via ScriptApp: ' + e.message);
-  }
+Sistem (`getAppUrl()` di `Code.gs`) membaca URL aplikasi Web secara otomatis dengan urutan prioritas berikut:
 
-  // Fallback: URL deployment standar project
-  return 'https://script.google.com/macros/s/AKfycb.../exec';
-}
-```
+1. **Sheet `Pengaturan` (`web_app_url`)** — jika Anda mengisinya di database/menu Pengaturan, URL ini yang diprioritaskan.
+2. **Script Properties (`WEB_APP_URL`)** — cadangan di setelan proyek Apps Script (opsional).
+3. **Deteksi Otomatis Google Apps Script (`ScriptApp.getService().getUrl()`)** — jika kolom `web_app_url` dikosongkan, sistem otomatis mengambil link `/exec` aktif tempat aplikasi di-deploy.
 
-1. **Fungsi kode**: Baris `ScriptApp.getService().getUrl()` secara cerdas mendeteksi URL aktif tempat user membuka web. Sedangkan baris `return 'https://...'` adalah *fallback* (jaring pengaman cadangan) jika fungsi dijalankan langsung dari console/editor tanpa konteks request browser.
-2. **Cara memperbarui**: Tempelkan URL Web App hasil Langkah 4 ke dalam string return fallback tersebut.
-3. Setelah memperbarui baris tersebut, simpan file `Code.gs`.
+---
+
+### 🔄 Panduan Pengaturan Fleksibel: Link Deploy & Ganti Database Tanpa Edit Kode
+
+Semua pengaturan link dan database kini bisa dikelola langsung dari **Menu Pengaturan > Bagian 5 (Database Relasional Google Spreadsheet & Link Deploy)** di tampilan web Admin:
+
+#### A. Mengatur Link Deploy Web App (`web_app_url`) via Web
+1. Login sebagai **Admin**, lalu buka menu **Pengaturan**.
+2. Gulir ke kotak **5. Database Relasional Google Spreadsheet & Link Deploy**.
+3. Pada kolom **Link Deploy Web App (`web_app_url`)**:
+   - Klik tombol **Deteksi URL Deploy** untuk mengisi otomatis link `/exec` aktif, **atau** tempel link `/exec` Web App Anda secara manual.
+   - *(Bisa juga dikosongkan jika ingin sistem selalu mengikuti link deploy aktif secara otomatis).*
+4. Klik tombol **Perbarui Seluruh Pengaturan Sistem** agar tersimpan permanen ke sheet `Pengaturan`.
+
+#### B. Mengganti Target Database Google Spreadsheet Sewaktu-Waktu
+Jika suatu saat Anda ingin memindahkan database ke Google Spreadsheet lain (misalnya ganti tahun ajaran, pindah akun, atau memakai file database cadangan) **tanpa menyentuh kode `Code.gs`**:
+
+1. Siapkan Google Spreadsheet target dan pastikan akun Google pemilik Web App memiliki izin **Editor (Edit)** di Spreadsheet tersebut.
+2. Di halaman **Pengaturan > Bagian 5**, Anda dapat melihat nama dan **Spreadsheet ID Aktif** yang sedang dipakai saat ini.
+3. Tempelkan **URL lengkap Google Sheets** (contoh: `https://docs.google.com/spreadsheets/d/ABC123.../edit`) atau cukup **Spreadsheet ID**-nya ke kolom **Ganti Target Database Google Spreadsheet (URL / ID)**.
+4. Klik tombol **Hubungkan & Ganti Database**.
+   - Sistem akan **mengecek akses file terlebih dahulu** sebelum mengganti koneksi. Jika link salah atau belum diberi izin Edit, database lama tetap aman dan tidak akan error.
+   - Jika valid, seluruh cache langsung dibersihkan dan aplikasi seketika membaca/menulis ke Spreadsheet baru tersebut.
+   - Jika Spreadsheet baru masih kosong, buka **Inisialisasi Ulang Database & Seed Data** untuk membuat 10 lembar sheet dan data awalnya.
+5. Jika ingin kembali ke database bawaan yang tertulis di `TARGET_SPREADSHEET_ID` (`Code.gs`), cukup klik tombol **Default**.
+
+> **Urutan Prioritas Database di `Code.gs` (`getSpreadsheet()`):**
+> 1. Database Pilihan dari Menu Pengaturan (`CUSTOM_SPREADSHEET_ID` di `ScriptProperties`)
+> 2. Konstanta `TARGET_SPREADSHEET_ID` di `Code.gs`
+> 3. Spreadsheet aktif (*container-bound*) / `SPREADSHEET_ID` cadangan / buat file Spreadsheet baru otomatis.
 
 ---
 
