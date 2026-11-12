@@ -33,9 +33,9 @@
           } catch(e) {}
         }
         if (!base || base.indexOf('/macros/s/') === -1) {
-          base = 'https://script.google.com/macros/s/AKfycbwsPpl26VbTP2HgegLO4TCSwI6DalsXPW0bMn3ATxc8/exec';
+          base = '';
         }
-        return base.split('?')[0].split('#')[0] + '?page=' + encodeURIComponent(targetPage);
+        return (base ? base.split('?')[0].split('#')[0] : '') + '?page=' + encodeURIComponent(targetPage);
       }
 
       if (!isAuth) {

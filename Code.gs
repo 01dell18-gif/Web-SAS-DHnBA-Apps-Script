@@ -218,24 +218,28 @@ function include(filename, data) {
 
 function getAppUrl() {
   try {
-    var url = ScriptApp.getService().getUrl();
-    if (url && url.indexOf('/macros/s/') !== -1) return url;
+    var settings = getSettingsMap();
+    var customAppUrl = settings ? String(settings.web_app_url || settings.app_url || '').trim() : '';
+    if (customAppUrl && customAppUrl.indexOf('/macros/s/') !== -1) {
+      return customAppUrl.split('?')[0].split('#')[0];
+    }
   } catch (e) {}
 
   try {
     var propsUrl = PropertiesService.getScriptProperties().getProperty('WEB_APP_URL');
-    if (propsUrl && propsUrl.indexOf('/macros/s/') !== -1) return propsUrl;
-  } catch (e) {}
-
-  try {
-    var settings = getSettingsMap();
-    var customAppUrl = settings ? (settings.web_app_url || settings.app_url) : null;
-    if (customAppUrl && customAppUrl.indexOf('/macros/s/') !== -1) {
-      return customAppUrl;
+    if (propsUrl && propsUrl.indexOf('/macros/s/') !== -1) {
+      return String(propsUrl).trim().split('?')[0].split('#')[0];
     }
   } catch (e) {}
 
-  return 'https://script.google.com/macros/s/AKfycbwsPpl26VbTP2HgegLO4TCSwI6DalsXPW0bMn3ATxc8/exec';
+  try {
+    var url = ScriptApp.getService().getUrl();
+    if (url && url.indexOf('/macros/s/') !== -1) {
+      return String(url).trim().split('?')[0].split('#')[0];
+    }
+  } catch (e) {}
+
+  return '';
 }
 
 function renderTemplate(filename) {
@@ -248,11 +252,13 @@ function renderTemplate(filename) {
   
   try {
     var ss = getSpreadsheet();
+    template.spreadsheetId = ss ? ss.getId() : '';
     template.spreadsheetUrl = ss ? ss.getUrl() : '';
     template.spreadsheetName = ss ? ss.getName() : 'Database SAS';
     var pSheet = ss ? ss.getSheetByName(SHEET_NAMES.SETTINGS) : null;
     template.settingsSheetUrl = template.spreadsheetUrl + (pSheet ? ('#gid=' + pSheet.getSheetId()) : '');
   } catch (eSs) {
+    template.spreadsheetId = '';
     template.spreadsheetUrl = '';
     template.spreadsheetName = 'Database SAS';
     template.settingsSheetUrl = '';
@@ -289,7 +295,16 @@ var _cachedSettingsMap = null;
 
 function getSpreadsheet() {
   if (!_cachedSpreadsheet) {
-    if (TARGET_SPREADSHEET_ID) {
+    var props = PropertiesService.getScriptProperties();
+    var customSsId = props.getProperty('CUSTOM_SPREADSHEET_ID');
+    if (customSsId) {
+      try {
+        _cachedSpreadsheet = SpreadsheetApp.openById(customSsId);
+      } catch (e) {
+        _cachedSpreadsheet = null;
+      }
+    }
+    if (!_cachedSpreadsheet && TARGET_SPREADSHEET_ID) {
       try {
         _cachedSpreadsheet = SpreadsheetApp.openById(TARGET_SPREADSHEET_ID);
       } catch (e) {
@@ -304,7 +319,6 @@ function getSpreadsheet() {
       }
     }
     if (!_cachedSpreadsheet) {
-      var props = PropertiesService.getScriptProperties();
       var ssId = props.getProperty('SPREADSHEET_ID');
       if (ssId) {
         try {
@@ -317,7 +331,7 @@ function getSpreadsheet() {
     if (!_cachedSpreadsheet) {
       try {
         _cachedSpreadsheet = SpreadsheetApp.create('Database SAS - SMK NEGERI FYJ CHANNEL');
-        PropertiesService.getScriptProperties().setProperty('SPREADSHEET_ID', _cachedSpreadsheet.getId());
+        props.setProperty('SPREADSHEET_ID', _cachedSpreadsheet.getId());
       } catch (err) {
         throw new Error('Gagal mengakses Spreadsheet database ' + TARGET_SPREADSHEET_ID + ': ' + err.message);
       }
@@ -993,10 +1007,11 @@ function getDefaultSettingsRows() {
     // 2. Logo Sekolah
     ['school_logo', 'https://drive.google.com/thumbnail?id=1GUfUommgYjV-cnhU0tTB8kRJy8iXagkI&sz=w1600'],
 
-    // 3. Identitas Sekolah & Penyimpanan Google Drive
+    // 3. Identitas Sekolah, Link Deploy & Penyimpanan Google Drive
     ['nama_sekolah', 'SMK NEGERI FYJ CHANNEL'],
     ['alamat_sekolah', 'Jl. Merpati No. 1'],
     ['google_drive_folder_url', 'https://drive.google.com/drive/folders/19fGt2rXhNLL_N-vCLUXC_CmSiwi7UzGR'],
+    ['web_app_url', ''],
 
     // 4. Master Tahun Ajaran & Semester
     ['tahun_ajaran_aktif', '2026/2027'],
@@ -2019,6 +2034,7 @@ function apiSavePengaturan(payload) {
     'nama_sekolah': schoolName,
     'alamat_sekolah': payload.alamat_sekolah !== undefined ? payload.alamat_sekolah : (currentSettings.alamat_sekolah || ''),
     'google_drive_folder_url': driveFolderUrl,
+    'web_app_url': payload.web_app_url !== undefined ? String(payload.web_app_url).trim() : (currentSettings.web_app_url || currentSettings.app_url || ''),
     'tahun_ajaran_aktif': tahunAktif,
     'semester_aktif': semAktif,
     'daftar_tahun_ajaran': listTh || JSON.stringify(['2026/2027', '2027/2028']),
@@ -2528,18 +2544,101 @@ function apiGetDatabaseInfo() {
     var pSheet = ss.getSheetByName(SHEET_NAMES.SETTINGS);
     var settingsUrl = ss.getUrl() + (pSheet ? ('#gid=' + pSheet.getSheetId()) : '');
     var settings = getSettingsMap();
+    var customId = '';
+    try {
+      customId = PropertiesService.getScriptProperties().getProperty('CUSTOM_SPREADSHEET_ID') || '';
+    } catch (eProp) {}
+    var serviceUrl = '';
+    try {
+      serviceUrl = ScriptApp.getService().getUrl() || '';
+    } catch (eSvc) {}
     return {
       success: true,
       id: ss.getId(),
       name: ss.getName(),
       url: settingsUrl,
       spreadsheetUrl: ss.getUrl(),
+      isCustomDatabase: !!(customId && customId === ss.getId()),
+      serviceUrl: serviceUrl,
+      webAppUrl: (settings && (settings.web_app_url || settings.app_url)) || '',
       driveUrl: (settings && (settings.google_drive_folder_url || settings.drive_folder_url)) || ''
     };
   } catch (e) {
     return {
       success: false,
       message: e.message
+    };
+  }
+}
+
+function apiGetCurrentServiceUrl() {
+  try {
+    var url = ScriptApp.getService().getUrl() || '';
+    return { success: true, url: url };
+  } catch (e) {
+    return { success: false, message: e.message, url: '' };
+  }
+}
+
+function extractSpreadsheetId(urlOrId) {
+  var raw = String(urlOrId || '').trim();
+  if (!raw) return '';
+  var match = raw.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  if (match && match[1]) return match[1];
+  if (/^[a-zA-Z0-9-_]{15,}$/.test(raw)) return raw;
+  return '';
+}
+
+function apiSwitchDatabaseSpreadsheet(urlOrId) {
+  try {
+    var newId = extractSpreadsheetId(urlOrId);
+    if (!newId) {
+      return {
+        success: false,
+        message: 'Format URL atau ID Google Spreadsheet tidak valid. Tempelkan link Google Sheets atau Spreadsheet ID yang benar.'
+      };
+    }
+
+    var testSs = SpreadsheetApp.openById(newId);
+    var ssName = testSs.getName();
+    var ssUrl = testSs.getUrl();
+
+    PropertiesService.getScriptProperties().setProperty('CUSTOM_SPREADSHEET_ID', newId);
+    _cachedSpreadsheet = testSs;
+    invalidateCaches();
+
+    return {
+      success: true,
+      id: newId,
+      name: ssName,
+      url: ssUrl,
+      message: 'Berhasil menghubungkan database ke Spreadsheet: ' + ssName
+    };
+  } catch (e) {
+    return {
+      success: false,
+      message: 'Gagal membuka Spreadsheet target: ' + e.message + '. Pastikan URL/ID benar dan Anda memiliki akses Edit pada file tersebut.'
+    };
+  }
+}
+
+function apiResetDatabaseSpreadsheet() {
+  try {
+    PropertiesService.getScriptProperties().deleteProperty('CUSTOM_SPREADSHEET_ID');
+    _cachedSpreadsheet = null;
+    invalidateCaches();
+    var ss = getSpreadsheet();
+    return {
+      success: true,
+      id: ss.getId(),
+      name: ss.getName(),
+      url: ss.getUrl(),
+      message: 'Database berhasil dikembalikan ke Spreadsheet default: ' + ss.getName()
+    };
+  } catch (e) {
+    return {
+      success: false,
+      message: 'Gagal mengembalikan database default: ' + e.message
     };
   }
 }

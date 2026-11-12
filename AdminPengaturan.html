@@ -445,11 +445,11 @@
                 </div>
             </div>
 
-            <!-- SECTION 5: BASIS DATA GOOGLE SPREADSHEET -->
+            <!-- SECTION 5: BASIS DATA GOOGLE SPREADSHEET & LINK DEPLOY -->
             <div class="card" style="margin-bottom: 1.5rem;">
                 <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                    <span class="card-title"><i class="bi bi-file-earmark-spreadsheet"></i> 5. Database Relasional Google Spreadsheet</span>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="loadDatabaseInfo()"><i class="bi bi-arrow-clockwise"></i> Segarkan Info</button>
+                    <span class="card-title"><i class="bi bi-file-earmark-spreadsheet"></i> 5. Database Relasional Google Spreadsheet & Link Deploy</span>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="loadDatabaseInfo(true)"><i class="bi bi-arrow-clockwise"></i> Segarkan Info</button>
                 </div>
                 <div class="card-body">
                     <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.75rem;">
@@ -460,7 +460,30 @@
                             <span><strong>Target Database:</strong> <span id="dbSpreadsheetName"><?= (typeof spreadsheetName !== "undefined" && spreadsheetName) ? spreadsheetName : "Google Sheets" ?></span></span>
                             <span class="badge" style="background:#dcfce7; color:#15803d; font-weight:700;"><i class="bi bi-check-circle"></i> Terhubung & Aktif</span>
                         </div>
+                        <div style="margin-top: 6px; font-size: 0.78rem; color: var(--text-muted); word-break: break-all;">
+                            <strong>Spreadsheet ID Aktif:</strong> <code id="dbSpreadsheetIdLabel"><?= (typeof spreadsheetId !== "undefined" && spreadsheetId) ? spreadsheetId : "-" ?></code>
+                        </div>
                     </div>
+
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" for="set_web_app_url">Link Deploy Web App (<code>web_app_url</code>)</label>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <input type="url" id="set_web_app_url" class="form-control" style="flex: 1; min-width: 240px;" placeholder="https://script.google.com/macros/s/.../exec (kosongkan untuk deteksi otomatis)" value="<?= (settings && (settings.web_app_url || settings.app_url)) ? (settings.web_app_url || settings.app_url) : '' ?>">
+                            <button type="button" class="btn btn-secondary" onclick="detectCurrentDeployUrl()" title="Ambil URL Deploy aktif dari Google Apps Script"><i class="bi bi-magic"></i> Deteksi URL Deploy</button>
+                        </div>
+                        <div class="form-text">Tersimpan di sheet <code>Pengaturan</code>. Prioritas utama sistem jika diisi; jika dikosongkan, sistem otomatis mengikuti URL deploy aktif Apps Script. Klik tombol <strong>Perbarui Seluruh Pengaturan Sistem</strong> di bawah setelah mengubah.</div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1.25rem; padding-top: 0.75rem; border-top: 1px dashed #e2e8f0;">
+                        <label class="form-label" for="set_custom_spreadsheet_url">Ganti Target Database Google Spreadsheet (URL / ID)</label>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <input type="text" id="set_custom_spreadsheet_url" class="form-control" style="flex: 1; min-width: 240px;" placeholder="Tempelkan link Google Sheets atau Spreadsheet ID baru..." value="<?= (typeof spreadsheetUrl !== 'undefined' && spreadsheetUrl) ? spreadsheetUrl : '' ?>">
+                            <button type="button" class="btn btn-primary" onclick="switchDatabaseSpreadsheet()"><i class="bi bi-link-45deg"></i> Hubungkan & Ganti Database</button>
+                            <button type="button" class="btn btn-secondary" onclick="resetDatabaseSpreadsheet()" title="Kembalikan ke Spreadsheet default kode"><i class="bi bi-arrow-counterclockwise"></i> Default</button>
+                        </div>
+                        <div class="form-text">Memungkinkan pindah database Spreadsheet sewaktu-waktu tanpa mengedit kode <code>Code.gs</code>. Pastikan akun Google Anda memiliki izin <strong>Edit</strong> pada Spreadsheet target.</div>
+                    </div>
+
                     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                         <button type="button" class="btn btn-success" id="btnOpenSpreadsheet" onclick="openDatabaseSpreadsheet()">
                             <i class="bi bi-box-arrow-up-right"></i> Buka Google Sheets (Sheet Pengaturan)
@@ -775,6 +798,9 @@ function loadInitialSettings(showToast) {
             document.getElementById('set_alamat_sekolah').value = s.alamat_sekolah || '';
             document.getElementById('set_semester_aktif').value = s.semester_aktif || s.default_semester || 'Ganjil';
             document.getElementById('set_drive_url').value = s.google_drive_folder_url || s.drive_folder_url || '';
+            if (document.getElementById('set_web_app_url')) {
+                document.getElementById('set_web_app_url').value = s.web_app_url || s.app_url || '';
+            }
             document.getElementById('set_kop_1').value = s.kop_baris_1 || '';
             document.getElementById('set_kop_2').value = s.kop_baris_2 || '';
             document.getElementById('set_kop_3').value = s.kop_baris_3 || '';
@@ -1089,6 +1115,7 @@ function handleSaveSettings(e) {
         tahun_ajaran_aktif: document.getElementById('set_tahun_aktif').value,
         semester_aktif: document.getElementById('set_semester_aktif').value,
         google_drive_folder_url: document.getElementById('set_drive_url').value.trim(),
+        web_app_url: document.getElementById('set_web_app_url') ? document.getElementById('set_web_app_url').value.trim() : '',
         kop_baris_1: document.getElementById('set_kop_1').value.trim(),
         kop_baris_2: document.getElementById('set_kop_2').value.trim(),
         kop_baris_3: document.getElementById('set_kop_3').value.trim(),
@@ -1120,16 +1147,110 @@ function handleSaveSettings(e) {
         .apiSavePengaturan(payload);
 }
 
-function loadDatabaseInfo() {
+function loadDatabaseInfo(showToast) {
+    if (showToast) showGlobalToast('Menyegarkan informasi database...', 'info');
     google.script.run
         .withSuccessHandler(function(res) {
             if (res && res.success) {
                 _dbUrl = res.url || res.spreadsheetUrl || _dbUrl;
                 var nameEl = document.getElementById('dbSpreadsheetName');
                 if (nameEl) nameEl.textContent = res.name || 'Database Google Sheets';
+                var idEl = document.getElementById('dbSpreadsheetIdLabel');
+                if (idEl) idEl.textContent = res.id || '-';
+                var inputSsEl = document.getElementById('set_custom_spreadsheet_url');
+                if (inputSsEl && res.spreadsheetUrl) inputSsEl.value = res.spreadsheetUrl;
+                var inputDeployEl = document.getElementById('set_web_app_url');
+                if (inputDeployEl && !inputDeployEl.value && res.webAppUrl) inputDeployEl.value = res.webAppUrl;
+                if (showToast) showGlobalToast('Info database diperbarui: ' + (res.name || ''), 'success');
+            } else if (showToast) {
+                showGlobalToast('Gagal memuat info database: ' + (res && res.message ? res.message : ''), 'danger');
             }
         })
+        .withFailureHandler(function(err) {
+            if (showToast) showGlobalToast('Error memuat info database: ' + (err && err.message ? err.message : err), 'danger');
+        })
         .apiGetDatabaseInfo();
+}
+
+function detectCurrentDeployUrl() {
+    var input = document.getElementById('set_web_app_url');
+    showGlobalToast('Mendeteksi URL Deploy Web App aktif...', 'info');
+    google.script.run
+        .withSuccessHandler(function(res) {
+            var detected = (res && res.url) ? String(res.url).trim() : '';
+            if (!detected && typeof getAppUrl === 'function') {
+                detected = getAppUrl() || '';
+            }
+            if (detected && input) {
+                input.value = detected;
+                showGlobalToast('URL Deploy terdeteksi! Klik "Perbarui Seluruh Pengaturan Sistem" untuk menyimpannya ke database.', 'success');
+            } else {
+                showGlobalToast('URL Deploy aktif tidak terdeteksi otomatis. Tempelkan link /exec secara manual.', 'warning');
+            }
+        })
+        .withFailureHandler(function(err) {
+            showGlobalToast('Gagal mendeteksi URL: ' + (err && err.message ? err.message : err), 'danger');
+        })
+        .apiGetCurrentServiceUrl();
+}
+
+function switchDatabaseSpreadsheet() {
+    var input = document.getElementById('set_custom_spreadsheet_url');
+    var val = input ? input.value.trim() : '';
+    if (!val) {
+        showGlobalToast('Masukkan URL atau ID Google Spreadsheet target terlebih dahulu.', 'warning');
+        return;
+    }
+    showGlobalConfirmDialog(
+        'Ganti Target Database Spreadsheet?',
+        'Aplikasi akan beralih membaca dan menulis seluruh data ke Google Spreadsheet baru yang Anda masukkan. Pastikan Spreadsheet target valid dan dapat diakses. Lanjutkan?',
+        function() {
+            showLoading(true);
+            google.script.run
+                .withSuccessHandler(function(res) {
+                    showLoading(false);
+                    if (res && res.success) {
+                        showGlobalNotificationDialog('Database Berhasil Diganti', res.message || ('Terhubung ke: ' + res.name), 'success', function() {
+                            safeReload('pengaturan');
+                        });
+                    } else {
+                        showGlobalNotificationDialog('Gagal Menghubungkan Database', (res && res.message) || 'Tidak dapat membuka Spreadsheet target.', 'danger');
+                    }
+                })
+                .withFailureHandler(function(err) {
+                    showLoading(false);
+                    showGlobalNotificationDialog('Gagal Menghubungkan Database', (err && err.message) || err, 'danger');
+                })
+                .apiSwitchDatabaseSpreadsheet(val);
+        },
+        'Ya, Hubungkan Database'
+    );
+}
+
+function resetDatabaseSpreadsheet() {
+    showGlobalConfirmDialog(
+        'Kembalikan ke Database Default?',
+        'Target database akan dikembalikan ke Google Spreadsheet default bawaan aplikasi. Lanjutkan?',
+        function() {
+            showLoading(true);
+            google.script.run
+                .withSuccessHandler(function(res) {
+                    showLoading(false);
+                    if (res && res.success) {
+                        showGlobalNotificationDialog('Berhasil', res.message || 'Database dikembalikan ke Spreadsheet default.', 'success', function() {
+                            safeReload('pengaturan');
+                        });
+                    } else {
+                        showGlobalNotificationDialog('Gagal', (res && res.message) || 'Terjadi kesalahan.', 'danger');
+                    }
+                })
+                .withFailureHandler(function(err) {
+                    showLoading(false);
+                    showGlobalNotificationDialog('Gagal', (err && err.message) || err, 'danger');
+                })
+                .apiResetDatabaseSpreadsheet();
+        }
+    );
 }
 
 function openDatabaseSpreadsheet() {
